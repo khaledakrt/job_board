@@ -1,0 +1,8 @@
+# Dev mail catcher — e-mails visibles sur http://localhost:8025
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    restart: unless-stopped

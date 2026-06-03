@@ -1,0 +1,270 @@
+<div class="landing">
+  <header class="landing-header">
+    <div class="landing-container landing-header-inner">
+      <a routerLink="/" class="landing-logo" aria-label="JobBoard — Accueil">
+        <span class="landing-logo-mark">JB</span>
+        <span class="landing-logo-text">JobBoard</span>
+      </a>
+      <nav class="landing-nav" aria-label="Navigation principale">
+        <button type="button" class="landing-nav-link" (click)="scrollTo('candidats')">Candidats</button>
+        <button type="button" class="landing-nav-link" (click)="scrollTo('recruteurs')">Recruteurs</button>
+        <button type="button" class="landing-nav-link" (click)="scrollTo('offres')">Offres</button>
+        <button type="button" class="landing-nav-link" (click)="scrollTo('fonctionnalites')">Fonctionnalités</button>
+      </nav>
+      <div class="landing-header-actions">
+        @if (authService.isAuthenticated()) {
+          <a [routerLink]="workspaceLink()" class="landing-btn landing-btn-primary">Mon espace</a>
+          <button type="button" class="landing-btn landing-btn-ghost" (click)="logout()">Déconnexion</button>
+        } @else {
+          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">Connexion</a>
+          <a [routerLink]="routes.AUTH.REGISTER" class="landing-btn landing-btn-primary">Inscription</a>
+        }
+      </div>
+    </div>
+  </header>
+
+  <section class="landing-hero">
+    <div class="landing-container landing-hero-grid">
+      <div class="landing-hero-copy">
+        <p class="landing-eyebrow">Plateforme de recrutement nouvelle génération</p>
+        <h1 class="landing-hero-title">
+          Recrutez mieux.<br />
+          <span class="landing-hero-accent">Postulez plus vite.</span>
+        </h1>
+        <p class="landing-hero-lead">
+          Une seule plateforme pour les candidats qui cherchent leur prochain défi et les entreprises
+          qui veulent attirer, filtrer et embaucher les bons talents.
+        </p>
+        @if (authService.isAuthenticated()) {
+          <a [routerLink]="workspaceLink()" class="landing-btn landing-btn-primary landing-btn-lg">
+            Accéder à mon espace
+          </a>
+        } @else {
+          <div class="landing-hero-ctas">
+            <a
+              [routerLink]="routes.AUTH.REGISTER"
+              [queryParams]="{ role: 'candidate' }"
+              class="landing-btn landing-btn-primary landing-btn-lg"
+            >
+              Je cherche un emploi
+            </a>
+            <a
+              [routerLink]="routes.AUTH.REGISTER"
+              [queryParams]="{ role: 'recruiter' }"
+              class="landing-btn landing-btn-outline landing-btn-lg"
+            >
+              Je recrute
+            </a>
+          </div>
+          <p class="landing-hero-note">Gratuit pour commencer · Sans engagement</p>
+        }
+      </div>
+      <div class="landing-hero-visual" aria-hidden="true">
+        <div class="landing-hero-card landing-hero-card-a">
+          <span class="landing-card-label">Candidat</span>
+          <strong>Développeur Full Stack</strong>
+          <span class="landing-card-meta">Paris · CDI · Télétravail hybride</span>
+          <span class="landing-card-badge landing-card-badge-ok">Candidature envoyée</span>
+        </div>
+        <div class="landing-hero-card landing-hero-card-b">
+          <span class="landing-card-label">Recruteur — ATS</span>
+          <strong>12 candidatures</strong>
+          <span class="landing-card-meta">Quiz : 8 bonnes réponses · 4 à revoir</span>
+          <div class="landing-card-quiz">
+            <span class="quiz-pill quiz-pill-ok">Q1 ✓</span>
+            <span class="quiz-pill quiz-pill-warn">Q2 ✗</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <app-public-jobs-browse />
+
+  <section class="landing-stats">
+    <div class="landing-container landing-stats-grid">
+      <div class="landing-stat">
+        <span class="landing-stat-value">2 min</span>
+        <span class="landing-stat-label">pour publier une offre</span>
+      </div>
+      <div class="landing-stat">
+        <span class="landing-stat-value">ATS</span>
+        <span class="landing-stat-label">pipeline candidatures intégré</span>
+      </div>
+      <div class="landing-stat">
+        <span class="landing-stat-value">Quiz</span>
+        <span class="landing-stat-label">présélection technique optionnelle</span>
+      </div>
+      <div class="landing-stat">
+        <span class="landing-stat-value">100 %</span>
+        <span class="landing-stat-label">parcours en français</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="candidats" class="landing-section landing-section-alt">
+    <div class="landing-container">
+      <div class="landing-section-head">
+        <p class="landing-eyebrow">Espace candidat</p>
+        <h2 class="landing-section-title">Trouvez l’offre qui vous ressemble</h2>
+        <p class="landing-section-lead">
+          Créez votre profil, explorez les opportunités et suivez chaque candidature depuis un seul tableau de bord.
+        </p>
+      </div>
+      <div class="landing-features">
+        @for (f of candidateFeatures; track f.title) {
+          <article class="landing-feature-card">
+            <span class="landing-feature-icon">{{ f.icon }}</span>
+            <h3>{{ f.title }}</h3>
+            <p>{{ f.text }}</p>
+          </article>
+        }
+      </div>
+      <div class="landing-steps">
+        @for (s of candidateSteps; track s.num) {
+          <div class="landing-step">
+            <span class="landing-step-num">{{ s.num }}</span>
+            <div>
+              <h4>{{ s.title }}</h4>
+              <p>{{ s.text }}</p>
+            </div>
+          </div>
+        }
+      </div>
+      @if (!authService.isAuthenticated()) {
+        <div class="landing-section-cta">
+          <a
+            [routerLink]="routes.AUTH.REGISTER"
+            [queryParams]="{ role: 'candidate' }"
+            class="landing-btn landing-btn-primary landing-btn-lg"
+          >
+            Créer mon compte candidat
+          </a>
+          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">J’ai déjà un compte</a>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section id="recruteurs" class="landing-section">
+    <div class="landing-container">
+      <div class="landing-section-head">
+        <p class="landing-eyebrow landing-eyebrow-accent">Espace recruteur</p>
+        <h2 class="landing-section-title">Attirez et sélectionnez les meilleurs profils</h2>
+        <p class="landing-section-lead">
+          Page employeur, offres détaillées, quiz technique et ATS : tout pour structurer votre recrutement.
+        </p>
+      </div>
+      <div class="landing-features">
+        @for (f of recruiterFeatures; track f.title) {
+          <article class="landing-feature-card landing-feature-card-recruiter">
+            <span class="landing-feature-icon">{{ f.icon }}</span>
+            <h3>{{ f.title }}</h3>
+            <p>{{ f.text }}</p>
+          </article>
+        }
+      </div>
+      <div class="landing-steps">
+        @for (s of recruiterSteps; track s.num) {
+          <div class="landing-step">
+            <span class="landing-step-num landing-step-num-accent">{{ s.num }}</span>
+            <div>
+              <h4>{{ s.title }}</h4>
+              <p>{{ s.text }}</p>
+            </div>
+          </div>
+        }
+      </div>
+      @if (!authService.isAuthenticated()) {
+        <div class="landing-section-cta">
+          <a
+            [routerLink]="routes.AUTH.REGISTER"
+            [queryParams]="{ role: 'recruiter' }"
+            class="landing-btn landing-btn-accent landing-btn-lg"
+          >
+            Inscrire mon entreprise
+          </a>
+          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">Connexion recruteur</a>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section id="fonctionnalites" class="landing-section landing-section-alt">
+    <div class="landing-container">
+      <div class="landing-section-head landing-section-head-center">
+        <p class="landing-eyebrow">Pourquoi JobBoard</p>
+        <h2 class="landing-section-title">Tout ce dont vous avez besoin, au même endroit</h2>
+      </div>
+      <ul class="landing-highlights">
+        @for (item of highlights; track item) {
+          <li>
+            <span class="landing-check" aria-hidden="true">✓</span>
+            {{ item }}
+          </li>
+        }
+      </ul>
+      <div class="landing-audience-cards">
+        <article class="landing-audience-card">
+          <h3>Vous êtes candidat ?</h3>
+          <p>Postulez avec confiance : CV, lettre et quiz en une seule candidature structurée.</p>
+          @if (!authService.isAuthenticated()) {
+            <a [routerLink]="routes.AUTH.REGISTER" [queryParams]="{ role: 'candidate' }" class="landing-link"
+              >Commencer →</a
+            >
+          }
+        </article>
+        <article class="landing-audience-card landing-audience-card-recruiter">
+          <h3>Vous recrutez ?</h3>
+          <p>Publiez, pré-sélectionnez avec le quiz et gérez votre pipeline sans outil externe.</p>
+          @if (!authService.isAuthenticated()) {
+            <a [routerLink]="routes.AUTH.REGISTER" [queryParams]="{ role: 'recruiter' }" class="landing-link"
+              >Publier une offre →</a
+            >
+          }
+        </article>
+      </div>
+    </div>
+  </section>
+
+  @if (!authService.isAuthenticated()) {
+    <section class="landing-cta-band">
+      <div class="landing-container landing-cta-band-inner">
+        <h2>Prêt à rejoindre JobBoard ?</h2>
+        <p>Créez votre compte en quelques minutes et accédez à votre espace personnalisé.</p>
+        <div class="landing-hero-ctas">
+          <a
+            [routerLink]="routes.AUTH.REGISTER"
+            [queryParams]="{ role: 'candidate' }"
+            class="landing-btn landing-btn-white landing-btn-lg"
+          >
+            Compte candidat
+          </a>
+          <a
+            [routerLink]="routes.AUTH.REGISTER"
+            [queryParams]="{ role: 'recruiter' }"
+            class="landing-btn landing-btn-outline-white landing-btn-lg"
+          >
+            Compte recruteur
+          </a>
+        </div>
+      </div>
+    </section>
+  }
+
+  <footer class="landing-footer">
+    <div class="landing-container landing-footer-inner">
+      <div class="landing-footer-brand">
+        <span class="landing-logo-mark">JB</span>
+        <span>JobBoard</span>
+        <p class="landing-footer-tagline">Recrutement simplifié pour candidats et entreprises.</p>
+      </div>
+      <div class="landing-footer-links">
+        <a [routerLink]="routes.AUTH.LOGIN">Connexion</a>
+        <a [routerLink]="routes.AUTH.REGISTER">Inscription</a>
+        <a [routerLink]="routes.AUTH.FORGOT_PASSWORD">Mot de passe oublié</a>
+      </div>
+      <p class="landing-footer-copy">© {{ year }} JobBoard. Tous droits réservés.</p>
+    </div>
+  </footer>
+</div>

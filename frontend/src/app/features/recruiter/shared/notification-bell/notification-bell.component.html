@@ -1,0 +1,116 @@
+<div class="notif-bell" (click)="stopPropagation($event)">
+  <button
+    type="button"
+    class="bell-btn"
+    aria-label="Notifications"
+    [attr.aria-expanded]="open()"
+    (click)="togglePanel($event)"
+  >
+    <svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 2a5 5 0 0 0-5 5v2.1c0 .92-.37 1.8-1.03 2.45L4.3 13.7A1.5 1.5 0 0 0 5.5 16H18.5a1.5 1.5 0 0 0 1.2-2.3l-1.67-2.15A3.5 3.5 0 0 1 17 9.1V7a5 5 0 0 0-5-5zm0 20a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22z"
+        fill="currentColor"
+      />
+    </svg>
+    @if (unreadCount() > 0) {
+      <span class="bell-badge">{{ unreadCount() > 9 ? '9+' : unreadCount() }}</span>
+    }
+  </button>
+
+  @if (open()) {
+    <div class="notif-panel" role="dialog" aria-label="Notifications recruteur">
+      <div class="notif-panel-head">
+        <h2 class="notif-panel-title">Notifications</h2>
+        @if (unreadCount() > 0) {
+          <button type="button" class="notif-mark-all" (click)="markAllRead($event)">
+            Tout marquer lu
+          </button>
+        }
+      </div>
+
+      @if (loading()) {
+        <p class="notif-empty">Chargement…</p>
+      } @else {
+        <ul class="notif-list">
+          @for (n of notifications(); track n.id) {
+            <li>
+              <button
+                type="button"
+                class="notif-item"
+                [class.notif-item-unread]="!n.isRead"
+                (click)="openNotification($event, n)"
+              >
+                @if (avatarUrl(n); as src) {
+                  <img [src]="src" alt="" class="notif-avatar" />
+                } @else {
+                  <span class="notif-avatar-ph">{{ initials(n.candidateName) }}</span>
+                }
+                <span class="notif-body">
+                  <span class="notif-msg">{{ n.messageText }}</span>
+                  <span class="notif-time">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </span>
+                @if (!n.isRead) {
+                  <span class="notif-dot" aria-hidden="true"></span>
+                }
+              </button>
+            </li>
+          } @empty {
+            <li class="notif-empty">Aucune notification pour le moment.</li>
+          }
+        </ul>
+      }
+
+      <a
+        [routerLink]="routes.RECRUITER.ATS"
+        class="notif-footer-link"
+        (click)="open.set(false)"
+      >
+        Voir toutes les candidatures →
+      </a>
+    </div>
+  }
+</div>
+
+@if (detailOpen() && selectedNotification(); as n) {
+  <div
+    class="notif-detail-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="notif-detail-title"
+    (click)="closeDetail($event)"
+  >
+    <article class="notif-detail-card" (click)="stopPropagation($event)">
+      <button type="button" class="notif-detail-close" aria-label="Fermer" (click)="closeDetail($event)">
+        ×
+      </button>
+
+      <header class="notif-detail-header">
+        @if (avatarUrl(n); as src) {
+          <img [src]="src" alt="" class="notif-detail-avatar" />
+        } @else {
+          <span class="notif-detail-avatar-ph">{{ initials(n.candidateName) }}</span>
+        }
+        <div>
+          <p class="notif-detail-kicker">Nouvelle candidature</p>
+          <h3 id="notif-detail-title" class="notif-detail-name">{{ n.candidateName }}</h3>
+          <p class="notif-detail-job">Offre : <strong>{{ n.jobTitle }}</strong></p>
+        </div>
+      </header>
+
+      <p class="notif-detail-message">{{ n.messageText }}</p>
+      <p class="notif-detail-time">{{ n.createdAt | date: 'dd/MM/yyyy à HH:mm' }}</p>
+
+      <div class="notif-detail-actions">
+        <button type="button" class="btn-primary !w-full" (click)="goToApplication($event, n)">
+          Voir la candidature
+        </button>
+        <button type="button" class="btn-secondary !w-full" (click)="goToJob($event, n)">
+          Voir l'offre
+        </button>
+        <button type="button" class="notif-detail-dismiss" (click)="closeDetail($event)">
+          Fermer
+        </button>
+      </div>
+    </article>
+  </div>
+}

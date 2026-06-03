@@ -1,0 +1,37 @@
+<div class="logo-uploader">
+  <button
+    type="button"
+    class="logo-preview"
+    [class.logo-preview-drag]="dragOver()"
+    [disabled]="disabled()"
+    (click)="openPicker()"
+    (drop)="onDrop($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    aria-label="Upload company logo"
+  >
+    @if (displayUrl()) {
+      <img [src]="displayUrl()" alt="Company logo preview" class="logo-image" />
+    } @else {
+      <div class="logo-placeholder">
+        <span class="logo-placeholder-icon">+</span>
+        <span class="logo-placeholder-text">Upload logo</span>
+      </div>
+    }
+    <span class="logo-overlay">Change</span>
+  </button>
+
+  <input
+    #fileInput
+    type="file"
+    class="hidden"
+    accept="image/jpeg,image/png,image/webp"
+    (change)="onFileChange($event)"
+  />
+
+  <p class="logo-hint">JPG, PNG or WEBP. Max {{ maxSizeMb() }}MB. Circular crop preview.</p>
+
+  @if (errorMessage()) {
+    <p class="logo-error">{{ errorMessage() }}</p>
+  }
+</div>

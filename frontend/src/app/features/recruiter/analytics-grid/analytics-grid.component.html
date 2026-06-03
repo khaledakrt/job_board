@@ -1,0 +1,31 @@
+<div class="analytics-grid">
+  <article class="metric-card">
+    <p class="metric-label">Total jobs</p>
+    <p class="metric-value">{{ summary().totalJobs }}</p>
+    <p class="metric-foot">{{ summary().activeJobs }} active</p>
+  </article>
+
+  <article class="metric-card metric-card-accent">
+    <p class="metric-label">Total views</p>
+    <p class="metric-value">{{ summary().totalViews | number }}</p>
+    <p class="metric-foot">Across all postings</p>
+  </article>
+
+  <article class="metric-card metric-card-success">
+    <p class="metric-label">Total applicants</p>
+    <p class="metric-value">{{ summary().totalApplicants | number }}</p>
+    <p class="metric-foot">Pipeline volume</p>
+  </article>
+
+  <article class="metric-card metric-card-dark">
+    <p class="metric-label">Conversion</p>
+    <p class="metric-value">
+      @if (summary().totalViews > 0) {
+        {{ (summary().totalApplicants / summary().totalViews * 100) | number:'1.1-1' }}%
+      } @else {
+        0%
+      }
+    </p>
+    <p class="metric-foot">Applicants / views</p>
+  </article>
+</div>

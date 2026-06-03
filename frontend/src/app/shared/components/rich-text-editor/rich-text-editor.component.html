@@ -1,0 +1,76 @@
+<div class="rte" [class.rte-disabled]="disabled()">
+  <div class="rte-toolbar" role="toolbar" aria-label="Mise en forme du texte">
+    <div class="rte-toolbar-group rte-font-buttons" role="group" aria-label="Police">
+      <span class="rte-toolbar-label">Police</span>
+      @for (font of fonts; track font.id) {
+        <button
+          type="button"
+          class="rte-font-btn {{ font.className }}"
+          [class.rte-font-btn-active]="selectedFont() === font.id"
+          [disabled]="disabled()"
+          (mousedown)="$event.preventDefault()"
+          (click)="applyFont(font.id)"
+          [title]="font.label"
+          [attr.aria-label]="font.label"
+        >
+          {{ font.shortLabel }}
+        </button>
+      }
+    </div>
+    <div class="rte-toolbar-group rte-format-buttons" role="group" aria-label="Style">
+      <button
+        type="button"
+        class="rte-btn"
+        [class.rte-btn-active]="isFormatActive('bold')"
+        [disabled]="disabled()"
+        (mousedown)="$event.preventDefault()"
+        (click)="format('bold')"
+        title="Gras"
+        aria-label="Gras"
+      >
+        <strong>B</strong>
+      </button>
+      <button
+        type="button"
+        class="rte-btn"
+        [class.rte-btn-active]="isFormatActive('italic')"
+        [disabled]="disabled()"
+        (mousedown)="$event.preventDefault()"
+        (click)="format('italic')"
+        title="Italique"
+        aria-label="Italique"
+      >
+        <em>I</em>
+      </button>
+      <button
+        type="button"
+        class="rte-btn"
+        [class.rte-btn-active]="isFormatActive('underline')"
+        [disabled]="disabled()"
+        (mousedown)="$event.preventDefault()"
+        (click)="format('underline')"
+        title="Souligner"
+        aria-label="Souligner"
+      >
+        <span class="rte-underline">U</span>
+      </button>
+    </div>
+    <span class="rte-hint">Surlignez → police ou B/I/U</span>
+  </div>
+  @if (fontHint()) {
+    <p class="rte-font-hint" role="status">{{ fontHint() }}</p>
+  }
+  <div
+    #editor
+    class="rte-editor form-input"
+    [attr.id]="editorId()"
+    [attr.contenteditable]="!disabled()"
+    [attr.data-placeholder]="placeholder()"
+    [attr.aria-label]="placeholder()"
+    (input)="onEditorInput()"
+    (blur)="onEditorBlur()"
+    (mouseup)="onEditorSelectionChange()"
+    (keyup)="onEditorSelectionChange()"
+    (paste)="onPaste($event)"
+  ></div>
+</div>

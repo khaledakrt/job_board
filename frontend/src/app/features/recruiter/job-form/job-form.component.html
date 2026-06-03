@@ -1,0 +1,282 @@
+<div class="page-header row-between">
+  <div>
+    <h1 class="page-title">{{ isEditMode() ? 'Modifier l\'offre' : 'Créer une offre' }}</h1>
+    <p class="page-subtitle">Détail du poste, contrat et compétences.</p>
+  </div>
+  <a [routerLink]="routes.RECRUITER.JOBS" class="btn-secondary !w-auto">← Offres</a>
+</div>
+
+@if (errorMessage()) {
+  <div class="alert alert-error">{{ errorMessage() }}</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="job-form panel" novalidate>
+  <div class="form-grid">
+    <div class="form-field form-field-inline span-2">
+      <label class="form-label" for="title" title="Titre du poste">Ti.</label>
+      <div class="form-field-body">
+        <input
+          id="title"
+          class="form-input"
+          formControlName="title"
+          placeholder="Ex. Développeur full stack"
+        />
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="contractType" title="Type de contrat">Ct.</label>
+      <div class="form-field-body">
+        <select id="contractType" class="form-input" formControlName="contractType">
+          @for (type of contractTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="remoteType" title="Télétravail">Tt.</label>
+      <div class="form-field-body">
+        <select id="remoteType" class="form-input" formControlName="remoteType">
+          @for (type of remoteTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="location" title="Lieu de travail">Li.</label>
+      <div class="form-field-body">
+        <input
+          id="location"
+          class="form-input"
+          formControlName="location"
+          placeholder="Ex. Paris, Lyon…"
+        />
+      </div>
+    </div>
+
+    @if (isExpiredJob()) {
+      <div class="form-field form-field-inline span-2">
+        <label class="form-label" title="Date d'expiration">Ex.</label>
+        <div class="form-field-body">
+          <p class="field-readonly">Offre expirée le {{ form.controls.expiresAt.value | date: 'dd/MM/yyyy' }}</p>
+        </div>
+      </div>
+    } @else {
+      <div class="form-field form-field-inline">
+        <label class="form-label" for="expiresAt" title="Date d'expiration">Ex.</label>
+        <div class="form-field-body">
+          <input id="expiresAt" type="date" class="form-input" formControlName="expiresAt" />
+          <p class="field-hint">« Expirée » à 23h59 ce jour-là.</p>
+        </div>
+      </div>
+
+      <div class="form-field form-field-inline">
+        <label class="form-label" for="status" title="Statut de l'offre">St.</label>
+        <div class="form-field-body">
+          <select id="status" class="form-input" formControlName="status">
+            @for (status of jobStatuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+          <p class="field-hint">{{ statusHints[form.controls.status.value] }}</p>
+        </div>
+      </div>
+    }
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="experienceYears" title="Expérience minimum">Xp.</label>
+      <div class="form-field-body">
+        <input
+          id="experienceYears"
+          type="number"
+          min="0"
+          max="50"
+          class="form-input"
+          formControlName="experienceYears"
+          placeholder="Ans min. (0 = débutant)"
+          title="Années d'expérience minimum"
+        />
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="salaryLabel" title="Salaire">€</label>
+      <div class="form-field-body">
+        <input
+          id="salaryLabel"
+          type="text"
+          class="form-input"
+          formControlName="salaryLabel"
+          placeholder="Ex. 45–55 k€ / an"
+          title="Montant ou formulation libre"
+        />
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline form-field-inline-top span-2">
+      <label class="form-label" for="languageInput" title="Langues">Lg.</label>
+      <div class="form-field-body">
+        <div class="tag-input-row">
+          <input
+            id="languageInput"
+            class="form-input"
+            [value]="languageInput()"
+            (input)="languageInput.set($any($event.target).value)"
+            (keydown)="onLanguageKeydown($event)"
+            placeholder="Français, Anglais… puis Entrée"
+          />
+          <button type="button" class="btn-secondary !w-auto" (click)="addLanguage()">+</button>
+        </div>
+        <div class="tag-list">
+          @for (lang of languages(); track lang) {
+            <span class="tag-chip tag-chip-lang">
+              {{ lang }}
+              <button
+                type="button"
+                class="tag-remove"
+                (click)="removeLanguage(lang)"
+                aria-label="Retirer la langue"
+              >
+                ×
+              </button>
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline form-field-inline-top span-2">
+      <label class="form-label" for="description" title="Description du poste">De.</label>
+      <div class="form-field-body">
+        <app-rich-text-editor
+          editorId="description"
+          formControlName="description"
+          placeholder="Décrivez le poste, la mission, l'équipe…"
+        />
+        @if (form.controls.description.touched && form.controls.description.hasError('richTextMinLength')) {
+          <p class="field-hint field-hint-error">Min. 20 caractères.</p>
+        }
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline form-field-inline-top span-2">
+      <label class="form-label" for="requirements" title="Profil recherché">Pf.</label>
+      <div class="form-field-body">
+        <app-rich-text-editor
+          editorId="requirements"
+          formControlName="requirements"
+          placeholder="Diplômes, compétences, expérience…"
+        />
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline form-field-inline-top span-2">
+      <label class="form-label" for="tagInput" title="Compétences techniques">Sk.</label>
+      <div class="form-field-body">
+        <div class="tag-input-row">
+          <input
+            id="tagInput"
+            class="form-input"
+            [value]="tagInput()"
+            (input)="tagInput.set($any($event.target).value)"
+            (keydown)="onTagKeydown($event)"
+            placeholder="Angular, Node.js… puis Entrée"
+          />
+          <button type="button" class="btn-secondary !w-auto" (click)="addTag()">+</button>
+        </div>
+        <div class="tag-list">
+          @for (tag of tags(); track tag) {
+            <span class="tag-chip">
+              {{ tag }}
+              <button type="button" class="tag-remove" (click)="removeTag(tag)" aria-label="Retirer">×</button>
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline form-field-inline-top span-2">
+      <label class="form-label" for="benefitInput" title="Avantages">Av.</label>
+      <div class="form-field-body">
+        <div class="tag-input-row">
+          <input
+            id="benefitInput"
+            class="form-input"
+            [value]="benefitInput()"
+            (input)="benefitInput.set($any($event.target).value)"
+            (keydown)="onBenefitKeydown($event)"
+            placeholder="Sorties, tickets resto, ambiance… puis Entrée"
+          />
+          <button type="button" class="btn-secondary !w-auto" (click)="addBenefit()">+</button>
+        </div>
+        <p class="field-hint">Ex. sorties d'équipe, tickets restaurant, télétravail, mutuelle…</p>
+        <div class="tag-list">
+          @for (benefit of benefits(); track benefit) {
+            <span class="tag-chip tag-chip-benefit">
+              {{ benefit }}
+              <button
+                type="button"
+                class="tag-remove"
+                (click)="removeBenefit(benefit)"
+                aria-label="Retirer l'avantage"
+              >
+                ×
+              </button>
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <section class="quiz-section span-2 panel-card">
+      <div class="quiz-section-head">
+        <div>
+          <h2 class="quiz-section-title">Quiz (optionnel)</h2>
+          <p class="field-hint">2 questions — indiquez la bonne réponse (contrôle côté recruteur à la réception).</p>
+        </div>
+        <label class="quiz-toggle">
+          <input
+            type="checkbox"
+            [checked]="quizEnabled()"
+            (change)="toggleQuizEnabled($any($event.target).checked)"
+          />
+          <span>Activer le quiz</span>
+        </label>
+      </div>
+
+      @if (quizEnabled()) {
+        <div class="quiz-section-actions">
+          @if (quizConfigured()) {
+            <span class="quiz-status-ok">Quiz configuré (2 questions)</span>
+          } @else {
+            <span class="quiz-status-warn">Quiz non configuré</span>
+          }
+          <button type="button" class="btn-secondary !w-auto" (click)="openQuizModal()">
+            {{ quizConfigured() ? 'Modifier le quiz' : 'Configurer le quiz' }}
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn-primary !w-auto" [disabled]="saving() || !context.canPostJob()">
+      @if (saving()) { Enregistrement… } @else { {{ isEditMode() ? 'Mettre à jour' : 'Publier l\'offre' }} }
+    </button>
+  </div>
+</form>
+
+@if (quizModalOpen()) {
+  <app-job-quiz-modal
+    [quiz]="quiz()"
+    [generating]="quizGenerating()"
+    [errorMessage]="quizError()"
+    (generateAi)="generateQuizAi()"
+    (save)="onQuizSaved($event)"
+    (cancel)="closeQuizModal()"
+  />
+}

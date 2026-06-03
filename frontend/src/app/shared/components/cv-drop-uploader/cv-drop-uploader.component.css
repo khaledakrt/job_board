@@ -1,0 +1,48 @@
+.cv-drop {
+  border: 2px dashed #94a3b8;
+  border-radius: 1rem;
+  background: #f8fafc;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cv-drop:hover,
+.cv-drop-active {
+  border-color: #0a66c2;
+  background: #eef3f8;
+}
+
+.cv-drop-icon {
+  font-size: 2rem;
+}
+
+.cv-drop-title {
+  margin-top: 0.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cv-drop-sub {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.cv-drop-file {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0a66c2;
+}
+
+.cv-drop-error {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #d93025;
+}
+
+.hidden {
+  display: none;
+}

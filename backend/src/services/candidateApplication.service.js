@@ -1,0 +1,204 @@
+'use strict';
+
+const { Application, Job, Company, CandidateProfile, ApplicationNote } = require('../models');
+const ApiError = require('../utils/ApiError');
+const { JOB_STATUS, APPLICATION_STATUS } = require('../config/constants');
+const { generateUuid } = require('../utils/uuid');
+const { copyResumeToSnapshot } = require('../utils/fileStorage');
+const { generateCoverLetter } = require('../utils/coverLetterGenerator');
+const { validateQuizAnswers } = require('../utils/jobQuiz');
+const recruiterNotificationService = require('./recruiterNotification.service');
+
+function formatApplication(application) {
+  return {
+    id: application.id,
+    jobId: application.job_id,
+    candidateId: application.candidate_id,
+    status: application.status,
+    coverLetter: application.cover_letter,
+    resumeSnapshotUrl: application.resume_snapshot_url,
+    rating: application.rating,
+    createdAt: application.created_at,
+    updatedAt: application.updated_at,
+    job: application.job
+      ? {
+          id: application.job.id,
+          title: application.job.title,
+          location: application.job.location,
+          remoteType: application.job.remote_type,
+          contractType: application.job.contract_type,
+          company: application.job.company
+            ? {
+                id: application.job.company.id,
+                name: application.job.company.name,
+                logoUrl: application.job.company.logo_url,
+              }
+            : null,
+        }
+      : null,
+  };
+}
+
+async function listCandidateApplications(candidateId) {
+  const applications = await Application.findAll({
+    where: { candidate_id: candidateId },
+    include: [
+      {
+        model: Job,
+        as: 'job',
+        include: [{ model: Company, as: 'company' }],
+      },
+    ],
+    order: [['updated_at', 'DESC']],
+  });
+
+  return applications.map(formatApplication);
+}
+
+async function listAppliedJobIds(candidateId) {
+  const applications = await Application.findAll({
+    where: { candidate_id: candidateId },
+    attributes: ['job_id'],
+  });
+  return applications.map((a) => a.job_id);
+}
+
+async function applyToJob({ candidate, jobId, coverLetter, quizAnswers }) {
+  const job = await Job.findOne({
+    where: {
+      id: jobId,
+      status: JOB_STATUS.ACTIVE,
+    },
+    include: [{ model: Company, as: 'company' }],
+  });
+
+  if (!job) {
+    throw ApiError.notFound('Job not found or no longer accepting applications');
+  }
+
+  if (!candidate.resume_url) {
+    throw ApiError.badRequest(
+      'Ajoutez un CV sur votre profil (import PDF ou génération depuis le profil manuel) avant de postuler.'
+    );
+  }
+
+  const existingApplication = await Application.findOne({
+    where: {
+      job_id: jobId,
+      candidate_id: candidate.id,
+    },
+  });
+
+  if (existingApplication) {
+    throw ApiError.conflict('Vous avez déjà postulé à cette offre');
+  }
+
+  let storedQuizAnswers = null;
+  if (job.quiz_enabled) {
+    const quizCheck = validateQuizAnswers(job.quiz_data, quizAnswers);
+    if (!quizCheck.ok) {
+      throw ApiError.badRequest(quizCheck.message);
+    }
+    storedQuizAnswers = quizCheck.stored;
+  } else if (quizAnswers?.length) {
+    throw ApiError.badRequest('This job does not require a quiz');
+  }
+
+  const resumeSnapshotUrl = await copyResumeToSnapshot(candidate.resume_url);
+
+  const application = await Application.create({
+    id: generateUuid(),
+    job_id: jobId,
+    candidate_id: candidate.id,
+    status: APPLICATION_STATUS.APPLIED,
+    cover_letter: coverLetter || null,
+    quiz_answers: storedQuizAnswers,
+    resume_snapshot_url: resumeSnapshotUrl,
+    rating: null,
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
+
+  await job.increment('applications_count', { by: 1 });
+
+  await recruiterNotificationService.notifyNewApplication({
+    application,
+    job,
+    candidate,
+  });
+
+  return {
+    application: formatApplication(application),
+    job: {
+      id: job.id,
+      title: job.title,
+      companyName: job.company?.name,
+    },
+  };
+}
+
+async function getCandidateApplicationDetail({ candidateId, applicationId }) {
+  const application = await Application.findOne({
+    where: { id: applicationId, candidate_id: candidateId },
+    include: [
+      {
+        model: Job,
+        as: 'job',
+        include: [{ model: Company, as: 'company' }],
+      },
+      {
+        model: ApplicationNote,
+        as: 'notes',
+        separate: true,
+        order: [['created_at', 'DESC']],
+      },
+    ],
+  });
+
+  if (!application) {
+    throw ApiError.notFound('Application not found');
+  }
+
+  const formatted = formatApplication(application);
+
+  return {
+    ...formatted,
+    notes: (application.notes || []).map((note) => ({
+      id: note.id,
+      authorId: note.author_id,
+      noteText: note.note_text,
+      createdAt: note.created_at,
+    })),
+  };
+}
+
+async function generateApplicationLetter({ candidate, jobId }) {
+  const job = await Job.findOne({
+    where: {
+      id: jobId,
+      status: JOB_STATUS.ACTIVE,
+    },
+    include: [{ model: Company, as: 'company' }],
+  });
+
+  if (!job) {
+    throw ApiError.notFound('Job not found or not active');
+  }
+
+  const letter = generateCoverLetter({
+    candidate,
+    job,
+    company: job.company,
+  });
+
+  return letter;
+}
+
+module.exports = {
+  listCandidateApplications,
+  listAppliedJobIds,
+  getCandidateApplicationDetail,
+  applyToJob,
+  generateApplicationLetter,
+  formatApplication,
+};

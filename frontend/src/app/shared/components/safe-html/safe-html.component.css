@@ -1,0 +1,41 @@
+.safe-html {
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.safe-html b,
+.safe-html strong {
+  font-weight: 700;
+}
+
+.safe-html i,
+.safe-html em {
+  font-style: italic;
+}
+
+.safe-html u {
+  text-decoration: underline;
+}
+
+.safe-html p {
+  margin: 0 0 0.5rem;
+}
+
+.safe-html p:last-child {
+  margin-bottom: 0;
+}
+
+.safe-html .rte-font-arial,
+.safe-html .rte-font-default {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.safe-html .rte-font-serif {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.safe-html .rte-font-comic,
+.safe-html .rte-font-mono,
+.safe-html .rte-font-modern {
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+}

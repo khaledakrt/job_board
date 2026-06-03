@@ -1,0 +1,148 @@
+.back-link {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0a66c2;
+  text-decoration: none;
+  margin-bottom: 0.35rem;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.visibility-banner {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #fff8ed;
+  color: #b36a00;
+  border: 1px solid #ffdb9e;
+}
+
+.visibility-public {
+  background: #ecfdf5;
+  color: #046139;
+  border-color: #a7f3d0;
+}
+
+.preview-card {
+  padding: 1.35rem 1.5rem;
+}
+
+.preview-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.preview-logo,
+.preview-logo-ph {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.65rem;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.preview-logo-ph {
+  display: grid;
+  place-items: center;
+  background: #eef3f8;
+  color: #074484;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.preview-header h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.preview-co {
+  color: #0a66c2;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+.preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1rem 0;
+}
+
+.preview-meta span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #074484;
+}
+
+.meta-salary {
+  background: #ecfdf5 !important;
+  color: #046139 !important;
+}
+
+.tag-chip-lang {
+  background: #f0fdf4;
+  color: #046139;
+  border: 1px solid #bbf7d0;
+}
+
+.tag-chip-benefit {
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.preview-tags-lang {
+  margin-bottom: 0.5rem;
+}
+
+.preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.tag-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #074484;
+}
+
+.section-title {
+  margin-top: 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #0f172a;
+}
+
+.preview-text {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: #334155;
+  white-space: pre-wrap;
+}

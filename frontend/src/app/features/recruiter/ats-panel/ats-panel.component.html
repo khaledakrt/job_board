@@ -1,0 +1,540 @@
+<div class="page-header row-between">
+  <div>
+    <h1 class="page-title">Suivi des candidatures</h1>
+    <p class="page-subtitle">
+      @if (selectedJobTitle(); as title) {
+        Offre : <strong>{{ title }}</strong> — cliquez sur une carte pour voir le profil puis le CV.
+      } @else {
+        Filtrez par offre — basculez entre vue Kanban et liste.
+      }
+    </p>
+  </div>
+
+  <div class="header-tools">
+    <div class="view-toggle" role="group" aria-label="Mode d'affichage">
+      <button
+        type="button"
+        class="view-toggle-btn"
+        [class.view-toggle-active]="viewMode() === 'kanban'"
+        (click)="setViewMode('kanban')"
+      >
+        Kanban
+      </button>
+      <button
+        type="button"
+        class="view-toggle-btn"
+        [class.view-toggle-active]="viewMode() === 'list'"
+        (click)="setViewMode('list')"
+      >
+        Liste
+      </button>
+    </div>
+
+    <div class="filter-wrap">
+      <label class="form-label" for="jobFilter">Filtrer par offre</label>
+      <select
+        id="jobFilter"
+        class="form-input filter-select"
+        [value]="selectedJobId()"
+        (change)="onJobFilterChange($event)"
+      >
+        <option value="">Toutes les offres</option>
+        @for (job of jobs(); track job.id) {
+          <option [value]="job.id">{{ job.title }}</option>
+        }
+      </select>
+    </div>
+    @if (selectedJobId()) {
+      <button type="button" class="btn-secondary !w-auto px-3" (click)="clearJobFilter()">Tout afficher</button>
+    }
+    <a [routerLink]="routes.RECRUITER.JOBS" class="btn-secondary !w-auto px-3">← Offres</a>
+  </div>
+</div>
+
+@if (errorMessage()) {
+  <div class="alert alert-error">{{ errorMessage() }}</div>
+}
+@if (successMessage()) {
+  <div class="alert alert-success">{{ successMessage() }}</div>
+}
+
+@if (pagination(); as p) {
+  @if (p.totalItems > 0) {
+    <p class="ats-summary panel-card">{{ pageSummary() }}</p>
+  }
+}
+
+@if (loading()) {
+  <p class="table-loading panel-card">Chargement des candidatures...</p>
+} @else if (viewMode() === 'kanban') {
+  <div class="kanban-board">
+    @for (column of columns(); track column.status) {
+      <section
+        class="kanban-column"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, column.status)"
+      >
+        <header class="column-header">
+          <h2>{{ column.label }}</h2>
+          <span class="column-count">{{ column.items.length }}</span>
+        </header>
+
+        <div class="column-body">
+          @for (app of column.items; track app.id) {
+            <article
+              class="candidate-card"
+              draggable="true"
+              (dragstart)="onDragStart($event, app.id)"
+              (click)="openPanel(app, 'profile')"
+            >
+              <div class="card-top">
+                @if (avatarUrl(app); as av) {
+                  <img [src]="av" alt="" class="card-avatar" />
+                } @else {
+                  <div class="card-avatar-ph">{{ candidateName(app).charAt(0) }}</div>
+                }
+                <div class="card-head-text">
+                  <h3>{{ candidateName(app) }}</h3>
+                  <p class="card-title-line">{{ candidateTitle(app) }}</p>
+                </div>
+                @if (app.rating) {
+                  <span class="mini-rating">{{ app.rating }}★</span>
+                }
+              </div>
+              <p class="card-job">{{ app.job?.title || 'Offre' }}</p>
+              <div class="card-actions" (click)="$event.stopPropagation()">
+                <button type="button" class="card-btn" (click)="openPanel(app, 'profile')">Profil</button>
+                <button type="button" class="card-btn card-btn-cv" (click)="openPanel(app, 'cv')">CV</button>
+              </div>
+            </article>
+          } @empty {
+            <p class="column-empty">Aucun candidat</p>
+          }
+        </div>
+      </section>
+    }
+  </div>
+} @else {
+  <div class="ats-list panel-card">
+    <table class="ats-table">
+      <thead>
+        <tr>
+          <th>Candidat</th>
+          <th>Offre</th>
+          <th>Étape</th>
+          <th>Note</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (app of applications(); track app.id) {
+          <tr class="ats-row" (click)="openPanel(app, 'profile')">
+            <td>
+              <div class="list-candidate">
+                @if (avatarUrl(app); as av) {
+                  <img [src]="av" alt="" class="list-avatar" />
+                } @else {
+                  <span class="list-avatar-ph">{{ candidateInitials(app) }}</span>
+                }
+                <div>
+                  <strong>{{ candidateName(app) }}</strong>
+                  <span class="list-sub">{{ candidateTitle(app) }}</span>
+                </div>
+              </div>
+            </td>
+            <td>{{ app.job?.title || '—' }}</td>
+            <td (click)="$event.stopPropagation()">
+              <div class="stage-cell">
+                <span [class]="stageBadgeClass(app.status)">{{ stageLabel(app.status) }}</span>
+                @if (context.canDecideApplication()) {
+                  <select
+                    class="stage-select"
+                    [value]="app.status"
+                    [disabled]="saving()"
+                    (change)="onListStatusChange(app, $event)"
+                    [attr.aria-label]="'Changer l\'étape de ' + candidateName(app)"
+                  >
+                    @for (col of stageColumns; track col.status) {
+                      <option [value]="col.status">{{ col.label }}</option>
+                    }
+                  </select>
+                }
+              </div>
+            </td>
+            <td>
+              @if (app.rating) {
+                {{ app.rating }}★
+              } @else {
+                —
+              }
+            </td>
+            <td>{{ app.createdAt | date: 'dd/MM/yyyy' }}</td>
+            <td (click)="$event.stopPropagation()">
+              <div class="list-actions">
+                <button type="button" class="card-btn" (click)="openPanel(app, 'profile')">Profil</button>
+                <button type="button" class="card-btn card-btn-cv" (click)="openPanel(app, 'cv')">CV</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="column-empty">Aucune candidature sur cette page.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (pagination(); as p) {
+  @if (p.totalPages > 1) {
+    <nav class="pagination-bar panel-card" aria-label="Pagination candidatures">
+      <button
+        type="button"
+        class="pagination-btn"
+        [disabled]="!p.hasPreviousPage || loading()"
+        (click)="goToPage(p.page - 1)"
+      >
+        ← Précédent
+      </button>
+
+      <div class="pagination-pages">
+        @for (pageNum of pageNumbers(); track pageNum) {
+          <button
+            type="button"
+            class="pagination-page"
+            [class.pagination-page-active]="p.page === pageNum"
+            [disabled]="loading()"
+            (click)="goToPage(pageNum)"
+          >
+            {{ pageNum }}
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="pagination-btn"
+        [disabled]="!p.hasNextPage || loading()"
+        (click)="goToPage(p.page + 1)"
+      >
+        Suivant →
+      </button>
+    </nav>
+  }
+}
+
+@if (panelOpen() && selectedApplication(); as selected) {
+  <div class="drawer-backdrop" (click)="closePanel()"></div>
+  <aside
+    class="detail-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-candidate-name"
+    [style.width.px]="drawerWidthPx()"
+    [class.detail-drawer-resizing]="drawerResizing()"
+  >
+    <div
+      class="drawer-resize-handle"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Glisser vers la gauche ou la droite pour redimensionner le panneau"
+      title="Redimensionner (glisser gauche / droite)"
+      (mousedown)="onDrawerResizeStart($event)"
+    ></div>
+    <header class="drawer-hero">
+      <button type="button" class="drawer-close" (click)="closePanel()" aria-label="Fermer">×</button>
+      <div class="drawer-hero-main">
+        @if (avatarUrl(selected); as av) {
+          <img [src]="av" alt="" class="drawer-avatar" />
+        } @else {
+          <div class="drawer-avatar-ph">{{ candidateInitials(selected) }}</div>
+        }
+        <div class="drawer-hero-text">
+          <span [class]="drawerStatusClass(selected.status)">{{ statusLabels[selected.status] }}</span>
+          <h2 id="drawer-candidate-name">{{ candidateName(selected) }}</h2>
+          <p class="drawer-sub">{{ selected.candidate?.professionalTitle || 'Profil candidat' }}</p>
+          @if (selected.job?.title; as jobTitle) {
+            <p class="drawer-job-pill">{{ jobTitle }}</p>
+          }
+        </div>
+      </div>
+      <div class="drawer-hero-meta">
+        <span class="drawer-meta-item">
+          <span class="drawer-meta-label">Postulé</span>
+          <span class="drawer-meta-value">{{ selected.createdAt | date: 'dd MMM yyyy' }}</span>
+        </span>
+        @if (selected.rating) {
+          <span class="drawer-meta-item">
+            <span class="drawer-meta-label">Note</span>
+            <span class="drawer-meta-value drawer-rating">{{ selected.rating }} ★</span>
+          </span>
+        }
+        @if (selected.candidate?.minSalary; as minSalary) {
+          <span class="drawer-meta-item">
+            <span class="drawer-meta-label">Salaire min.</span>
+            <span class="drawer-meta-value">{{ minSalary | number }} €</span>
+          </span>
+        }
+      </div>
+    </header>
+
+    <nav class="drawer-tabs" aria-label="Contenu candidature">
+      <button
+        type="button"
+        class="drawer-tab"
+        [class.drawer-tab-active]="drawerTab() === 'profile'"
+        (click)="setDrawerTab('profile')"
+      >
+        Profil & candidature
+      </button>
+      <button
+        type="button"
+        class="drawer-tab"
+        [class.drawer-tab-active]="drawerTab() === 'cv'"
+        (click)="setDrawerTab('cv')"
+      >
+        CV
+      </button>
+    </nav>
+
+    <div class="drawer-scroll">
+      @if (drawerTab() === 'profile') {
+        <section class="drawer-card">
+          <h3 class="drawer-card-title">Contact</h3>
+          <div class="contact-grid">
+            @if (selected.candidate?.email; as email) {
+              <a class="contact-item" [href]="'mailto:' + email">
+                <span class="contact-icon" aria-hidden="true">&#64;</span>
+                <span>
+                  <span class="contact-label">E-mail</span>
+                  <span class="contact-value">{{ email }}</span>
+                </span>
+              </a>
+            }
+            @if (selected.candidate?.phone; as phone) {
+              <a class="contact-item" [href]="'tel:' + phone">
+                <span class="contact-icon contact-icon-tel" aria-hidden="true">T</span>
+                <span>
+                  <span class="contact-label">Téléphone</span>
+                  <span class="contact-value">{{ phone }}</span>
+                </span>
+              </a>
+            }
+          </div>
+        </section>
+
+        @if (selected.candidate?.skills?.length) {
+          <section class="drawer-card">
+            <h3 class="drawer-card-title">Compétences</h3>
+            <div class="skill-tags">
+              @for (skill of selected.candidate!.skills!; track skill) {
+                <span class="skill-tag">{{ skill }}</span>
+              }
+            </div>
+          </section>
+        }
+
+        @if (selected.candidate?.bio; as bio) {
+          <section class="drawer-card">
+            <h3 class="drawer-card-title">À propos</h3>
+            <p class="profile-text">{{ bio }}</p>
+          </section>
+        }
+
+        @if (selected.quizReview?.questions?.length) {
+          <section class="drawer-card">
+            <h3 class="drawer-card-title">Réponses au quiz</h3>
+            <p class="quiz-review-intro">
+              Vert = bonne réponse du candidat · Rouge = réponse incorrecte
+            </p>
+            @for (q of selected.quizReview!.questions; track q.questionIndex) {
+              <article class="quiz-review-card">
+                <p class="quiz-review-q">
+                  <span class="quiz-review-num">Q{{ q.questionIndex + 1 }}</span>
+                  {{ q.text }}
+                </p>
+                <ul class="quiz-review-choices">
+                  @for (choice of q.choices; track $index; let ci = $index) {
+                    <li
+                      class="quiz-review-choice"
+                      [class.quiz-choice-correct]="q.candidateChoiceIndex === ci && q.isCorrect"
+                      [class.quiz-choice-wrong]="q.candidateChoiceIndex === ci && !q.isCorrect"
+                      [class.quiz-choice-expected]="q.correctChoiceIndex === ci && !q.isCorrect"
+                    >
+                      {{ choice.text }}
+                      @if (q.candidateChoiceIndex === ci) {
+                        <span class="quiz-choice-badge">Réponse candidat</span>
+                      }
+                      @if (q.correctChoiceIndex === ci) {
+                        <span class="quiz-choice-badge quiz-choice-badge-ok">Bonne réponse</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              </article>
+            }
+          </section>
+        }
+
+        @if (selected.coverLetter) {
+          <section class="drawer-card">
+            <h3 class="drawer-card-title">Lettre de motivation</h3>
+            <div class="cover-letter-box" [class.cover-letter-expanded]="coverLetterExpanded()">
+              <p class="profile-text cover-letter-text">
+                {{ coverLetterPreview(selected.coverLetter) }}
+              </p>
+            </div>
+            @if (selected.coverLetter.length > 280) {
+              <button type="button" class="cover-letter-toggle" (click)="toggleCoverLetter()">
+                @if (coverLetterExpanded()) { Réduire } @else { Lire la suite }
+              </button>
+            }
+          </section>
+        }
+
+        @if (selected.candidate?.experiences?.length) {
+          <section class="drawer-card">
+            <h3 class="drawer-card-title">Expériences</h3>
+            <ul class="timeline">
+              @for (exp of selected.candidate!.experiences!; track $index) {
+                <li class="timeline-item">
+                  <div class="timeline-dot" aria-hidden="true"></div>
+                  <div class="timeline-body">
+                    <p class="timeline-title">{{ exp.title || 'Poste' }}</p>
+                    <p class="timeline-sub">{{ exp.company || 'Entreprise' }}</p>
+                    @if (exp.startDate || exp.endDate) {
+                      <p class="timeline-dates">
+                        {{ exp.startDate || '—' }} – {{ exp.endDate || 'présent' }}
+                      </p>
+                    }
+                    @if (exp.description) {
+                      <p class="timeline-desc">{{ exp.description }}</p>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (selected.candidate?.education?.length) {
+          <section class="drawer-card">
+            <h3 class="drawer-card-title">Formation</h3>
+            <ul class="timeline">
+              @for (edu of selected.candidate!.education!; track $index) {
+                <li class="timeline-item">
+                  <div class="timeline-dot timeline-dot-edu" aria-hidden="true"></div>
+                  <div class="timeline-body">
+                    <p class="timeline-title">{{ edu.degree || 'Diplôme' }}</p>
+                    <p class="timeline-sub">{{ edu.institution || 'Établissement' }}</p>
+                    @if (edu.startDate || edu.endDate) {
+                      <p class="timeline-dates">
+                        {{ edu.startDate || '—' }} – {{ edu.endDate || '—' }}
+                      </p>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+
+      @if (drawerTab() === 'cv') {
+        <section class="drawer-card cv-section">
+          @if (resumeUrl(selected); as cvUrl) {
+            <h3 class="drawer-card-title">CV du candidat</h3>
+            <p class="cv-hint">Fichier joint à cette candidature (snapshot ou CV actuel).</p>
+            <div class="cv-actions">
+              <a [href]="cvUrl" target="_blank" rel="noopener" class="btn-primary !w-auto px-5">
+                Ouvrir le PDF
+              </a>
+              <button type="button" class="btn-secondary !w-auto px-4" (click)="viewResume(selected)">
+                Nouvel onglet
+              </button>
+            </div>
+            @if (cvPreviewLoading()) {
+              <p class="cv-hint">Chargement de l’aperçu…</p>
+            }
+            @if (cvPreviewError()) {
+              <p class="alert alert-error">{{ cvPreviewError() }}</p>
+            }
+            @if (cvPreviewSrc(); as previewSrc) {
+              <iframe [src]="previewSrc" class="cv-frame" title="Aperçu CV"></iframe>
+            }
+          } @else {
+            <p class="drawer-empty">Aucun CV n’a été téléversé pour cette candidature.</p>
+          }
+        </section>
+      }
+
+      <section class="drawer-card drawer-card-actions">
+        <h3 class="drawer-card-title">Évaluation & suivi</h3>
+        <div class="rating-row">
+          <span class="rating-label">Note interne</span>
+          <app-star-rating
+            [rating]="selected.rating"
+            [disabled]="!context.canDecideApplication() || saving()"
+            (ratingChange)="onRatingChange($event)"
+          />
+        </div>
+
+        <p class="subsection-label">Étape du pipeline</p>
+        <div class="status-actions">
+          @for (status of statuses; track status) {
+            <button
+              type="button"
+              class="status-chip"
+              [class.status-chip-active]="selected.status === status"
+              [disabled]="!context.canDecideApplication() || saving()"
+              (click)="moveToStatus(status)"
+            >
+              {{ statusLabels[status] }}
+            </button>
+          }
+        </div>
+      </section>
+
+      <form [formGroup]="noteForm" (ngSubmit)="submitNote()" class="drawer-card">
+        <h3 class="drawer-card-title">Message au candidat</h3>
+        <textarea
+          class="form-input drawer-textarea"
+          rows="2"
+          formControlName="evaluationText"
+          placeholder="Texte optionnel envoyé par e-mail au candidat…"
+        ></textarea>
+
+        <h3 class="drawer-card-title drawer-card-title-spaced">Nouvelle note interne</h3>
+        <textarea
+          class="form-input drawer-textarea"
+          rows="3"
+          formControlName="noteText"
+          placeholder="Note visible dans l’historique…"
+        ></textarea>
+        <button
+          type="submit"
+          class="btn-primary !w-full"
+          [disabled]="saving() || !context.canDecideApplication()"
+        >
+          @if (saving()) { Envoi… } @else { Enregistrer la note }
+        </button>
+      </form>
+
+      <section class="drawer-card">
+        <h3 class="drawer-card-title">Historique des notes</h3>
+        <div class="notes-list">
+          @for (note of selected.notes; track note.id) {
+            <article class="note-item">
+              <p>{{ note.noteText }}</p>
+              <time>{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+            </article>
+          } @empty {
+            <p class="drawer-empty">Aucune note pour le moment.</p>
+          }
+        </div>
+      </section>
+    </div>
+  </aside>
+}

@@ -1,0 +1,19 @@
+<div
+  class="cv-drop"
+  [class.cv-drop-active]="dragOver()"
+  (drop)="onDrop($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave()"
+  (click)="openPicker()"
+>
+  <div class="cv-drop-icon">📄</div>
+  <p class="cv-drop-title">Drag & drop your CV (PDF)</p>
+  <p class="cv-drop-sub">or click to browse — we will parse and pre-fill your profile</p>
+  @if (fileName()) {
+    <p class="cv-drop-file">{{ fileName() }}</p>
+  }
+</div>
+<input #fileInput type="file" class="hidden" accept="application/pdf" (change)="onFileChange($event)" />
+@if (errorMessage()) {
+  <p class="cv-drop-error">{{ errorMessage() }}</p>
+}

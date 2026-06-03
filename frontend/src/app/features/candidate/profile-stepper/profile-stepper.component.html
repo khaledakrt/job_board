@@ -1,0 +1,234 @@
+<div class="page-header">
+  <h1 class="page-title">Mon profil</h1>
+  <p class="page-subtitle">
+    Complétez votre profil en trois étapes pour postuler et être visible des recruteurs.
+    @if (context.hasProfile()) {
+      <span class="profile-completion"> — {{ context.profileCompletion() }}% complété</span>
+    }
+  </p>
+</div>
+
+<div class="stepper-nav">
+  @for (step of [1, 2, 3]; track step) {
+    <button
+      type="button"
+      class="step-pill"
+      [class.step-pill-active]="currentStep() === step"
+      [class.step-pill-done]="currentStep() > step"
+      (click)="currentStep.set(step)"
+    >
+      @switch (step) {
+        @case (1) { Identité & CV }
+        @case (2) { Expérience }
+        @case (3) { Formation }
+      }
+    </button>
+  }
+</div>
+
+@if (message()) {
+  <div class="alert alert-success">{{ message() }}</div>
+}
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+@if (currentStep() === 1) {
+  <section class="step-panel panel-card">
+    <div class="step-grid">
+      <div>
+        <h2 class="panel-title">CV et identité</h2>
+
+        <div class="cv-mode-tabs" role="tablist">
+          <button
+            type="button"
+            class="cv-mode-tab"
+            [class.cv-mode-tab--active]="cvMode() === 'manual'"
+            (click)="setCvMode('manual')"
+          >
+            Créer mon CV manuellement
+          </button>
+          <button
+            type="button"
+            class="cv-mode-tab"
+            [class.cv-mode-tab--active]="cvMode() === 'import'"
+            (click)="setCvMode('import')"
+          >
+            Importer un PDF
+          </button>
+        </div>
+
+        @if (cvMode() === 'manual') {
+          <p class="panel-hint">
+            Remplissez les 3 étapes (identité, expériences, formation). À l'enregistrement, un
+            <strong>CV PDF</strong> sera généré automatiquement pour les recruteurs.
+          </p>
+        } @else {
+          <p class="panel-hint">
+            Importez votre CV (PDF). Corrigez les données extraites puis appliquez au profil.
+          </p>
+          <app-cv-drop-uploader (fileSelected)="onCvSelected($event)" />
+          @if (parsing()) {
+            <p class="parse-status" role="status">
+              {{ parseStatus() || 'Analyse du CV en cours…' }}
+            </p>
+          }
+        }
+
+        @if (context.profile()?.resumeUrl) {
+          <p class="resume-link-wrap">
+            <a [href]="resumeUrl()" target="_blank" rel="noopener noreferrer" class="resume-link">
+              Voir mon CV PDF (recruteurs)
+            </a>
+            @if (cvMode() === 'manual') {
+              <button
+                type="button"
+                class="btn-secondary cv-regen-btn"
+                [disabled]="generatingPdf() || saving()"
+                (click)="generateResumePdf()"
+              >
+                @if (generatingPdf()) { Génération… } @else { Régénérer le PDF }
+              </button>
+            }
+          </p>
+        }
+      </div>
+      <div class="identity-col">
+        <app-circular-avatar-uploader
+          [currentAvatarUrl]="context.profile()?.avatarUrl ?? null"
+          (fileSelected)="onAvatarSelected($event)"
+        />
+        <form [formGroup]="identityForm" class="identity-form">
+          <div class="form-field">
+            <label class="form-label">Prénom</label>
+            <input class="form-input" formControlName="firstName" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Nom</label>
+            <input class="form-input" formControlName="lastName" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Téléphone</label>
+            <input class="form-input" formControlName="phone" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Titre professionnel</label>
+            <input class="form-input" formControlName="professionalTitle" placeholder="Ex. Développeur full-stack" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Salaire minimum souhaité (€)</label>
+            <input class="form-input" type="number" formControlName="minSalary" />
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label">Présentation</label>
+            <textarea class="form-input" rows="3" formControlName="bio" placeholder="Quelques lignes sur votre parcours…"></textarea>
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label">Compétences</label>
+            <div class="tag-row">
+              <input
+                class="form-input"
+                [value]="skillInput()"
+                (input)="skillInput.set($any($event.target).value)"
+                (keydown.enter)="$event.preventDefault(); addSkill()"
+                placeholder="Ajouter une compétence puis Entrée"
+              />
+              <button type="button" class="btn-secondary !w-auto px-3" (click)="addSkill()">Ajouter</button>
+            </div>
+            <div class="tag-list">
+              @for (skill of skills(); track skill) {
+                <span class="tag-chip">{{ skill }}<button type="button" (click)="removeSkill(skill)">×</button></span>
+              }
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+}
+
+@if (currentStep() === 2) {
+  <section class="step-panel panel-card">
+    <div class="row-between">
+      <h2 class="panel-title">Expérience professionnelle</h2>
+      <button type="button" class="btn-secondary !w-auto px-3" (click)="addExperience()">+ Ajouter une expérience</button>
+    </div>
+    @for (group of experiencesArray.controls; track $index; let i = $index) {
+      <div class="block-card" [formGroup]="$any(group)">
+        <div class="block-grid">
+          <input class="form-input" formControlName="title" placeholder="Intitulé du poste" />
+          <input class="form-input" formControlName="company" placeholder="Entreprise" />
+          <input class="form-input" formControlName="startDate" placeholder="Début (AAAA-MM)" />
+          <input class="form-input" formControlName="endDate" placeholder="Fin (AAAA-MM)" />
+          <textarea class="form-input span-2" rows="2" formControlName="description" placeholder="Description des missions"></textarea>
+        </div>
+        @if (experiences.length > 1) {
+          <button type="button" class="btn-text-danger" (click)="removeExperience(i)">Supprimer</button>
+        }
+      </div>
+    }
+  </section>
+}
+
+@if (currentStep() === 3) {
+  <section class="step-panel panel-card">
+    @if (cvMode() === 'manual') {
+      <p class="panel-hint cv-final-hint">
+        Dernière étape : après enregistrement, votre CV sera converti en PDF pour les recruteurs.
+      </p>
+    }
+    <div class="row-between">
+      <h2 class="panel-title">Formation</h2>
+      <button type="button" class="btn-secondary !w-auto px-3" (click)="addEducation()">+ Ajouter une formation</button>
+    </div>
+    @for (group of educationArray.controls; track $index; let i = $index) {
+      <div class="block-card" [formGroup]="$any(group)">
+        <div class="block-grid">
+          <input class="form-input" formControlName="institution" placeholder="Établissement" />
+          <input class="form-input" formControlName="degree" placeholder="Diplôme" />
+          <input class="form-input" formControlName="startDate" placeholder="Début" />
+          <input class="form-input" formControlName="endDate" placeholder="Fin" />
+        </div>
+        @if (education.length > 1) {
+          <button type="button" class="btn-text-danger" (click)="removeEducation(i)">Supprimer</button>
+        }
+      </div>
+    }
+  </section>
+}
+
+<div class="stepper-actions">
+  @if (currentStep() > 1) {
+    <button type="button" class="btn-secondary !w-auto px-5" (click)="prevStep()">Retour</button>
+  }
+  @if (currentStep() < 3) {
+    <button type="button" class="btn-primary !w-auto px-5" (click)="nextStep()">Continuer</button>
+  } @else {
+    <button
+      type="button"
+      class="btn-primary !w-auto px-5"
+      [disabled]="saving() || generatingPdf()"
+      (click)="saveProfile()"
+    >
+      @if (saving() || generatingPdf()) {
+        {{ generatingPdf() ? 'Génération du CV PDF…' : 'Enregistrement…' }}
+      } @else if (cvMode() === 'manual') {
+        Enregistrer et générer mon CV PDF
+      } @else {
+        Enregistrer mon profil
+      }
+    </button>
+  }
+</div>
+
+@if (parsePreviewOpen() && parsePreviewData(); as previewData) {
+  <div class="cv-preview-backdrop" role="presentation" (click)="closeParsePreview()">
+    <div class="cv-preview-wrap" (click)="$event.stopPropagation()">
+      <app-cv-parse-preview
+        [data]="previewData"
+        (apply)="applyParsedData($event)"
+        (cancel)="closeParsePreview()"
+      />
+    </div>
+  </div>
+}

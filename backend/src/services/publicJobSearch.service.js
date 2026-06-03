@@ -1,0 +1,171 @@
+'use strict';
+
+const { Op, Sequelize } = require('sequelize');
+const { Job, Company } = require('../models');
+const { JOB_STATUS, JOB_PUBLIC_STATUSES } = require('../config/constants');
+const ApiError = require('../utils/ApiError');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
+const { expireDueJobs } = require('../utils/jobExpiration');
+const { formatQuizForCandidate } = require('../utils/jobQuiz');
+
+function formatPublicJob(job) {
+  return {
+    id: job.id,
+    title: job.title,
+    description: job.description,
+    requirements: job.requirements,
+    tags: job.tags,
+    languages: job.languages,
+    benefits: job.benefits,
+    experienceYears: job.experience_years,
+    location: job.location,
+    remoteType: job.remote_type,
+    contractType: job.contract_type,
+    salaryLabel: job.salary_label,
+    status: job.status,
+    viewsCount: job.views_count,
+    applicationsCount: job.applications_count,
+    quizEnabled: Boolean(job.quiz_enabled) && Boolean(job.quiz_data),
+    quiz:
+      job.quiz_enabled && job.quiz_data
+        ? formatQuizForCandidate(job.quiz_data)
+        : null,
+    createdAt: job.created_at,
+    company: job.company
+      ? {
+          id: job.company.id,
+          name: job.company.name,
+          logoUrl: job.company.logo_url,
+          industry: job.company.industry,
+        }
+      : null,
+  };
+}
+
+function buildSearchWhereClause(filters) {
+  const where = {
+    status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
+  };
+
+  if (filters.location) {
+    where.location = {
+      [Op.like]: `%${filters.location}%`,
+    };
+  }
+
+  if (filters.contractType) {
+    where.contract_type = filters.contractType;
+  }
+
+  if (filters.remoteType) {
+    where.remote_type = filters.remoteType;
+  }
+
+  if (filters.keywords) {
+    const keyword = filters.keywords.trim();
+    const likeKeyword = `%${keyword}%`;
+
+    const keywordCondition = {
+      [Op.or]: [
+        { title: { [Op.like]: likeKeyword } },
+        { description: { [Op.like]: likeKeyword } },
+        { requirements: { [Op.like]: likeKeyword } },
+        { location: { [Op.like]: likeKeyword } },
+        { salary_label: { [Op.like]: likeKeyword } },
+        Sequelize.literal(
+          `CAST(COALESCE(tags, JSON_ARRAY()) AS CHAR) LIKE ${Job.sequelize.escape(`%${keyword}%`)}`
+        ),
+        Sequelize.literal(
+          `CAST(COALESCE(languages, JSON_ARRAY()) AS CHAR) LIKE ${Job.sequelize.escape(`%${keyword}%`)}`
+        ),
+        Sequelize.literal(
+          `CAST(COALESCE(benefits, JSON_ARRAY()) AS CHAR) LIKE ${Job.sequelize.escape(`%${keyword}%`)}`
+        ),
+      ],
+    };
+
+    if (where[Op.and]) {
+      where[Op.and].push(keywordCondition);
+    } else {
+      where[Op.and] = [keywordCondition];
+    }
+  }
+
+  return where;
+}
+
+async function searchJobs(query) {
+  await expireDueJobs();
+
+  const { page, limit, offset } = parsePagination(query);
+
+  const filters = {
+    keywords: query.keywords,
+    location: query.location,
+    contractType: query.contractType,
+    remoteType: query.remoteType,
+  };
+
+  const where = buildSearchWhereClause(filters);
+
+  const order = [
+    ['created_at', 'DESC'],
+    ['applications_count', 'DESC'],
+  ];
+
+  const { rows, count } = await Job.findAndCountAll({
+    where,
+    include: [
+      {
+        model: Company,
+        as: 'company',
+        attributes: ['id', 'name', 'logo_url', 'industry'],
+      },
+    ],
+    order,
+    limit,
+    offset,
+    distinct: true,
+  });
+
+  const items = rows.map(formatPublicJob);
+
+  return buildPaginatedResponse({
+    rows: items,
+    count,
+    page,
+    limit,
+  });
+}
+
+async function getPublicJobById(jobId) {
+  await expireDueJobs();
+
+  const job = await Job.findOne({
+    where: {
+      id: jobId,
+      status: JOB_STATUS.ACTIVE,
+    },
+    include: [
+      {
+        model: Company,
+        as: 'company',
+        attributes: ['id', 'name', 'logo_url', 'website', 'industry', 'description'],
+      },
+    ],
+  });
+
+  if (!job) {
+    throw ApiError.notFound('Job not found or no longer active');
+  }
+
+  await job.increment('views_count', { by: 1 });
+
+  return formatPublicJob(job);
+}
+
+module.exports = {
+  searchJobs,
+  getPublicJobById,
+  formatPublicJob,
+};

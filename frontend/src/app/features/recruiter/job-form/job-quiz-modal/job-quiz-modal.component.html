@@ -1,0 +1,82 @@
+<div class="quiz-backdrop" role="presentation" (click)="onCancel()"></div>
+<div
+  class="quiz-dialog"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="quiz-modal-title"
+  (click)="$event.stopPropagation()"
+>
+  <header class="quiz-dialog-header">
+    <div>
+      <h2 id="quiz-modal-title" class="quiz-dialog-title">Quiz de présélection</h2>
+      <p class="quiz-dialog-sub">
+        2 questions techniques liées à l’offre · 3 réponses · cochez la bonne réponse.
+      </p>
+    </div>
+    <button type="button" class="quiz-close" (click)="onCancel()" aria-label="Fermer">×</button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error quiz-alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="quiz-toolbar">
+    <button
+      type="button"
+      class="btn-secondary !w-auto px-4"
+      (click)="onGenerateAi()"
+      [disabled]="generating()"
+    >
+      @if (generating()) {
+        Génération IA…
+      } @else {
+        ✨ Générer avec l’IA (selon l’offre)
+      }
+    </button>
+  </div>
+
+  <div class="quiz-cards">
+    @for (question of questions(); track $index; let qi = $index) {
+      <article class="quiz-card panel-card">
+        <h3 class="quiz-card-title">Question {{ qi + 1 }}</h3>
+        <label class="form-label" [for]="'q-text-' + qi">Intitulé</label>
+        <textarea
+          [id]="'q-text-' + qi"
+          class="form-input quiz-question-input"
+          rows="2"
+          [ngModel]="question.text"
+          (ngModelChange)="updateQuestionText(qi, $event)"
+          placeholder="Ex. Quelle compétence est essentielle pour ce poste ?"
+        ></textarea>
+
+        <p class="quiz-choices-label">Réponses (cochez la bonne réponse)</p>
+        <ul class="quiz-choices">
+          @for (choice of question.choices; track $index; let ci = $index) {
+            <li class="quiz-choice-row">
+              <label class="quiz-choice-radio">
+                <input
+                  type="radio"
+                  [name]="'correct-' + qi"
+                  [checked]="question.correctChoiceIndex === ci"
+                  (change)="setCorrectChoice(qi, ci)"
+                />
+                <span class="quiz-choice-badge">Bonne réponse</span>
+              </label>
+              <input
+                class="form-input"
+                [ngModel]="choice.text"
+                (ngModelChange)="updateChoiceText(qi, ci, $event)"
+                [placeholder]="'Réponse ' + (ci + 1)"
+              />
+            </li>
+          }
+        </ul>
+      </article>
+    }
+  </div>
+
+  <footer class="quiz-dialog-footer">
+    <button type="button" class="btn-secondary !w-auto px-5" (click)="onCancel()">Annuler</button>
+    <button type="button" class="btn-primary !w-auto px-5" (click)="onSave()">Enregistrer le quiz</button>
+  </footer>
+</div>

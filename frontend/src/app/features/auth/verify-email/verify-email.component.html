@@ -1,0 +1,19 @@
+<div class="auth-card panel-card">
+  <h1 class="auth-title">Confirmation de l'e-mail</h1>
+
+  @if (loading()) {
+    <p class="auth-sub">Validation de votre lien en cours…</p>
+  } @else if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+    @if (verifiedEmail()) {
+      <p class="auth-sub">Compte : <strong>{{ verifiedEmail() }}</strong></p>
+    }
+    <a [routerLink]="routes.AUTH.LOGIN" class="btn-primary auth-btn">Se connecter</a>
+  } @else {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+    <p class="auth-sub">
+      Le lien a peut-être expiré. Demandez un nouvel e-mail depuis la page de connexion.
+    </p>
+    <a [routerLink]="routes.AUTH.LOGIN" class="btn-secondary auth-btn">Retour à la connexion</a>
+  }
+</div>

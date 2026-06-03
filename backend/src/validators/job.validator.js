@@ -1,0 +1,117 @@
+'use strict';
+
+const { z } = require('zod');
+const { plainTextLength } = require('../utils/richText');
+const {
+  JOB_STATUS,
+  JOB_MANUAL_STATUSES,
+  REMOTE_TYPES,
+  CONTRACT_TYPES,
+  MAX_LIMIT,
+} = require('../config/constants');
+
+const quizChoiceSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+});
+
+const quizQuestionSchema = z.object({
+  text: z.string().trim().min(5).max(1000),
+  choices: z.array(quizChoiceSchema).length(3),
+  correctChoiceIndex: z.number().int().min(0).max(2),
+});
+
+const quizSchema = z.object({
+  questions: z.array(quizQuestionSchema).length(2),
+});
+
+const jobBodySchema = z.object({
+  title: z.string().trim().min(3).max(255),
+  description: z
+    .string()
+    .trim()
+    .max(50000)
+    .refine((v) => plainTextLength(v) >= 20, {
+      message: 'Description must be at least 20 characters',
+    }),
+  requirements: z.string().trim().optional().nullable(),
+  tags: z.array(z.string().trim().min(1).max(50)).max(20).optional().nullable(),
+  languages: z.array(z.string().trim().min(1).max(50)).max(15).optional().nullable(),
+  benefits: z.array(z.string().trim().min(1).max(80)).max(20).optional().nullable(),
+  experienceYears: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(50)
+    .optional()
+    .nullable(),
+  location: z.string().trim().max(255).optional().nullable(),
+  remoteType: z.enum(REMOTE_TYPES).default('on-site'),
+  contractType: z.enum(CONTRACT_TYPES).default('CDI'),
+  salaryLabel: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .nullable()
+    .transform((v) => (v === '' ? null : v)),
+  status: z.enum(JOB_MANUAL_STATUSES).optional(),
+  expiresAt: z.coerce.date().optional(),
+  quizEnabled: z.boolean().optional().default(false),
+  quiz: quizSchema.optional().nullable(),
+});
+
+const createJobSchema = jobBodySchema.extend({
+  expiresAt: z.coerce
+    .date()
+    .refine((d) => d.getTime() > Date.now(), 'Expiration date must be in the future'),
+});
+
+const updateJobSchema = jobBodySchema.partial();
+
+const updateJobStatusSchema = z.object({
+  status: z.enum(JOB_MANUAL_STATUSES),
+});
+
+/** Looser than createJob — quiz can be generated while the offer form is still being filled. */
+const generateQuizSchema = z
+  .object({
+    title: z.string().trim().max(255).optional().default(''),
+    description: z.string().trim().max(50000).optional().default(''),
+    requirements: z
+      .string()
+      .trim()
+      .max(50000)
+      .optional()
+      .nullable()
+      .transform((v) => (v === '' ? null : v)),
+    tags: z.array(z.string().trim().min(1).max(50)).max(20).optional().nullable(),
+    languages: z.array(z.string().trim().min(1).max(50)).max(15).optional().nullable(),
+    benefits: z.array(z.string().trim().min(1).max(80)).max(20).optional().nullable(),
+  })
+  .transform((data) => ({
+    title: data.title.length >= 1 ? data.title : 'Offre d\'emploi',
+    description:
+      data.description.length >= 1
+        ? data.description
+        : 'Poste à pourvoir — complétez la description dans le formulaire.',
+    requirements: data.requirements,
+    tags: data.tags ?? null,
+    languages: data.languages ?? null,
+    benefits: data.benefits ?? null,
+  }));
+
+const listJobsQuerySchema = z.object({
+  status: z
+    .enum([JOB_STATUS.DRAFT, JOB_STATUS.ACTIVE, JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED])
+    .optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(MAX_LIMIT).optional(),
+});
+
+module.exports = {
+  createJobSchema,
+  updateJobSchema,
+  updateJobStatusSchema,
+  listJobsQuerySchema,
+  generateQuizSchema,
+};

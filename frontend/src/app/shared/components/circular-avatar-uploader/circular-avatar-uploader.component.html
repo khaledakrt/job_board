@@ -1,0 +1,11 @@
+<div class="avatar-uploader">
+  <button type="button" class="avatar-ring" (click)="openPicker()">
+    @if (displayUrl()) {
+      <img [src]="displayUrl()" alt="Avatar preview" class="avatar-img" />
+    } @else {
+      <span class="avatar-placeholder">+</span>
+    }
+  </button>
+  <input #fileInput type="file" class="hidden" accept="image/jpeg,image/png,image/webp" (change)="onFileChange($event)" />
+  <p class="avatar-hint">Upload profile photo</p>
+</div>

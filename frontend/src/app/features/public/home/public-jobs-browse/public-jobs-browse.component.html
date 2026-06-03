@@ -1,0 +1,445 @@
+<ng-template #filtersPanel>
+  <div class="public-jobs-filters">
+    <div class="public-jobs-filters-head">
+      <h3 class="public-jobs-filters-title">Recherche avancée</h3>
+      <div class="public-jobs-filters-actions">
+        <button type="button" class="landing-btn landing-btn-primary" (click)="applyFilters()">
+          Rechercher
+        </button>
+        @if (hasActiveFilters()) {
+          <button type="button" class="landing-btn landing-btn-ghost" (click)="resetFilters()">
+            Réinitialiser
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="public-jobs-filters-grid">
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Mots-clés</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Titre, compétence, technologie…"
+          [value]="filters().keywords"
+          (input)="updateKeyword($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Localisation</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Ville, région…"
+          [value]="filters().location"
+          (input)="updateLocation($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Entreprise</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Nom de l'employeur…"
+          [value]="filters().company"
+          (input)="updateCompany($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Secteur</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Ex. Technology, Logistics…"
+          [value]="filters().industry"
+          (input)="updateIndustry($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Expérience</label>
+        <select
+          class="public-jobs-select"
+          [value]="filters().experience"
+          (change)="setExperience($any($event.target).value)"
+        >
+          @for (opt of experienceOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="public-jobs-filter-field public-jobs-filter-field-check">
+        <label class="public-jobs-check">
+          <input
+            type="checkbox"
+            [checked]="filters().quizOnly"
+            (change)="toggleQuizOnly()"
+          />
+          <span>Offres avec quiz technique uniquement</span>
+        </label>
+      </div>
+      <div class="public-jobs-filter-field public-jobs-filter-field-wide">
+        <p class="public-jobs-filter-label">Type de contrat</p>
+        <div class="public-jobs-pills">
+          @for (type of contractTypes; track type) {
+            <button
+              type="button"
+              class="public-jobs-pill"
+              [class.public-jobs-pill-active]="filters().contracts.includes(type)"
+              (click)="toggleContract(type)"
+            >
+              {{ type }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="public-jobs-filter-field public-jobs-filter-field-wide">
+        <p class="public-jobs-filter-label">Mode de travail</p>
+        <div class="public-jobs-pills">
+          @for (type of remoteTypes; track type) {
+            <button
+              type="button"
+              class="public-jobs-pill"
+              [class.public-jobs-pill-active]="filters().remotes.includes(type)"
+              (click)="toggleRemote(type)"
+            >
+              {{ remoteLabels[type] }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #jobsGrid let-emptyMessage="emptyMessage" let-mode="mode">
+  @if (loading()) {
+    <p class="public-jobs-status">Chargement des offres…</p>
+  } @else if (loadError()) {
+    <p class="public-jobs-status public-jobs-status-warn">
+      Impossible de charger les offres. Vérifiez que le backend tourne sur le port 3000.
+    </p>
+  } @else if ((mode === 'catalog' ? displayedCatalogJobs() : displayedPreviewJobs()).length === 0) {
+    <p class="public-jobs-status">{{ emptyMessage }}</p>
+  } @else {
+    <div
+      class="public-jobs-grid"
+      [class.public-jobs-grid-landing]="mode !== 'catalog'"
+    >
+      @for (job of (mode === 'catalog' ? displayedCatalogJobs() : displayedPreviewJobs()); track job.id) {
+        <article
+          class="public-job-grid-card"
+          tabindex="0"
+          role="button"
+          (click)="openJobDetail(job)"
+          (keydown.enter)="openJobDetail(job)"
+          (keydown.space)="$event.preventDefault(); openJobDetail(job)"
+        >
+          <div class="public-job-grid-card-top">
+            @if (companyLogo(job); as logo) {
+              <img [src]="logo" alt="" class="public-job-grid-logo" />
+            } @else {
+              <div class="public-job-grid-logo-ph">{{ job.company?.name?.charAt(0) || '?' }}</div>
+            }
+            @if (isQuizEnabled(job)) {
+              <span class="public-job-grid-badge">Quiz</span>
+            }
+          </div>
+          <h4 class="public-job-grid-title">{{ job.title }}</h4>
+          @if (job.company?.id; as companyId) {
+            <a
+              class="public-job-grid-co public-company-name-link"
+              [routerLink]="publicCompanyLink(companyId)"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Voir le profil de l'entreprise dans un nouvel onglet"
+              (click)="$event.stopPropagation()"
+            >
+              {{ job.company?.name }}
+            </a>
+          } @else if (job.company?.name) {
+            <p class="public-job-grid-co">{{ job.company?.name }}</p>
+          }
+          @if (job.company?.industry; as industry) {
+            <p class="public-job-grid-industry">{{ industry }}</p>
+          }
+          <p class="public-job-grid-meta">
+            {{ job.location || 'Lieu non précisé' }} · {{ job.contractType }}
+          </p>
+          <p class="public-job-grid-remote">{{ formatRemote(job.remoteType) }}</p>
+          @if (formatSalary(job); as salary) {
+            <p class="public-job-grid-salary">{{ salary }}</p>
+          }
+          <div class="public-job-grid-actions" (click)="$event.stopPropagation()">
+            <button type="button" class="public-job-grid-btn public-job-grid-btn-primary" (click)="openJobDetail(job)">
+              Voir l'offre
+            </button>
+            <button
+              type="button"
+              class="public-job-grid-btn public-job-grid-btn-outline"
+              title="Afficher dans un nouvel onglet pour consulter l'offre"
+              (click)="openJobInNewTab(job, $event)"
+            >
+              Nouvel onglet
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+
+    @if ((mode === 'catalog' ? catalogTotalPages() : previewTotalPages()) > 1) {
+      <nav class="public-jobs-pagination" aria-label="Pagination des offres">
+        <button
+          type="button"
+          class="public-jobs-page-btn"
+          [disabled]="(mode === 'catalog' ? catalogPage() : previewPage()) <= 1"
+          (click)="goToPage((mode === 'catalog' ? catalogPage() : previewPage()) - 1, mode)"
+        >
+          Précédent
+        </button>
+        <div class="public-jobs-page-numbers">
+          @for (p of (mode === 'catalog' ? catalogPageNumbers() : previewPageNumbers()); track p) {
+            <button
+              type="button"
+              class="public-jobs-page-num"
+              [class.public-jobs-page-num-active]="p === (mode === 'catalog' ? catalogPage() : previewPage())"
+              (click)="goToPage(p, mode)"
+            >
+              {{ p }}
+            </button>
+          }
+        </div>
+        <button
+          type="button"
+          class="public-jobs-page-btn"
+          [disabled]="(mode === 'catalog' ? catalogPage() : previewPage()) >= (mode === 'catalog' ? catalogTotalPages() : previewTotalPages())"
+          (click)="goToPage((mode === 'catalog' ? catalogPage() : previewPage()) + 1, mode)"
+        >
+          Suivant
+        </button>
+      </nav>
+    }
+  }
+</ng-template>
+
+<section id="offres" class="public-jobs">
+  <div class="landing-container">
+    <div class="public-jobs-head">
+      <p class="landing-eyebrow">Offres en ligne</p>
+      <h2 class="landing-section-title">Consultez les offres publiées</h2>
+      <p class="landing-section-lead">
+        Filtrez les opportunités, parcourez les cartes (3 par ligne) et ouvrez le catalogue complet.
+      </p>
+    </div>
+
+    <div class="public-jobs-toolbar">
+      <button type="button" class="landing-btn landing-btn-primary landing-btn-lg" (click)="openBrowseAll()">
+        Afficher toutes les offres
+      </button>
+      <p class="public-jobs-toolbar-hint">
+        {{ totalItems() }} offre{{ totalItems() > 1 ? 's' : '' }} au total
+        @if (hasActiveFilters()) {
+          <span class="public-jobs-toolbar-filtered"> — filtres actifs</span>
+        }
+      </p>
+    </div>
+
+    <ng-container *ngTemplateOutlet="filtersPanel" />
+
+    <p class="public-jobs-count">
+      Page {{ previewPage() }} / {{ previewTotalPages() }} —
+      {{ displayedPreviewJobs().length }} offre{{ displayedPreviewJobs().length > 1 ? 's' : '' }} affichée{{ displayedPreviewJobs().length > 1 ? 's' : '' }}
+      sur {{ totalItems() }}
+    </p>
+
+    <ng-container
+      *ngTemplateOutlet="jobsGrid; context: { emptyMessage: 'Aucune offre ne correspond à vos critères.', mode: 'landing' }"
+    />
+  </div>
+</section>
+
+@if (browseAllModalOpen()) {
+  <dialog
+    #browseAllDialog
+    class="public-jobs-dialog public-jobs-dialog-browse-all"
+    aria-labelledby="browse-all-title"
+    (click)="onBrowseAllDialogClick($event)"
+    (close)="onBrowseAllDialogClosed()"
+  >
+    <div class="public-jobs-browse-all-modal">
+    <header class="public-jobs-browse-all-header">
+      <div>
+        <h3 id="browse-all-title">Toutes les offres</h3>
+        <p class="public-jobs-browse-all-sub">
+          {{ totalItems() }} résultat{{ totalItems() > 1 ? 's' : '' }} — utilisez les filtres pour affiner votre recherche
+        </p>
+      </div>
+      <button type="button" class="public-jobs-detail-close" aria-label="Fermer" (click)="closeBrowseAll()">
+        ✕
+      </button>
+    </header>
+
+    <div class="public-jobs-browse-all-body">
+      <ng-container *ngTemplateOutlet="filtersPanel" />
+
+      <p class="public-jobs-count">
+        Page {{ catalogPage() }} / {{ catalogTotalPages() }} —
+        {{ displayedCatalogJobs().length }} sur {{ catalogTotalItems() }} offre{{ catalogTotalItems() > 1 ? 's' : '' }}
+      </p>
+
+      <ng-container
+        *ngTemplateOutlet="jobsGrid; context: { emptyMessage: 'Aucune offre ne correspond à vos filtres.', mode: 'catalog' }"
+      />
+    </div>
+    </div>
+  </dialog>
+}
+
+@if (detailModalOpen() && selectedJob(); as job) {
+  <dialog
+    #detailDialog
+    class="public-jobs-dialog public-jobs-dialog-detail"
+    aria-labelledby="job-detail-title"
+    (click)="onDetailDialogClick($event)"
+    (close)="onDetailDialogClosed()"
+  >
+    <div class="public-jobs-detail-modal">
+    <button type="button" class="public-jobs-detail-close" aria-label="Fermer" (click)="closeDetailModal()">
+      ✕
+    </button>
+
+    <header class="public-jobs-detail-header">
+      <div class="public-jobs-detail-head">
+        @if (companyLogo(job); as logo) {
+          <img [src]="logo" alt="" class="public-jobs-detail-logo" />
+        } @else {
+          <div class="public-jobs-detail-logo-ph">{{ job.company?.name?.charAt(0) || '?' }}</div>
+        }
+        <div>
+          <h3 id="job-detail-title">{{ job.title }}</h3>
+          @if (job.company?.id; as companyId) {
+            <a
+              class="public-jobs-detail-co public-company-name-link"
+              [routerLink]="publicCompanyLink(companyId)"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Voir le profil de l'entreprise dans un nouvel onglet"
+            >
+              {{ job.company?.name || 'Entreprise' }}
+            </a>
+          } @else {
+            <p class="public-jobs-detail-co">{{ job.company?.name || 'Entreprise' }}</p>
+          }
+          @if (job.company?.industry; as industry) {
+            <p class="public-jobs-detail-industry">{{ industry }}</p>
+          }
+        </div>
+      </div>
+      <button type="button" class="landing-btn landing-btn-primary" (click)="onApply()">Postuler</button>
+    </header>
+
+    <div class="public-jobs-detail-body">
+      @if (isQuizEnabled(job)) {
+        <p class="public-jobs-quiz-hint">Quiz technique à compléter lors de la candidature</p>
+      }
+
+      <div class="public-jobs-detail-meta">
+        <span>{{ job.location || 'Lieu flexible' }}</span>
+        <span>{{ job.contractType }}</span>
+        <span>{{ formatRemote(job.remoteType) }}</span>
+        @if (formatSalary(job); as salary) {
+          <span class="public-jobs-detail-salary">{{ salary }}</span>
+        }
+        @if (formatExperience(job); as exp) {
+          <span>{{ exp }}</span>
+        }
+      </div>
+
+      @if (job.tags?.length) {
+        <div class="public-jobs-tags">
+          @for (tag of job.tags; track tag) {
+            <span class="public-jobs-tag">{{ tag }}</span>
+          }
+        </div>
+      }
+
+      @if (job.benefits?.length) {
+        <h4 class="public-jobs-section-title">Avantages</h4>
+        <div class="public-jobs-tags public-jobs-tags-benefits">
+          @for (benefit of job.benefits; track benefit) {
+            <span class="public-jobs-tag public-jobs-tag-benefit">{{ benefit }}</span>
+          }
+        </div>
+      }
+
+      <h4 class="public-jobs-section-title">Description du poste</h4>
+      <div class="public-jobs-rich">
+        <app-safe-html [content]="job.description" />
+      </div>
+
+      @if (job.requirements) {
+        <h4 class="public-jobs-section-title">Profil recherché</h4>
+        <div class="public-jobs-rich">
+          <app-safe-html [content]="job.requirements" />
+        </div>
+      }
+
+      @if (isQuizEnabled(job) && jobQuiz(job); as quiz) {
+        <h4 class="public-jobs-section-title">Quiz de présélection</h4>
+        <p class="public-jobs-quiz-intro">
+          Vous répondrez à ces questions après connexion, lors de l’envoi de votre candidature.
+        </p>
+        @for (question of quiz.questions; track $index; let qi = $index) {
+          <article class="public-jobs-quiz-card">
+            <p><strong>Q{{ qi + 1 }}.</strong> {{ question.text }}</p>
+            <ul>
+              @for (choice of question.choices; track $index) {
+                <li>{{ choice.text }}</li>
+              }
+            </ul>
+          </article>
+        }
+      }
+    </div>
+
+    <footer class="public-jobs-detail-footer">
+      <button type="button" class="landing-btn landing-btn-primary landing-btn-lg" (click)="onApply()">
+        Postuler à cette offre
+      </button>
+    </footer>
+    </div>
+  </dialog>
+}
+
+@if (authPromptOpen()) {
+  <dialog
+    #authDialog
+    class="public-jobs-dialog public-jobs-dialog-auth"
+    aria-labelledby="auth-prompt-title"
+    aria-describedby="auth-prompt-desc"
+    (click)="onAuthDialogClick($event)"
+    (close)="onAuthDialogClosed()"
+  >
+    <div class="public-jobs-modal" role="alertdialog">
+    <h3 id="auth-prompt-title" class="public-jobs-modal-title">Connexion requise</h3>
+    <p id="auth-prompt-desc" class="public-jobs-modal-text">
+      Pour postuler à cette offre, vous devez vous connecter ou créer un compte candidat gratuit.
+    </p>
+    <div class="public-jobs-modal-actions">
+      <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-primary" (click)="closeAuthPrompt()">
+        Se connecter
+      </a>
+      <a
+        [routerLink]="routes.AUTH.REGISTER"
+        [queryParams]="{ role: 'candidate' }"
+        class="landing-btn landing-btn-outline"
+        (click)="closeAuthPrompt()"
+      >
+        Créer un compte
+      </a>
+      <button type="button" class="landing-btn landing-btn-ghost" (click)="closeAuthPrompt()">
+        Annuler
+      </button>
+    </div>
+    </div>
+  </dialog>
+}

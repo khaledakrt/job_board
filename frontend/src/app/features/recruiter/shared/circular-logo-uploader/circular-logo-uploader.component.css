@@ -1,0 +1,92 @@
+.logo-uploader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-preview {
+  position: relative;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 9999px;
+  border: 3px dashed #cbd5e1;
+  background: #f8fafc;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logo-preview:hover:not(:disabled) {
+  border-color: #0a66c2;
+  box-shadow: 0 12px 32px rgba(10, 102, 194, 0.15);
+}
+
+.logo-preview-drag {
+  border-color: #0a66c2;
+  background: #eef3f8;
+}
+
+.logo-preview:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #64748b;
+}
+
+.logo-placeholder-icon {
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.logo-placeholder-text {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.logo-overlay {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0.35rem;
+  background: rgba(15, 23, 42, 0.65);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.logo-preview:hover .logo-overlay {
+  opacity: 1;
+}
+
+.logo-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.logo-error {
+  font-size: 0.75rem;
+  color: #d93025;
+}
+
+.hidden {
+  display: none;
+}

@@ -1,0 +1,62 @@
+.settings-card {
+  padding: 1.25rem 1.5rem;
+}
+
+.settings-section-hint {
+  margin: -0.25rem 0 1rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.settings-card + .settings-card {
+  margin-top: 1rem;
+}
+
+.settings-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.span-2 {
+  grid-column: span 1;
+}
+
+@media (min-width: 768px) {
+  .settings-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .span-2 {
+    grid-column: span 2;
+  }
+}
+
+.password-rules {
+  border-radius: 0.875rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+}
+
+.rules-list {
+  margin-top: 0.5rem;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  list-style: disc;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}

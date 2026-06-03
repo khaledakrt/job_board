@@ -1,0 +1,308 @@
+<div class="page-header">
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">Profil entreprise</h1>
+      <p class="page-subtitle">
+        Complétez les informations de votre société telles qu’elles apparaîtront auprès des candidats.
+      </p>
+    </div>
+    <div class="profile-progress-card" aria-live="polite">
+      <div class="profile-progress-head">
+        <span class="profile-progress-label">Complétion du profil</span>
+        <span
+          class="profile-progress-percent"
+          [class.profile-progress-percent-done]="profileProgress().isComplete"
+        >
+          {{ profileProgress().percent }} %
+        </span>
+      </div>
+      <div
+        class="profile-progress-track"
+        role="progressbar"
+        [attr.aria-valuenow]="profileProgress().percent"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-label]="'Profil complété à ' + profileProgress().percent + ' pour cent'"
+      >
+        <div
+          class="profile-progress-fill"
+          [style.width.%]="profileProgress().percent"
+          [class.profile-progress-fill-done]="profileProgress().isComplete"
+        ></div>
+      </div>
+      <p class="profile-progress-status">{{ progressStatusLabel() }}</p>
+      @if (!profileProgress().isComplete && profileProgress().missing.length) {
+        <p class="profile-progress-missing">
+          Manque :
+          {{ profileProgress().missing.slice(0, 5).join(', ') }}
+          @if (profileProgress().missing.length > 5) {
+            … (+{{ profileProgress().missing.length - 5 }})
+          }
+        </p>
+      }
+    </div>
+  </div>
+</div>
+
+@if (errorMessage()) {
+  <div class="alert alert-error">{{ errorMessage() }}</div>
+}
+@if (successMessage()) {
+  <div class="alert alert-success">{{ successMessage() }}</div>
+}
+
+<div class="onboarding-layout">
+  <aside class="panel panel-brand">
+    <h2 class="section-title">Identité visuelle</h2>
+    <p class="section-hint">Logo affiché sur vos offres et votre page employeur.</p>
+    <app-circular-logo-uploader
+      [currentLogoUrl]="context.company()?.logoUrl ?? null"
+      [disabled]="saving()"
+      (fileSelected)="onLogoSelected($event)"
+    />
+  </aside>
+
+  <div class="panels-stack">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="onboarding-form" novalidate>
+      <section class="panel">
+        <h2 class="section-title">Identité légale</h2>
+        <p class="section-hint">Raison sociale et forme juridique (France).</p>
+        <div class="form-grid">
+          <div class="form-field span-2">
+            <label class="form-label" for="name">Nom commercial / marque employeur *</label>
+            <input id="name" class="form-input" formControlName="name" placeholder="Ex. Acme Corp" />
+            @if (hasError('name')) {
+              <p class="form-error">Nom requis (2 caractères minimum).</p>
+            }
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label" for="legalName">Raison sociale (si différente)</label>
+            <input
+              id="legalName"
+              class="form-input"
+              formControlName="legalName"
+              placeholder="Ex. Acme Technologies SAS"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="legalForm">Forme juridique</label>
+            <select id="legalForm" class="form-input" formControlName="legalForm">
+              @for (f of legalForms; track f.value) {
+                <option [value]="f.value">{{ f.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="foundedYear">Année de création</label>
+            <input
+              id="foundedYear"
+              type="number"
+              class="form-input"
+              formControlName="foundedYear"
+              min="1800"
+              [max]="currentYear"
+              placeholder="Ex. 2018"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="siret">SIRET (14 chiffres)</label>
+            <input
+              id="siret"
+              class="form-input"
+              formControlName="siret"
+              inputmode="numeric"
+              maxlength="14"
+              placeholder="12345678901234"
+            />
+            @if (hasError('siret')) {
+              <p class="form-error">14 chiffres maximum, sans espaces.</p>
+            }
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="vatNumber">N° TVA intracommunautaire</label>
+            <input
+              id="vatNumber"
+              class="form-input"
+              formControlName="vatNumber"
+              placeholder="FRXX123456789"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Siège & contact</h2>
+        <div class="form-grid">
+          <div class="form-field span-2">
+            <label class="form-label" for="streetAddress">Adresse</label>
+            <input
+              id="streetAddress"
+              class="form-input"
+              formControlName="streetAddress"
+              placeholder="Numéro et voie"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="postalCode">Code postal</label>
+            <input id="postalCode" class="form-input" formControlName="postalCode" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="city">Ville *</label>
+            <input id="city" class="form-input" formControlName="city" />
+            @if (hasError('city')) {
+              <p class="form-error">Ville requise.</p>
+            }
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="country">Pays *</label>
+            <select id="country" class="form-input" formControlName="country">
+              @if (extraCountryOption(); as extra) {
+                <option [value]="extra">{{ extra }}</option>
+              }
+              <optgroup label="Pays fréquents">
+                @for (c of frequentCountries; track c.value) {
+                  <option [value]="c.value">{{ c.label }}</option>
+                }
+              </optgroup>
+              <optgroup label="Tous les pays">
+                @for (c of otherCountries; track c.value) {
+                  <option [value]="c.value">{{ c.label }}</option>
+                }
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label-row">
+              <label class="form-label" for="contactEmail">E-mail de contact RH *</label>
+              <button
+                type="button"
+                class="visibility-toggle"
+                [class.visibility-toggle-public]="form.controls.contactEmailPublic.value"
+                (click)="toggleContactEmailVisibility()"
+                [attr.aria-pressed]="form.controls.contactEmailPublic.value"
+                title="Choisir si l'e-mail est visible sur la page publique de l'entreprise"
+              >
+                {{ form.controls.contactEmailPublic.value ? 'Public' : 'Privé' }}
+              </button>
+            </div>
+            <input id="contactEmail" type="email" class="form-input" formControlName="contactEmail" />
+            <p class="form-hint">
+              @if (form.controls.contactEmailPublic.value) {
+                Visible sur votre page entreprise publique.
+              } @else {
+                Non affiché aux candidats sur la page entreprise.
+              }
+            </p>
+            @if (hasError('contactEmail')) {
+              <p class="form-error">E-mail professionnel valide requis.</p>
+            }
+          </div>
+          <div class="form-field">
+            <div class="form-field-label-row">
+              <label class="form-label" for="contactPhone">Téléphone entreprise</label>
+              <button
+                type="button"
+                class="visibility-toggle"
+                [class.visibility-toggle-public]="form.controls.contactPhonePublic.value"
+                (click)="toggleContactPhoneVisibility()"
+                [attr.aria-pressed]="form.controls.contactPhonePublic.value"
+                title="Choisir si le téléphone est visible sur la page publique de l'entreprise"
+              >
+                {{ form.controls.contactPhonePublic.value ? 'Public' : 'Privé' }}
+              </button>
+            </div>
+            <input id="contactPhone" type="tel" class="form-input" formControlName="contactPhone" />
+            <p class="form-hint">
+              @if (form.controls.contactPhonePublic.value) {
+                Visible sur votre page entreprise publique.
+              } @else {
+                Non affiché aux candidats sur la page entreprise.
+              }
+            </p>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="website">Site web</label>
+            <input id="website" class="form-input" formControlName="website" placeholder="https://" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="linkedinUrl">Page LinkedIn</label>
+            <input
+              id="linkedinUrl"
+              class="form-input"
+              formControlName="linkedinUrl"
+              placeholder="https://linkedin.com/company/..."
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Activité</h2>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label" for="industry">Secteur d’activité *</label>
+            <select id="industry" class="form-input" formControlName="industry">
+              @for (ind of industries; track ind.value) {
+                <option [value]="ind.value">{{ ind.label }}</option>
+              }
+            </select>
+            @if (hasError('industry')) {
+              <p class="form-error">Secteur requis.</p>
+            }
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="scaleSize">Effectif *</label>
+            <select id="scaleSize" class="form-input" formControlName="scaleSize">
+              @for (size of companySizes; track size.value) {
+                <option [value]="size.value">{{ size.label }}</option>
+              }
+            </select>
+            @if (hasError('scaleSize')) {
+              <p class="form-error">Effectif requis.</p>
+            }
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label" for="description">Présentation de l’entreprise *</label>
+            <textarea
+              id="description"
+              rows="4"
+              class="form-input"
+              formControlName="description"
+              placeholder="Mission, culture, valeurs, types de postes proposés… (40 caractères min.)"
+            ></textarea>
+            @if (hasError('description')) {
+              <p class="form-error">Description requise (40 caractères minimum).</p>
+            }
+          </div>
+        </div>
+      </section>
+
+      @if (!context.hasCompany()) {
+        <section class="panel">
+          <h2 class="section-title">Votre rôle (responsable RH)</h2>
+          <div class="form-grid">
+            <div class="form-field">
+              <label class="form-label" for="ownerJobTitle">Votre poste</label>
+              <input
+                id="ownerJobTitle"
+                class="form-input"
+                formControlName="ownerJobTitle"
+                placeholder="Ex. Responsable RH"
+              />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="ownerPhone">Votre téléphone</label>
+              <input id="ownerPhone" type="tel" class="form-input" formControlName="ownerPhone" />
+            </div>
+          </div>
+        </section>
+      }
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary !w-auto px-8" [disabled]="saving()">
+          @if (saving()) { Enregistrement… } @else { Enregistrer le profil entreprise }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,200 @@
+<div class="public-company-page">
+  <header class="public-company-page-header">
+    <div class="public-company-page-header-inner">
+      <a routerLink="/" class="public-company-page-logo" aria-label="JobBoard — Accueil">
+        <span class="public-company-page-logo-mark">JB</span>
+        <span class="public-company-page-logo-text">JobBoard</span>
+      </a>
+      <a routerLink="/" fragment="offres" class="public-company-page-back">← Retour aux offres</a>
+    </div>
+  </header>
+
+  <main class="public-company-page-main">
+    @if (loading()) {
+      <p class="public-company-page-status">Chargement de l’entreprise…</p>
+    } @else if (error()) {
+      <div class="public-company-page-card public-company-page-card-error">
+        <p>{{ error() }}</p>
+        <a routerLink="/" fragment="offres" class="public-company-page-btn public-company-page-btn-primary">
+          Voir toutes les offres
+        </a>
+      </div>
+    } @else {
+      @if (company(); as co) {
+        <section class="public-company-page-card public-company-page-profile">
+          <div class="public-company-page-profile-head">
+            @if (companyLogo(); as logo) {
+              <img [src]="logo" alt="" class="public-company-page-logo-img" />
+            } @else {
+              <div class="public-company-page-logo-ph">{{ co.name.charAt(0) }}</div>
+            }
+            <div class="public-company-page-profile-copy">
+              <h1>{{ co.name }}</h1>
+              @if (co.legalName && co.legalName !== co.name) {
+                <p class="public-company-page-legal-name">{{ co.legalName }}</p>
+              }
+              @if (co.industry) {
+                <p class="public-company-page-industry">{{ co.industry }}</p>
+              }
+              <div class="public-company-page-meta">
+                @if (formatScaleSize(co.scaleSize); as sizeLabel) {
+                  <span>{{ sizeLabel }}</span>
+                }
+                @if (co.foundedYear) {
+                  <span>Fondée en {{ co.foundedYear }}</span>
+                }
+                @if (formatLegalForm(co.legalForm); as legalForm) {
+                  <span>{{ legalForm }}</span>
+                }
+              </div>
+              <div class="public-company-page-links">
+                @if (co.website) {
+                  <a [href]="co.website" target="_blank" rel="noopener noreferrer">Site web</a>
+                }
+                @if (co.linkedinUrl) {
+                  <a [href]="co.linkedinUrl" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="public-company-page-details">
+            @if (co.addressLabel) {
+              <div class="public-company-detail-block">
+                <h2>Adresse</h2>
+                <p>{{ co.addressLabel }}</p>
+              </div>
+            }
+
+            @if (co.contactEmail || co.contactPhone) {
+              <div class="public-company-detail-block">
+                <h2>Contact</h2>
+                <dl class="public-company-dl">
+                  @if (co.contactEmail) {
+                    <div class="public-company-dl-row">
+                      <dt>E-mail</dt>
+                      <dd><a [href]="'mailto:' + co.contactEmail">{{ co.contactEmail }}</a></dd>
+                    </div>
+                  }
+                  @if (co.contactPhone) {
+                    <div class="public-company-dl-row">
+                      <dt>Téléphone</dt>
+                      <dd><a [href]="'tel:' + co.contactPhone">{{ co.contactPhone }}</a></dd>
+                    </div>
+                  }
+                </dl>
+              </div>
+            }
+
+            <div class="public-company-detail-block">
+              <h2>Informations légales</h2>
+              <dl class="public-company-dl">
+                @if (co.legalName) {
+                  <div class="public-company-dl-row">
+                    <dt>Raison sociale</dt>
+                    <dd>{{ co.legalName }}</dd>
+                  </div>
+                }
+                @if (formatLegalForm(co.legalForm); as lf) {
+                  <div class="public-company-dl-row">
+                    <dt>Forme juridique</dt>
+                    <dd>{{ lf }}</dd>
+                  </div>
+                }
+                @if (formatSiret(co.siret); as siret) {
+                  <div class="public-company-dl-row">
+                    <dt>SIRET</dt>
+                    <dd>{{ siret }}</dd>
+                  </div>
+                }
+                @if (co.vatNumber) {
+                  <div class="public-company-dl-row">
+                    <dt>N° TVA</dt>
+                    <dd>{{ co.vatNumber }}</dd>
+                  </div>
+                }
+                @if (!co.legalName && !co.legalForm && !co.siret && !co.vatNumber) {
+                  <p class="public-company-detail-empty">Non renseigné</p>
+                }
+              </dl>
+            </div>
+
+            <div class="public-company-detail-block">
+              <h2>Activité</h2>
+              <dl class="public-company-dl">
+                @if (co.industry) {
+                  <div class="public-company-dl-row">
+                    <dt>Secteur</dt>
+                    <dd>{{ co.industry }}</dd>
+                  </div>
+                }
+                @if (formatScaleSize(co.scaleSize); as sizeLabel) {
+                  <div class="public-company-dl-row">
+                    <dt>Effectif</dt>
+                    <dd>{{ sizeLabel }}</dd>
+                  </div>
+                }
+                @if (co.foundedYear) {
+                  <div class="public-company-dl-row">
+                    <dt>Année de création</dt>
+                    <dd>{{ co.foundedYear }}</dd>
+                  </div>
+                }
+              </dl>
+            </div>
+          </div>
+
+          @if (co.description) {
+            <div class="public-company-page-description">
+              <h2>À propos</h2>
+              <div class="public-company-page-rich">
+                <app-safe-html [content]="co.description" />
+              </div>
+            </div>
+          }
+        </section>
+
+        <section class="public-company-page-jobs">
+          <div class="public-company-page-jobs-head">
+            <h2>Offres publiées</h2>
+            <p>{{ totalJobs() }} offre{{ totalJobs() > 1 ? 's' : '' }} en ligne</p>
+          </div>
+
+          @if (jobs().length === 0) {
+            <p class="public-company-page-status">Aucune offre active pour le moment.</p>
+          } @else {
+            <div class="public-company-page-grid">
+              @for (job of jobs(); track job.id) {
+                <article class="public-company-job-card">
+                  <div class="public-company-job-card-top">
+                    <h3>{{ job.title }}</h3>
+                    @if (isQuizEnabled(job)) {
+                      <span class="public-company-job-badge">Quiz</span>
+                    }
+                  </div>
+                  <p class="public-company-job-meta">
+                    {{ job.location || 'Lieu non précisé' }} · {{ job.contractType }}
+                  </p>
+                  <p class="public-company-job-remote">{{ formatRemote(job.remoteType) }}</p>
+                  @if (formatSalary(job); as salary) {
+                    <p class="public-company-job-salary">{{ salary }}</p>
+                  }
+                  <div class="public-company-job-actions">
+                    <a
+                      class="public-company-page-btn public-company-page-btn-primary"
+                      [routerLink]="publicJobLink(job.id)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Voir l’offre
+                    </a>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </section>
+      }
+    }
+  </main>
+</div>

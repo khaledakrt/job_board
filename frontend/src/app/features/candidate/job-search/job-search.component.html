@@ -1,0 +1,570 @@
+<ng-template #filtersPanel>
+  <div class="public-jobs-filters candidate-search-filters">
+    <div class="public-jobs-filters-head">
+      <h3 class="public-jobs-filters-title">Recherche avancée</h3>
+      <div class="public-jobs-filters-actions">
+        <button type="button" class="landing-btn landing-btn-primary" (click)="applyFilters()">
+          Rechercher
+        </button>
+        @if (hasActiveFilters()) {
+          <button type="button" class="landing-btn landing-btn-ghost" (click)="resetFilters()">
+            Réinitialiser
+          </button>
+        }
+        <button type="button" class="landing-btn landing-btn-outline" (click)="createAlert()">
+          Créer une alerte
+        </button>
+      </div>
+    </div>
+
+    <div class="public-jobs-filters-grid">
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Mots-clés</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Titre, compétence, technologie…"
+          [value]="filters().keywords"
+          (input)="updateKeyword($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Localisation</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Ville, région…"
+          [value]="filters().location"
+          (input)="updateLocation($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Entreprise</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Nom de l'employeur…"
+          [value]="filters().company"
+          (input)="updateCompany($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Secteur</label>
+        <input
+          class="public-jobs-input"
+          placeholder="Ex. Technology, Logistics…"
+          [value]="filters().industry"
+          (input)="updateIndustry($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
+        />
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Expérience</label>
+        <select
+          class="public-jobs-select"
+          [value]="filters().experience"
+          (change)="setExperience($any($event.target).value)"
+        >
+          @for (opt of experienceOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="public-jobs-filter-field public-jobs-filter-field-check">
+        <label class="public-jobs-check">
+          <input
+            type="checkbox"
+            [checked]="filters().quizOnly"
+            (change)="toggleQuizOnly()"
+          />
+          <span>Offres avec quiz technique uniquement</span>
+        </label>
+      </div>
+      <div class="public-jobs-filter-field public-jobs-filter-field-wide">
+        <p class="public-jobs-filter-label">Type de contrat</p>
+        <div class="public-jobs-pills">
+          @for (type of contractTypes; track type) {
+            <button
+              type="button"
+              class="public-jobs-pill"
+              [class.public-jobs-pill-active]="filters().contracts.includes(type)"
+              (click)="toggleContract(type)"
+            >
+              {{ type }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="public-jobs-filter-field public-jobs-filter-field-wide">
+        <p class="public-jobs-filter-label">Mode de travail</p>
+        <div class="public-jobs-pills">
+          @for (type of remoteTypes; track type) {
+            <button
+              type="button"
+              class="public-jobs-pill"
+              [class.public-jobs-pill-active]="filters().remotes.includes(type)"
+              (click)="toggleRemote(type)"
+            >
+              {{ remoteLabels[type] }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #jobDetailPanel let-job="job">
+  <header class="detail-header">
+    <div class="detail-head-main">
+      @if (companyLogo(job); as logo) {
+        <img [src]="logo" alt="" class="detail-logo" />
+      } @else {
+        <div class="detail-logo-placeholder">{{ job.company?.name?.charAt(0) || '?' }}</div>
+      }
+      <div>
+        <h2 id="candidate-job-detail-title">{{ job.title }}</h2>
+        @if (job.company?.id; as companyId) {
+          <a
+            class="detail-co detail-co-link"
+            [routerLink]="publicCompanyLink(companyId)"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Voir le profil de l'entreprise dans un nouvel onglet"
+          >
+            {{ job.company?.name || 'Entreprise' }}
+          </a>
+        } @else {
+          <p class="detail-co">{{ job.company?.name || 'Entreprise' }}</p>
+        }
+        @if (job.company?.industry; as industry) {
+          <p class="detail-industry">{{ industry }}</p>
+        }
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button
+        type="button"
+        class="btn-secondary !w-auto px-3"
+        title="Afficher dans un nouvel onglet"
+        (click)="openJobInNewTab(job, $event)"
+      >
+        Nouvel onglet
+      </button>
+      <button type="button" class="btn-secondary !w-auto px-3" (click)="saveJob(job)">Enregistrer</button>
+      @if (hasApplied(job.id)) {
+        <button type="button" class="btn-primary !w-auto px-4 btn-applied" disabled>
+          Déjà postulé
+        </button>
+      } @else {
+        <button type="button" class="btn-primary !w-auto px-4" (click)="openApplyModal()">
+          Postuler
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (isQuizEnabled(job)) {
+    <div class="detail-quiz-banner">
+      <span class="detail-quiz-badge">Quiz technique requis</span>
+      <span class="detail-quiz-badge-hint">Répondez aux 2 questions pour postuler (toute réponse acceptée)</span>
+    </div>
+  }
+
+  <div class="detail-meta">
+    <span>{{ job.location || 'Lieu flexible' }}</span>
+    <span>{{ job.contractType }}</span>
+    <span>{{ formatRemote(job.remoteType) }}</span>
+    @if (formatSalary(job); as salary) {
+      <span class="detail-meta-salary">{{ salary }}</span>
+    }
+    @if (formatExperience(job); as exp) {
+      <span>{{ exp }}</span>
+    }
+  </div>
+
+  @if (job.languages?.length) {
+    <div class="detail-tags detail-tags-lang">
+      @for (lang of job.languages; track $index) {
+        <span class="tag-chip tag-chip-lang">{{ lang }}</span>
+      }
+    </div>
+  }
+
+  @if (job.tags?.length) {
+    <div class="detail-tags detail-tags-top">
+      @for (tag of job.tags; track $index) {
+        <span class="tag-chip">{{ tag }}</span>
+      }
+    </div>
+  }
+
+  @if (job.benefits?.length) {
+    <h3 class="detail-section-title">Avantages</h3>
+    <div class="detail-tags detail-tags-benefits">
+      @for (benefit of job.benefits; track $index) {
+        <span class="tag-chip tag-chip-benefit">{{ benefit }}</span>
+      }
+    </div>
+  }
+
+  <h3 class="detail-section-title">Description du poste</h3>
+  <div class="detail-text">
+    <app-safe-html [content]="job.description" />
+  </div>
+
+  @if (job.requirements) {
+    <h3 class="detail-section-title">Profil recherché</h3>
+    <div class="detail-text">
+      <app-safe-html [content]="job.requirements" />
+    </div>
+  }
+
+  @if (isQuizEnabled(job) && jobQuiz(job); as quiz) {
+    <h3 class="detail-section-title">Quiz de présélection</h3>
+    <p class="detail-quiz-intro">
+      Répondez aux 2 questions lors de la candidature. Le recruteur comparera vos réponses aux réponses attendues.
+    </p>
+    <div class="detail-quiz-preview">
+      @for (question of quiz.questions; track $index; let qi = $index) {
+        <article class="detail-quiz-card panel-card">
+          <p class="detail-quiz-q">
+            <span class="apply-quiz-num">Q{{ qi + 1 }}</span>
+            {{ question.text }}
+          </p>
+          <ul class="detail-quiz-choices-readonly">
+            @for (choice of question.choices; track $index) {
+              <li>{{ choice.text }}</li>
+            }
+          </ul>
+        </article>
+      }
+    </div>
+  }
+</ng-template>
+
+<div class="search-page">
+  <header class="page-header page-header-row">
+    <div>
+      <h1 class="page-title">Rechercher une offre</h1>
+      <p class="page-subtitle">
+        {{ filteredJobs().length }} offre{{ filteredJobs().length > 1 ? 's' : '' }} affichée{{ filteredJobs().length > 1 ? 's' : '' }}
+      </p>
+    </div>
+    <div class="view-mode-toggle" role="group" aria-label="Mode d'affichage des offres">
+      <button
+        type="button"
+        class="view-mode-btn"
+        [class.view-mode-btn-active]="viewMode() === 'linkedin'"
+        (click)="setViewMode('linkedin')"
+      >
+        Vue liste
+      </button>
+      <button
+        type="button"
+        class="view-mode-btn"
+        [class.view-mode-btn-active]="viewMode() === 'cards'"
+        (click)="setViewMode('cards')"
+      >
+        Vue cartes
+      </button>
+    </div>
+  </header>
+
+  <ng-container *ngTemplateOutlet="filtersPanel" />
+
+  @if (viewMode() === 'linkedin') {
+  <div class="search-shell">
+    <aside class="search-left">
+      <div class="job-list">
+        @if (loading()) {
+          <p class="table-loading panel-card">Chargement des offres...</p>
+        }
+        @for (job of filteredJobs(); track job.id) {
+          <article
+            class="job-card"
+            [class.job-card-active]="selectedJob()?.id === job.id"
+            tabindex="0"
+            role="button"
+            [attr.aria-pressed]="selectedJob()?.id === job.id"
+            (click)="selectJobFromList(job)"
+            (keydown.enter)="selectJobFromList(job, $event)"
+            (keydown.space)="$event.preventDefault(); selectJobFromList(job, $event)"
+          >
+            <div class="job-card-top">
+              @if (companyLogo(job); as logo) {
+                <img [src]="logo" alt="" class="job-card-logo" />
+              } @else {
+                <div class="job-card-logo-placeholder">{{ job.company?.name?.charAt(0) || '?' }}</div>
+              }
+              <div class="job-card-body">
+                <h3 class="job-card-title">
+                  <a
+                    class="job-card-title-link"
+                    [routerLink]="publicJobLink(job.id)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Ouvrir l'offre dans un nouvel onglet"
+                    (click)="$event.stopPropagation()"
+                  >
+                    {{ job.title }}
+                  </a>
+                </h3>
+                @if (job.company?.id; as companyId) {
+                  <a
+                    class="job-card-co job-card-co-link"
+                    [routerLink]="publicCompanyLink(companyId)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Voir le profil de l'entreprise"
+                    (click)="$event.stopPropagation()"
+                  >
+                    {{ job.company?.name }}
+                  </a>
+                } @else if (job.company?.name) {
+                  <p class="job-card-co">{{ job.company?.name }}</p>
+                }
+                <p class="job-card-meta">
+                  {{ job.location || 'Lieu non précisé' }} · {{ job.contractType }} · {{ formatRemote(job.remoteType) }}
+                </p>
+                @if (formatSalary(job); as salary) {
+                  <p class="job-card-salary">{{ salary }}</p>
+                }
+                @if (hasApplied(job.id)) {
+                  <p class="job-card-applied">Déjà postulé</p>
+                }
+              </div>
+              <div class="job-card-badges">
+                @if (isQuizEnabled(job)) {
+                  <span class="job-card-pill">Quiz</span>
+                }
+                @if (isSaved(job.id)) {
+                  <span class="saved-badge">Enregistrée</span>
+                }
+              </div>
+            </div>
+            <div class="job-card-footer" (click)="$event.stopPropagation()">
+              <button type="button" class="job-card-btn job-card-btn-outline" (click)="selectJobFromList(job, $event)">
+                Voir le détail
+              </button>
+              <button
+                type="button"
+                class="job-card-btn job-card-btn-outline"
+                (click)="openJobInNewTab(job, $event)"
+              >
+                Nouvel onglet
+              </button>
+              @if (hasApplied(job.id)) {
+                <span class="job-card-btn job-card-btn-applied">Postulé</span>
+              } @else {
+                <button type="button" class="job-card-btn job-card-btn-apply" (click)="quickApply(job, $event)">
+                  Postuler
+                </button>
+              }
+            </div>
+          </article>
+        } @empty {
+          @if (!loading()) {
+            <p class="empty-cell panel-card">Aucune offre ne correspond à vos filtres.</p>
+          }
+        }
+      </div>
+    </aside>
+
+    <section class="search-right panel-card">
+      @if (selectedJob(); as job) {
+        <div class="detail-sticky">
+          <ng-container *ngTemplateOutlet="jobDetailPanel; context: { job }" />
+        </div>
+      } @else {
+        <div class="detail-empty">
+          <p class="detail-empty-title">Sélectionnez une offre</p>
+          <p class="detail-empty-hint">
+            Cliquez sur une offre à gauche (titre, entreprise ou bouton « Voir le détail ») pour afficher le poste et postuler.
+          </p>
+        </div>
+      }
+    </section>
+  </div>
+  } @else {
+    <div class="cards-shell">
+      @if (loading()) {
+        <p class="table-loading panel-card">Chargement des offres...</p>
+      } @else if (filteredJobs().length === 0) {
+        <p class="empty-cell panel-card">Aucune offre ne correspond à vos filtres.</p>
+      } @else {
+        <div class="cards-grid">
+          @for (job of filteredJobs(); track job.id) {
+            <article
+              class="cards-grid-card"
+              tabindex="0"
+              role="button"
+              (click)="openCardsJobDetail(job)"
+              (keydown.enter)="openCardsJobDetail(job)"
+              (keydown.space)="$event.preventDefault(); openCardsJobDetail(job)"
+            >
+              <div class="cards-grid-card-top">
+                @if (companyLogo(job); as logo) {
+                  <img [src]="logo" alt="" class="cards-grid-logo" />
+                } @else {
+                  <div class="cards-grid-logo-ph">{{ job.company?.name?.charAt(0) || '?' }}</div>
+                }
+                @if (isQuizEnabled(job)) {
+                  <span class="cards-grid-badge">Quiz</span>
+                }
+                @if (isSaved(job.id)) {
+                  <span class="cards-grid-saved">Enregistrée</span>
+                }
+              </div>
+              <h3 class="cards-grid-title">
+                <a
+                  class="cards-grid-title-link"
+                  [routerLink]="publicJobLink(job.id)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  (click)="$event.stopPropagation()"
+                >
+                  {{ job.title }}
+                </a>
+              </h3>
+              @if (job.company?.id; as companyId) {
+                <a
+                  class="cards-grid-co cards-grid-co-link"
+                  [routerLink]="publicCompanyLink(companyId)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Voir le profil de l'entreprise dans un nouvel onglet"
+                  (click)="$event.stopPropagation()"
+                >
+                  {{ job.company?.name }}
+                </a>
+              } @else if (job.company?.name) {
+                <p class="cards-grid-co">{{ job.company?.name }}</p>
+              }
+              <p class="cards-grid-meta">
+                {{ job.location || 'Lieu non précisé' }} · {{ job.contractType }} · {{ formatRemote(job.remoteType) }}
+              </p>
+              @if (formatSalary(job); as salary) {
+                <p class="cards-grid-salary">{{ salary }}</p>
+              }
+              @if (hasApplied(job.id)) {
+                <p class="cards-grid-applied">Déjà postulé</p>
+              }
+              <div class="cards-grid-actions" (click)="$event.stopPropagation()">
+                <button type="button" class="cards-grid-btn cards-grid-btn-primary" (click)="openCardsJobDetail(job)">
+                  Voir l'offre
+                </button>
+                <button
+                  type="button"
+                  class="cards-grid-btn cards-grid-btn-outline"
+                  title="Afficher dans un nouvel onglet"
+                  (click)="openJobInNewTab(job, $event)"
+                >
+                  Nouvel onglet
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (viewMode() === 'cards' && cardsDetailOpen()) {
+  <dialog
+    #detailDialog
+    class="candidate-job-detail-dialog"
+    aria-labelledby="candidate-job-detail-title"
+    (click)="onCardsDetailDialogClick($event)"
+    (close)="onCardsDetailDialogClosed()"
+  >
+    <div class="candidate-job-detail-modal">
+      <button type="button" class="candidate-job-detail-close" aria-label="Fermer" (click)="closeCardsDetail()">
+        ✕
+      </button>
+      @if (selectedJob(); as job) {
+        <div class="candidate-job-detail-body">
+          <ng-container *ngTemplateOutlet="jobDetailPanel; context: { job }" />
+        </div>
+      }
+    </div>
+  </dialog>
+}
+
+@if (error()) {
+  <div class="toast-fixed-error">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="toast-fixed-success">{{ success() }}</div>
+}
+
+@if (applyModalOpen()) {
+  <div class="modal-backdrop" (click)="closeApplyModal()">
+    <div class="modal-card-lg apply-modal" (click)="$event.stopPropagation()">
+      <h2 class="modal-title">Postuler — {{ selectedJob()?.title }}</h2>
+      <p class="modal-sub">
+        @if (selectedJob(); as job) {
+          @if (isQuizEnabled(job)) {
+            Complétez le quiz technique puis votre lettre de motivation (assistant IA disponible).
+          } @else {
+            Rédigez votre lettre de motivation ou utilisez l’assistant IA.
+          }
+        }
+      </p>
+
+      @if (selectedJob(); as job) {
+        @if (isQuizEnabled(job) && jobQuiz(job); as quiz) {
+          <section class="apply-quiz panel-card">
+            <h3 class="apply-quiz-title">Quiz obligatoire</h3>
+            <p class="apply-quiz-hint">
+              Choisissez une réponse pour chaque question (obligatoire pour envoyer la candidature).
+            </p>
+            @for (question of quiz.questions; track $index; let qi = $index) {
+              <article class="apply-quiz-card">
+                <p class="apply-quiz-q">
+                  <span class="apply-quiz-num">Q{{ qi + 1 }}</span>
+                  {{ question.text }}
+                </p>
+                <ul class="apply-quiz-choices">
+                  @for (choice of question.choices; track $index; let ci = $index) {
+                    <li>
+                      <label class="apply-quiz-choice">
+                        <input
+                          type="radio"
+                          [name]="'apply-q-' + qi"
+                          [checked]="quizAnswerFor(qi) === ci"
+                          (change)="selectQuizAnswer(qi, ci)"
+                        />
+                        <span>{{ choice.text }}</span>
+                      </label>
+                    </li>
+                  }
+                </ul>
+              </article>
+            }
+          </section>
+        }
+      }
+
+      <button type="button" class="ai-link" (click)="generateLetter()" [disabled]="generatingLetter()">
+        @if (generatingLetter()) { Génération en cours... } @else { ✨ Assistant IA : générer une lettre personnalisée }
+      </button>
+      <form [formGroup]="applyForm" (ngSubmit)="submitApplication()">
+        <label class="form-label">Lettre de motivation</label>
+        <textarea
+          class="form-input"
+          rows="12"
+          formControlName="coverLetter"
+          placeholder="Votre lettre de motivation..."
+        ></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">Annuler</button>
+          <button type="submit" class="btn-primary !w-auto px-4" [disabled]="applying()">
+            @if (applying()) { Envoi... } @else { Envoyer ma candidature }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

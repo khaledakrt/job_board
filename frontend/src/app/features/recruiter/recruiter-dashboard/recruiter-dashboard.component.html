@@ -1,0 +1,26 @@
+<div class="page-header">
+  <h1 class="page-title">Tableau de bord</h1>
+  <p class="page-subtitle">Vue d’ensemble de vos recrutements.</p>
+</div>
+
+@if (!context.hasCompany()) {
+  <div class="alert alert-error">
+    Complétez la fiche
+    <a [routerLink]="routes.RECRUITER.ONBOARDING" class="link-primary">entreprise</a>
+    pour débloquer tout l’espace recruteur.
+  </div>
+}
+
+<app-analytics-grid [jobs]="jobs()" />
+
+<div class="quick-actions">
+  <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">+ Créer une offre</a>
+  <a [routerLink]="routes.RECRUITER.ATS" class="quick-card">Voir les candidatures</a>
+  @if (context.isOwner()) {
+    <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">Gérer l’équipe</a>
+  }
+</div>
+
+@if (loading()) {
+  <p class="table-loading">Actualisation des indicateurs...</p>
+}

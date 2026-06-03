@@ -1,0 +1,144 @@
+<div class="page-header row-between">
+  <div>
+    <h1 class="page-title">Gestion de l'équipe</h1>
+    <p class="page-subtitle">
+      @if (canManageTeam()) {
+        Invitez des recruteurs et gérez leurs permissions via « Modifier ».
+      } @else {
+        Membres de votre espace recrutement.
+      }
+    </p>
+  </div>
+  @if (canManageTeam()) {
+    <button type="button" class="btn-primary !w-auto px-4" (click)="openInviteModal()">
+      Inviter un recruteur
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="alert alert-error">{{ errorMessage() }}</div>
+}
+@if (successMessage()) {
+  <div class="alert alert-success">{{ successMessage() }}</div>
+}
+
+<div class="table-panel">
+  @if (loading()) {
+    <p class="table-loading">Chargement de l'équipe…</p>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>E-mail</th>
+          <th>Rôle</th>
+          <th>Poste</th>
+          <th>Permissions</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (member of members(); track member.id) {
+          <tr>
+            <td>{{ member.email }}</td>
+            <td>
+              <span class="badge" [class.badge-owner]="member.companyRole === 'owner'">
+                {{ roleLabel(member.companyRole) }}
+              </span>
+            </td>
+            <td>{{ member.jobTitle || '—' }}</td>
+            <td>{{ permissionLabel(member) }}</td>
+            <td class="actions-cell">
+              @if (canEditMember(member)) {
+                <button type="button" class="btn-text-link" (click)="openEditModal(member)">
+                  Modifier
+                </button>
+                <button type="button" class="btn-text-danger" (click)="removeMember(member)">
+                  Retirer
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="empty-cell">Aucun membre pour le moment.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+@if (modalOpen()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="modal-title">Inviter un membre</h2>
+      <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" class="modal-form">
+        <div class="form-field">
+          <label class="form-label" for="email">E-mail</label>
+          <input id="email" class="form-input" formControlName="email" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="jobTitle">Poste</label>
+          <input id="jobTitle" class="form-input" formControlName="jobTitle" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="phone">Téléphone</label>
+          <input id="phone" class="form-input" formControlName="phone" />
+        </div>
+
+        <fieldset class="permissions-fieldset">
+          <legend class="form-label">Permissions initiales</legend>
+          @for (perm of permissionOptions; track perm.key) {
+            <label class="checkbox-row">
+              <input type="checkbox" [formControlName]="perm.key" />
+              <span>{{ perm.label }}</span>
+            </label>
+          }
+        </fieldset>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeModal()">Annuler</button>
+          <button type="submit" class="btn-primary !w-auto px-4" [disabled]="saving()">
+            @if (saving()) { Envoi… } @else { Envoyer l'invitation }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (editModalOpen() && editingMember(); as member) {
+  <div class="modal-backdrop" (click)="closeEditModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2 class="modal-title">Modifier — {{ member.email }}</h2>
+      <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="modal-form">
+        <div class="form-field">
+          <label class="form-label" for="editJobTitle">Poste</label>
+          <input id="editJobTitle" class="form-input" formControlName="jobTitle" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="editPhone">Téléphone</label>
+          <input id="editPhone" class="form-input" formControlName="phone" />
+        </div>
+
+        <fieldset class="permissions-fieldset">
+          <legend class="form-label">Permissions</legend>
+          @for (perm of permissionOptions; track perm.key) {
+            <label class="checkbox-row">
+              <input type="checkbox" [formControlName]="perm.key" />
+              <span>{{ perm.label }}</span>
+            </label>
+          }
+        </fieldset>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeEditModal()">Annuler</button>
+          <button type="submit" class="btn-primary !w-auto px-4" [disabled]="saving()">
+            @if (saving()) { Enregistrement… } @else { Enregistrer }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

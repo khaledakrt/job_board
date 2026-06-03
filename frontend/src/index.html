@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>JobBoard — Plateforme de recrutement</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="JobBoard — recrutez et postulez sur une seule plateforme." />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <style>
+      #bootstrap-error {
+        display: none;
+        margin: 1rem;
+        padding: 1rem 1.25rem;
+        border-radius: 0.75rem;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        font-family: system-ui, sans-serif;
+        font-size: 0.9rem;
+      }
+      .static-landing {
+        min-height: 100vh;
+        background: linear-gradient(160deg, #eef3f8 0%, #f8fafc 45%, #fff8ed 100%);
+        color: #0f172a;
+        font-family: system-ui, sans-serif;
+      }
+      .static-landing-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 2.5rem 1rem 3rem;
+      }
+      .static-landing h1 {
+        margin: 0.5rem 0 0;
+        font-size: clamp(1.75rem, 5vw, 2.75rem);
+        line-height: 1.15;
+      }
+      .static-landing p {
+        max-width: 36rem;
+        line-height: 1.6;
+        color: #475569;
+      }
+      .static-landing-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 1.5rem;
+      }
+      .static-landing-actions a {
+        display: inline-flex;
+        padding: 0.7rem 1.2rem;
+        border-radius: 0.55rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-decoration: none;
+      }
+      .static-btn-primary {
+        background: #0a66c2;
+        color: #fff;
+      }
+      .static-btn-outline {
+        background: #fff;
+        color: #0a66c2;
+        border: 1px solid #b3cce5;
+      }
+      .static-loading {
+        margin-top: 1.25rem;
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+    </style>
+  </head>
+  <body class="bg-surface-50 text-surface-900 antialiased">
+    <div id="bootstrap-error" role="alert"></div>
+    <app-root>
+      <div class="static-landing">
+        <div class="static-landing-inner">
+          <p style="margin: 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #0a66c2">
+            JobBoard
+          </p>
+          <h1>Recrutez mieux.<br /><span style="color: #0a66c2">Postulez plus vite.</span></h1>
+          <p>
+            Plateforme de recrutement pour candidats et entreprises — offres, quiz de présélection et ATS intégré.
+          </p>
+          <div class="static-landing-actions">
+            <a class="static-btn-primary" href="/auth/register?role=candidate">Je cherche un emploi</a>
+            <a class="static-btn-outline" href="/auth/register?role=recruiter">Je recrute</a>
+            <a class="static-btn-outline" href="/auth/login">Connexion</a>
+          </div>
+          <p class="static-loading">Chargement de l’application…</p>
+        </div>
+      </div>
+    </app-root>
+    <noscript>
+      <p style="padding: 2rem; font-family: system-ui, sans-serif">
+        JavaScript est requis. Activez-le ou utilisez les liens :
+        <a href="/auth/register?role=candidate">Candidat</a>,
+        <a href="/auth/register?role=recruiter">Recruteur</a>,
+        <a href="/auth/login">Connexion</a>.
+      </p>
+    </noscript>
+  </body>
+</html>

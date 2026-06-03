@@ -1,0 +1,285 @@
+:host {
+  --job-input-py: 0.4rem;
+  --job-input-px: 0.65rem;
+  --job-input-fs: 0.8125rem;
+  --job-label-fs: 0.7rem;
+  --job-grid-gap: 0.65rem;
+}
+
+:host .page-header {
+  margin-bottom: 1rem;
+}
+
+:host .page-title {
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+
+:host .page-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+}
+
+:host .page-header .btn-secondary {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8125rem;
+  border-radius: 0.5rem;
+}
+
+:host .alert {
+  margin-bottom: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.job-form {
+  padding: 0.9rem 1rem;
+}
+
+.form-field-inline {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.2rem 0.45rem;
+  align-items: center;
+}
+
+.form-field-inline-top {
+  align-items: start;
+}
+
+.form-field-inline-top .form-label {
+  padding-top: 0.42rem;
+}
+
+.job-form .form-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: right;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.form-field-body {
+  min-width: 0;
+  width: 100%;
+}
+
+.form-field-body .form-input,
+.form-field-body select.form-input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.form-field-body app-rich-text-editor {
+  display: block;
+  width: 100%;
+}
+
+.job-form .form-input {
+  padding: var(--job-input-py) var(--job-input-px);
+  font-size: var(--job-input-fs);
+  line-height: 1.35;
+  border-radius: 0.5rem;
+}
+
+.job-form select.form-input {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.job-form textarea.form-input {
+  min-height: 5.5rem;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+  resize: vertical;
+}
+
+.job-form .form-actions .btn-primary,
+.job-form .tag-input-row .btn-secondary {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  border-radius: 0.5rem;
+}
+
+.tag-input-row {
+  display: flex;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.tag-input-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.tag-input-row .btn-secondary {
+  flex-shrink: 0;
+  min-width: 2rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #074484;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.tag-chip-lang {
+  background: #f0fdf4;
+  color: #046139;
+  border: 1px solid #bbf7d0;
+}
+
+.tag-chip-benefit {
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.tag-remove {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.field-hint {
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.field-hint-error {
+  color: #b3261e;
+}
+
+.job-form .rte-editor {
+  border-radius: 0.5rem;
+}
+
+.field-readonly {
+  margin: 0;
+  font-size: var(--job-input-fs);
+  color: #475569;
+}
+
+.form-actions {
+  margin-top: 0.65rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--job-grid-gap);
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.quiz-section {
+  margin-top: 0.25rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.quiz-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.quiz-section-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.quiz-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.quiz-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.quiz-section-actions .btn-secondary {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8125rem;
+  border-radius: 0.5rem;
+}
+
+.quiz-status-ok {
+  color: #15803d;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.quiz-status-warn {
+  color: #b45309;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+
+  .form-field-inline {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .job-form .form-label {
+    text-align: left;
+  }
+
+  .form-field-inline-top .form-label {
+    padding-top: 0;
+  }
+}

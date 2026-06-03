@@ -1,0 +1,254 @@
+<div class="tracking-workspace">
+  <header class="page-header row-between">
+    <div>
+      <h1 class="page-title">Tableau de bord</h1>
+      <p class="page-subtitle">
+        Suivez vos candidatures, offres enregistrées et alertes emploi en un seul endroit.
+      </p>
+    </div>
+    <a [routerLink]="routes.CANDIDATE.JOBS" class="btn-primary !w-auto px-4">Rechercher des offres</a>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <section class="stats-grid">
+    <article class="stat-card panel-card">
+      <p class="stat-label">Candidatures</p>
+      <p class="stat-value">{{ stats().total }}</p>
+    </article>
+    <article class="stat-card panel-card">
+      <p class="stat-label">En cours</p>
+      <p class="stat-value">{{ stats().active }}</p>
+    </article>
+    <article class="stat-card panel-card">
+      <p class="stat-label">Entretiens</p>
+      <p class="stat-value">{{ stats().interview }}</p>
+    </article>
+    <article class="stat-card panel-card">
+      <p class="stat-label">Offres enregistrées</p>
+      <p class="stat-value">{{ stats().saved }}</p>
+    </article>
+  </section>
+
+  <section class="tracking-section panel-card">
+    <div class="section-head">
+      <h2 class="section-title">Mes candidatures</h2>
+      <p class="section-hint">Cliquez sur une ligne pour voir le détail et les messages du recruteur.</p>
+    </div>
+    <div class="apps-table-wrap">
+      <table class="apps-table">
+        <thead>
+          <tr>
+            <th>Poste</th>
+            <th>Entreprise</th>
+            <th>Statut</th>
+            <th class="th-timeline">Progression</th>
+            <th>Mise à jour</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loadingApps()) {
+            <tr>
+              <td colspan="6" class="table-loading">Chargement des candidatures…</td>
+            </tr>
+          }
+          @for (app of applications(); track app.id) {
+            <tr class="app-row-clickable" (click)="openApplicationDetail(app)">
+              <td data-label="Poste">
+                <span class="app-title">{{ app.job?.title || '—' }}</span>
+              </td>
+              <td data-label="Entreprise">{{ companyName(app) }}</td>
+              <td data-label="Statut">
+                <span class="status-pill status-pill-{{ app.status }}">{{ statusLabels[app.status] }}</span>
+              </td>
+              <td class="timeline-cell" data-label="Progression">
+                <app-application-timeline [status]="app.status" [compact]="true" />
+              </td>
+              <td class="date-cell" data-label="Mise à jour">{{ app.updatedAt | date: 'shortDate' }}</td>
+              <td class="actions-cell">
+                <button
+                  type="button"
+                  class="row-action-btn"
+                  title="Voir le détail"
+                  (click)="openApplicationDetail(app); $event.stopPropagation()"
+                >
+                  Détail
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!loadingApps()) {
+              <tr>
+                <td colspan="6" class="empty-cell">
+                  Aucune candidature. <a [routerLink]="routes.CANDIDATE.JOBS">Parcourir les offres</a>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="tracking-columns">
+    <section class="tracking-section panel-card">
+      <div class="section-head">
+        <h2 class="section-title">Offres enregistrées</h2>
+        <a [routerLink]="routes.CANDIDATE.JOBS" class="section-link">Voir toutes les offres</a>
+      </div>
+      @if (loadingSaved()) {
+        <p class="table-loading">Chargement…</p>
+      } @else {
+        <div class="saved-grid">
+          @for (item of savedJobs(); track item.id) {
+            <article class="saved-card" (click)="openSavedJob(item)" tabindex="0" role="button">
+              @if (resolveLogo(item.job?.company?.logoUrl); as logo) {
+                <img [src]="logo" alt="" class="saved-logo" />
+              } @else {
+                <div class="saved-logo-placeholder">{{ item.job?.company?.name?.charAt(0) || 'J' }}</div>
+              }
+              <div class="saved-body">
+                <h3>{{ item.job?.title || 'Offre' }}</h3>
+                <p class="saved-co">{{ item.job?.company?.name }}</p>
+                <p class="saved-meta">
+                  {{ item.job?.location || 'Lieu flexible' }} · {{ item.job?.contractType }}
+                </p>
+                @if (formatSavedSalary(item); as salary) {
+                  <p class="saved-salary">{{ salary }}</p>
+                }
+              </div>
+              <div class="saved-actions" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="saved-link-btn"
+                  title="Page publique"
+                  (click)="openPublicJob(item.jobId, $event)"
+                >
+                  ↗
+                </button>
+                <button type="button" class="saved-remove" (click)="removeSaved(item)" title="Retirer">×</button>
+              </div>
+            </article>
+          } @empty {
+            <p class="empty-cell">Aucune offre enregistrée. Utilisez « Enregistrer » depuis la recherche.</p>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="tracking-section panel-card">
+      <div class="section-head">
+        <h2 class="section-title">Alertes emploi</h2>
+        <a [routerLink]="routes.CANDIDATE.JOBS" class="section-link">Créer une alerte</a>
+      </div>
+      @if (loadingAlerts()) {
+        <p class="table-loading">Chargement…</p>
+      } @else {
+        <ul class="alerts-list">
+          @for (alert of alerts(); track alert.id) {
+            <li class="alert-row">
+              <div>
+                <p class="alert-filters">{{ formatAlertFilters(alert.searchFilters) }}</p>
+                <p class="alert-date">Créée le {{ alert.createdAt | date: 'mediumDate' }}</p>
+              </div>
+              <button type="button" class="btn-secondary !w-auto px-3 py-2 text-xs" (click)="removeAlert(alert)">
+                Supprimer
+              </button>
+            </li>
+          } @empty {
+            <p class="empty-cell">Aucune alerte. Créez-en une depuis les filtres de recherche.</p>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</div>
+
+@if (detailOpen()) {
+  <div class="app-detail-backdrop" (click)="closeDetail()" role="presentation">
+    <article
+      id="app-detail-dialog"
+      class="app-detail-modal panel-card"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-labelledby="app-detail-title"
+    >
+      <button type="button" class="app-detail-close" aria-label="Fermer" (click)="closeDetail()">×</button>
+
+      @if (loadingDetail()) {
+        <p class="table-loading">Chargement du détail…</p>
+      } @else {
+        @if (selectedApplication(); as detail) {
+        <header class="app-detail-header">
+          <div>
+            <h2 id="app-detail-title">{{ detail.job?.title || 'Candidature' }}</h2>
+            <p class="app-detail-co">{{ companyName(detail) }}</p>
+          </div>
+          <span class="status-pill status-pill-{{ detail.status }}">{{ statusLabels[detail.status] }}</span>
+        </header>
+
+        <app-application-timeline [status]="detail.status" />
+
+        <div class="app-detail-meta">
+          <span>Postulé le {{ detail.createdAt | date: 'mediumDate' }}</span>
+          <span>Dernière mise à jour {{ detail.updatedAt | date: 'mediumDate' }}</span>
+          @if (detail.rating != null) {
+            <span>Note recruteur : {{ detail.rating }}/5</span>
+          }
+        </div>
+
+        @if (detail.coverLetter) {
+          <section class="app-detail-block">
+            <h3 class="app-detail-subtitle">Lettre de motivation envoyée</h3>
+            <div class="app-detail-text">
+              <app-safe-html [content]="detail.coverLetter" />
+            </div>
+          </section>
+        }
+
+        @if (resumeLink(detail.resumeSnapshotUrl); as resume) {
+          <p class="app-detail-resume">
+            <a [href]="resume" target="_blank" rel="noopener noreferrer">Télécharger le CV envoyé</a>
+          </p>
+        }
+
+        @if (detail.notes?.length) {
+          <section class="app-detail-block">
+            <h3 class="app-detail-subtitle">Messages du recruteur</h3>
+            <ul class="app-notes-list">
+              @for (note of detail.notes; track note.id) {
+                <li class="app-note-item">
+                  <p class="app-note-text">{{ note.noteText }}</p>
+                  <p class="app-note-date">{{ note.createdAt | date: 'medium' }}</p>
+                </li>
+              }
+            </ul>
+          </section>
+        } @else {
+          <p class="app-detail-empty-notes">Aucun message du recruteur pour le moment.</p>
+        }
+
+        <div class="app-detail-actions">
+          @if (detail.job?.id; as jobId) {
+            <a
+              [routerLink]="routes.CANDIDATE.JOBS"
+              [queryParams]="{ jobId }"
+              class="btn-primary !w-auto px-4"
+              (click)="closeDetail()"
+            >
+              Voir l'offre
+            </a>
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="openPublicJob(jobId, $event)">
+              Page publique
+            </button>
+          }
+        </div>
+        }
+      }
+    </article>
+  </div>
+}

@@ -1,0 +1,95 @@
+<div class="page-header row-between">
+  <div>
+    <a [routerLink]="routes.RECRUITER.JOBS" class="back-link">← Retour aux offres</a>
+    @if (job(); as j) {
+      <h1 class="page-title">{{ j.title }}</h1>
+      <p class="page-subtitle">Aperçu interne — comme vue par les candidats lorsque l’offre est affichée.</p>
+    }
+  </div>
+  @if (job(); as j) {
+    <div class="header-actions">
+      <span class="badge" [class]="statusBadgeClass(j.status)">{{ statusLabels[j.status] }}</span>
+      <a [routerLink]="['/recruiter/jobs', j.id, 'edit']" class="btn-secondary !w-auto px-4">Modifier</a>
+      <a [routerLink]="routes.RECRUITER.ATS" [queryParams]="{ jobId: j.id }" class="btn-primary !w-auto px-4">Candidatures</a>
+    </div>
+  }
+</div>
+
+@if (loading()) {
+  <p class="table-loading panel-card">Chargement...</p>
+}
+
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+@if (job(); as j) {
+  <div class="visibility-banner" [class.visibility-public]="j.status === 'active'">
+    {{ visibilityNote(j.status) }}
+  </div>
+
+  <article class="preview-card panel-card">
+    <header class="preview-header">
+      @if (companyLogo(j); as logo) {
+        <img [src]="logo" alt="" class="preview-logo" />
+      } @else {
+        <div class="preview-logo-ph">{{ j.company?.name?.charAt(0) || '?' }}</div>
+      }
+      <div>
+        <h2>{{ j.title }}</h2>
+        <p class="preview-co">{{ j.company?.name }}</p>
+      </div>
+    </header>
+
+    <div class="preview-meta">
+      <span>{{ j.location || 'Lieu flexible' }}</span>
+      <span>{{ j.contractType }}</span>
+      <span>{{ formatRemote(j.remoteType) }}</span>
+      @if (formatSalary(j); as salary) {
+        <span class="meta-salary">{{ salary }}</span>
+      }
+      @if (formatExperience(j); as exp) {
+        <span>{{ exp }}</span>
+      }
+      <span>{{ j.viewsCount }} vues · {{ j.applicationsCount }} candidature(s)</span>
+      <span>Expire le {{ j.expiresAt | date: 'dd/MM/yyyy' }}</span>
+    </div>
+
+    @if (j.languages?.length) {
+      <div class="preview-tags preview-tags-lang">
+        @for (lang of j.languages; track lang) {
+          <span class="tag-chip tag-chip-lang">{{ lang }}</span>
+        }
+      </div>
+    }
+
+    @if (j.tags?.length) {
+      <div class="preview-tags">
+        @for (tag of j.tags; track tag) {
+          <span class="tag-chip">{{ tag }}</span>
+        }
+      </div>
+    }
+
+    @if (j.benefits?.length) {
+      <h3 class="section-title">Avantages</h3>
+      <div class="preview-tags preview-tags-benefits">
+        @for (benefit of j.benefits; track benefit) {
+          <span class="tag-chip tag-chip-benefit">{{ benefit }}</span>
+        }
+      </div>
+    }
+
+    <h3 class="section-title">Description du poste</h3>
+    <div class="preview-text">
+      <app-safe-html [content]="j.description" />
+    </div>
+
+    @if (j.requirements) {
+      <h3 class="section-title">Profil recherché</h3>
+      <div class="preview-text">
+        <app-safe-html [content]="j.requirements" />
+      </div>
+    }
+  </article>
+}

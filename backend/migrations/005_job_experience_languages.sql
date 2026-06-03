@@ -1,0 +1,3 @@
+ALTER TABLE `jobs`
+  ADD COLUMN `experience_years` SMALLINT UNSIGNED NULL DEFAULT NULL AFTER `salary_label`,
+  ADD COLUMN `languages` JSON NULL DEFAULT NULL AFTER `tags`;

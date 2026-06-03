@@ -1,0 +1,108 @@
+<div class="auth-shell flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-lg">
+    <div class="mb-8 text-center">
+      <h1 class="text-2xl font-bold text-surface-900">Create your JobBoard account</h1>
+      <p class="mt-2 text-sm text-surface-600">
+        Choose how you want to use the platform.
+      </p>
+    </div>
+
+    <div class="auth-card">
+      <div class="role-toggle mb-6" role="group" aria-label="Account type">
+        <button
+          type="button"
+          class="role-toggle-btn"
+          [class.role-toggle-btn-active]="selectedRole() === 'candidate'"
+          (click)="selectRole('candidate')"
+        >
+          <span class="role-toggle-title">Candidate</span>
+          <span class="role-toggle-subtitle">Find roles and apply</span>
+        </button>
+        <button
+          type="button"
+          class="role-toggle-btn"
+          [class.role-toggle-btn-active]="selectedRole() === 'recruiter'"
+          (click)="selectRole('recruiter')"
+        >
+          <span class="role-toggle-title">Company Owner</span>
+          <span class="role-toggle-subtitle">Post jobs and hire talent</span>
+        </button>
+      </div>
+
+      @if (authService.errorMessage()) {
+        <div class="mb-4 rounded-xl border border-danger-500/30 bg-red-50 px-4 py-3 text-sm text-danger-600">
+          {{ authService.errorMessage() }}
+        </div>
+      }
+
+      @if (successMessage()) {
+        <div class="mb-4 rounded-xl border border-success-500/30 bg-green-50 px-4 py-3 text-sm text-success-600">
+          {{ successMessage() }}
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="mb-4">
+          <label class="form-label" for="email">Work email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            class="form-input"
+            [class.form-input-error]="hasError('email')"
+            placeholder="name@company.com"
+          />
+          @if (hasError('email')) {
+            <p class="form-error">Enter a valid email address.</p>
+          }
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            class="form-input"
+            [class.form-input-error]="hasError('password')"
+            placeholder="Create a strong password"
+          />
+          @if (hasError('password')) {
+            <p class="form-error">{{ passwordErrorMessage() }}</p>
+          }
+        </div>
+
+        <div class="mb-6">
+          <label class="form-label" for="confirmPassword">Confirm password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            class="form-input"
+            [class.form-input-error]="hasError('confirmPassword')"
+            placeholder="Repeat your password"
+          />
+          @if (hasError('confirmPassword')) {
+            <p class="form-error">Please confirm your password.</p>
+          }
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="authService.loading()">
+          @if (authService.loading()) {
+            Creating account...
+          } @else {
+            Create account
+          }
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-surface-600">
+        Already registered?
+        <a [routerLink]="routes.AUTH.LOGIN" class="link-primary">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>

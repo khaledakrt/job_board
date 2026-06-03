@@ -1,0 +1,11 @@
+<div class="timeline" [class.timeline-compact]="compact()" role="list">
+  @for (step of steps(); track step.key; let last = $last) {
+    <div class="timeline-step" [class]="'timeline-' + step.state" role="listitem">
+      <div class="timeline-node"></div>
+      @if (!last) {
+        <div class="timeline-line" [class.line-complete]="step.state === 'complete'"></div>
+      }
+      <span class="timeline-label">{{ step.displayLabel }}</span>
+    </div>
+  }
+</div>

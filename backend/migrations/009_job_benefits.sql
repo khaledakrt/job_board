@@ -1,0 +1,2 @@
+ALTER TABLE `jobs`
+  ADD COLUMN `benefits` JSON NULL DEFAULT NULL AFTER `languages`;
