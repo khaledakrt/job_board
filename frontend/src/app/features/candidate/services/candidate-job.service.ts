@@ -12,6 +12,8 @@ export interface JobSearchParams {
   location?: string;
   contractType?: string;
   remoteType?: string;
+  minSalary?: number;
+  sortBy?: 'date' | 'salary';
   page?: number;
   limit?: number;
 }
@@ -27,6 +29,8 @@ function buildSearchQueryParams(params: JobSearchParams): Record<string, string 
 
   if (params.contractType) query['contractType'] = params.contractType;
   if (params.remoteType) query['remoteType'] = params.remoteType;
+  if (params.minSalary != null && params.minSalary > 0) query['minSalary'] = params.minSalary;
+  if (params.sortBy) query['sortBy'] = params.sortBy;
 
   if (params.page != null && params.page > 0) query['page'] = params.page;
   if (params.limit != null && params.limit > 0) query['limit'] = params.limit;
@@ -39,10 +43,17 @@ export class CandidateJobService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/jobs`;
 
-  search(params: JobSearchParams): Observable<ApiResponse<Job[]> & PaginatedJobs<Job>> {
-    return this.http.get<ApiResponse<Job[]> & PaginatedJobs<Job>>(this.apiUrl, {
-      params: buildSearchQueryParams(params),
-    });
+  search(
+    params: JobSearchParams
+  ): Observable<
+    ApiResponse<Job[]> & { pagination?: PaginatedJobs<Job>['pagination'] }
+  > {
+    return this.http.get<ApiResponse<Job[]> & { pagination?: PaginatedJobs<Job>['pagination'] }>(
+      this.apiUrl,
+      {
+        params: buildSearchQueryParams(params),
+      }
+    );
   }
 
   getById(id: string): Observable<ApiResponse<Job>> {

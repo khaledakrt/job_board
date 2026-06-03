@@ -1,5 +1,7 @@
 export type ExperienceFilter = 'all' | 'junior' | 'mid' | 'senior';
 
+export type JobSortBy = 'date' | 'salary';
+
 export interface JobSearchFilters {
   keywords: string;
   location: string;
@@ -9,6 +11,8 @@ export interface JobSearchFilters {
   remotes: string[];
   experience: ExperienceFilter;
   quizOnly: boolean;
+  minSalary: number | null;
+  sortBy: JobSortBy;
 }
 
 export const DEFAULT_JOB_SEARCH_FILTERS: JobSearchFilters = {
@@ -20,4 +24,6 @@ export const DEFAULT_JOB_SEARCH_FILTERS: JobSearchFilters = {
   remotes: [],
   experience: 'all',
   quizOnly: false,
+  minSalary: null,
+  sortBy: 'date',
 };

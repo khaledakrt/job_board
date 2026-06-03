@@ -15,27 +15,103 @@
 
   <section class="stats-grid">
     <article class="stat-card panel-card">
-      <p class="stat-label">Candidatures</p>
-      <p class="stat-value">{{ stats().total }}</p>
+      <p class="stat-label">Candidatures actives</p>
+      <p class="stat-value">{{ dashboardSummary()?.totals?.active ?? stats().active }}</p>
     </article>
     <article class="stat-card panel-card">
-      <p class="stat-label">En cours</p>
-      <p class="stat-value">{{ stats().active }}</p>
+      <p class="stat-label">Taux de réponse</p>
+      <p class="stat-value">{{ dashboardSummary()?.responseRate ?? 0 }}%</p>
     </article>
     <article class="stat-card panel-card">
       <p class="stat-label">Entretiens</p>
-      <p class="stat-value">{{ stats().interview }}</p>
+      <p class="stat-value">{{ dashboardSummary()?.totals?.interview ?? stats().interview }}</p>
     </article>
     <article class="stat-card panel-card">
-      <p class="stat-label">Offres enregistrées</p>
-      <p class="stat-value">{{ stats().saved }}</p>
+      <p class="stat-label">Archivées</p>
+      <p class="stat-value">{{ dashboardSummary()?.totals?.archived ?? 0 }}</p>
     </article>
   </section>
+
+  @if (dashboardSummary()?.monthlyApplications?.length) {
+    <section class="chart-section panel-card">
+      <h2 class="section-title">Candidatures par mois</h2>
+      <div class="chart-bars">
+        @for (m of dashboardSummary()!.monthlyApplications; track m.month) {
+          <div class="chart-bar-col">
+            <div
+              class="chart-bar"
+              [style.height.%]="(m.count / chartMax()) * 100"
+              [attr.title]="m.count + ' candidature(s)'"
+            ></div>
+            <span class="chart-label">{{ m.month }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  @if (recommendedJobs().length) {
+    <section class="tracking-section panel-card">
+      <div class="section-head">
+        <h2 class="section-title">Offres pour vous</h2>
+        <p class="section-hint">Suggestions basées sur votre profil et vos compétences.</p>
+      </div>
+      <div class="reco-grid">
+        @for (job of recommendedJobs(); track job.id) {
+          <article class="reco-card" (click)="openRecommended(job.id)" tabindex="0" role="button">
+            <h3>{{ job.title }}</h3>
+            <p>{{ job.company?.name }}</p>
+            @if (job.matchScore) {
+              <span class="reco-score">Pertinence {{ job.matchScore }}</span>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
 
   <section class="tracking-section panel-card">
     <div class="section-head">
       <h2 class="section-title">Mes candidatures</h2>
       <p class="section-hint">Cliquez sur une ligne pour voir le détail et les messages du recruteur.</p>
+    </div>
+    <div class="apps-filters">
+      <div class="apps-tabs">
+        <button
+          type="button"
+          class="apps-tab"
+          [class.apps-tab-active]="appScope() === 'active'"
+          (click)="setAppScope('active')"
+        >
+          Actives
+        </button>
+        <button
+          type="button"
+          class="apps-tab"
+          [class.apps-tab-active]="appScope() === 'archived'"
+          (click)="setAppScope('archived')"
+        >
+          Archivées (6 mois+)
+        </button>
+      </div>
+      <input
+        class="form-input apps-search"
+        placeholder="Rechercher poste ou entreprise…"
+        [value]="searchQ()"
+        (input)="searchQ.set($any($event.target).value); reloadApplications()"
+      />
+      <select
+        class="form-input apps-select"
+        [value]="filterStatus()"
+        (change)="filterStatus.set($any($event.target).value); reloadApplications()"
+      >
+        <option value="">Tous les statuts</option>
+        <option value="applied">Envoyée</option>
+        <option value="screening">Présélection</option>
+        <option value="interview">Entretien</option>
+        <option value="offer">Offre</option>
+        <option value="rejected">Refusée</option>
+      </select>
     </div>
     <div class="apps-table-wrap">
       <table class="apps-table">
@@ -97,7 +173,7 @@
     <section class="tracking-section panel-card">
       <div class="section-head">
         <h2 class="section-title">Offres enregistrées</h2>
-        <a [routerLink]="routes.CANDIDATE.JOBS" class="section-link">Voir toutes les offres</a>
+        <a [routerLink]="routes.CANDIDATE.SAVED" class="section-link">Voir tout</a>
       </div>
       @if (loadingSaved()) {
         <p class="table-loading">Chargement…</p>
@@ -142,7 +218,7 @@
     <section class="tracking-section panel-card">
       <div class="section-head">
         <h2 class="section-title">Alertes emploi</h2>
-        <a [routerLink]="routes.CANDIDATE.JOBS" class="section-link">Créer une alerte</a>
+        <a [routerLink]="routes.CANDIDATE.SAVED" class="section-link">Gérer les alertes</a>
       </div>
       @if (loadingAlerts()) {
         <p class="table-loading">Chargement…</p>
@@ -216,7 +292,24 @@
           </p>
         }
 
-        @if (detail.notes?.length) {
+        @if (detail.interviewAt) {
+          <section class="app-detail-block">
+            <h3 class="app-detail-subtitle">Entretien</h3>
+            <p>Prévu le {{ detail.interviewAt | date: 'full' }}</p>
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="downloadInterviewIcs(detail)">
+              Ajouter au calendrier (.ics)
+            </button>
+          </section>
+        }
+
+        @if (detail.quizReview?.questions?.length) {
+          <section class="app-detail-block">
+            <h3 class="app-detail-subtitle">Quiz technique</h3>
+            <app-application-quiz-review [review]="detail.quizReview!" />
+          </section>
+        }
+
+        @if (detail.notes.length) {
           <section class="app-detail-block">
             <h3 class="app-detail-subtitle">Messages du recruteur</h3>
             <ul class="app-notes-list">
