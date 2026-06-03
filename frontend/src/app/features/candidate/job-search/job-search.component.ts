@@ -43,6 +43,7 @@ import { stripHtml } from '../../../shared/utils/rich-text.util';
 export type CandidateJobsViewMode = 'linkedin' | 'cards';
 
 const API_MAX_LIMIT = 50;
+const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-job-search',
@@ -64,6 +65,7 @@ export class JobSearchComponent implements OnInit {
   readonly candidateContext = inject(CandidateContextService);
 
   private readonly detailDialog = viewChild<ElementRef<HTMLDialogElement>>('detailDialog');
+  private lastHandledQueryKey = '';
 
   readonly contractTypes = CONTRACT_TYPES;
   readonly remoteTypes = REMOTE_TYPES;
@@ -81,7 +83,11 @@ export class JobSearchComponent implements OnInit {
   readonly allJobs = signal<Job[]>([]);
   readonly selectedJob = signal<Job | null>(null);
   readonly loading = signal(false);
-  readonly applyModalOpen = signal(false);
+  /** Offre en cours de candidature (popup, indépendante du panneau droit). */
+  readonly applyJob = signal<Job | null>(null);
+  /** Popup candidature (une seule à la fois). */
+  readonly applyFlowOpen = signal(false);
+  readonly applyFlowStep = signal<'offer' | 'letter'>('offer');
   readonly applying = signal(false);
   readonly generatingLetter = signal(false);
   readonly savedJobIds = signal<Set<string>>(new Set());
@@ -92,6 +98,9 @@ export class JobSearchComponent implements OnInit {
   readonly success = signal<string | null>(null);
   readonly viewMode = signal<CandidateJobsViewMode>('linkedin');
   readonly cardsDetailOpen = signal(false);
+  readonly currentPage = signal(1);
+  readonly totalPages = signal(1);
+  readonly totalJobs = signal(0);
 
   readonly applyForm = this.fb.nonNullable.group({
     coverLetter: [''],
@@ -114,6 +123,9 @@ export class JobSearchComponent implements OnInit {
     return this.allJobs().filter((job) => this.matchesClientFilters(job, f));
   });
 
+  /** Offre pour laquelle quizSelections est valide (réinitialisé au changement d’offre). */
+  private activeQuizJobId: string | null = null;
+
   readonly hasActiveFilters = computed(() => {
     const f = this.appliedFilters();
     return (
@@ -124,7 +136,9 @@ export class JobSearchComponent implements OnInit {
       f.contracts.length > 0 ||
       f.remotes.length > 0 ||
       f.experience !== 'all' ||
-      f.quizOnly
+      f.quizOnly ||
+      f.minSalary != null ||
+      f.sortBy !== 'date'
     );
   });
 
@@ -145,29 +159,7 @@ export class JobSearchComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchJobs();
-    this.route.queryParamMap.subscribe((params) => {
-      const jobId = params.get('jobId');
-      if (!jobId) return;
-      const apply = params.get('apply') === '1';
-      this.jobService.getById(jobId).subscribe({
-        next: (res) => {
-          const job = res.data;
-          if (!job) return;
-          const inList = this.allJobs().find((j) => j.id === job.id);
-          if (!inList) {
-            this.allJobs.update((list) => [job, ...list]);
-          }
-          if (this.viewMode() === 'cards') {
-            this.openCardsJobDetail(job);
-          } else {
-            this.selectJob(job);
-          }
-          if (apply && !this.hasApplied(job.id)) {
-            this.openApplyModal();
-          }
-        },
-      });
-    });
+    this.route.queryParamMap.subscribe(() => this.syncFromQueryParams());
     this.savedJobService.list().subscribe({
       next: (res) => {
         const ids = new Set((res.data || []).map((s) => s.jobId));
@@ -186,6 +178,12 @@ export class JobSearchComponent implements OnInit {
     this.jobService.search(this.buildApiParams()).subscribe({
       next: (res) => {
         this.allJobs.set(res.data || []);
+        const pag = res.pagination;
+        if (pag) {
+          this.totalPages.set(pag.totalPages || 1);
+          this.totalJobs.set(pag.totalItems ?? 0);
+          this.currentPage.set(pag.page || 1);
+        }
         this.loading.set(false);
       },
       error: () => {
@@ -197,12 +195,37 @@ export class JobSearchComponent implements OnInit {
 
   applyFilters(): void {
     this.appliedFilters.set({ ...this.filters() });
+    this.currentPage.set(1);
     this.fetchJobs();
   }
 
   resetFilters(): void {
     this.filters.set({ ...DEFAULT_JOB_SEARCH_FILTERS });
     this.appliedFilters.set({ ...DEFAULT_JOB_SEARCH_FILTERS });
+    this.currentPage.set(1);
+    this.fetchJobs();
+  }
+
+  applyProfileMinSalary(): void {
+    const min = this.candidateContext.profile()?.minSalary;
+    if (min != null && min > 0) {
+      this.filters.update((f) => ({ ...f, minSalary: Number(min) }));
+      this.applyFilters();
+    }
+  }
+
+  updateMinSalary(value: string): void {
+    const n = value.trim() === '' ? null : Number(value);
+    this.filters.update((f) => ({ ...f, minSalary: n != null && !Number.isNaN(n) ? n : null }));
+  }
+
+  setSortBy(value: string): void {
+    this.filters.update((f) => ({ ...f, sortBy: value === 'salary' ? 'salary' : 'date' }));
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
     this.fetchJobs();
   }
 
@@ -251,13 +274,21 @@ export class JobSearchComponent implements OnInit {
   private buildApiParams(): JobSearchParams {
     const f = this.appliedFilters();
     const params: JobSearchParams = {
-      limit: this.useClientFilters() ? API_MAX_LIMIT : 50,
+      page: this.currentPage(),
+      limit: PAGE_SIZE,
+      sortBy: f.sortBy,
     };
 
     if (f.keywords.trim()) params.keywords = f.keywords.trim();
     if (f.location.trim()) params.location = f.location.trim();
     if (f.contracts.length === 1) params.contractType = f.contracts[0];
     if (f.remotes.length === 1) params.remoteType = f.remotes[0];
+    if (f.minSalary != null && f.minSalary > 0) params.minSalary = f.minSalary;
+
+    if (this.useClientFilters()) {
+      params.limit = API_MAX_LIMIT;
+      params.page = 1;
+    }
 
     return params;
   }
@@ -292,6 +323,14 @@ export class JobSearchComponent implements OnInit {
     if (!this.matchesExperience(job, f.experience)) return false;
     if (f.quizOnly && !job.quizEnabled) return false;
 
+    if (f.minSalary != null && f.minSalary > 0) {
+      const label = job.salaryLabel || '';
+      const nums = label.match(/\d[\d\s]*/g);
+      if (!nums?.length) return false;
+      const val = parseInt(nums[0].replace(/\s/g, ''), 10);
+      if (!Number.isNaN(val) && val < f.minSalary) return false;
+    }
+
     return true;
   }
 
@@ -310,20 +349,45 @@ export class JobSearchComponent implements OnInit {
       return;
     }
     this.closeCardsDetail();
+    this.closeApplyModal();
     this.viewMode.set(mode);
   }
 
   selectJob(job: Job): void {
+    if (this.activeQuizJobId !== job.id) {
+      this.quizSelections.set({});
+      this.activeQuizJobId = job.id;
+    }
+    this.closeApplyModal();
     this.selectedJob.set(job);
     this.jobService.getById(job.id).subscribe({
-      next: (res) => res.data && this.selectedJob.set(res.data),
+      next: (res) => {
+        if (res.data) {
+          this.selectedJob.set(res.data);
+          if (this.activeQuizJobId !== res.data.id) {
+            this.quizSelections.set({});
+            this.activeQuizJobId = res.data.id;
+          }
+        }
+      },
     });
   }
 
-  openCardsJobDetail(job: Job): void {
+  openCardsJobDetail(job: Job, event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
     this.selectJob(job);
     this.cardsDetailOpen.set(true);
     this.openDialogWhenReady(this.detailDialog);
+  }
+
+  openCompanyInNewTab(companyId: string, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/entreprises', companyId])
+    );
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   closeCardsDetail(): void {
@@ -347,17 +411,148 @@ export class JobSearchComponent implements OnInit {
     }
   }
 
+  closeApplyModal(): void {
+    this.applyFlowOpen.set(false);
+    this.applyFlowStep.set('offer');
+    this.applyJob.set(null);
+    this.applyForm.reset({ coverLetter: '' });
+  }
+
+  backToOfferQuizStep(): void {
+    this.applyFlowStep.set('offer');
+    this.applyForm.reset({ coverLetter: '' });
+  }
+
+  proceedToLetterStep(): void {
+    const job = this.applyJob();
+    if (!job) return;
+    if (this.isQuizEnabled(job) && !this.isQuizCompleteForJob(job)) {
+      this.error.set('Répondez à toutes les questions du quiz avant de continuer.');
+      return;
+    }
+    this.applyFlowStep.set('letter');
+    this.applyForm.reset({ coverLetter: '' });
+  }
+
+  private startApplyFlow(job: Job): void {
+    this.error.set(null);
+    this.closeCardsDetail();
+
+    if (this.hasApplied(job.id)) {
+      this.error.set('Vous avez déjà postulé à cette offre.');
+      return;
+    }
+
+    if (!this.candidateContext.profile()?.resumeUrl) {
+      this.error.set(
+        'Ajoutez un CV dans Mon profil (étape Identité & CV) avant de postuler.'
+      );
+      return;
+    }
+
+    if (this.activeQuizJobId !== job.id) {
+      this.quizSelections.set({});
+      this.activeQuizJobId = job.id;
+    }
+
+    this.applyJob.set(job);
+    this.applyForm.reset({ coverLetter: '' });
+    this.applyFlowStep.set(this.isQuizEnabled(job) ? 'offer' : 'letter');
+    this.applyFlowOpen.set(true);
+
+    this.jobService.getById(job.id).subscribe({
+      next: (res) => {
+        if (res.data) {
+          this.applyJob.set(res.data);
+          if (this.activeQuizJobId !== res.data.id) {
+            this.quizSelections.set({});
+            this.activeQuizJobId = res.data.id;
+          }
+        }
+      },
+    });
+  }
+
+  canProceedToLetter(job: Job): boolean {
+    return !this.isQuizEnabled(job) || this.isQuizCompleteForJob(job);
+  }
+
   publicCompanyLink(companyId: string): string[] {
     return ['/entreprises', companyId];
   }
 
-  openJobInNewTab(job: Job, event: Event): void {
-    event.stopPropagation();
-    event.preventDefault();
+  openJobInNewTab(job: Job, event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
     const url = this.router.serializeUrl(
       this.router.createUrlTree(['/offres', job.id])
     );
     window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  private clearJobQueryParams(): void {
+    if (!this.route.snapshot.queryParamMap.get('jobId')) {
+      return;
+    }
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { jobId: null, apply: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+      state: { skipJobQuerySync: true },
+    });
+  }
+
+  private syncFromQueryParams(): void {
+    const navState = this.router.lastSuccessfulNavigation?.extras?.state as
+      | { skipJobQuerySync?: boolean }
+      | undefined;
+    if (navState?.skipJobQuerySync) {
+      return;
+    }
+    const jobId = this.route.snapshot.queryParamMap.get('jobId');
+    if (!jobId) {
+      this.lastHandledQueryKey = '';
+      return;
+    }
+
+    const apply = this.route.snapshot.queryParamMap.get('apply') === '1';
+    const queryKey = `${jobId}:${apply ? '1' : '0'}`;
+    if (queryKey === this.lastHandledQueryKey) {
+      return;
+    }
+    this.lastHandledQueryKey = queryKey;
+
+    const openForJob = (job: Job) => {
+      const inList = this.allJobs().some((j) => j.id === job.id);
+      if (!inList) {
+        this.allJobs.update((list) => [job, ...list]);
+      }
+      if (this.viewMode() === 'cards') {
+        this.openCardsJobDetail(job);
+      } else {
+        this.selectJob(job);
+      }
+      if (apply && !this.hasApplied(job.id)) {
+        afterNextRender(() => this.startApplyFlow(job), { injector: this.injector });
+      }
+      this.clearJobQueryParams();
+    };
+
+    const cached = this.allJobs().find((j) => j.id === jobId);
+    if (cached) {
+      openForJob(cached);
+      return;
+    }
+
+    this.jobService.getById(jobId).subscribe({
+      next: (res) => {
+        const job = res.data;
+        if (job) {
+          openForJob(job);
+        }
+      },
+    });
   }
 
   publicJobLink(jobId: string): string[] {
@@ -370,14 +565,35 @@ export class JobSearchComponent implements OnInit {
     this.selectJob(job);
   }
 
-  quickApply(job: Job, event: Event): void {
-    event.stopPropagation();
-    event.preventDefault();
-    this.selectJob(job);
-    if (this.viewMode() === 'cards') {
-      this.openCardsJobDetail(job);
+  isQuizCompleteForJob(job: Job): boolean {
+    if (!this.isQuizEnabled(job)) {
+      return true;
     }
-    this.openApplyModal();
+    const quiz = this.jobQuiz(job);
+    if (!quiz) {
+      return true;
+    }
+    if (this.activeQuizJobId !== job.id) {
+      return false;
+    }
+    const selections = this.quizSelections();
+    return quiz.questions.every((_, index) => selections[index] !== undefined);
+  }
+
+  postulerFromDetail(job: Job, event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    if (this.viewMode() === 'cards' && this.selectedJob()?.id !== job.id) {
+      this.selectJob(job);
+    }
+    this.startApplyFlow(job);
+  }
+
+  /** Postuler depuis la vue liste (carte gauche) — ne change pas le panneau droit. */
+  tryOpenApplyFromList(job: Job, event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.startApplyFlow(job);
   }
 
   private extractApiError(err: HttpErrorResponse): string {
@@ -402,34 +618,10 @@ export class JobSearchComponent implements OnInit {
     );
   }
 
-  openApplyModal(): void {
-    const job = this.selectedJob();
-    if (!job || this.hasApplied(job.id)) return;
-
-    if (!this.candidateContext.profile()?.resumeUrl) {
-      this.error.set(
-        'Ajoutez un CV dans Mon profil (import PDF ou génération PDF) avant de postuler.'
-      );
-      return;
-    }
-
-    this.applyForm.reset({ coverLetter: '' });
-    this.quizSelections.set({});
-    this.applyModalOpen.set(true);
-    this.jobService.getById(job.id).subscribe({
-      next: (res) => {
-        if (res.data) this.selectedJob.set(res.data);
-      },
-    });
-  }
-
-  closeApplyModal(): void {
-    this.applyModalOpen.set(false);
-  }
 
   generateLetter(): void {
-    const job = this.selectedJob();
-    if (!job) return;
+    const job = this.applyJob();
+    if (!job || !this.applyFlowOpen()) return;
     this.generatingLetter.set(true);
     this.jobService.generateLetter(job.id).subscribe({
       next: (res) => {
@@ -468,7 +660,7 @@ export class JobSearchComponent implements OnInit {
   }
 
   private buildQuizAnswers(): QuizAnswerPayload[] | undefined {
-    const job = this.selectedJob();
+    const job = this.applyJob();
     if (!job || !this.isQuizEnabled(job)) return undefined;
     const quiz = this.jobQuiz(job);
     if (!quiz) return undefined;
@@ -479,7 +671,7 @@ export class JobSearchComponent implements OnInit {
   }
 
   private validateQuizBeforeApply(): string | null {
-    const job = this.selectedJob();
+    const job = this.applyJob();
     if (!job || !this.isQuizEnabled(job)) return null;
     const quiz = this.jobQuiz(job);
     if (!quiz) return null;
@@ -492,8 +684,8 @@ export class JobSearchComponent implements OnInit {
   }
 
   async submitApplication(): Promise<void> {
-    const job = this.selectedJob();
-    if (!job) return;
+    const job = this.applyJob();
+    if (!job || !this.applyFlowOpen()) return;
 
     const quizError = this.validateQuizBeforeApply();
     if (quizError) {
@@ -540,7 +732,9 @@ export class JobSearchComponent implements OnInit {
       });
   }
 
-  async saveJob(job: Job): Promise<void> {
+  async saveJob(job: Job, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    event?.preventDefault();
     const ok = await this.confirmDialog.confirm({
       title: 'Enregistrer l\'offre',
       message: `Enregistrer « ${job.title} » dans vos offres sauvegardées ?`,
@@ -567,9 +761,9 @@ export class JobSearchComponent implements OnInit {
     });
     if (!ok) return;
 
-    this.alertService.create(
-      this.appliedFilters() as unknown as Record<string, unknown>
-    ).subscribe({
+    this.alertService
+      .create({ searchFilters: { ...this.appliedFilters() } as Record<string, unknown> })
+      .subscribe({
       next: () => this.success.set('Alerte emploi créée avec les filtres actuels.'),
       error: () => this.error.set('Impossible de créer l\'alerte.'),
     });

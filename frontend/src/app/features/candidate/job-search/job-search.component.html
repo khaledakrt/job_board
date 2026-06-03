@@ -59,6 +59,29 @@
         />
       </div>
       <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Salaire min. (€/an)</label>
+        <input
+          class="public-jobs-input"
+          type="number"
+          min="0"
+          placeholder="Ex. 35000"
+          [value]="filters().minSalary ?? ''"
+          (input)="updateMinSalary($any($event.target).value)"
+        />
+        @if (candidateContext.profile()?.minSalary; as profMin) {
+          <button type="button" class="salary-hint-btn" (click)="applyProfileMinSalary()">
+            Utiliser mon profil ({{ profMin }} €)
+          </button>
+        }
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Tri</label>
+        <select class="public-jobs-select" [value]="filters().sortBy" (change)="setSortBy($any($event.target).value)">
+          <option value="date">Plus récentes</option>
+          <option value="salary">Salaire</option>
+        </select>
+      </div>
+      <div class="public-jobs-filter-field">
         <label class="public-jobs-label">Expérience</label>
         <select
           class="public-jobs-select"
@@ -114,7 +137,7 @@
   </div>
 </ng-template>
 
-<ng-template #jobDetailPanel let-job="job">
+<ng-template #jobDetailPanel let-job="job" let-showQuizBanner="showQuizBanner">
   <header class="detail-header">
     <div class="detail-head-main">
       @if (companyLogo(job); as logo) {
@@ -146,28 +169,28 @@
       <button
         type="button"
         class="btn-secondary !w-auto px-3"
-        title="Afficher dans un nouvel onglet"
+        title="Ouvrir la page publique de l'offre dans un nouvel onglet"
         (click)="openJobInNewTab(job, $event)"
       >
         Nouvel onglet
       </button>
-      <button type="button" class="btn-secondary !w-auto px-3" (click)="saveJob(job)">Enregistrer</button>
+      <button type="button" class="btn-secondary !w-auto px-3" (click)="saveJob(job, $event)">Enregistrer</button>
       @if (hasApplied(job.id)) {
         <button type="button" class="btn-primary !w-auto px-4 btn-applied" disabled>
           Déjà postulé
         </button>
       } @else {
-        <button type="button" class="btn-primary !w-auto px-4" (click)="openApplyModal()">
+        <button type="button" class="btn-primary !w-auto px-4" (click)="postulerFromDetail(job, $event)">
           Postuler
         </button>
       }
     </div>
   </header>
 
-  @if (isQuizEnabled(job)) {
-    <div class="detail-quiz-banner">
-      <span class="detail-quiz-badge">Quiz technique requis</span>
-      <span class="detail-quiz-badge-hint">Répondez aux 2 questions pour postuler (toute réponse acceptée)</span>
+  @if (showQuizBanner !== false && isQuizEnabled(job)) {
+    <div class="detail-quiz-banner" role="note">
+      <strong>Cette offre contient un quiz de présélection.</strong>
+      Cliquez sur <em>Postuler</em> pour répondre au quiz, puis compléter votre lettre de motivation.
     </div>
   }
 
@@ -220,36 +243,90 @@
     </div>
   }
 
-  @if (isQuizEnabled(job) && jobQuiz(job); as quiz) {
-    <h3 class="detail-section-title">Quiz de présélection</h3>
-    <p class="detail-quiz-intro">
-      Répondez aux 2 questions lors de la candidature. Le recruteur comparera vos réponses aux réponses attendues.
-    </p>
-    <div class="detail-quiz-preview">
-      @for (question of quiz.questions; track $index; let qi = $index) {
-        <article class="detail-quiz-card panel-card">
-          <p class="detail-quiz-q">
-            <span class="apply-quiz-num">Q{{ qi + 1 }}</span>
-            {{ question.text }}
-          </p>
-          <ul class="detail-quiz-choices-readonly">
-            @for (choice of question.choices; track $index) {
-              <li>{{ choice.text }}</li>
-            }
-          </ul>
-        </article>
-      }
-    </div>
-  }
 </ng-template>
 
-<div class="search-page">
+<ng-template #applyModalOfferContent let-job="job">
+  <section class="apply-modal-offer panel-card">
+    <div class="apply-modal-offer-head">
+      @if (companyLogo(job); as logo) {
+        <img [src]="logo" alt="" class="apply-modal-offer-logo" />
+      } @else {
+        <div class="apply-modal-offer-logo-ph">{{ job.company?.name?.charAt(0) || '?' }}</div>
+      }
+      <div>
+        <h3 class="apply-modal-offer-title">{{ job.title }}</h3>
+        <p class="apply-modal-job-co">{{ job.company?.name || 'Entreprise' }}</p>
+      </div>
+    </div>
+
+    <div class="apply-modal-offer-meta-row detail-meta">
+      <span>{{ job.location || 'Lieu flexible' }}</span>
+      <span>{{ job.contractType }}</span>
+      <span>{{ formatRemote(job.remoteType) }}</span>
+      @if (formatSalary(job); as salary) {
+        <span class="detail-meta-salary">{{ salary }}</span>
+      }
+      @if (formatExperience(job); as exp) {
+        <span>{{ exp }}</span>
+      }
+    </div>
+
+    @if (job.tags?.length) {
+      <div class="detail-tags detail-tags-top">
+        @for (tag of job.tags; track $index) {
+          <span class="tag-chip">{{ tag }}</span>
+        }
+      </div>
+    }
+
+    @if (job.benefits?.length) {
+      <h4 class="apply-modal-section-title">Avantages</h4>
+      <div class="detail-tags detail-tags-benefits">
+        @for (benefit of job.benefits; track $index) {
+          <span class="tag-chip tag-chip-benefit">{{ benefit }}</span>
+        }
+      </div>
+    }
+
+    <h4 class="apply-modal-section-title">Description du poste</h4>
+    <div class="detail-text apply-modal-rich">
+      <app-safe-html [content]="job.description" />
+    </div>
+
+    @if (job.requirements) {
+      <h4 class="apply-modal-section-title">Profil recherché</h4>
+      <div class="detail-text apply-modal-rich">
+        <app-safe-html [content]="job.requirements" />
+      </div>
+    }
+  </section>
+</ng-template>
+
+<div class="search-page" [class.search-page-apply-active]="applyFlowOpen()">
   <header class="page-header page-header-row">
     <div>
       <h1 class="page-title">Rechercher une offre</h1>
       <p class="page-subtitle">
-        {{ filteredJobs().length }} offre{{ filteredJobs().length > 1 ? 's' : '' }} affichée{{ filteredJobs().length > 1 ? 's' : '' }}
+        {{ filteredJobs().length }} sur {{ totalJobs() || filteredJobs().length }} offre(s)
+        @if (totalPages() > 1) {
+          — page {{ currentPage() }} / {{ totalPages() }}
+        }
       </p>
+      @if (totalPages() > 1 && !useClientFilters()) {
+        <div class="jobs-pagination">
+          <button type="button" class="landing-btn landing-btn-ghost" [disabled]="currentPage() <= 1" (click)="goToPage(currentPage() - 1)">
+            Précédent
+          </button>
+          <button
+            type="button"
+            class="landing-btn landing-btn-ghost"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Suivant
+          </button>
+        </div>
+      }
     </div>
     <div class="view-mode-toggle" role="group" aria-label="Mode d'affichage des offres">
       <button
@@ -284,14 +361,16 @@
           <article
             class="job-card"
             [class.job-card-active]="selectedJob()?.id === job.id"
-            tabindex="0"
-            role="button"
-            [attr.aria-pressed]="selectedJob()?.id === job.id"
-            (click)="selectJobFromList(job)"
-            (keydown.enter)="selectJobFromList(job, $event)"
-            (keydown.space)="$event.preventDefault(); selectJobFromList(job, $event)"
           >
-            <div class="job-card-top">
+            <div
+              class="job-card-top"
+              tabindex="0"
+              role="button"
+              [attr.aria-pressed]="selectedJob()?.id === job.id"
+              (click)="selectJobFromList(job)"
+              (keydown.enter)="selectJobFromList(job, $event)"
+              (keydown.space)="$event.preventDefault(); selectJobFromList(job, $event)"
+            >
               @if (companyLogo(job); as logo) {
                 <img [src]="logo" alt="" class="job-card-logo" />
               } @else {
@@ -335,15 +414,12 @@
                 }
               </div>
               <div class="job-card-badges">
-                @if (isQuizEnabled(job)) {
-                  <span class="job-card-pill">Quiz</span>
-                }
                 @if (isSaved(job.id)) {
                   <span class="saved-badge">Enregistrée</span>
                 }
               </div>
             </div>
-            <div class="job-card-footer" (click)="$event.stopPropagation()">
+            <div class="job-card-footer">
               <button type="button" class="job-card-btn job-card-btn-outline" (click)="selectJobFromList(job, $event)">
                 Voir le détail
               </button>
@@ -357,7 +433,7 @@
               @if (hasApplied(job.id)) {
                 <span class="job-card-btn job-card-btn-applied">Postulé</span>
               } @else {
-                <button type="button" class="job-card-btn job-card-btn-apply" (click)="quickApply(job, $event)">
+                <button type="button" class="job-card-btn job-card-btn-apply" (click)="tryOpenApplyFromList(job, $event)">
                   Postuler
                 </button>
               }
@@ -374,7 +450,7 @@
     <section class="search-right panel-card">
       @if (selectedJob(); as job) {
         <div class="detail-sticky">
-          <ng-container *ngTemplateOutlet="jobDetailPanel; context: { job }" />
+          <ng-container *ngTemplateOutlet="jobDetailPanel; context: { job, showQuizBanner: true }" />
         </div>
       } @else {
         <div class="detail-empty">
@@ -451,7 +527,7 @@
                 <p class="cards-grid-applied">Déjà postulé</p>
               }
               <div class="cards-grid-actions" (click)="$event.stopPropagation()">
-                <button type="button" class="cards-grid-btn cards-grid-btn-primary" (click)="openCardsJobDetail(job)">
+                <button type="button" class="cards-grid-btn cards-grid-btn-primary" (click)="openCardsJobDetail(job, $event)">
                   Voir l'offre
                 </button>
                 <button
@@ -485,7 +561,7 @@
       </button>
       @if (selectedJob(); as job) {
         <div class="candidate-job-detail-body">
-          <ng-container *ngTemplateOutlet="jobDetailPanel; context: { job }" />
+          <ng-container *ngTemplateOutlet="jobDetailPanel; context: { job, showQuizBanner: false }" />
         </div>
       }
     </div>
@@ -499,72 +575,113 @@
   <div class="toast-fixed-success">{{ success() }}</div>
 }
 
-@if (applyModalOpen()) {
-  <div class="modal-backdrop" (click)="closeApplyModal()">
-    <div class="modal-card-lg apply-modal" (click)="$event.stopPropagation()">
-      <h2 class="modal-title">Postuler — {{ selectedJob()?.title }}</h2>
-      <p class="modal-sub">
-        @if (selectedJob(); as job) {
-          @if (isQuizEnabled(job)) {
-            Complétez le quiz technique puis votre lettre de motivation (assistant IA disponible).
-          } @else {
-            Rédigez votre lettre de motivation ou utilisez l’assistant IA.
+@if (applyFlowOpen() && applyJob(); as job) {
+  <div class="modal-backdrop apply-flow-backdrop" (click)="closeApplyModal()">
+    @if (applyFlowStep() === 'offer') {
+      <div
+        class="modal-card-lg apply-modal apply-modal-shell apply-modal-wide"
+        (click)="$event.stopPropagation()"
+      >
+        <h2 class="modal-title apply-modal-shell-title">Postuler — {{ job.title }}</h2>
+
+        <div class="apply-modal-scroll-body">
+          <ng-container *ngTemplateOutlet="applyModalOfferContent; context: { job }" />
+
+          @if (isQuizEnabled(job) && jobQuiz(job); as quiz) {
+            <section class="apply-modal-quiz panel-card">
+              <h3 class="apply-modal-quiz-title">Quiz de présélection</h3>
+              <p class="detail-quiz-intro">
+                Répondez aux {{ quiz.questions.length }} questions, puis cliquez sur Postuler pour la lettre de
+                motivation.
+              </p>
+              @for (question of quiz.questions; track $index; let qi = $index) {
+                <article class="apply-quiz-card">
+                  <p class="apply-quiz-q">
+                    <span class="apply-quiz-num">Q{{ qi + 1 }}</span>
+                    {{ question.text }}
+                  </p>
+                  <ul class="apply-quiz-choices">
+                    @for (choice of question.choices; track $index; let ci = $index) {
+                      <li>
+                        <label class="apply-quiz-choice">
+                          <input
+                            type="radio"
+                            [name]="'flow-q-' + job.id + '-' + qi"
+                            [checked]="quizAnswerFor(qi) === ci"
+                            (change)="selectQuizAnswer(qi, ci)"
+                          />
+                          <span>{{ choice.text }}</span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </article>
+              }
+            </section>
           }
-        }
-      </p>
-
-      @if (selectedJob(); as job) {
-        @if (isQuizEnabled(job) && jobQuiz(job); as quiz) {
-          <section class="apply-quiz panel-card">
-            <h3 class="apply-quiz-title">Quiz obligatoire</h3>
-            <p class="apply-quiz-hint">
-              Choisissez une réponse pour chaque question (obligatoire pour envoyer la candidature).
-            </p>
-            @for (question of quiz.questions; track $index; let qi = $index) {
-              <article class="apply-quiz-card">
-                <p class="apply-quiz-q">
-                  <span class="apply-quiz-num">Q{{ qi + 1 }}</span>
-                  {{ question.text }}
-                </p>
-                <ul class="apply-quiz-choices">
-                  @for (choice of question.choices; track $index; let ci = $index) {
-                    <li>
-                      <label class="apply-quiz-choice">
-                        <input
-                          type="radio"
-                          [name]="'apply-q-' + qi"
-                          [checked]="quizAnswerFor(qi) === ci"
-                          (change)="selectQuizAnswer(qi, ci)"
-                        />
-                        <span>{{ choice.text }}</span>
-                      </label>
-                    </li>
-                  }
-                </ul>
-              </article>
-            }
-          </section>
-        }
-      }
-
-      <button type="button" class="ai-link" (click)="generateLetter()" [disabled]="generatingLetter()">
-        @if (generatingLetter()) { Génération en cours... } @else { ✨ Assistant IA : générer une lettre personnalisée }
-      </button>
-      <form [formGroup]="applyForm" (ngSubmit)="submitApplication()">
-        <label class="form-label">Lettre de motivation</label>
-        <textarea
-          class="form-input"
-          rows="12"
-          formControlName="coverLetter"
-          placeholder="Votre lettre de motivation..."
-        ></textarea>
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">Annuler</button>
-          <button type="submit" class="btn-primary !w-auto px-4" [disabled]="applying()">
-            @if (applying()) { Envoi... } @else { Envoyer ma candidature }
-          </button>
         </div>
-      </form>
-    </div>
+
+        <div class="apply-modal-footer">
+          <div class="modal-actions apply-modal-actions">
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">Annuler</button>
+            <button
+              type="button"
+              class="btn-primary !w-auto px-4"
+              [disabled]="!canProceedToLetter(job)"
+              [class.btn-disabled]="!canProceedToLetter(job)"
+              (click)="proceedToLetterStep()"
+            >
+              Postuler
+            </button>
+          </div>
+          @if (isQuizEnabled(job) && !isQuizCompleteForJob(job)) {
+            <p class="detail-quiz-apply-hint">Répondez à chaque question pour activer Postuler.</p>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="modal-card-lg apply-modal apply-modal-letter-shell" (click)="$event.stopPropagation()">
+        <h2 class="modal-title">Lettre de motivation</h2>
+        <p class="apply-modal-letter-job">{{ job.title }} · {{ job.company?.name || 'Entreprise' }}</p>
+        @if (isQuizEnabled(job)) {
+          <p class="apply-step-badge">Quiz validé</p>
+        }
+        <p class="modal-sub">Rédigez votre lettre ou utilisez l’assistant IA, puis envoyez votre candidature.</p>
+
+        <button type="button" class="ai-link" (click)="generateLetter()" [disabled]="generatingLetter()">
+          @if (generatingLetter()) {
+            Génération en cours…
+          } @else {
+            ✨ Assistant IA : générer une lettre personnalisée
+          }
+        </button>
+
+        <form [formGroup]="applyForm" (ngSubmit)="submitApplication()">
+          <label class="form-label">Lettre de motivation</label>
+          <textarea
+            class="form-input"
+            rows="12"
+            formControlName="coverLetter"
+            placeholder="Votre lettre de motivation…"
+          ></textarea>
+          <div class="modal-actions apply-modal-actions">
+            @if (isQuizEnabled(job)) {
+              <button type="button" class="btn-secondary !w-auto px-4" (click)="backToOfferQuizStep()">
+                ← Retour
+              </button>
+            }
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">Annuler</button>
+            <button type="submit" class="btn-primary !w-auto px-4" [disabled]="applying()">
+              @if (applying()) {
+                Envoi…
+              } @else {
+                Envoyer ma candidature
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    }
   </div>
 }
+
