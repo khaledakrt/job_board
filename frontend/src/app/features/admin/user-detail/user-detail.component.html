@@ -1,0 +1,220 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <p class="admin-breadcrumb">
+      <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+      <span> / </span>
+      <a [routerLink]="routes.ADMIN.USERS">Utilisateurs</a>
+      <span> / Détail</span>
+    </p>
+    <div>
+      <h1>Détail utilisateur</h1>
+      <p class="admin-page-subtitle">Modifier le compte, le mot de passe, modérer et consulter les IP.</p>
+    </div>
+    <a [routerLink]="routes.ADMIN.USERS" class="btn-secondary !w-auto px-4 shrink-0">← Retour</a>
+  </header>
+
+  @if (loading()) {
+    <p class="table-loading">Chargement...</p>
+  } @else if (user()) {
+    <div class="admin-alerts">
+      @if (message()) {
+        <div class="alert-success">{{ message() }}</div>
+      }
+      @if (errorMessage()) {
+        <div class="alert-error">{{ errorMessage() }}</div>
+      }
+    </div>
+
+    <section class="admin-hero">
+      <div class="admin-hero-avatar">{{ userInitials(user()!) }}</div>
+      <div class="admin-hero-main">
+        <p class="admin-hero-email">{{ user()!.email }}</p>
+        <p class="admin-hero-sub">{{ userSubtitle(user()!) }}</p>
+      </div>
+      <div class="admin-hero-badges">
+        <span class="admin-badge admin-badge--role">{{ roleLabel(user()!.role) }}</span>
+        @if (user()!.isVerified) {
+          <span class="admin-badge admin-badge--ok">Vérifié</span>
+        } @else {
+          <span class="admin-badge admin-badge--warn">Non vérifié</span>
+        }
+        @if (user()!.isBanned) {
+          <span class="admin-badge admin-badge--danger">Banni</span>
+        } @else {
+          <span class="admin-badge admin-badge--ok">Actif</span>
+        }
+      </div>
+    </section>
+
+    <div class="admin-columns">
+      <section class="admin-card">
+        <h2 class="admin-card-title">Informations du compte</h2>
+
+        <div class="admin-meta-grid">
+          <div class="admin-meta-item">
+            <span class="admin-meta-label">Identifiant</span>
+            <span class="admin-meta-value">{{ user()!.id }}</span>
+          </div>
+          <div class="admin-meta-item">
+            <span class="admin-meta-label">Créé le</span>
+            <span class="admin-meta-value">{{ user()!.createdAt | date: 'medium' }}</span>
+          </div>
+          <div class="admin-meta-item">
+            <span class="admin-meta-label">Dernière IP</span>
+            <span class="admin-meta-value">{{ user()!.lastLoginIp || '—' }}</span>
+          </div>
+        </div>
+
+        <form [formGroup]="editForm" (ngSubmit)="saveProfile()" class="admin-form-grid">
+          <div class="admin-field field-full">
+            <label for="email">E-mail</label>
+            <input id="email" type="email" formControlName="email" class="form-input" />
+          </div>
+          <div class="admin-field">
+            <label for="role">Rôle</label>
+            <select id="role" formControlName="role" class="form-input">
+              <option [value]="roles.CANDIDATE">Candidat</option>
+              <option [value]="roles.RECRUITER">Recruteur</option>
+              <option [value]="roles.ADMIN">Administrateur</option>
+            </select>
+          </div>
+          <div class="admin-field admin-checkbox">
+            <label>
+              <input type="checkbox" formControlName="isVerified" />
+              Compte vérifié
+            </label>
+          </div>
+          @if (user()!.role === roles.CANDIDATE) {
+            <div class="admin-field">
+              <label for="firstName">Prénom</label>
+              <input id="firstName" formControlName="firstName" class="form-input" />
+            </div>
+            <div class="admin-field">
+              <label for="lastName">Nom</label>
+              <input id="lastName" formControlName="lastName" class="form-input" />
+            </div>
+          }
+          <div class="admin-form-actions">
+            <button type="submit" class="btn-primary !w-auto px-5" [disabled]="saving()">
+              Enregistrer les modifications
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <div class="admin-side-stack">
+        <section class="admin-card">
+          <h2 class="admin-card-title">Mot de passe</h2>
+          <form [formGroup]="passwordForm" (ngSubmit)="setPassword()" class="admin-form-grid">
+            <div class="admin-field field-full">
+              <label for="pwd">Nouveau mot de passe</label>
+              <input
+                id="pwd"
+                type="password"
+                formControlName="password"
+                class="form-input"
+                placeholder="Minimum 8 caractères"
+              />
+            </div>
+            <div class="admin-form-actions">
+              <button type="submit" class="btn-secondary !w-auto px-4">Appliquer</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="admin-card admin-card--danger">
+          <h2 class="admin-card-title">Modération</h2>
+          @if (!user()!.isBanned && user()!.role !== roles.ADMIN) {
+            <form [formGroup]="banForm" class="admin-form-grid">
+              <div class="admin-field field-full">
+                <label for="banReason">Raison du bannissement</label>
+                <input id="banReason" formControlName="reason" class="form-input" />
+              </div>
+              <div class="admin-form-actions">
+                <button type="button" class="admin-btn-danger" (click)="ban()">
+                  Bannir l'utilisateur
+                </button>
+              </div>
+            </form>
+          }
+          @if (user()!.isBanned) {
+            <p class="admin-empty-hint">{{ user()!.banReason }}</p>
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="unban()">
+              Lever le bannissement
+            </button>
+          }
+          @if (user()!.role !== roles.ADMIN) {
+            <div class="admin-form-actions admin-form-actions--compact">
+              <button type="button" class="admin-btn-outline" (click)="deleteUser()">
+                Supprimer définitivement
+              </button>
+            </div>
+          }
+        </section>
+      </div>
+    </div>
+
+    <section class="admin-card">
+      <h2 class="admin-card-title">Historique des connexions (IP)</h2>
+      <div class="admin-ip-banner">
+        <span
+          >Dernière IP enregistrée :
+          <strong>{{ user()!.lastLoginIp || 'Aucune — le candidat doit se reconnecter' }}</strong></span
+        >
+      </div>
+      <p class="admin-empty-hint">
+        Les adresses IP sont enregistrées à chaque connexion. Utilisez le filtre « même IP » pour
+        détecter les comptes multiples.
+      </p>
+
+      @if (loginPagination()) {
+        <div class="admin-toolbar">
+          <span>{{ loginSummary() }}</span>
+        </div>
+      }
+
+      <div class="admin-table-wrap" [class.admin-table-wrap--loading]="loginLoading()">
+        @if (loginLoading()) {
+          <div class="admin-table-loading">Chargement…</div>
+        }
+        <div class="table-panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Adresse IP</th>
+              <th>Navigateur</th>
+              <th class="col-actions">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of loginEvents(); track e.id) {
+              <tr>
+                <td>{{ e.createdAt | date: 'short' }}</td>
+                <td><code class="ip-code">{{ e.ipAddress }}</code></td>
+                <td class="ua-cell" [title]="e.userAgent || ''">{{ e.userAgent || '—' }}</td>
+                <td class="actions-cell">
+                  <button type="button" class="admin-link" (click)="filterByIp(e.ipAddress)">
+                    Comptes même IP
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty-cell">Aucune connexion enregistrée pour le moment</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <app-admin-pagination
+        [pagination]="loginPagination()"
+        [loading]="loginLoading()"
+        itemLabel="connexion"
+        (pageChange)="loadLoginEvents($event)"
+      />
+    </section>
+  }
+</div>

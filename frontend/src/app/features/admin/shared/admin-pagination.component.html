@@ -1,0 +1,39 @@
+@if (pagination && pagination.totalItems > 0) {
+  <nav class="admin-pagination-bar" [attr.aria-label]="'Pagination ' + itemLabel">
+    <p class="admin-pagination-summary">{{ summary() }}</p>
+
+    <div class="admin-pagination-controls">
+      <button
+        type="button"
+        class="admin-pagination-btn"
+        [disabled]="!pagination.hasPreviousPage || loading"
+        (click)="goTo(pagination.page - 1)"
+      >
+        ← Précédent
+      </button>
+
+      <div class="admin-pagination-pages">
+        @for (num of pageNumbers(); track num) {
+          <button
+            type="button"
+            class="admin-pagination-page"
+            [class.admin-pagination-page--active]="pagination.page === num"
+            [disabled]="loading"
+            (click)="goTo(num)"
+          >
+            {{ num }}
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="admin-pagination-btn"
+        [disabled]="!pagination.hasNextPage || loading"
+        (click)="goTo(pagination.page + 1)"
+      >
+        Suivant →
+      </button>
+    </div>
+  </nav>
+}

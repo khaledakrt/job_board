@@ -39,8 +39,14 @@
     @apply mb-1.5 block text-sm font-semibold text-surface-700;
   }
 
-  .form-input {
+  .form-input,
+  .input-field {
     @apply w-full rounded-xl border border-surface-300 bg-white px-4 py-3 text-sm text-surface-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+  }
+
+  select.form-input,
+  select.input-field {
+    @apply cursor-pointer appearance-auto;
   }
 
   .form-input-error {

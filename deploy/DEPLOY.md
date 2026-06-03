@@ -2,6 +2,22 @@
 
 Ce guide permet d’exposer le Job Board sur Internet (domaine ou IP publique).
 
+## Instance en production (IP)
+
+- **Site** : http://5.189.190.131
+- **API** : http://5.189.190.131/api/health
+- **Code** : `/var/www/jobboard` (clone GitHub)
+- **Fichiers statiques** : `/var/www/jobboard/site`
+- **Nginx (aaPanel)** : `/www/server/panel/vhost/nginx/5.189.190.131.conf`
+- **Process API** : `pm2 list` → `jobboard-api`
+
+Comptes de test (après `npm run db:seed`) :
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Candidat | candidate@test.com | Test1234! |
+| Recruteur | recruiter@test.com | Test1234! |
+
 ## Ce dont vous avez besoin
 
 | Élément | Détail |

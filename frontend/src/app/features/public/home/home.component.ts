@@ -31,6 +31,9 @@ export class HomeComponent {
 
   readonly workspaceLink = computed(() => {
     const role = this.authService.user()?.role;
+    if (role === USER_ROLES.ADMIN) {
+      return APP_ROUTES.ADMIN.DASHBOARD;
+    }
     if (role === USER_ROLES.RECRUITER) {
       return APP_ROUTES.RECRUITER.DASHBOARD;
     }

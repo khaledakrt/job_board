@@ -16,11 +16,17 @@ async function authenticate(req, res, next) {
     const decoded = tokenService.verifyAccessToken(token);
 
     const user = await User.findByPk(decoded.sub, {
-      attributes: ['id', 'email', 'role', 'is_verified'],
+      attributes: ['id', 'email', 'role', 'is_verified', 'is_banned', 'ban_reason'],
     });
 
     if (!user) {
       throw ApiError.unauthorized('User no longer exists');
+    }
+
+    if (user.is_banned) {
+      throw ApiError.forbidden(
+        user.ban_reason || 'Votre compte a été suspendu. Contactez le support.'
+      );
     }
 
     req.user = {
@@ -28,6 +34,7 @@ async function authenticate(req, res, next) {
       email: user.email,
       role: user.role,
       isVerified: user.is_verified,
+      isBanned: user.is_banned,
     };
 
     return next();

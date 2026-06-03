@@ -9,6 +9,7 @@ const { generateUuid } = require('../utils/uuid');
 const { hashPassword, comparePassword } = require('../utils/password');
 const tokenService = require('./token.service');
 const emailService = require('./email.service');
+const loginEventService = require('./loginEvent.service');
 
 async function register({ email, password, role }) {
   const existingUser = await User.findOne({ where: { email } });
@@ -46,7 +47,7 @@ async function register({ email, password, role }) {
   };
 }
 
-async function login({ email, password }) {
+async function login({ email, password, ipAddress, userAgent }) {
   const user = await User.findOne({ where: { email } });
 
   if (!user) {
@@ -59,10 +60,25 @@ async function login({ email, password }) {
     throw ApiError.unauthorized('Invalid email or password');
   }
 
-  if (!user.is_verified) {
+  if (user.is_banned) {
+    throw ApiError.forbidden(
+      user.ban_reason || 'Votre compte a été suspendu. Contactez le support.'
+    );
+  }
+
+  if (!user.is_verified && user.role !== USER_ROLES.ADMIN) {
     throw ApiError.forbidden(
       'Adresse e-mail non confirmée. Ouvrez le lien reçu par e-mail ou demandez un nouvel envoi.'
     );
+  }
+
+  if (ipAddress) {
+    await user.update({ last_login_ip: ipAddress });
+    await loginEventService.recordLogin({
+      userId: user.id,
+      ipAddress,
+      userAgent,
+    });
   }
 
   const accessToken = tokenService.signAccessToken(user);
@@ -314,6 +330,12 @@ async function refreshSession(refreshToken) {
 
   if (!user) {
     throw ApiError.unauthorized('User no longer exists');
+  }
+
+  if (user.is_banned) {
+    throw ApiError.forbidden(
+      user.ban_reason || 'Votre compte a été suspendu. Contactez le support.'
+    );
   }
 
   const accessToken = tokenService.signAccessToken(user);

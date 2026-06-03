@@ -1,0 +1,85 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / </span>
+        <a [routerLink]="routes.ADMIN.USERS">Utilisateurs</a>
+        <span> / Nouveau</span>
+      </p>
+      <h1>Créer un compte</h1>
+      <p class="admin-page-subtitle">
+        Ajoutez un candidat, recruteur ou administrateur. Le compte peut être marqué comme déjà vérifié.
+      </p>
+    </div>
+    <a [routerLink]="routes.ADMIN.USERS" class="btn-secondary !w-auto px-4 shrink-0">← Retour</a>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  }
+
+  <section class="admin-card admin-form-card">
+    <h2 class="admin-card-title">Informations du nouveau compte</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="admin-form-grid">
+      <div class="admin-field field-full">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" formControlName="email" class="form-input" autocomplete="off" />
+      </div>
+      <div class="admin-field field-full">
+        <label for="password">Mot de passe</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="form-input"
+          placeholder="Min. 8 caractères, majuscule, chiffre, symbole"
+        />
+      </div>
+      <div class="admin-field">
+        <label for="newRole">Rôle</label>
+        <select id="newRole" formControlName="role" class="form-input">
+          <option [value]="roles.CANDIDATE">Candidat</option>
+          <option [value]="roles.RECRUITER">Recruteur</option>
+          <option [value]="roles.ADMIN">Administrateur</option>
+        </select>
+      </div>
+      <div class="admin-field admin-checkbox">
+        <label>
+          <input type="checkbox" formControlName="isVerified" />
+          Compte déjà vérifié
+        </label>
+      </div>
+      @if (form.getRawValue().role === roles.CANDIDATE) {
+        <div class="admin-field">
+          <label for="fn">Prénom</label>
+          <input id="fn" formControlName="firstName" class="form-input" />
+        </div>
+        <div class="admin-field">
+          <label for="ln">Nom</label>
+          <input id="ln" formControlName="lastName" class="form-input" />
+        </div>
+      }
+      @if (form.getRawValue().role === roles.RECRUITER) {
+        <div class="admin-field field-full">
+          <label for="company">Nom de l'entreprise</label>
+          <input id="company" formControlName="companyName" class="form-input" />
+        </div>
+        <div class="admin-field">
+          <label for="jobTitle">Poste</label>
+          <input id="jobTitle" formControlName="jobTitle" class="form-input" />
+        </div>
+      }
+      <div class="admin-form-actions">
+        <button type="submit" class="btn-primary !w-auto px-5" [disabled]="saving()">
+          @if (saving()) {
+            Création…
+          } @else {
+            Créer le compte
+          }
+        </button>
+        <a [routerLink]="routes.ADMIN.USERS" class="btn-secondary !w-auto px-4">Annuler</a>
+      </div>
+    </form>
+  </section>
+</div>

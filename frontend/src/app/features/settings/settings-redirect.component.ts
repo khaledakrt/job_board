@@ -17,9 +17,11 @@ export class SettingsRedirectComponent implements OnInit {
   ngOnInit(): void {
     const role = this.authService.user()?.role;
     const target =
-      role === USER_ROLES.RECRUITER
-        ? APP_ROUTES.RECRUITER.SETTINGS
-        : APP_ROUTES.CANDIDATE.SETTINGS;
+      role === USER_ROLES.ADMIN
+        ? APP_ROUTES.ADMIN.DASHBOARD
+        : role === USER_ROLES.RECRUITER
+          ? APP_ROUTES.RECRUITER.SETTINGS
+          : APP_ROUTES.CANDIDATE.SETTINGS;
     void this.router.navigateByUrl(target, { replaceUrl: true });
   }
 }

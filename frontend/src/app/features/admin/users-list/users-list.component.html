@@ -1,0 +1,140 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / Utilisateurs</span>
+      </p>
+      <h1>Utilisateurs</h1>
+      <p class="admin-page-subtitle">
+        Gérez les comptes, vérifiez les e-mails, bannissez les faux profils et filtrez par adresse IP.
+      </p>
+    </div>
+    <a [routerLink]="routes.ADMIN.USER_NEW" class="btn-primary !w-auto px-5 shrink-0"
+      >+ Nouveau compte</a
+    >
+  </header>
+
+  <form class="admin-filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <div class="admin-field">
+      <label for="search">Recherche e-mail</label>
+      <input id="search" type="search" formControlName="search" placeholder="ex@mail.com" class="form-input" />
+    </div>
+    <div class="admin-field">
+      <label for="role">Rôle</label>
+      <select id="role" formControlName="role" class="form-input">
+        <option value="">Tous</option>
+        <option [value]="roles.CANDIDATE">Candidat</option>
+        <option [value]="roles.RECRUITER">Recruteur</option>
+        <option [value]="roles.ADMIN">Admin</option>
+      </select>
+    </div>
+    <div class="admin-field">
+      <label for="banned">Statut</label>
+      <select id="banned" formControlName="banned" class="form-input">
+        <option value="">Tous</option>
+        <option value="true">Bannis</option>
+        <option value="false">Actifs</option>
+      </select>
+    </div>
+    <div class="admin-field">
+      <label for="ip">Adresse IP</label>
+      <input id="ip" type="text" formControlName="ip" placeholder="ex. 192.168.1.1" class="form-input" />
+    </div>
+    <div class="admin-filter-actions">
+      <button type="button" class="admin-btn-ghost" (click)="resetFilters()">Réinitialiser</button>
+      <button type="submit" class="btn-primary !w-auto px-5">Appliquer</button>
+    </div>
+  </form>
+
+  @if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  }
+
+  @if (pagination()) {
+    <div class="admin-toolbar">
+      <span>{{ toolbarSummary() }}</span>
+      <span class="admin-toolbar-sep">·</span>
+      <span>{{ pageSize }} par page</span>
+    </div>
+  }
+
+  <div class="admin-table-wrap" [class.admin-table-wrap--loading]="loading()">
+    @if (loading()) {
+      <div class="admin-table-loading">Chargement…</div>
+    }
+    <div class="table-panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-title">E-mail</th>
+            <th>Rôle</th>
+            <th>Vérifié</th>
+            <th class="col-status">Statut</th>
+            <th>Dernière IP</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of users(); track u.id) {
+            <tr>
+              <td class="col-title">
+                <span class="user-email-cell">{{ u.email }}</span>
+              </td>
+              <td>
+                <span class="admin-badge admin-badge--role admin-badge--table">{{
+                  roleLabel(u.role)
+                }}</span>
+              </td>
+              <td>
+                @if (u.isVerified) {
+                  <span class="admin-badge admin-badge--ok">Oui</span>
+                } @else {
+                  <span class="admin-badge admin-badge--warn">Non</span>
+                }
+              </td>
+              <td>
+                @if (u.isBanned) {
+                  <span class="admin-badge admin-badge--danger">Banni</span>
+                } @else {
+                  <span class="admin-badge admin-badge--ok">Actif</span>
+                }
+              </td>
+              <td>
+                @if (u.lastLoginIp) {
+                  <button
+                    type="button"
+                    class="admin-link"
+                    (click)="filters.patchValue({ ip: u.lastLoginIp }); applyFilters()"
+                  >
+                    {{ u.lastLoginIp }}
+                  </button>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td class="actions-cell">
+                <a [routerLink]="routes.ADMIN.USER_DETAIL(u.id)" class="link-action">Gérer →</a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="admin-empty-state">
+                  Aucun utilisateur ne correspond à vos critères.
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-admin-pagination
+    [pagination]="pagination()"
+    [loading]="loading()"
+    itemLabel="utilisateur"
+    (pageChange)="load($event)"
+  />
+</div>

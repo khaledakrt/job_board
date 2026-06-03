@@ -13,12 +13,16 @@ const RecruiterNotificationRead = require('./RecruiterNotificationRead');
 const Subscription = require('./Subscription');
 const SavedJob = require('./SavedJob');
 const JobAlert = require('./JobAlert');
+const UserLoginEvent = require('./UserLoginEvent');
 
 User.hasOne(RecruiterProfile, { foreignKey: 'user_id', as: 'recruiterProfile' });
 RecruiterProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 User.hasOne(CandidateProfile, { foreignKey: 'user_id', as: 'candidateProfile' });
 CandidateProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasMany(UserLoginEvent, { foreignKey: 'user_id', as: 'loginEvents' });
+UserLoginEvent.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 Company.hasMany(RecruiterProfile, { foreignKey: 'company_id', as: 'recruiters' });
 RecruiterProfile.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -93,4 +97,5 @@ module.exports = {
   Subscription,
   SavedJob,
   JobAlert,
+  UserLoginEvent,
 };

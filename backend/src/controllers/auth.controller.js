@@ -3,6 +3,7 @@
 const authService = require('../services/auth.service');
 const tokenService = require('../services/token.service');
 const asyncHandler = require('../utils/asyncHandler');
+const getClientIp = require('../utils/getClientIp');
 
 const register = asyncHandler(async (req, res) => {
   const result = await authService.register(req.validatedBody);
@@ -20,7 +21,11 @@ const register = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-  const result = await authService.login(req.validatedBody);
+  const result = await authService.login({
+    ...req.validatedBody,
+    ipAddress: getClientIp(req),
+    userAgent: req.headers['user-agent'],
+  });
 
   tokenService.setRefreshTokenCookie(res, result.refreshToken);
 

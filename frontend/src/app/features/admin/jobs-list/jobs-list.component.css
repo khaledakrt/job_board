@@ -1,0 +1,22 @@
+.job-title-cell {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.count-pill {
+  display: inline-block;
+  min-width: 1.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #0a66c2;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.date-cell {
+  font-size: 0.85rem;
+  color: #64748b;
+  white-space: nowrap;
+}

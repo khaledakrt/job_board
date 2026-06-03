@@ -1,0 +1,54 @@
+================================================================================
+  JOB BOARD — Déploiement VM (index rapide)
+================================================================================
+
+Guide détaillé avec scripts :
+  → deploy/README-DEPLOIEMENT.md
+
+================================================================================
+  DÉPLOIEMENT COMPLET (une commande sur la VM)
+================================================================================
+
+  ssh root@VOTRE_IP
+  mkdir -p /var/www/jobboard && cd /var/www/jobboard
+  git clone https://github.com/khaledakrt/job_board.git .
+
+  export PUBLIC_URL=http://VOTRE_IP
+  export SERVER_NAME=VOTRE_IP
+  export DB_PASSWORD='MotDePasseDB_Securise'
+  export USE_AAPANEL=yes
+
+  chmod +x deploy/deploy.sh deploy/scripts/*.sh
+  sudo -E bash deploy/deploy.sh
+
+================================================================================
+  ÉTAPES SÉPARÉES (scripts)
+================================================================================
+
+  Étape | Commande
+  ------|----------------------------------------------------------
+    1   | sudo bash deploy/scripts/01-install-system.sh
+    2   | export DB_PASSWORD='...' && sudo -E bash deploy/scripts/02-setup-mysql.sh
+    3   | bash deploy/scripts/03-clone-project.sh
+    4   | export PUBLIC_URL=... DB_PASSWORD=... && bash deploy/scripts/04-init-env.sh
+    5   | bash deploy/scripts/05-deploy-backend.sh
+    6   | bash deploy/scripts/06-deploy-frontend.sh
+    7   | bash deploy/scripts/07-start-pm2.sh
+    8   | export SERVER_NAME=VOTRE_IP && sudo -E bash deploy/scripts/08-nginx-aapanel.sh
+
+================================================================================
+  MISE À JOUR (après git push)
+================================================================================
+
+  cd /var/www/jobboard
+  sudo bash deploy/update.sh
+
+================================================================================
+  TESTS
+================================================================================
+
+  http://VOTRE_IP/
+  http://VOTRE_IP/api/health
+  candidate@test.com / Test1234!
+
+================================================================================

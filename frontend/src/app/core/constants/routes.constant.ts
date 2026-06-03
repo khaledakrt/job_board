@@ -29,4 +29,12 @@ export const APP_ROUTES = {
     ATS: '/recruiter/ats',
     SETTINGS: '/recruiter/settings',
   },
+  ADMIN: {
+    ROOT: '/admin',
+    DASHBOARD: '/admin/dashboard',
+    USERS: '/admin/users',
+    USER_NEW: '/admin/users/new',
+    USER_DETAIL: (id: string) => `/admin/users/${id}`,
+    JOBS: '/admin/jobs',
+  },
 } as const;

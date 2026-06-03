@@ -1,0 +1,67 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">Admin / Tableau de bord</p>
+      <h1>Tableau de bord</h1>
+      <p class="admin-page-subtitle">
+        Vue d'ensemble de la plateforme : utilisateurs, offres et modération.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="admin-skeleton-grid">
+      @for (i of [1, 2, 3, 4, 5, 6, 7]; track i) {
+        <div class="admin-skeleton-card"></div>
+      }
+    </div>
+  } @else if (stats()) {
+    <section class="admin-stats" aria-label="Statistiques">
+      <a [routerLink]="routes.ADMIN.USERS" class="admin-stat admin-stat--link">
+        <span class="admin-stat-icon">👥</span>
+        <span class="admin-stat-label">Utilisateurs</span>
+        <strong class="admin-stat-value">{{ stats()!.usersTotal }}</strong>
+        <span class="admin-stat-meta">{{ stats()!.bannedUsers }} bannis</span>
+      </a>
+      <a [routerLink]="routes.ADMIN.USERS" class="admin-stat admin-stat--link">
+        <span class="admin-stat-icon">🎓</span>
+        <span class="admin-stat-label">Candidats</span>
+        <strong class="admin-stat-value">{{ stats()!.candidates }}</strong>
+      </a>
+      <a [routerLink]="routes.ADMIN.USERS" class="admin-stat admin-stat--link">
+        <span class="admin-stat-icon">🏢</span>
+        <span class="admin-stat-label">Recruteurs</span>
+        <strong class="admin-stat-value">{{ stats()!.recruiters }}</strong>
+      </a>
+      <div class="admin-stat">
+        <span class="admin-stat-icon">🛡️</span>
+        <span class="admin-stat-label">Administrateurs</span>
+        <strong class="admin-stat-value">{{ stats()!.admins }}</strong>
+      </div>
+      <a [routerLink]="routes.ADMIN.JOBS" class="admin-stat admin-stat--link">
+        <span class="admin-stat-icon">💼</span>
+        <span class="admin-stat-label">Offres</span>
+        <strong class="admin-stat-value">{{ stats()!.jobsTotal }}</strong>
+      </a>
+      <div class="admin-stat">
+        <span class="admin-stat-icon">📋</span>
+        <span class="admin-stat-label">Candidatures</span>
+        <strong class="admin-stat-value">{{ stats()!.applicationsTotal }}</strong>
+      </div>
+      <div class="admin-stat">
+        <span class="admin-stat-icon">🏭</span>
+        <span class="admin-stat-label">Entreprises</span>
+        <strong class="admin-stat-value">{{ stats()!.companiesTotal }}</strong>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2 class="admin-card-title">Actions rapides</h2>
+      <div class="admin-quick-actions">
+        <a [routerLink]="routes.ADMIN.USERS" class="btn-primary !w-auto px-5">Gérer les utilisateurs</a>
+        <a [routerLink]="routes.ADMIN.JOBS" class="btn-secondary !w-auto px-5">Gérer les offres</a>
+        <a [routerLink]="routes.ADMIN.USER_NEW" class="btn-secondary !w-auto px-5">Créer un compte</a>
+      </div>
+    </section>
+  }
+</div>

@@ -36,6 +36,10 @@ const TEST_USERS = [
     },
   },
   {
+    email: 'admin@test.com',
+    role: USER_ROLES.ADMIN,
+  },
+  {
     email: 'recruiter@test.com',
     role: USER_ROLES.RECRUITER,
     company: {
@@ -156,7 +160,9 @@ async function main() {
     const { user, created: userCreated } = await upsertUser(spec);
     const action = userCreated ? 'created' : 'already exists';
 
-    if (spec.role === USER_ROLES.CANDIDATE) {
+    if (spec.role === USER_ROLES.ADMIN) {
+      console.log(`[admin] ${spec.email} — user ${action}`);
+    } else if (spec.role === USER_ROLES.CANDIDATE) {
       const { created } = await seedCandidate(user, spec.profile);
       console.log(`[candidate] ${spec.email} — user ${action}, profile ${created ? 'created' : 'ok'}`);
     } else {

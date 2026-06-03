@@ -50,6 +50,12 @@ export const routes: Routes = [
       import('./features/recruiter/recruiter.routes').then((m) => m.RECRUITER_ROUTES),
   },
   {
+    path: 'admin',
+    canActivate: [authGuard, roleGuard([USER_ROLES.ADMIN])],
+    loadChildren: () =>
+      import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: '',
   },

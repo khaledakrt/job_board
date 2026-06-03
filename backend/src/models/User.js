@@ -32,6 +32,23 @@ User.init(
       allowNull: false,
       defaultValue: false,
     },
+    is_banned: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    ban_reason: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    banned_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    last_login_ip: {
+      type: DataTypes.STRING(45),
+      allowNull: true,
+    },
     verification_token: {
       type: DataTypes.STRING(255),
       allowNull: true,

@@ -15,6 +15,7 @@ const candidateApplicationsRoutes = require('./candidateApplications.routes');
 const candidateSavedJobsRoutes = require('./candidateSavedJobs.routes');
 const candidateJobAlertsRoutes = require('./candidateJobAlerts.routes');
 const candidateNotificationsRoutes = require('./candidateNotifications.routes');
+const adminRoutes = require('./admin.routes');
 
 const router = express.Router();
 
@@ -40,5 +41,6 @@ router.use('/candidate/applications', candidateApplicationsRoutes);
 router.use('/candidate/saved-jobs', candidateSavedJobsRoutes);
 router.use('/candidate/job-alerts', candidateJobAlertsRoutes);
 router.use('/candidate/notifications', candidateNotificationsRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router;

@@ -1,0 +1,21 @@
+.ua-cell {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.ip-code {
+  font-size: 0.85rem;
+  background: #f1f5f9;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.admin-form-actions--compact {
+  border-top: none;
+  margin-top: 0.75rem;
+  padding-top: 0;
+}

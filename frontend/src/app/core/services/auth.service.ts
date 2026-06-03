@@ -43,6 +43,7 @@ export class AuthService {
   readonly isInitialized = computed(() => this.state().initialized);
   readonly isCandidate = computed(() => this.state().user?.role === USER_ROLES.CANDIDATE);
   readonly isRecruiter = computed(() => this.state().user?.role === USER_ROLES.RECRUITER);
+  readonly isAdmin = computed(() => this.state().user?.role === USER_ROLES.ADMIN);
 
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -208,6 +209,11 @@ export class AuthService {
 
     if (role === USER_ROLES.RECRUITER) {
       void this.router.navigate([APP_ROUTES.RECRUITER.DASHBOARD]);
+      return;
+    }
+
+    if (role === USER_ROLES.ADMIN) {
+      void this.router.navigate([APP_ROUTES.ADMIN.DASHBOARD]);
       return;
     }
 
