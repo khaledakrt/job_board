@@ -5,7 +5,7 @@ const { z } = require('zod');
 const candidateNotificationController = require('../controllers/candidateNotification.controller');
 const authenticate = require('../middleware/authenticate');
 const { requireCandidateRole } = require('../middleware/authorize');
-const { requireCandidateProfile } = require('../middleware/requireCandidate');
+const { requireCandidate, requireCandidateProfile } = require('../middleware/requireCandidate');
 const { validateParams } = require('../middleware/validateParams');
 
 const router = express.Router();
@@ -16,10 +16,11 @@ const notificationIdSchema = z.object({
 
 router.use(authenticate);
 router.use(requireCandidateRole);
-router.use(requireCandidateProfile);
 
-router.get('/', candidateNotificationController.listNotifications);
-router.get('/unread-count', candidateNotificationController.getUnreadCount);
+router.get('/', requireCandidate, candidateNotificationController.listNotifications);
+router.get('/unread-count', requireCandidate, candidateNotificationController.getUnreadCount);
+
+router.use(requireCandidateProfile);
 router.patch('/read-all', candidateNotificationController.markAllAsRead);
 router.patch(
   '/:id/read',

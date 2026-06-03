@@ -4,6 +4,9 @@ const savedJobService = require('../services/candidateSavedJob.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const list = asyncHandler(async (req, res) => {
+  if (!req.candidate) {
+    return res.status(200).json({ success: true, data: [] });
+  }
   const data = await savedJobService.listSavedJobs(req.candidate.id);
   res.status(200).json({ success: true, data });
 });

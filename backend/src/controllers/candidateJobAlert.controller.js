@@ -4,6 +4,9 @@ const jobAlertService = require('../services/candidateJobAlert.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const list = asyncHandler(async (req, res) => {
+  if (!req.candidate) {
+    return res.status(200).json({ success: true, data: [] });
+  }
   const data = await jobAlertService.listJobAlerts(req.candidate.id);
   res.status(200).json({ success: true, data });
 });

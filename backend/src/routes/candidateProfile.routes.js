@@ -24,7 +24,7 @@ router.post(
   candidateProfileController.createProfile
 );
 
-router.get('/', requireCandidateProfile, candidateProfileController.getProfile);
+router.get('/', candidateProfileController.getProfile);
 
 router.put(
   '/',

@@ -6,7 +6,11 @@ const ApiError = require('../utils/ApiError');
 
 const listNotifications = asyncHandler(async (req, res) => {
   if (!req.candidate) {
-    throw ApiError.notFound('Candidate profile not found');
+    return res.status(200).json({
+      success: true,
+      data: [],
+      meta: { unreadCount: 0 },
+    });
   }
 
   const limit = req.query.limit ? Number(req.query.limit) : undefined;
@@ -24,7 +28,10 @@ const listNotifications = asyncHandler(async (req, res) => {
 
 const getUnreadCount = asyncHandler(async (req, res) => {
   if (!req.candidate) {
-    throw ApiError.notFound('Candidate profile not found');
+    return res.status(200).json({
+      success: true,
+      data: { unreadCount: 0 },
+    });
   }
 
   const unreadCount = await candidateNotificationService.getUnreadCount({

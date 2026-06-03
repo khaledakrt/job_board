@@ -39,7 +39,7 @@ async function getProfileByUserId(userId) {
   });
 
   if (!profile) {
-    throw ApiError.notFound('Candidate profile not found');
+    return null;
   }
 
   return formatProfile(profile);

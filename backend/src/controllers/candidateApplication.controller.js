@@ -35,6 +35,9 @@ const applyToJob = asyncHandler(async (req, res) => {
 });
 
 const listAppliedJobIds = asyncHandler(async (req, res) => {
+  if (!req.candidate) {
+    return res.status(200).json({ success: true, data: [] });
+  }
   const jobIds = await candidateApplicationService.listAppliedJobIds(req.candidate.id);
 
   res.status(200).json({
@@ -56,6 +59,9 @@ const getApplicationDetail = asyncHandler(async (req, res) => {
 });
 
 const listMyApplications = asyncHandler(async (req, res) => {
+  if (!req.candidate) {
+    return res.status(200).json({ success: true, data: [] });
+  }
   const data = await candidateApplicationService.listCandidateApplications(
     req.candidate.id
   );
