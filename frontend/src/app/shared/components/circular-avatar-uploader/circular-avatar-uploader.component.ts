@@ -1,4 +1,5 @@
 import { Component, computed, ElementRef, input, output, signal, viewChild } from '@angular/core';
+import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 
 @Component({
   selector: 'app-circular-avatar-uploader',
@@ -14,7 +15,11 @@ export class CircularAvatarUploaderComponent {
   readonly previewUrl = signal<string | null>(null);
   readonly dragOver = signal(false);
 
-  readonly displayUrl = computed(() => this.previewUrl() || this.currentAvatarUrl());
+  readonly displayUrl = computed(() => {
+    const preview = this.previewUrl();
+    if (preview) return preview;
+    return resolveUploadUrl(this.currentAvatarUrl());
+  });
 
   openPicker(): void {
     this.fileInput()?.nativeElement.click();
