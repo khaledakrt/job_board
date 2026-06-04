@@ -2,6 +2,7 @@
 
 const { z } = require('zod');
 const { plainTextLength } = require('../utils/richText');
+const { parseExpiresAt } = require('../utils/jobExpiration');
 const {
   JOB_STATUS,
   JOB_MANUAL_STATUSES,
@@ -37,13 +38,10 @@ const jobBodySchema = z.object({
   tags: z.array(z.string().trim().min(1).max(50)).max(20).optional().nullable(),
   languages: z.array(z.string().trim().min(1).max(50)).max(15).optional().nullable(),
   benefits: z.array(z.string().trim().min(1).max(80)).max(20).optional().nullable(),
-  experienceYears: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .max(50)
-    .optional()
-    .nullable(),
+  experienceYears: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : val),
+    z.coerce.number().int().min(0).max(50).nullable().optional()
+  ),
   location: z.string().trim().max(255).optional().nullable(),
   remoteType: z.enum(REMOTE_TYPES).default('on-site'),
   contractType: z.enum(CONTRACT_TYPES).default('CDI'),
@@ -60,11 +58,24 @@ const jobBodySchema = z.object({
   quiz: quizSchema.optional().nullable(),
 });
 
-const createJobSchema = jobBodySchema.extend({
-  expiresAt: z.coerce
-    .date()
-    .refine((d) => d.getTime() > Date.now(), 'Expiration date must be in the future'),
-});
+const createJobSchema = jobBodySchema
+  .extend({
+    expiresAt: z.coerce
+      .date()
+      .transform((d) => parseExpiresAt(d))
+      .refine((d) => d != null && d.getTime() > Date.now(), {
+        message: 'La date d\'expiration doit être dans le futur',
+      }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.quizEnabled && !data.quiz) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Configurez le quiz ou désactivez-le',
+        path: ['quiz'],
+      });
+    }
+  });
 
 const updateJobSchema = jobBodySchema.partial();
 

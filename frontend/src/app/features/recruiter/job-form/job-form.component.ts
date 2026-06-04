@@ -415,6 +415,23 @@ export class JobFormComponent implements OnInit {
 
 
 
+  private formatSaveError(err: HttpErrorResponse): string {
+    const body = err.error as {
+      message?: string;
+      errors?: { field?: string; message?: string }[];
+    } | null;
+    const details = body?.errors
+      ?.map((e) => {
+        const field = e.field ? `${e.field}: ` : '';
+        return `${field}${e.message ?? ''}`;
+      })
+      .filter(Boolean);
+    if (details?.length) {
+      return details.join(' · ');
+    }
+    return body?.message || 'Enregistrement impossible.';
+  }
+
   /** Input type="number" yields number | null; edit mode may use string. */
   private parseExperienceYears(
     value: string | number | null | undefined
@@ -551,11 +568,8 @@ export class JobFormComponent implements OnInit {
       },
 
       error: (err: HttpErrorResponse) => {
-
-        this.errorMessage.set(err.error?.message || 'Enregistrement impossible.');
-
+        this.errorMessage.set(this.formatSaveError(err));
         this.saving.set(false);
-
       },
 
     });
