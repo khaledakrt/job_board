@@ -415,6 +415,18 @@ export class JobFormComponent implements OnInit {
 
 
 
+  /** Input type="number" yields number | null; edit mode may use string. */
+  private parseExperienceYears(
+    value: string | number | null | undefined
+  ): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const n =
+      typeof value === 'number' ? value : Number.parseInt(String(value).trim(), 10);
+    return Number.isNaN(n) ? null : n;
+  }
+
   private addToList(
 
     input: ReturnType<typeof signal<string>>,
@@ -475,11 +487,7 @@ export class JobFormComponent implements OnInit {
 
     const raw = this.form.getRawValue();
 
-    const experienceRaw = raw.experienceYears.trim();
-
-    const experienceYears =
-
-      experienceRaw === '' ? null : Number.parseInt(experienceRaw, 10);
+    const experienceYears = this.parseExperienceYears(raw.experienceYears);
 
 
 
@@ -499,13 +507,7 @@ export class JobFormComponent implements OnInit {
 
       salaryLabel: raw.salaryLabel?.trim() || null,
 
-      experienceYears:
-
-        experienceYears != null && !Number.isNaN(experienceYears)
-
-          ? experienceYears
-
-          : null,
+      experienceYears,
 
       tags: this.tags(),
 
