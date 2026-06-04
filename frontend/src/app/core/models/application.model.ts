@@ -53,6 +53,7 @@ export interface Application {
   coverLetter: string | null;
   resumeSnapshotUrl: string | null;
   rating: number | null;
+  interviewAt: string | null;
   createdAt: string;
   updatedAt: string;
   job?: ApplicationJob;

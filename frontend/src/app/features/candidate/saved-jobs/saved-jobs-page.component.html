@@ -1,0 +1,102 @@
+<div class="saved-page">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Offres enregistrées & alertes</h1>
+      <p class="page-subtitle">Retrouvez vos favoris et gérez vos alertes emploi.</p>
+    </div>
+    <a [routerLink]="routes.CANDIDATE.JOBS" class="btn-primary !w-auto px-4">Rechercher des offres</a>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <div class="saved-tabs">
+    <button type="button" class="saved-tab" [class.saved-tab-active]="tab() === 'saved'" (click)="setTab('saved')">
+      Offres ({{ savedJobs().length }})
+    </button>
+    <button type="button" class="saved-tab" [class.saved-tab-active]="tab() === 'alerts'" (click)="setTab('alerts')">
+      Alertes ({{ alerts().length }})
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="table-loading">Chargement…</p>
+  } @else if (tab() === 'saved') {
+    <div class="saved-grid">
+      @for (item of savedJobs(); track item.id) {
+        <article class="saved-card panel-card">
+          @if (logo(item.job?.company?.logoUrl); as src) {
+            <img [src]="src" alt="" class="saved-logo" />
+          } @else {
+            <div class="saved-logo-ph">{{ item.job?.company?.name?.charAt(0) || 'J' }}</div>
+          }
+          <div class="saved-body">
+            <h3>{{ item.job?.title || 'Offre' }}</h3>
+            <p class="saved-co">{{ item.job?.company?.name }}</p>
+            @if (salary(item); as s) {
+              <p class="saved-meta">{{ s }}</p>
+            }
+          </div>
+          <div class="saved-actions">
+            <button type="button" class="btn-primary !w-auto px-3 text-xs" (click)="openJob(item.jobId, true)">
+              Postuler
+            </button>
+            <button type="button" class="btn-secondary !w-auto px-3 text-xs" (click)="openJob(item.jobId)">Voir</button>
+            <button type="button" class="saved-remove" (click)="removeSaved(item)">×</button>
+          </div>
+        </article>
+      } @empty {
+        <p class="empty-cell">Aucune offre enregistrée.</p>
+      }
+    </div>
+  } @else {
+    <ul class="alerts-full-list">
+      @for (alert of alerts(); track alert.id) {
+        <li class="alert-full panel-card">
+          @if (editingAlertId() === alert.id) {
+            <form class="alert-edit-form" [formGroup]="alertEditForm" (ngSubmit)="saveAlertEdit(alert)">
+              <label class="form-label">Nom de l'alerte</label>
+              <input class="form-input" formControlName="label" placeholder="Ex. Dev Paris" />
+              <label class="form-label">Fréquence</label>
+              <select class="form-input" formControlName="frequency">
+                <option value="daily">Quotidienne</option>
+                <option value="weekly">Hebdomadaire</option>
+              </select>
+              <label class="form-check">
+                <input type="checkbox" formControlName="isActive" />
+                Alerte active
+              </label>
+              <div class="alert-edit-actions">
+                <button type="submit" class="btn-primary !w-auto px-3">Enregistrer</button>
+                <button type="button" class="btn-secondary !w-auto px-3" (click)="cancelEditAlert()">Annuler</button>
+              </div>
+            </form>
+          } @else {
+            <div class="alert-full-head">
+              <div>
+                <h3>{{ alert.label || 'Alerte emploi' }}</h3>
+                <p class="alert-filters">{{ formatAlertFilters(alert.searchFilters) }}</p>
+                <p class="alert-meta">
+                  {{ alert.frequency === 'daily' ? 'Quotidienne' : 'Hebdomadaire' }}
+                  · {{ alert.isActive ? 'Active' : 'En pause' }}
+                  · {{ alert.createdAt | date: 'mediumDate' }}
+                </p>
+              </div>
+              <div class="alert-full-actions">
+                <button type="button" class="btn-secondary !w-auto px-3 text-xs" (click)="startEditAlert(alert)">
+                  Modifier
+                </button>
+                <button type="button" class="btn-secondary !w-auto px-3 text-xs" (click)="removeAlert(alert)">
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          }
+        </li>
+      } @empty {
+        <p class="empty-cell">Aucune alerte. Créez-en une depuis la recherche d'offres.</p>
+      }
+    </ul>
+  }
+</div>

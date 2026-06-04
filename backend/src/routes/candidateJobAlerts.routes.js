@@ -16,10 +16,26 @@ router.use(authenticate, requireCandidateRole);
 router.get('/', requireCandidate, controller.list);
 
 router.use(requireCandidateProfile);
-router.post(
-  '/',
-  validateBody(z.object({ searchFilters: z.record(z.unknown()) })),
-  controller.create
+const createAlertSchema = z.object({
+  searchFilters: z.record(z.unknown()),
+  label: z.string().trim().max(120).optional().nullable(),
+  frequency: z.enum(['daily', 'weekly']).optional(),
+  isActive: z.boolean().optional(),
+});
+
+const updateAlertSchema = z.object({
+  searchFilters: z.record(z.unknown()).optional(),
+  label: z.string().trim().max(120).optional().nullable(),
+  frequency: z.enum(['daily', 'weekly']).optional(),
+  isActive: z.boolean().optional(),
+});
+
+router.post('/', validateBody(createAlertSchema), controller.create);
+router.patch(
+  '/:id',
+  validateParams(z.object({ id: z.string().uuid() })),
+  validateBody(updateAlertSchema),
+  controller.update
 );
 router.delete(
   '/:id',

@@ -56,11 +56,11 @@
           </form>
           @if (showBio()) {
             <div class="form-field cv-bio-field">
-              <label class="cv-label" for="cv-bio">Présentation (optionnel)</label>
+              <label class="cv-label" for="cv-bio">Résumé (affiché sur le CV PDF)</label>
               <textarea id="cv-bio" class="form-input" rows="3" formControlName="bio"></textarea>
             </div>
           } @else {
-            <button type="button" class="cv-link-btn" (click)="showBio.set(true)">+ Ajouter une présentation</button>
+            <button type="button" class="cv-link-btn" (click)="showBio.set(true)">+ Ajouter un résumé</button>
           }
         </div>
       }

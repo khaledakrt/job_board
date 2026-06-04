@@ -66,8 +66,25 @@ function createModerateAuthRateLimiter(env) {
   });
 }
 
+function createContactFormRateLimiter(env) {
+  const max = isDevelopment(env) ? 30 : 5;
+  const windowMs = isDevelopment(env) ? 60_000 : 900_000;
+
+  return rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      message: 'Trop de messages envoyés. Réessayez dans quelques minutes.',
+    },
+  });
+}
+
 module.exports = {
   createGlobalRateLimiter,
   createStrictAuthRateLimiter,
   createModerateAuthRateLimiter,
+  createContactFormRateLimiter,
 };

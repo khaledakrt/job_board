@@ -857,6 +857,7 @@
   font-size: 0.8rem;
   line-height: 1.45;
   color: #64748b;
+  white-space: pre-wrap;
 }
 
 .rating-row {

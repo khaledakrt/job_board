@@ -24,10 +24,17 @@ function formatProfile(profile) {
     professionalTitle: profile.professional_title,
     bio: profile.bio,
     skills: profile.skills,
+    languages: profile.languages,
+    certifications: profile.certifications,
+    linkedinUrl: profile.linkedin_url,
+    portfolioUrl: profile.portfolio_url,
     experiences: profile.experiences,
     education: profile.education,
     resumeUrl: profile.resume_url,
     minSalary: profile.min_salary,
+    jobPreferences: profile.job_preferences,
+    notificationPreferences: profile.notification_preferences,
+    onboardingCompletedAt: profile.onboarding_completed_at,
     updatedAt: profile.updated_at,
   };
 }
@@ -68,10 +75,16 @@ async function createProfile({ userId, payload }) {
     professional_title: payload.professionalTitle || null,
     bio: payload.bio || null,
     skills: payload.skills || null,
+    languages: payload.languages || null,
+    certifications: payload.certifications || null,
+    linkedin_url: payload.linkedinUrl || null,
+    portfolio_url: payload.portfolioUrl || null,
     experiences: payload.experiences || null,
     education: payload.education || null,
     resume_url: null,
     min_salary: payload.minSalary ?? null,
+    job_preferences: payload.jobPreferences || null,
+    notification_preferences: payload.notificationPreferences || null,
     updated_at: new Date(),
   });
 
@@ -96,9 +109,21 @@ async function updateProfile({ userId, payload }) {
     professional_title: payload.professionalTitle ?? profile.professional_title,
     bio: payload.bio ?? profile.bio,
     skills: payload.skills ?? profile.skills,
+    languages: payload.languages ?? profile.languages,
+    certifications: payload.certifications ?? profile.certifications,
+    linkedin_url: payload.linkedinUrl ?? profile.linkedin_url,
+    portfolio_url: payload.portfolioUrl ?? profile.portfolio_url,
     experiences: payload.experiences ?? profile.experiences,
     education: payload.education ?? profile.education,
     min_salary: payload.minSalary ?? profile.min_salary,
+    job_preferences: payload.jobPreferences ?? profile.job_preferences,
+    notification_preferences: payload.notificationPreferences ?? profile.notification_preferences,
+    onboarding_completed_at:
+      payload.onboardingCompleted === true
+        ? new Date()
+        : payload.onboardingCompleted === false
+          ? null
+          : profile.onboarding_completed_at,
     updated_at: new Date(),
   });
 

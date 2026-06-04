@@ -1,0 +1,262 @@
+:host {
+  display: block;
+}
+
+.public-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.public-shell-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.landing-container {
+  width: min(1120px, 100% - 2rem);
+  margin-inline: auto;
+}
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.landing-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  flex-wrap: wrap;
+}
+
+.landing-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.landing-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.55rem;
+  background: linear-gradient(135deg, #0a66c2, #1d8fe8);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.landing-logo-text {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0a66c2;
+}
+
+.landing-nav {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  max-width: 52rem;
+  justify-content: center;
+}
+
+@media (min-width: 900px) {
+  .landing-nav {
+    display: flex;
+  }
+}
+
+@media (min-width: 1100px) {
+  .landing-nav {
+    gap: 0.25rem;
+  }
+
+  .landing-nav-link-anchor {
+    font-size: 0.82rem;
+  }
+}
+
+.landing-nav-link-anchor {
+  display: inline-block;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  text-decoration: none;
+  border-radius: 0.4rem;
+}
+
+.landing-nav-link-anchor:hover {
+  background: #eef3f8;
+  color: #0a66c2;
+}
+
+.landing-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.landing-btn:hover {
+  transform: translateY(-1px);
+}
+
+.landing-btn-primary {
+  background: #0a66c2;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(10, 102, 194, 0.28);
+}
+
+.landing-btn-primary:hover {
+  background: #0958ab;
+}
+
+.landing-btn-ghost {
+  background: transparent;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.landing-btn-ghost:hover {
+  background: #f1f5f9;
+}
+
+.landing-footer {
+  margin-top: auto;
+  padding: 2.5rem 0 2rem;
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+.landing-footer-inner {
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .landing-footer-inner {
+    grid-template-columns: 1.2fr repeat(3, 1fr);
+  }
+}
+
+.landing-footer-brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.landing-footer-tagline {
+  width: 100%;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.landing-footer-col-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #e2e8f0;
+}
+
+.landing-footer-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.landing-footer-menu a,
+.landing-footer-contact-link {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.landing-footer-menu a:hover,
+.landing-footer-contact-link:hover {
+  color: #fff;
+}
+
+.landing-footer-social-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.landing-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.landing-social-link:hover {
+  color: #fff;
+}
+
+.landing-social-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}
+
+.landing-footer-contact-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+}
+
+.landing-footer-copy {
+  grid-column: 1 / -1;
+  margin: 0.5rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid #1e293b;
+  font-size: 0.75rem;
+  color: #64748b;
+}

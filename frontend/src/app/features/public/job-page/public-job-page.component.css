@@ -270,3 +270,175 @@
   padding: 0.7rem 1.35rem;
   font-size: 0.9rem;
 }
+
+.public-job-page-btn-ghost {
+  background: transparent;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.public-job-page-btn-ghost:hover {
+  background: #f8fafc;
+}
+
+.public-job-page-btn--disabled,
+.public-job-page-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.public-job-page-quiz-apply {
+  margin: 1.25rem 0;
+  padding: 1rem 1.1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #ffcc80;
+  background: #fffbf5;
+}
+
+.public-job-page-quiz-card--active {
+  background: #fff;
+  border-color: #e2e8f0;
+}
+
+.public-job-page-quiz-q {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.public-job-page-quiz-num {
+  display: inline-block;
+  margin-right: 0.35rem;
+  color: #074484;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.public-job-page-quiz-choices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.public-job-page-quiz-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.public-job-page-apply-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.public-job-page-quiz-hint-bottom {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  text-align: right;
+}
+
+.public-job-apply-modal-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.public-job-apply-modal-badge {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #046139;
+}
+
+.public-job-apply-modal-sub {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.public-job-ai-link {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px dashed #94a3b8;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0a66c2;
+  cursor: pointer;
+  text-align: left;
+}
+
+.public-job-ai-link:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.public-job-ai-link:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.public-job-form-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.public-job-form-input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.public-job-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.public-job-page-toast {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 60;
+  max-width: min(420px, calc(100vw - 2rem));
+  padding: 0.75rem 1rem;
+  border-radius: 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+}
+
+.public-job-page-toast-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.public-job-page-toast-success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #046139;
+}

@@ -48,6 +48,10 @@ Application.init(
       type: DataTypes.TINYINT.UNSIGNED,
       allowNull: true,
     },
+    interview_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

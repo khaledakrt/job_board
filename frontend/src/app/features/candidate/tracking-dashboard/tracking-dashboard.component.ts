@@ -11,7 +11,10 @@ import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApplicationTimelineComponent } from '../../../shared/components/application-timeline/application-timeline.component';
+import { ApplicationQuizReviewComponent } from '../../../shared/components/application-quiz-review/application-quiz-review.component';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
+import { CandidateDashboardService, DashboardSummary } from '../services/candidate-dashboard.service';
+import { Job } from '../../../core/models/job.model';
 import { APPLICATION_STATUS_LABELS } from '../../../core/constants/application-status.constant';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { Application, ApplicationDetail } from '../../../core/models/application.model';
@@ -25,7 +28,13 @@ import { salaryDisplayLabel } from '../../../core/utils/job-display.util';
 @Component({
   selector: 'app-tracking-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, ApplicationTimelineComponent, SafeHtmlComponent],
+  imports: [
+    RouterLink,
+    DatePipe,
+    ApplicationTimelineComponent,
+    ApplicationQuizReviewComponent,
+    SafeHtmlComponent,
+  ],
   templateUrl: './tracking-dashboard.component.html',
   styleUrl: './tracking-dashboard.component.css',
 })
@@ -34,13 +43,20 @@ export class TrackingDashboardComponent implements OnInit {
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly savedJobService = inject(SavedJobService);
   private readonly alertService = inject(JobAlertService);
+  private readonly dashboardService = inject(CandidateDashboardService);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
 
   readonly routes = APP_ROUTES;
   readonly statusLabels = APPLICATION_STATUS_LABELS;
 
+  readonly appScope = signal<'active' | 'archived'>('active');
+  readonly filterStatus = signal<string>('');
+  readonly searchQ = signal('');
+
   readonly applications = signal<Application[]>([]);
+  readonly dashboardSummary = signal<DashboardSummary | null>(null);
+  readonly recommendedJobs = signal<(Job & { matchScore?: number })[]>([]);
   readonly savedJobs = signal<SavedJobItem[]>([]);
   readonly alerts = signal<JobAlertItem[]>([]);
   readonly loadingApps = signal(true);
@@ -67,11 +83,32 @@ export class TrackingDashboardComponent implements OnInit {
     this.loadApplications();
     this.loadSavedJobs();
     this.loadAlerts();
+    this.dashboardService.getSummary().subscribe({
+      next: (res) => this.dashboardSummary.set(res.data || null),
+    });
+    this.dashboardService.getRecommendedJobs().subscribe({
+      next: (res) => this.recommendedJobs.set(res.data || []),
+    });
+  }
+
+  reloadApplications(): void {
+    this.loadApplications();
+  }
+
+  setAppScope(scope: 'active' | 'archived'): void {
+    this.appScope.set(scope);
+    this.loadApplications();
   }
 
   loadApplications(): void {
     this.loadingApps.set(true);
-    this.applicationsService.list().subscribe({
+    this.applicationsService
+      .list({
+        scope: this.appScope(),
+        status: this.filterStatus() || undefined,
+        q: this.searchQ() || undefined,
+      })
+      .subscribe({
       next: (res) => {
         this.applications.set(res.data || []);
         this.loadingApps.set(false);
@@ -224,5 +261,42 @@ export class TrackingDashboardComponent implements OnInit {
 
   resumeLink(url: string | null | undefined): string | null {
     return resolveUploadUrl(url);
+  }
+
+  chartMax(): number {
+    const months = this.dashboardSummary()?.monthlyApplications || [];
+    return Math.max(1, ...months.map((m) => m.count));
+  }
+
+  downloadInterviewIcs(detail: ApplicationDetail): void {
+    if (!detail.interviewAt) return;
+    const start = new Date(detail.interviewAt);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const fmt = (d: Date) =>
+      d
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d{3}/, '');
+    const title = encodeURIComponent(`Entretien — ${detail.job?.title || 'JobBoard'}`);
+    const body = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      `DTSTART:${fmt(start)}`,
+      `DTEND:${fmt(end)}`,
+      `SUMMARY:${title}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const blob = new Blob([body], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'entretien-jobboard.ics';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  openRecommended(jobId: string): void {
+    void this.router.navigate([this.routes.CANDIDATE.JOBS], { queryParams: { jobId } });
   }
 }

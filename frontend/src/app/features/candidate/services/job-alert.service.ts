@@ -14,8 +14,25 @@ export class JobAlertService {
     return this.http.get<ApiResponse<JobAlertItem[]>>(this.base);
   }
 
-  create(searchFilters: Record<string, unknown>): Observable<ApiResponse<JobAlertItem>> {
-    return this.http.post<ApiResponse<JobAlertItem>>(this.base, { searchFilters });
+  create(payload: {
+    searchFilters: Record<string, unknown>;
+    label?: string | null;
+    frequency?: 'daily' | 'weekly';
+    isActive?: boolean;
+  }): Observable<ApiResponse<JobAlertItem>> {
+    return this.http.post<ApiResponse<JobAlertItem>>(this.base, payload);
+  }
+
+  update(
+    id: string,
+    payload: {
+      searchFilters?: Record<string, unknown>;
+      label?: string | null;
+      frequency?: 'daily' | 'weekly';
+      isActive?: boolean;
+    }
+  ): Observable<ApiResponse<JobAlertItem>> {
+    return this.http.patch<ApiResponse<JobAlertItem>>(`${this.base}/${id}`, payload);
   }
 
   remove(id: string): Observable<ApiResponse<null>> {

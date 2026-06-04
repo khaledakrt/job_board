@@ -36,6 +36,7 @@ function formatApplication(application) {
     coverLetter: application.cover_letter,
     resumeSnapshotUrl: application.resume_snapshot_url,
     rating: application.rating,
+    interviewAt: application.interview_at,
     createdAt: application.created_at,
     updatedAt: application.updated_at,
     job: application.job
@@ -108,16 +109,25 @@ async function updateApplicationStatus({
   status,
   rating,
   evaluationText,
+  interviewAt,
   recruiterUser,
 }) {
   const application = await getApplicationForCompany(applicationId, companyId);
   const previousStatus = application.status;
 
-  await application.update({
+  const updates = {
     status,
     rating: rating ?? application.rating,
     updated_at: new Date(),
-  });
+  };
+
+  if (interviewAt !== undefined) {
+    updates.interview_at = interviewAt ? new Date(interviewAt) : null;
+  } else if (status === 'interview' && !application.interview_at) {
+    updates.interview_at = new Date();
+  }
+
+  await application.update(updates);
 
   await application.reload({
     include: [

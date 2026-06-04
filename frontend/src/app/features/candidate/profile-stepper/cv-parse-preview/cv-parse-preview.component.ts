@@ -56,7 +56,7 @@ export class CvParsePreviewComponent {
       lastName: sanitizeText(d.last_name || ''),
       phone: sanitizeText(d.phone || ''),
       professionalTitle: sanitizeText(d.professional_title || ''),
-      bio: sanitizeText(d.bio || ''),
+      bio: sanitizeMultilineText(d.bio || ''),
     });
     this.showBio.set(Boolean(d.bio?.trim()));
     this.skills.set(normalizeSkills(d.skills || []));
@@ -74,7 +74,7 @@ export class CvParsePreviewComponent {
             company: [sanitizeText(e.company || '')],
             startDate: [dates.start],
             endDate: [dates.end],
-            description: [sanitizeText(e.description || '')],
+            description: [sanitizeMultilineText(e.description || '')],
           })
         );
       });
@@ -187,7 +187,7 @@ export class CvParsePreviewComponent {
         company: sanitizeText(e.company || '') || undefined,
         startDate: sanitizeText(e.startDate || '') || undefined,
         endDate: sanitizeText(e.endDate || '') || undefined,
-        description: sanitizeText(e.description || '') || undefined,
+        description: sanitizeMultilineText(e.description || '') || undefined,
       }));
 
     const education: EducationBlock[] = this.education
@@ -206,7 +206,7 @@ export class CvParsePreviewComponent {
       last_name: id.lastName || null,
       phone: id.phone || null,
       professional_title: id.professionalTitle || null,
-      bio: id.bio?.trim() || null,
+      bio: sanitizeMultilineText(id.bio || '') || null,
       skills: this.skills(),
       experiences,
       education,
@@ -239,6 +239,18 @@ function sanitizeText(value: string): string {
     .replace(/M\s*crosoft/gi, 'Microsoft')
     .replace(/Offce/gi, 'Office')
     .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function sanitizeMultilineText(value: string): string {
+  return value
+    .replace(/\uFFFD/g, '')
+    .replace(/M\s*crosoft/gi, 'Microsoft')
+    .replace(/Offce/gi, 'Office')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
     .trim();
 }
 

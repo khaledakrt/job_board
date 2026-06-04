@@ -10,8 +10,14 @@ export class CandidateApplicationsService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/candidate/applications`;
 
-  list(): Observable<ApiResponse<Application[]>> {
-    return this.http.get<ApiResponse<Application[]>>(this.base);
+  list(params?: { scope?: 'active' | 'archived' | 'all'; status?: string; q?: string }): Observable<
+    ApiResponse<Application[]>
+  > {
+    const query: Record<string, string> = {};
+    if (params?.scope) query['scope'] = params.scope;
+    if (params?.status) query['status'] = params.status;
+    if (params?.q?.trim()) query['q'] = params.q.trim();
+    return this.http.get<ApiResponse<Application[]>>(this.base, { params: query });
   }
 
   getById(id: string): Observable<ApiResponse<ApplicationDetail>> {

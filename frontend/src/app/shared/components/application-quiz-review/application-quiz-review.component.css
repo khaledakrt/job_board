@@ -1,0 +1,68 @@
+.quiz-review-intro {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.quiz-review-card {
+  margin-bottom: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  background: #f8fafc;
+}
+
+.quiz-review-q {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.quiz-review-num {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.35rem;
+  background: #0a66c2;
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.quiz-review-choices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.quiz-review-choice {
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.4rem;
+  font-size: 0.82rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.quiz-choice-correct {
+  border-color: #86efac;
+  background: #ecfdf5;
+}
+
+.quiz-choice-wrong {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.quiz-choice-expected {
+  border-color: #bbf7d0;
+}
+
+.quiz-choice-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #475569;
+}

@@ -11,6 +11,30 @@ export const routes: Routes = [
     component: HomeComponent,
   },
   {
+    path: 'contact',
+    loadComponent: () =>
+      import('./features/public/static-page/public-static-page.component').then(
+        (m) => m.PublicStaticPageComponent
+      ),
+    data: { pageId: 'contact' },
+  },
+  {
+    path: 'conditions',
+    loadComponent: () =>
+      import('./features/public/static-page/public-static-page.component').then(
+        (m) => m.PublicStaticPageComponent
+      ),
+    data: { pageId: 'terms' },
+  },
+  {
+    path: 'qui-sommes-nous',
+    loadComponent: () =>
+      import('./features/public/static-page/public-static-page.component').then(
+        (m) => m.PublicStaticPageComponent
+      ),
+    data: { pageId: 'about' },
+  },
+  {
     path: 'offres/:id',
     loadComponent: () =>
       import('./features/public/job-page/public-job-page.component').then(

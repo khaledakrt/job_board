@@ -61,6 +61,20 @@ function buildSearchWhereClause(filters) {
     where.remote_type = filters.remoteType;
   }
 
+  if (filters.minSalary != null && filters.minSalary > 0) {
+    const min = Math.floor(filters.minSalary);
+    const salaryCondition = {
+      salary_label: {
+        [Op.regexp]: `[0-9]`,
+      },
+    };
+    if (where[Op.and]) {
+      where[Op.and].push(salaryCondition);
+    } else {
+      where[Op.and] = [salaryCondition];
+    }
+  }
+
   if (filters.keywords) {
     const keyword = filters.keywords.trim();
     const likeKeyword = `%${keyword}%`;
@@ -104,14 +118,21 @@ async function searchJobs(query) {
     location: query.location,
     contractType: query.contractType,
     remoteType: query.remoteType,
+    minSalary: query.minSalary,
   };
 
   const where = buildSearchWhereClause(filters);
 
-  const order = [
-    ['created_at', 'DESC'],
-    ['applications_count', 'DESC'],
-  ];
+  const order =
+    query.sortBy === 'salary'
+      ? [
+          ['salary_label', 'DESC'],
+          ['created_at', 'DESC'],
+        ]
+      : [
+          ['created_at', 'DESC'],
+          ['applications_count', 'DESC'],
+        ];
 
   const { rows, count } = await Job.findAndCountAll({
     where,

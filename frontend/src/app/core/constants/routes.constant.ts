@@ -1,6 +1,9 @@
 export const APP_ROUTES = {
   HOME: '/',
   PUBLIC: {
+    CONTACT: '/contact',
+    TERMS: '/conditions',
+    ABOUT: '/qui-sommes-nous',
     JOB: (id: string) => `/offres/${id}`,
     COMPANY: (id: string) => `/entreprises/${id}`,
   },
@@ -16,6 +19,7 @@ export const APP_ROUTES = {
     ROOT: '/candidate',
     DASHBOARD: '/candidate/dashboard',
     JOBS: '/candidate/jobs',
+    SAVED: '/candidate/saved',
     PROFILE: '/candidate/profile',
     SETTINGS: '/candidate/settings',
   },

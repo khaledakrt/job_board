@@ -1,0 +1,231 @@
+:host {
+  display: block;
+  flex: 1;
+}
+
+.static-page-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2.5rem 1rem 3.5rem;
+  background: linear-gradient(160deg, #eef3f8 0%, #f8fafc 50%, #fff 100%);
+}
+
+.static-page-panel {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  padding: 2rem 2.25rem 1.75rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow:
+    0 4px 6px -1px rgba(15, 23, 42, 0.06),
+    0 12px 28px -8px rgba(10, 102, 194, 0.12);
+}
+
+.static-page-head {
+  margin-bottom: 1.75rem;
+  text-align: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.static-page-head h1 {
+  margin: 0;
+  font-size: clamp(1.65rem, 4vw, 2rem);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.static-page-lead {
+  margin: 0.75rem auto 0;
+  max-width: 32rem;
+  font-size: 1rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.static-page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.static-page-section {
+  padding: 1.15rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.static-page-section:last-child {
+  border-bottom: none;
+}
+
+.static-page-section h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0a66c2;
+}
+
+.static-page-section p {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #334155;
+}
+
+.static-page-section p:last-child {
+  margin-bottom: 0;
+}
+
+.static-page-block {
+  margin-top: 0.25rem;
+}
+
+.static-page-block-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.static-page-block-hint {
+  margin: 0 0 1.35rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.static-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.static-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.static-form-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.static-form-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.static-form-input:hover {
+  border-color: #94a3b8;
+}
+
+.static-form-input:focus {
+  outline: none;
+  border-color: #0a66c2;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.15);
+}
+
+.static-form-textarea {
+  resize: vertical;
+  min-height: 8.5rem;
+}
+
+.static-form-error {
+  font-size: 0.78rem;
+  color: #dc2626;
+}
+
+.static-form-alert {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.static-form-alert-success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.static-form-alert-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.static-form-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.static-form-submit {
+  padding: 0.7rem 1.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  background: #0a66c2;
+  border: none;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(10, 102, 194, 0.28);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.static-form-submit:hover:not(:disabled) {
+  background: #0958ab;
+  transform: translateY(-1px);
+}
+
+.static-form-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.static-page-foot {
+  margin-top: 1.75rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.static-page-back-link {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0a66c2;
+  text-decoration: none;
+}
+
+.static-page-back-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .static-page-panel {
+    padding: 1.5rem 1.25rem 1.35rem;
+    border-radius: 0.75rem;
+  }
+
+  .static-page-main {
+    padding: 1.5rem 0.75rem 2.5rem;
+  }
+}

@@ -13,6 +13,21 @@ export interface EducationBlock {
   endDate?: string;
 }
 
+export interface JobPreferences {
+  contractTypes?: string[];
+  remoteTypes?: string[];
+  preferredLocations?: string[];
+  mobility?: string;
+}
+
+export interface NotificationPreferences {
+  emailEnabled?: boolean;
+  inAppEnabled?: boolean;
+  statusChange?: boolean;
+  recruiterMessage?: boolean;
+  jobAlert?: boolean;
+}
+
 export interface CandidateProfile {
   id: string;
   userId: string;
@@ -24,10 +39,17 @@ export interface CandidateProfile {
   professionalTitle: string | null;
   bio: string | null;
   skills: string[] | null;
+  languages: string[] | null;
+  certifications: string[] | null;
+  linkedinUrl: string | null;
+  portfolioUrl: string | null;
   experiences: ExperienceBlock[] | null;
   education: EducationBlock[] | null;
   resumeUrl: string | null;
   minSalary: number | null;
+  jobPreferences: JobPreferences | null;
+  notificationPreferences: NotificationPreferences | null;
+  onboardingCompletedAt: string | null;
   updatedAt: string;
 }
 
@@ -71,7 +93,11 @@ export interface JobAlertItem {
   id: string;
   candidateId: string;
   searchFilters: Record<string, unknown>;
+  label: string | null;
+  isActive: boolean;
+  frequency: 'daily' | 'weekly';
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface PaginatedJobs<T> {

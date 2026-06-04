@@ -6,6 +6,7 @@
 }
 
 .candidate-content {
+  --candidate-page-max: 1400px;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -139,15 +140,30 @@
   cursor: pointer;
 }
 
+.candidate-page-shell {
+  width: 100%;
+  max-width: var(--candidate-page-max);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  box-sizing: border-box;
+}
+
 .candidate-topbar {
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.candidate-topbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: #fff;
-  flex-shrink: 0;
+  padding-block: 0.85rem;
+}
+
+.profile-banner-shell {
+  margin-top: 1rem;
 }
 
 .topbar-greeting {
@@ -169,7 +185,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin: 1rem 1.5rem 0;
+  margin: 0;
   padding: 1rem 1.15rem;
   border-left: 4px solid #ff9800;
   background: #fff8ed;
@@ -193,10 +209,15 @@
 }
 
 .candidate-main {
-  padding: 1.25rem 1.5rem 1.5rem;
+  padding-block: 1.25rem 1.5rem;
   overflow-x: hidden;
   min-width: 0;
   flex: 1;
+}
+
+.candidate-main-inner > :not(router-outlet) {
+  display: block;
+  width: 100%;
 }
 
 .loading-bar {

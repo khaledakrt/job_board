@@ -10,6 +10,7 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
     status: req.validatedBody.status,
     rating: req.validatedBody.rating,
     evaluationText: req.validatedBody.evaluationText,
+    interviewAt: req.validatedBody.interviewAt,
     recruiterUser: { id: req.user.id, email: req.user.email },
   });
 

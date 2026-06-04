@@ -1,0 +1,62 @@
+.onboarding-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.onboarding-card {
+  width: min(440px, 100%);
+  padding: 1.5rem;
+}
+
+.onboarding-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ff9800;
+}
+
+.onboarding-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.onboarding-card p {
+  margin: 0 0 1rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.onboarding-link {
+  font-weight: 700;
+  color: #0a66c2;
+  text-decoration: none;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 0.35rem;
+  margin: 1.25rem 0;
+}
+
+.onboarding-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.onboarding-dot-active {
+  background: #ff9800;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

@@ -8,6 +8,8 @@ const publicJobSearchQuerySchema = z.object({
   location: z.string().trim().max(255).optional(),
   contractType: z.enum(CONTRACT_TYPES).optional(),
   remoteType: z.enum(REMOTE_TYPES).optional(),
+  minSalary: z.coerce.number().nonnegative().optional(),
+  sortBy: z.enum(['date', 'salary']).optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(50).optional(),
 });

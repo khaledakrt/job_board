@@ -41,6 +41,18 @@ function cleanParsedText(value) {
     .trim();
 }
 
+function cleanParsedMultiline(value) {
+  return String(value || '')
+    .replace(/\uFFFD/g, '')
+    .replace(/M\s*crosoft/gi, 'Microsoft')
+    .replace(/Offce/gi, 'Office')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .trim();
+}
+
 function normalizeAiPayload(raw, parserMode) {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -53,7 +65,7 @@ function normalizeAiPayload(raw, parserMode) {
           company: cleanParsedText(e.company) || null,
           startDate: cleanParsedText(e.startDate) || null,
           endDate: cleanParsedText(e.endDate) || null,
-          description: cleanParsedText(e.description) || null,
+          description: cleanParsedMultiline(e.description) || null,
         }))
         .filter((e) => e.title || e.company)
     : [];
@@ -78,7 +90,7 @@ function normalizeAiPayload(raw, parserMode) {
     last_name: raw.lastName ? cleanParsedText(raw.lastName) : null,
     phone: raw.phone ? cleanParsedText(raw.phone) : null,
     professional_title: raw.professionalTitle ? cleanParsedText(raw.professionalTitle) : null,
-    bio: raw.bio ? cleanParsedText(raw.bio) : null,
+    bio: raw.bio ? cleanParsedMultiline(raw.bio) : null,
     skills: skills.slice(0, 30),
     experiences: experiences.slice(0, 15),
     education: education.slice(0, 10),

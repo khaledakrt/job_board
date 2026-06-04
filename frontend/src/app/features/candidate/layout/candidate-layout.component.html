@@ -1,99 +1,116 @@
-<div class="candidate-shell">
-  <aside class="candidate-sidebar">
-    <div class="sidebar-brand">
-      @if (avatarUrl(); as src) {
-        <img [src]="src" alt="" class="brand-avatar" />
-      } @else {
-        <div class="brand-mark">{{ initials() }}</div>
-      }
-      <div>
-        <p class="brand-title">Espace candidat</p>
-        <p class="brand-sub">{{ displayName() }}</p>
-        @if (context.hasProfile()) {
-          <p class="brand-progress">Profil {{ context.profileCompletion() }}%</p>
-        }
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a
-        [routerLink]="routes.CANDIDATE.DASHBOARD"
-        routerLinkActive="nav-active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-link"
-      >
-        Suivi
-      </a>
-      <a
-        [routerLink]="routes.CANDIDATE.JOBS"
-        routerLinkActive="nav-active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-link"
-      >
-        Offres
-      </a>
-      <a
-        [routerLink]="routes.CANDIDATE.PROFILE"
-        routerLinkActive="nav-active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-link"
-      >
-        Profil
-        @if (context.profileIncomplete()) {
-          <span class="nav-badge">!</span>
-        }
-      </a>
-      <a
-        [routerLink]="routes.CANDIDATE.SETTINGS"
-        routerLinkActive="nav-active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-link"
-      >
-        Paramètres
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <a [routerLink]="routes.HOME" class="nav-link">Accueil</a>
-      <button type="button" class="nav-link logout-btn" (click)="logout()">Déconnexion</button>
-    </div>
-  </aside>
-
-  <div class="candidate-content">
-    <header class="candidate-topbar">
-      <div class="topbar-left">
-        <p class="topbar-greeting">Bonjour, {{ displayName() }}</p>
-      </div>
-      <div class="topbar-actions">
-        <app-candidate-notification-bell />
-      </div>
-    </header>
-
-    @if (!context.loading() && context.profileIncomplete()) {
-      <div class="profile-banner panel-card">
-        <div class="profile-banner-text">
-          <p class="profile-banner-title">Complétez votre profil</p>
-          <p class="profile-banner-hint">
-            @if (!context.hasProfile()) {
-              Créez votre profil pour postuler, enregistrer des offres et recevoir des alertes.
-            } @else if (!context.profile()?.resumeUrl) {
-              Ajoutez votre CV pour pouvoir postuler aux offres.
-            } @else {
-              Votre profil est complété à {{ context.profileCompletion() }}%. Enrichissez-le pour maximiser vos chances.
-            }
-          </p>
-        </div>
-        <a [routerLink]="routes.CANDIDATE.PROFILE" class="btn-primary !w-auto px-4 profile-banner-btn">
-          Compléter mon profil
-        </a>
-      </div>
-    }
-
-    @if (context.loading()) {
-      <div class="loading-bar">Chargement de votre espace…</div>
-    }
-    <main class="candidate-main">
-      <router-outlet />
-    </main>
-  </div>
-</div>
+<app-candidate-onboarding />
+<div class="candidate-shell">
+  <aside class="candidate-sidebar">
+    <div class="sidebar-brand">
+      @if (avatarUrl(); as src) {
+        <img [src]="src" alt="" class="brand-avatar" />
+      } @else {
+        <div class="brand-mark">{{ initials() }}</div>
+      }
+      <div>
+        <p class="brand-title">Espace candidat</p>
+        <p class="brand-sub">{{ displayName() }}</p>
+        @if (context.hasProfile()) {
+          <p class="brand-progress">Profil {{ context.profileCompletion() }}%</p>
+        }
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a
+        [routerLink]="routes.CANDIDATE.DASHBOARD"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+      >
+        Suivi
+      </a>
+      <a
+        [routerLink]="routes.CANDIDATE.JOBS"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+      >
+        Offres
+      </a>
+      <a
+        [routerLink]="routes.CANDIDATE.SAVED"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+      >
+        Enregistrées
+      </a>
+      <a
+        [routerLink]="routes.CANDIDATE.PROFILE"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+      >
+        Profil
+        @if (context.profileIncomplete()) {
+          <span class="nav-badge">!</span>
+        }
+      </a>
+      <a
+        [routerLink]="routes.CANDIDATE.SETTINGS"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+      >
+        Paramètres
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a [routerLink]="routes.HOME" class="nav-link">Accueil</a>
+      <button type="button" class="nav-link logout-btn" (click)="logout()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="candidate-content">
+    <header class="candidate-topbar">
+      <div class="candidate-page-shell candidate-topbar-inner">
+        <div class="topbar-left">
+          <p class="topbar-greeting">Bonjour, {{ displayName() }}</p>
+        </div>
+        <div class="topbar-actions">
+          <app-candidate-notification-bell />
+        </div>
+      </div>
+    </header>
+
+    @if (!context.loading() && context.profileIncomplete()) {
+      <div class="candidate-page-shell profile-banner-shell">
+        <div class="profile-banner panel-card">
+          <div class="profile-banner-text">
+            <p class="profile-banner-title">Complétez votre profil</p>
+            <p class="profile-banner-hint">
+              @if (!context.hasProfile()) {
+                Créez votre profil pour postuler, enregistrer des offres et recevoir des alertes.
+              } @else if (!context.profile()?.resumeUrl) {
+                Ajoutez votre CV pour pouvoir postuler aux offres.
+              } @else {
+                Votre profil est complété à {{ context.profileCompletion() }}%. Enrichissez-le pour maximiser vos chances.
+              }
+            </p>
+          </div>
+          <a [routerLink]="routes.CANDIDATE.PROFILE" class="btn-primary !w-auto px-4 profile-banner-btn">
+            Compléter mon profil
+          </a>
+        </div>
+      </div>
+    }
+
+    <main class="candidate-main">
+      @if (context.loading()) {
+        <div class="candidate-page-shell">
+          <div class="loading-bar">Chargement de votre espace…</div>
+        </div>
+      }
+      <div class="candidate-page-shell candidate-main-inner">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>

@@ -15,8 +15,20 @@ const create = asyncHandler(async (req, res) => {
   const data = await jobAlertService.createJobAlert({
     candidateId: req.candidate.id,
     searchFilters: req.validatedBody.searchFilters,
+    label: req.validatedBody.label,
+    frequency: req.validatedBody.frequency,
+    isActive: req.validatedBody.isActive,
   });
   res.status(201).json({ success: true, message: 'Job alert created', data });
+});
+
+const update = asyncHandler(async (req, res) => {
+  const data = await jobAlertService.updateJobAlert({
+    candidateId: req.candidate.id,
+    alertId: req.validatedParams.id,
+    payload: req.validatedBody,
+  });
+  res.status(200).json({ success: true, message: 'Job alert updated', data });
 });
 
 const remove = asyncHandler(async (req, res) => {
@@ -27,4 +39,4 @@ const remove = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: result.message });
 });
 
-module.exports = { list, create, remove };
+module.exports = { list, create, update, remove };

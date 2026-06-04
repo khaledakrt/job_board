@@ -55,6 +55,7 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_FROM_NAME: z.string().default('Job Board'),
   SMTP_FROM_EMAIL: z.string().email().default('noreply@jobboard.local'),
+  CONTACT_TO_EMAIL: z.string().email().default('khaliid.akrout@gmail.com'),
 
   /** off = gratuit (heuristique) | ollama = gratuit local | openai = API payante */
   CV_LLM_PROVIDER: z.enum(['off', 'ollama', 'openai']).default('off'),

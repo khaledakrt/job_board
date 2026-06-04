@@ -8,11 +8,30 @@ const {
   ensureResumeDirectory,
   getResumeDirectory,
   buildResumePublicUrl,
+  resolveFilePathFromUrl,
 } = require('../utils/fileStorage');
+const { AVATAR_UPLOAD } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
+
+const HEADER_PHOTO_SIZE = 72;
 
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+/** Préserve les retours à la ligne (résumé, descriptions de missions). */
+function normalizeMultiline(value) {
+  return String(value ?? '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\uFFFD/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .trim();
+}
+
+function hasMultilineText(value) {
+  return normalizeMultiline(value).length > 0;
 }
 
 function formatPeriod(start, end) {
@@ -48,12 +67,150 @@ function writeSectionTitle(doc, title) {
 }
 
 function writeWrapped(doc, content, options = {}) {
-  const value = text(content);
+  const value = normalizeMultiline(content);
   if (!value) return;
-  doc.fontSize(options.size || 10).text(value, {
+  const font = options.font || 'Helvetica';
+  doc.font(font).fontSize(options.size || 10);
+  doc.text(value, {
     width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
     align: options.align || 'left',
+    lineGap: options.lineGap ?? 3,
   });
+}
+
+function resolveAvatarPath(avatarUrl) {
+  const filePath = resolveFilePathFromUrl(avatarUrl, AVATAR_UPLOAD.SUBDIRECTORY);
+  if (!filePath || !fs.existsSync(filePath)) {
+    return null;
+  }
+  return filePath;
+}
+
+function drawCircularImage(doc, imagePath, x, y, size) {
+  const radius = size / 2;
+  const cx = x + radius;
+  const cy = y + radius;
+  doc.save();
+  doc.circle(cx, cy, radius).clip();
+  doc.image(imagePath, x, y, { width: size, height: size });
+  doc.restore();
+}
+
+function getProfileLinks(profile) {
+  const links = [];
+  const linkedin = String(profile.linkedinUrl ?? '').trim();
+  const portfolio = String(profile.portfolioUrl ?? '').trim();
+  if (linkedin) links.push({ label: 'LinkedIn', url: linkedin });
+  if (portfolio) links.push({ label: 'Portfolio', url: portfolio });
+  return links;
+}
+
+function drawProfileLinks(doc, links, options = {}) {
+  if (!links.length) return;
+
+  const fontSize = options.fontSize ?? 9;
+  const { textX, textWidth, centered, y } = options;
+
+  doc.font('Helvetica').fontSize(fontSize);
+
+  if (centered) {
+    links.forEach((link, index) => {
+      if (index > 0) doc.moveDown(0.1);
+      doc.fillColor('#0a66c2').text(link.label, { align: 'center', link: link.url, underline: true });
+    });
+    doc.fillColor('#111827');
+    return;
+  }
+
+  let lineY = y ?? doc.y;
+  links.forEach((link, index) => {
+    if (index > 0) {
+      doc.fillColor('#64748b').text('  •  ', textX, lineY, { width: textWidth, continued: true });
+    }
+    doc.fillColor('#0a66c2').text(link.label, textX, lineY, {
+      width: textWidth,
+      link: link.url,
+      underline: true,
+      continued: index < links.length - 1,
+    });
+  });
+
+  doc.fillColor('#111827');
+}
+
+function drawCenteredHeader(doc, profile, fullName, contactParts, profileLinks) {
+  doc.font('Helvetica-Bold').fontSize(22).fillColor('#0f172a').text(fullName, { align: 'center' });
+  doc.moveDown(0.35);
+
+  if (text(profile.professionalTitle)) {
+    doc.font('Helvetica').fontSize(13).fillColor('#334155').text(text(profile.professionalTitle), {
+      align: 'center',
+    });
+    doc.moveDown(0.5);
+  }
+
+  if (contactParts.length) {
+    doc.fontSize(10).fillColor('#64748b').text(contactParts.join('  •  '), { align: 'center' });
+    doc.moveDown(profileLinks.length ? 0.25 : 0.6);
+  }
+
+  if (profileLinks.length) {
+    drawProfileLinks(doc, profileLinks, { centered: true, fontSize: 9 });
+    doc.moveDown(0.5);
+  } else if (!contactParts.length) {
+    doc.moveDown(0.6);
+  }
+}
+
+function drawHeaderWithPhoto(doc, profile, fullName, contactParts, profileLinks, avatarPath) {
+  const margin = doc.page.margins.left;
+  const photoSize = HEADER_PHOTO_SIZE;
+  const headerY = doc.y;
+  const textX = margin + photoSize + 18;
+  const textWidth = doc.page.width - doc.page.margins.right - textX;
+
+  drawCircularImage(doc, avatarPath, margin, headerY, photoSize);
+
+  doc.font('Helvetica-Bold').fontSize(20).fillColor('#0f172a');
+  doc.text(fullName, textX, headerY, { width: textWidth, lineGap: 2 });
+
+  let blockY = doc.y + 4;
+  if (text(profile.professionalTitle)) {
+    doc.font('Helvetica').fontSize(12).fillColor('#334155');
+    doc.text(text(profile.professionalTitle), textX, blockY, { width: textWidth });
+    blockY = doc.y + 4;
+  }
+
+  if (contactParts.length) {
+    doc.font('Helvetica').fontSize(9).fillColor('#64748b');
+    doc.text(contactParts.join('  •  '), textX, blockY, { width: textWidth });
+    blockY = doc.y + 4;
+  }
+
+  if (profileLinks.length) {
+    drawProfileLinks(doc, profileLinks, { textX, textWidth, fontSize: 9, y: blockY });
+    blockY = Math.max(blockY, doc.y);
+  }
+
+  const headerBottom = Math.max(doc.y, headerY + photoSize, blockY);
+  doc.y = headerBottom + 14;
+  doc.x = margin;
+}
+
+function drawProfileHeader(doc, profile, fullName, contactParts, profileLinks) {
+  const avatarPath = resolveAvatarPath(profile.avatarUrl);
+
+  if (avatarPath) {
+    try {
+      drawHeaderWithPhoto(doc, profile, fullName, contactParts, profileLinks, avatarPath);
+      return;
+    } catch {
+      doc.y = doc.page.margins.top;
+      doc.x = doc.page.margins.left;
+    }
+  }
+
+  drawCenteredHeader(doc, profile, fullName, contactParts, profileLinks);
 }
 
 async function generateResumePdfFile(profile) {
@@ -79,23 +236,12 @@ async function generateResumePdfFile(profile) {
 
     const fullName = `${text(profile.firstName)} ${text(profile.lastName)}`.trim();
 
-    doc.font('Helvetica-Bold').fontSize(22).fillColor('#0f172a').text(fullName, { align: 'center' });
-    doc.moveDown(0.35);
-
-    if (text(profile.professionalTitle)) {
-      doc.font('Helvetica').fontSize(13).fillColor('#334155').text(text(profile.professionalTitle), {
-        align: 'center',
-      });
-      doc.moveDown(0.5);
-    }
-
     const contactParts = [];
     if (text(profile.phone)) contactParts.push(text(profile.phone));
     if (text(profile.email)) contactParts.push(text(profile.email));
-    if (contactParts.length) {
-      doc.fontSize(10).fillColor('#64748b').text(contactParts.join('  •  '), { align: 'center' });
-      doc.moveDown(0.6);
-    }
+    const profileLinks = getProfileLinks(profile);
+
+    drawProfileHeader(doc, profile, fullName, contactParts, profileLinks);
 
     doc.strokeColor('#e2e8f0').lineWidth(1);
     doc
@@ -104,36 +250,10 @@ async function generateResumePdfFile(profile) {
       .stroke();
     doc.moveDown(0.5);
 
-    if (text(profile.bio)) {
-      writeSectionTitle(doc, 'Profil');
-      doc.font('Helvetica').fontSize(10);
-      writeWrapped(doc, profile.bio);
-    }
-
-    const skills = Array.isArray(profile.skills) ? profile.skills.filter((s) => text(s)) : [];
-    if (skills.length) {
-      writeSectionTitle(doc, 'Compétences');
-      doc.font('Helvetica').fontSize(10).text(skills.map((s) => text(s)).join('  •  '));
-    }
-
-    const experiences = Array.isArray(profile.experiences) ? profile.experiences : [];
-    const validExp = experiences.filter((e) => text(e.title) || text(e.company));
-    if (validExp.length) {
-      writeSectionTitle(doc, 'Expérience professionnelle');
-      validExp.forEach((exp, index) => {
-        if (index > 0) doc.moveDown(0.35);
-        doc.font('Helvetica-Bold').fontSize(11).text(text(exp.title) || 'Poste');
-        const meta = [text(exp.company), formatPeriod(exp.startDate, exp.endDate)].filter(Boolean);
-        if (meta.length) {
-          doc.font('Helvetica-Oblique').fontSize(9).fillColor('#475569').text(meta.join(' — '));
-          doc.fillColor('#111827');
-        }
-        if (text(exp.description)) {
-          doc.moveDown(0.15);
-          doc.font('Helvetica').fontSize(9);
-          writeWrapped(doc, exp.description);
-        }
-      });
+    // Ordre CV : Résumé → Formation → Expérience → Compétences → Langues
+    if (hasMultilineText(profile.bio)) {
+      writeSectionTitle(doc, 'Résumé');
+      writeWrapped(doc, profile.bio, { size: 10 });
     }
 
     const education = Array.isArray(profile.education) ? profile.education : [];
@@ -149,6 +269,37 @@ async function generateResumePdfFile(profile) {
           doc.fillColor('#111827');
         }
       });
+    }
+
+    const experiences = Array.isArray(profile.experiences) ? profile.experiences : [];
+    const validExp = experiences.filter((e) => text(e.title) || text(e.company));
+    if (validExp.length) {
+      writeSectionTitle(doc, 'Expérience');
+      validExp.forEach((exp, index) => {
+        if (index > 0) doc.moveDown(0.35);
+        doc.font('Helvetica-Bold').fontSize(11).text(text(exp.title) || 'Poste');
+        const meta = [text(exp.company), formatPeriod(exp.startDate, exp.endDate)].filter(Boolean);
+        if (meta.length) {
+          doc.font('Helvetica-Oblique').fontSize(9).fillColor('#475569').text(meta.join(' — '));
+          doc.fillColor('#111827');
+        }
+        if (hasMultilineText(exp.description)) {
+          doc.moveDown(0.15);
+          writeWrapped(doc, exp.description, { size: 9, lineGap: 2 });
+        }
+      });
+    }
+
+    const skills = Array.isArray(profile.skills) ? profile.skills.filter((s) => text(s)) : [];
+    if (skills.length) {
+      writeSectionTitle(doc, 'Compétences');
+      doc.font('Helvetica').fontSize(10).text(skills.map((s) => text(s)).join('  •  '));
+    }
+
+    const languages = Array.isArray(profile.languages) ? profile.languages.filter((l) => text(l)) : [];
+    if (languages.length) {
+      writeSectionTitle(doc, 'Langues');
+      doc.font('Helvetica').fontSize(10).text(languages.map((l) => text(l)).join('  •  '));
     }
 
     doc.moveDown(1);

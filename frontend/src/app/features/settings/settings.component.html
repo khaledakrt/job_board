@@ -1,184 +1,206 @@
-<div class="page-header">
-  <h1 class="page-title">Paramètres</h1>
-  <p class="page-subtitle">
-    Compte : <span class="font-semibold text-surface-800">{{ userEmail }}</span>
-  </p>
-</div>
+<div class="settings-page">
+  <header class="page-header">
+    <h1 class="page-title">Paramètres</h1>
+    <p class="page-subtitle">Gérez vos notifications, votre e-mail et votre mot de passe.</p>
+  </header>
 
-@if (isCandidate()) {
+  @if (isCandidate()) {
+    <section class="settings-card panel-card">
+      <h2 class="settings-section-title">Notifications</h2>
+      <p class="settings-section-hint">Choisissez comment vous souhaitez être informé.</p>
+      @if (notifSaved()) {
+        <div class="alert alert-success">Préférences enregistrées.</div>
+      }
+      <form [formGroup]="notifPrefs" (ngSubmit)="saveNotificationPrefs()">
+        <div class="settings-notif-grid">
+          <label class="form-check">
+            <input type="checkbox" formControlName="emailEnabled" />
+            <span>E-mails</span>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" formControlName="inAppEnabled" />
+            <span>Notifications in-app</span>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" formControlName="statusChange" />
+            <span>Changement de statut candidature</span>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" formControlName="recruiterMessage" />
+            <span>Message recruteur</span>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" formControlName="jobAlert" />
+            <span>Nouvelles alertes emploi</span>
+          </label>
+        </div>
+        <div class="settings-form-actions">
+          <button type="submit" class="btn-primary !w-auto px-5">Enregistrer les préférences</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="settings-card panel-card">
+      <h2 class="settings-section-title">Adresse e-mail</h2>
+      <p class="settings-section-hint">
+        Compte connecté : <strong class="settings-email-current">{{ userEmail }}</strong>
+      </p>
+
+      @if (emailErrorMessage()) {
+        <div class="alert alert-error">{{ emailErrorMessage() }}</div>
+      }
+
+      @if (emailSuccessMessage()) {
+        <div class="alert alert-success">{{ emailSuccessMessage() }}</div>
+      }
+
+      @if (emailDevVerifyUrl()) {
+        <div class="alert alert-info settings-dev-alert">
+          <p class="settings-dev-alert-title">Mode développement — SMTP indisponible</p>
+          <p>Ouvrez ce lien pour confirmer votre nouvelle adresse :</p>
+          <a [href]="emailDevVerifyUrl()!" class="resume-link break-all">{{ emailDevVerifyUrl() }}</a>
+        </div>
+      }
+
+      <form [formGroup]="emailForm" (ngSubmit)="onSubmitEmail()" novalidate class="settings-form-grid">
+        <div class="form-field span-2">
+          <label class="form-label" for="newEmail">Nouvelle adresse e-mail</label>
+          <input
+            id="newEmail"
+            type="email"
+            formControlName="newEmail"
+            autocomplete="email"
+            class="form-input"
+            [class.form-input-error]="hasEmailError('newEmail') || hasEmailFormError('sameAsCurrentEmail')"
+          />
+          @if (hasEmailError('newEmail')) {
+            <p class="form-error">Saisissez une adresse e-mail valide.</p>
+          }
+          @if (hasEmailFormError('sameAsCurrentEmail')) {
+            <p class="form-error">La nouvelle adresse doit être différente de l’actuelle.</p>
+          }
+        </div>
+
+        <div class="form-field span-2">
+          <label class="form-label" for="confirmNewEmail">Confirmer la nouvelle adresse</label>
+          <input
+            id="confirmNewEmail"
+            type="email"
+            formControlName="confirmNewEmail"
+            autocomplete="email"
+            class="form-input"
+            [class.form-input-error]="hasEmailError('confirmNewEmail') || hasEmailFormError('emailMismatch')"
+          />
+          @if (hasEmailError('confirmNewEmail')) {
+            <p class="form-error">Confirmez la nouvelle adresse e-mail.</p>
+          }
+          @if (hasEmailFormError('emailMismatch')) {
+            <p class="form-error">Les deux adresses e-mail ne correspondent pas.</p>
+          }
+        </div>
+
+        <div class="form-field span-2">
+          <label class="form-label" for="emailCurrentPassword">Mot de passe actuel</label>
+          <input
+            id="emailCurrentPassword"
+            type="password"
+            formControlName="currentPassword"
+            autocomplete="current-password"
+            class="form-input"
+            [class.form-input-error]="hasEmailError('currentPassword')"
+          />
+          @if (hasEmailError('currentPassword')) {
+            <p class="form-error">Le mot de passe actuel est requis pour modifier l’e-mail.</p>
+          }
+        </div>
+
+        <div class="settings-form-actions span-2">
+          <button type="submit" class="btn-primary !w-auto px-5" [disabled]="authService.loading()">
+            @if (authService.loading()) { Mise à jour… } @else { Mettre à jour l’e-mail }
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
   <section class="settings-card panel-card">
-    <h2 class="settings-section-title">Compte — adresse e-mail</h2>
-    <p class="settings-section-hint">
-      E-mail actuel : <strong>{{ userEmail }}</strong>
-    </p>
+    <h2 class="settings-section-title">Mot de passe</h2>
+    <p class="settings-section-hint">Utilisez un mot de passe fort, différent de vos autres comptes.</p>
 
-    @if (emailErrorMessage()) {
-      <div class="alert alert-error">{{ emailErrorMessage() }}</div>
+    @if (authService.errorMessage()) {
+      <div class="alert alert-error">{{ authService.errorMessage() }}</div>
     }
 
-    @if (emailSuccessMessage()) {
-      <div class="alert alert-success">{{ emailSuccessMessage() }}</div>
+    @if (passwordSuccessMessage()) {
+      <div class="alert alert-success">{{ passwordSuccessMessage() }}</div>
     }
 
-    @if (emailDevVerifyUrl()) {
-      <div class="alert alert-info text-sm">
-        <p class="mb-2 font-medium">Mode développement — SMTP indisponible</p>
-        <p class="mb-2">Ouvrez ce lien pour confirmer votre nouvelle adresse :</p>
-        <a [href]="emailDevVerifyUrl()!" class="link-primary break-all">{{ emailDevVerifyUrl() }}</a>
-      </div>
-    }
-
-    <form
-      [formGroup]="emailForm"
-      (ngSubmit)="onSubmitEmail()"
-      novalidate
-      class="settings-form-grid"
-    >
+    <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" novalidate class="settings-form-grid">
       <div class="form-field span-2">
-        <label class="form-label" for="newEmail">Nouvelle adresse e-mail</label>
+        <label class="form-label" for="currentPassword">Mot de passe actuel</label>
         <input
-          id="newEmail"
-          type="email"
-          formControlName="newEmail"
-          autocomplete="email"
-          class="form-input"
-          [class.form-input-error]="hasEmailError('newEmail') || hasEmailFormError('sameAsCurrentEmail')"
-        />
-        @if (hasEmailError('newEmail')) {
-          <p class="form-error">Saisissez une adresse e-mail valide.</p>
-        }
-        @if (hasEmailFormError('sameAsCurrentEmail')) {
-          <p class="form-error">La nouvelle adresse doit être différente de l’actuelle.</p>
-        }
-      </div>
-
-      <div class="form-field span-2">
-        <label class="form-label" for="confirmNewEmail">Confirmer la nouvelle adresse</label>
-        <input
-          id="confirmNewEmail"
-          type="email"
-          formControlName="confirmNewEmail"
-          autocomplete="email"
-          class="form-input"
-          [class.form-input-error]="hasEmailError('confirmNewEmail') || hasEmailFormError('emailMismatch')"
-        />
-        @if (hasEmailError('confirmNewEmail')) {
-          <p class="form-error">Confirmez la nouvelle adresse e-mail.</p>
-        }
-        @if (hasEmailFormError('emailMismatch')) {
-          <p class="form-error">Les deux adresses e-mail ne correspondent pas.</p>
-        }
-      </div>
-
-      <div class="form-field span-2">
-        <label class="form-label" for="emailCurrentPassword">Mot de passe actuel</label>
-        <input
-          id="emailCurrentPassword"
+          id="currentPassword"
           type="password"
           formControlName="currentPassword"
           autocomplete="current-password"
           class="form-input"
-          [class.form-input-error]="hasEmailError('currentPassword')"
+          [class.form-input-error]="hasPasswordError('currentPassword')"
         />
-        @if (hasEmailError('currentPassword')) {
-          <p class="form-error">Le mot de passe actuel est requis pour modifier l’e-mail.</p>
+        @if (hasPasswordError('currentPassword')) {
+          <p class="form-error">Le mot de passe actuel est requis.</p>
         }
       </div>
 
-      <div class="span-2">
-        <button
-          type="submit"
-          class="btn-primary !w-auto min-w-[220px]"
-          [disabled]="authService.loading()"
-        >
-          @if (authService.loading()) { Mise à jour... } @else { Mettre à jour l’e-mail }
+      <div class="form-field">
+        <label class="form-label" for="newPassword">Nouveau mot de passe</label>
+        <input
+          id="newPassword"
+          type="password"
+          formControlName="newPassword"
+          autocomplete="new-password"
+          class="form-input"
+          [class.form-input-error]="hasPasswordError('newPassword') || hasPasswordFormError('sameAsCurrent')"
+        />
+        @if (hasPasswordError('newPassword')) {
+          <p class="form-error">{{ newPasswordErrorMessage() }}</p>
+        }
+        @if (hasPasswordFormError('sameAsCurrent')) {
+          <p class="form-error">Le nouveau mot de passe doit être différent de l’actuel.</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="confirmPassword">Confirmer le nouveau mot de passe</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          class="form-input"
+          [class.form-input-error]="hasPasswordError('confirmPassword') || hasPasswordFormError('passwordMismatch')"
+        />
+        @if (hasPasswordError('confirmPassword')) {
+          <p class="form-error">Veuillez confirmer le mot de passe.</p>
+        }
+        @if (hasPasswordFormError('passwordMismatch')) {
+          <p class="form-error">Les mots de passe ne correspondent pas.</p>
+        }
+      </div>
+
+      <div class="password-rules span-2">
+        <p class="password-rules-title">Exigences</p>
+        <ul class="rules-list">
+          <li>8 caractères minimum</li>
+          <li>Majuscules et minuscules</li>
+          <li>Au moins un chiffre et un caractère spécial</li>
+        </ul>
+      </div>
+
+      <div class="settings-form-actions span-2">
+        <button type="submit" class="btn-primary !w-auto px-5" [disabled]="authService.loading()">
+          @if (authService.loading()) { Mise à jour… } @else { Mettre à jour le mot de passe }
         </button>
       </div>
     </form>
   </section>
-}
-
-<section class="settings-card panel-card">
-  <h2 class="settings-section-title">Sécurité — mot de passe</h2>
-
-  @if (authService.errorMessage()) {
-    <div class="alert alert-error">{{ authService.errorMessage() }}</div>
-  }
-
-  @if (passwordSuccessMessage()) {
-    <div class="alert alert-success">{{ passwordSuccessMessage() }}</div>
-  }
-
-  <form
-    [formGroup]="passwordForm"
-    (ngSubmit)="onSubmitPassword()"
-    novalidate
-    class="settings-form-grid"
-  >
-    <div class="form-field">
-      <label class="form-label" for="currentPassword">Mot de passe actuel</label>
-      <input
-        id="currentPassword"
-        type="password"
-        formControlName="currentPassword"
-        autocomplete="current-password"
-        class="form-input"
-        [class.form-input-error]="hasPasswordError('currentPassword')"
-      />
-      @if (hasPasswordError('currentPassword')) {
-        <p class="form-error">Le mot de passe actuel est requis.</p>
-      }
-    </div>
-
-    <div class="form-field">
-      <label class="form-label" for="newPassword">Nouveau mot de passe</label>
-      <input
-        id="newPassword"
-        type="password"
-        formControlName="newPassword"
-        autocomplete="new-password"
-        class="form-input"
-        [class.form-input-error]="hasPasswordError('newPassword') || hasPasswordFormError('sameAsCurrent')"
-      />
-      @if (hasPasswordError('newPassword')) {
-        <p class="form-error">{{ newPasswordErrorMessage() }}</p>
-      }
-      @if (hasPasswordFormError('sameAsCurrent')) {
-        <p class="form-error">Le nouveau mot de passe doit être différent de l’actuel.</p>
-      }
-    </div>
-
-    <div class="form-field span-2">
-      <label class="form-label" for="confirmPassword">Confirmer le nouveau mot de passe</label>
-      <input
-        id="confirmPassword"
-        type="password"
-        formControlName="confirmPassword"
-        autocomplete="new-password"
-        class="form-input"
-        [class.form-input-error]="hasPasswordError('confirmPassword') || hasPasswordFormError('passwordMismatch')"
-      />
-      @if (hasPasswordError('confirmPassword')) {
-        <p class="form-error">Veuillez confirmer le mot de passe.</p>
-      }
-      @if (hasPasswordFormError('passwordMismatch')) {
-        <p class="form-error">Les mots de passe ne correspondent pas.</p>
-      }
-    </div>
-
-    <div class="password-rules span-2">
-      <p class="text-sm font-semibold text-surface-700">Exigences</p>
-      <ul class="rules-list">
-        <li>8 caractères minimum</li>
-        <li>Majuscules et minuscules</li>
-        <li>Au moins un chiffre et un caractère spécial</li>
-      </ul>
-    </div>
-
-    <div class="span-2">
-      <button type="submit" class="btn-primary !w-auto min-w-[220px]" [disabled]="authService.loading()">
-        @if (authService.loading()) { Mise à jour... } @else { Mettre à jour le mot de passe }
-      </button>
-    </div>
-  </form>
-</section>
+</div>

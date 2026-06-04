@@ -21,107 +21,176 @@
       </div>
     } @else {
       @if (selectedJob(); as job) {
-      <article class="public-job-page-card">
-        <header class="public-job-page-head">
-          <div class="public-job-page-head-main">
-            @if (companyLogo(job); as logo) {
-              <img [src]="logo" alt="" class="public-job-page-logo-img" />
-            } @else {
-              <div class="public-job-page-logo-ph">{{ job.company?.name?.charAt(0) || '?' }}</div>
-            }
-            <div>
-              <h1>{{ job.title }}</h1>
-              @if (job.company?.id; as companyId) {
-                <a
-                  class="public-job-page-co public-company-name-link"
-                  [routerLink]="publicCompanyLink(companyId)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Voir le profil de l'entreprise dans un nouvel onglet"
-                >
-                  {{ job.company?.name || 'Entreprise' }}
-                </a>
+        <article class="public-job-page-card">
+          <header class="public-job-page-head">
+            <div class="public-job-page-head-main">
+              @if (companyLogo(job); as logo) {
+                <img [src]="logo" alt="" class="public-job-page-logo-img" />
               } @else {
-                <p class="public-job-page-co">{{ job.company?.name || 'Entreprise' }}</p>
+                <div class="public-job-page-logo-ph">{{ job.company?.name?.charAt(0) || '?' }}</div>
               }
-              @if (job.company?.industry; as industry) {
-                <p class="public-job-page-industry">{{ industry }}</p>
+              <div>
+                <h1>{{ job.title }}</h1>
+                @if (job.company?.id; as companyId) {
+                  <a
+                    class="public-job-page-co public-company-name-link"
+                    [routerLink]="publicCompanyLink(companyId)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Voir le profil de l'entreprise dans un nouvel onglet"
+                  >
+                    {{ job.company?.name || 'Entreprise' }}
+                  </a>
+                } @else {
+                  <p class="public-job-page-co">{{ job.company?.name || 'Entreprise' }}</p>
+                }
+                @if (job.company?.industry; as industry) {
+                  <p class="public-job-page-industry">{{ industry }}</p>
+                }
+              </div>
+            </div>
+            @if (!isCandidate() || !isQuizEnabled(job)) {
+              @if (hasApplied()) {
+                <button type="button" class="public-job-page-btn public-job-page-btn-primary" disabled>
+                  Déjà postulé
+                </button>
+              } @else {
+                <button type="button" class="public-job-page-btn public-job-page-btn-primary" (click)="onApply()">
+                  Postuler
+                </button>
+              }
+            }
+          </header>
+
+          @if (isCandidate() && isQuizEnabled(job) && jobQuiz(job); as quiz) {
+            <section class="public-job-page-quiz-apply">
+              <h2 class="public-job-page-section-title">Quiz de présélection (obligatoire)</h2>
+              <p class="public-job-page-quiz-intro">
+                Répondez aux {{ quiz.questions.length }} questions. Le bouton Postuler s’active une fois le quiz
+                complété.
+              </p>
+              @for (question of quiz.questions; track $index; let qi = $index) {
+                <article class="public-job-page-quiz-card public-job-page-quiz-card--active">
+                  <p class="public-job-page-quiz-q">
+                    <span class="public-job-page-quiz-num">Q{{ qi + 1 }}</span>
+                    {{ question.text }}
+                  </p>
+                  <ul class="public-job-page-quiz-choices">
+                    @for (choice of question.choices; track $index; let ci = $index) {
+                      <li>
+                        <label class="public-job-page-quiz-choice">
+                          <input
+                            type="radio"
+                            [name]="'public-q-' + job.id + '-' + qi"
+                            [checked]="quizAnswerFor(qi) === ci"
+                            (change)="selectQuizAnswer(qi, ci)"
+                          />
+                          <span>{{ choice.text }}</span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </article>
+              }
+              <div class="public-job-page-apply-row">
+                @if (hasApplied()) {
+                  <button type="button" class="public-job-page-btn public-job-page-btn-primary public-job-page-btn-lg" disabled>
+                    Déjà postulé
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="public-job-page-btn public-job-page-btn-primary public-job-page-btn-lg"
+                    [disabled]="!isQuizCompleteForJob(job)"
+                    [class.public-job-page-btn--disabled]="!isQuizCompleteForJob(job)"
+                    (click)="tryOpenApply(job)"
+                  >
+                    Postuler
+                  </button>
+                }
+              </div>
+              @if (!isQuizCompleteForJob(job) && !hasApplied()) {
+                <p class="public-job-page-quiz-hint-bottom">Répondez à chaque question pour activer Postuler.</p>
+              }
+            </section>
+          }
+
+          <div class="public-job-page-meta">
+            <span>{{ job.location || 'Lieu flexible' }}</span>
+            <span>{{ job.contractType }}</span>
+            <span>{{ formatRemote(job.remoteType) }}</span>
+            @if (formatSalary(job); as salary) {
+              <span class="public-job-page-salary">{{ salary }}</span>
+            }
+            @if (formatExperience(job); as exp) {
+              <span>{{ exp }}</span>
+            }
+          </div>
+
+          @if (job.tags?.length) {
+            <div class="public-job-page-tags">
+              @for (tag of job.tags; track tag) {
+                <span class="public-job-page-tag">{{ tag }}</span>
               }
             </div>
-          </div>
-          <button type="button" class="public-job-page-btn public-job-page-btn-primary" (click)="onApply()">
-            Postuler
-          </button>
-        </header>
-
-        @if (isQuizEnabled(job)) {
-          <p class="public-job-page-quiz-hint">Quiz technique à compléter lors de la candidature</p>
-        }
-
-        <div class="public-job-page-meta">
-          <span>{{ job.location || 'Lieu flexible' }}</span>
-          <span>{{ job.contractType }}</span>
-          <span>{{ formatRemote(job.remoteType) }}</span>
-          @if (formatSalary(job); as salary) {
-            <span class="public-job-page-salary">{{ salary }}</span>
           }
-          @if (formatExperience(job); as exp) {
-            <span>{{ exp }}</span>
+
+          @if (job.benefits?.length) {
+            <h2 class="public-job-page-section-title">Avantages</h2>
+            <div class="public-job-page-tags public-job-page-tags-benefits">
+              @for (benefit of job.benefits; track benefit) {
+                <span class="public-job-page-tag public-job-page-tag-benefit">{{ benefit }}</span>
+              }
+            </div>
           }
-        </div>
 
-        @if (job.tags?.length) {
-          <div class="public-job-page-tags">
-            @for (tag of job.tags; track tag) {
-              <span class="public-job-page-tag">{{ tag }}</span>
-            }
-          </div>
-        }
-
-        @if (job.benefits?.length) {
-          <h2 class="public-job-page-section-title">Avantages</h2>
-          <div class="public-job-page-tags public-job-page-tags-benefits">
-            @for (benefit of job.benefits; track benefit) {
-              <span class="public-job-page-tag public-job-page-tag-benefit">{{ benefit }}</span>
-            }
-          </div>
-        }
-
-        <h2 class="public-job-page-section-title">Description du poste</h2>
-        <div class="public-job-page-rich">
-          <app-safe-html [content]="job.description" />
-        </div>
-
-        @if (job.requirements) {
-          <h2 class="public-job-page-section-title">Profil recherché</h2>
+          <h2 class="public-job-page-section-title">Description du poste</h2>
           <div class="public-job-page-rich">
-            <app-safe-html [content]="job.requirements" />
+            <app-safe-html [content]="job.description" />
           </div>
-        }
 
-        @if (isQuizEnabled(job) && getJobQuiz(job); as quiz) {
-          <h2 class="public-job-page-section-title">Quiz de présélection</h2>
-          <p class="public-job-page-quiz-intro">
-            Vous répondrez à ces questions après connexion, lors de l’envoi de votre candidature.
-          </p>
-          @for (question of quiz.questions; track $index; let qi = $index) {
-            <article class="public-job-page-quiz-card">
-              <p><strong>Q{{ qi + 1 }}.</strong> {{ question.text }}</p>
-              <ul>
-                @for (choice of question.choices; track $index) {
-                  <li>{{ choice.text }}</li>
-                }
-              </ul>
-            </article>
+          @if (job.requirements) {
+            <h2 class="public-job-page-section-title">Profil recherché</h2>
+            <div class="public-job-page-rich">
+              <app-safe-html [content]="job.requirements" />
+            </div>
           }
-        }
 
-        <footer class="public-job-page-footer">
-          <button type="button" class="public-job-page-btn public-job-page-btn-primary public-job-page-btn-lg" (click)="onApply()">
-            Postuler à cette offre
-          </button>
-        </footer>
-      </article>
+          @if (!isCandidate() && isQuizEnabled(job) && jobQuiz(job); as quiz) {
+            <h2 class="public-job-page-section-title">Quiz de présélection</h2>
+            <p class="public-job-page-quiz-intro">
+              Connectez-vous en tant que candidat pour répondre au quiz et postuler.
+            </p>
+            @for (question of quiz.questions; track $index; let qi = $index) {
+              <article class="public-job-page-quiz-card">
+                <p><strong>Q{{ qi + 1 }}.</strong> {{ question.text }}</p>
+                <ul>
+                  @for (choice of question.choices; track $index) {
+                    <li>{{ choice.text }}</li>
+                  }
+                </ul>
+              </article>
+            }
+          }
+
+          @if (!isCandidate()) {
+            <footer class="public-job-page-footer">
+              @if (hasApplied()) {
+                <button type="button" class="public-job-page-btn public-job-page-btn-primary public-job-page-btn-lg" disabled>
+                  Déjà postulé
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="public-job-page-btn public-job-page-btn-primary public-job-page-btn-lg"
+                  (click)="onApply()"
+                >
+                  Postuler à cette offre
+                </button>
+              }
+            </footer>
+          }
+        </article>
       } @else {
         <div class="public-job-page-card public-job-page-card-error">
           <p>Offre introuvable.</p>
@@ -133,3 +202,60 @@
     }
   </main>
 </div>
+
+@if (applyError()) {
+  <div class="public-job-page-toast public-job-page-toast-error">{{ applyError() }}</div>
+}
+@if (success()) {
+  <div class="public-job-page-toast public-job-page-toast-success">{{ success() }}</div>
+}
+
+@if (applyModalOpen()) {
+  <div class="modal-backdrop" (click)="closeApplyModal()">
+    <div class="modal-card-lg public-job-apply-modal" (click)="$event.stopPropagation()">
+      @if (selectedJob(); as job) {
+        <h2 class="public-job-apply-modal-title">Lettre de motivation — {{ job.title }}</h2>
+        @if (isQuizEnabled(job)) {
+          <p class="public-job-apply-modal-badge">Quiz validé — dernière étape</p>
+        }
+        <p class="public-job-apply-modal-sub">
+          Rédigez votre lettre ou utilisez l’assistant IA, puis envoyez votre candidature.
+        </p>
+
+        <button type="button" class="public-job-ai-link" (click)="generateLetter()" [disabled]="generatingLetter()">
+          @if (generatingLetter()) {
+            Génération en cours…
+          } @else {
+            ✨ Assistant IA : générer une lettre personnalisée
+          }
+        </button>
+
+        <form [formGroup]="applyForm" (ngSubmit)="submitApplication()">
+          <label class="public-job-form-label">Lettre de motivation</label>
+          <textarea
+            class="public-job-form-input"
+            rows="12"
+            formControlName="coverLetter"
+            placeholder="Votre lettre de motivation…"
+          ></textarea>
+          <div class="public-job-modal-actions">
+            <button type="button" class="public-job-page-btn public-job-page-btn-ghost" (click)="closeApplyModal()">
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="public-job-page-btn public-job-page-btn-primary"
+              [disabled]="applying()"
+            >
+              @if (applying()) {
+                Envoi…
+              } @else {
+                Envoyer ma candidature
+              }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,140 @@
+.saved-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.saved-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.saved-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.saved-tab-active {
+  background: #fff8ed;
+  border-color: #ff9800;
+  color: #e65100;
+}
+
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.saved-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.saved-logo,
+.saved-logo-ph {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.saved-logo-ph {
+  display: grid;
+  place-items: center;
+  background: #eef3f8;
+  font-weight: 700;
+  color: #0a66c2;
+}
+
+.saved-body h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.saved-co,
+.saved-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.saved-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: stretch;
+}
+
+.saved-remove {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.alerts-full-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.alert-full-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.alert-full h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.alert-filters {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.alert-meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.alert-full-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.alert-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 400px;
+}
+
+.alert-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}

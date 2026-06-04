@@ -16,6 +16,10 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 import { CandidateProfileService } from '../services/candidate-profile.service';
 import { CandidateContextService } from '../services/candidate-context.service';
 import {
+  CandidateDashboardService,
+  RecruiterPreview,
+} from '../services/candidate-dashboard.service';
+import {
   ExperienceBlock,
   EducationBlock,
   ResumeParseResult,
@@ -38,6 +42,7 @@ import { CvParsePreviewComponent } from './cv-parse-preview/cv-parse-preview.com
 export class ProfileStepperComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly profileService = inject(CandidateProfileService);
+  private readonly dashboardService = inject(CandidateDashboardService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly injector = inject(Injector);
   readonly context = inject(CandidateContextService);
@@ -51,6 +56,11 @@ export class ProfileStepperComponent implements OnInit {
   readonly saving = signal(false);
   readonly skills = signal<string[]>([]);
   readonly skillInput = signal('');
+  readonly languages = signal<string[]>([]);
+  readonly langInput = signal('');
+  readonly certifications = signal<string[]>([]);
+  readonly certInput = signal('');
+  readonly recruiterPreview = signal<RecruiterPreview | null>(null);
   readonly message = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly pendingAvatar = signal<File | null>(null);
@@ -67,6 +77,10 @@ export class ProfileStepperComponent implements OnInit {
     professionalTitle: ['', Validators.required],
     bio: [''],
     minSalary: [''],
+    linkedinUrl: [''],
+    portfolioUrl: [''],
+    mobility: [''],
+    preferredLocations: [''],
   });
 
   readonly experiences = this.fb.array([this.createExperienceGroup()]);
@@ -120,8 +134,14 @@ export class ProfileStepperComponent implements OnInit {
       professionalTitle: p.professionalTitle || '',
       bio: p.bio || '',
       minSalary: p.minSalary?.toString() || '',
+      linkedinUrl: p.linkedinUrl || '',
+      portfolioUrl: p.portfolioUrl || '',
+      mobility: p.jobPreferences?.mobility || '',
+      preferredLocations: (p.jobPreferences?.preferredLocations || []).join(', '),
     });
     this.skills.set(p.skills || []);
+    this.languages.set(p.languages || []);
+    this.certifications.set(p.certifications || []);
     if (p.experiences?.length) {
       this.experiences.clear();
       p.experiences.forEach((e) => this.experiences.push(this.createExperienceGroup(e)));
@@ -266,6 +286,28 @@ export class ProfileStepperComponent implements OnInit {
     this.skills.update((s) => s.filter((x) => x !== skill));
   }
 
+  addLang(): void {
+    const v = this.langInput().trim();
+    if (!v || this.languages().includes(v)) return;
+    this.languages.update((s) => [...s, v]);
+    this.langInput.set('');
+  }
+
+  removeLang(lang: string): void {
+    this.languages.update((s) => s.filter((x) => x !== lang));
+  }
+
+  addCert(): void {
+    const v = this.certInput().trim();
+    if (!v || this.certifications().includes(v)) return;
+    this.certifications.update((s) => [...s, v]);
+    this.certInput.set('');
+  }
+
+  removeCert(cert: string): void {
+    this.certifications.update((s) => s.filter((x) => x !== cert));
+  }
+
   addExperience(): void {
     this.experiences.push(this.createExperienceGroup());
   }
@@ -287,7 +329,16 @@ export class ProfileStepperComponent implements OnInit {
       this.identityForm.markAllAsTouched();
       return;
     }
-    this.currentStep.update((s) => Math.min(3, s + 1));
+    if (this.currentStep() === 3) {
+      this.loadRecruiterPreview();
+    }
+    this.currentStep.update((s) => Math.min(4, s + 1));
+  }
+
+  loadRecruiterPreview(): void {
+    this.dashboardService.getRecruiterPreview().subscribe({
+      next: (res) => this.recruiterPreview.set(res.data || null),
+    });
   }
 
   prevStep(): void {
@@ -315,6 +366,16 @@ export class ProfileStepperComponent implements OnInit {
       bio: identity.bio || null,
       minSalary: identity.minSalary ? Number(identity.minSalary) : null,
       skills: this.skills(),
+      languages: this.languages(),
+      certifications: this.certifications(),
+      linkedinUrl: identity.linkedinUrl || null,
+      portfolioUrl: identity.portfolioUrl || null,
+      jobPreferences: {
+        mobility: identity.mobility || undefined,
+        preferredLocations: identity.preferredLocations
+          ? identity.preferredLocations.split(',').map((s) => s.trim()).filter(Boolean)
+          : [],
+      },
       experiences: this.buildExperiencesPayload(),
       education: this.buildEducationPayload(),
     };
@@ -331,8 +392,17 @@ export class ProfileStepperComponent implements OnInit {
           const afterAvatar = () => this.afterProfileSaved();
           if (avatar) {
             this.profileService.uploadAvatar(avatar).subscribe({
-              next: (r) => r.data && this.context.setProfile(r.data),
-              complete: afterAvatar,
+              next: (r) => {
+                if (r.data) {
+                  this.context.setProfile(r.data);
+                }
+                this.pendingAvatar.set(null);
+                afterAvatar();
+              },
+              error: (err: HttpErrorResponse) => {
+                this.error.set(err.error?.message || 'Impossible d\'enregistrer la photo.');
+                this.saving.set(false);
+              },
             });
           } else {
             afterAvatar();

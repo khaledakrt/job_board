@@ -13,6 +13,7 @@ const updateApplicationStatusSchema = z.object({
   ]),
   rating: z.coerce.number().int().min(1).max(5).optional().nullable(),
   evaluationText: z.string().trim().min(1).max(5000).optional().nullable(),
+  interviewAt: z.string().datetime().optional().nullable(),
 });
 
 const createApplicationNoteSchema = z.object({

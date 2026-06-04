@@ -5,11 +5,18 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { CandidateContextService } from '../services/candidate-context.service';
 import { CandidateNotificationBellComponent } from '../shared/notification-bell/notification-bell.component';
+import { CandidateOnboardingComponent } from '../shared/candidate-onboarding/candidate-onboarding.component';
 
 @Component({
   selector: 'app-candidate-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CandidateNotificationBellComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    CandidateNotificationBellComponent,
+    CandidateOnboardingComponent,
+  ],
   templateUrl: './candidate-layout.component.html',
   styleUrl: './candidate-layout.component.css',
 })

@@ -19,6 +19,27 @@ const educationSchema = z.object({
   endDate: z.string().max(32).optional(),
 });
 
+const jobPreferencesSchema = z
+  .object({
+    contractTypes: z.array(z.string().max(32)).max(8).optional(),
+    remoteTypes: z.array(z.string().max(32)).max(8).optional(),
+    preferredLocations: z.array(z.string().max(128)).max(10).optional(),
+    mobility: z.string().max(255).optional(),
+  })
+  .optional()
+  .nullable();
+
+const notificationPreferencesSchema = z
+  .object({
+    emailEnabled: z.boolean().optional(),
+    inAppEnabled: z.boolean().optional(),
+    statusChange: z.boolean().optional(),
+    recruiterMessage: z.boolean().optional(),
+    jobAlert: z.boolean().optional(),
+  })
+  .optional()
+  .nullable();
+
 const profileBodySchema = z.object({
   firstName: z.string().trim().min(1).max(128).optional().nullable(),
   lastName: z.string().trim().min(1).max(128).optional().nullable(),
@@ -31,6 +52,15 @@ const profileBodySchema = z.object({
   }),
   experiences: z.array(experienceSchema).max(30).optional().nullable(),
   education: z.array(educationSchema).max(20).optional().nullable(),
+  languages: z.array(z.string().trim().min(1).max(64)).max(20).optional().nullable(),
+  certifications: z.array(z.string().trim().min(1).max(128)).max(30).optional().nullable(),
+  linkedinUrl: z
+    .preprocess((v) => (v === '' || v == null ? null : v), z.string().url().max(512).nullable().optional()),
+  portfolioUrl: z
+    .preprocess((v) => (v === '' || v == null ? null : v), z.string().url().max(512).nullable().optional()),
+  jobPreferences: jobPreferencesSchema,
+  notificationPreferences: notificationPreferencesSchema,
+  onboardingCompleted: z.boolean().optional(),
   minSalary: z.coerce.number().nonnegative().optional().nullable(),
 });
 

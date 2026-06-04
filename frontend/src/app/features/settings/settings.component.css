@@ -1,11 +1,14 @@
-.settings-card {
-  padding: 1.25rem 1.5rem;
+:host {
+  display: block;
+  width: 100%;
 }
 
-.settings-section-hint {
-  margin: -0.25rem 0 1rem;
-  font-size: 0.875rem;
-  color: #64748b;
+.settings-page {
+  width: 100%;
+}
+
+.settings-card {
+  padding: 1.25rem 1.5rem;
 }
 
 .settings-card + .settings-card {
@@ -16,15 +19,74 @@
   font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.settings-section-hint {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.settings-email-current {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.settings-notif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.65rem 1rem;
   margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
+}
+
+.form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  background: #f8fafc;
+  font-size: 0.875rem;
+  color: #334155;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.form-check:has(input:checked) {
+  border-color: #ffcc80;
+  background: #fff8ed;
+}
+
+.form-check input {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  accent-color: #e65100;
+}
+
+.form-check span {
+  line-height: 1.4;
 }
 
 .settings-form-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+.settings-form-grid .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.settings-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
 }
 
 .span-2 {
@@ -42,21 +104,36 @@
 }
 
 .password-rules {
-  border-radius: 0.875rem;
+  border-radius: 0.75rem;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   padding: 1rem;
 }
 
+.password-rules-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+}
+
 .rules-list {
-  margin-top: 0.5rem;
+  margin: 0.5rem 0 0;
   padding-left: 1.25rem;
   font-size: 0.875rem;
   color: #64748b;
   list-style: disc;
 }
 
-.form-field {
-  display: flex;
-  flex-direction: column;
+.settings-dev-alert {
+  font-size: 0.875rem;
+}
+
+.settings-dev-alert-title {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+}
+
+.break-all {
+  word-break: break-all;
 }

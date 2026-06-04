@@ -1,0 +1,98 @@
+<app-public-shell>
+  <main class="static-page-main">
+    <article class="static-page-panel">
+      <header class="static-page-head">
+        <h1>{{ content.title }}</h1>
+        <p class="static-page-lead">{{ content.lead }}</p>
+      </header>
+
+      @if (isContactPage) {
+        <section class="static-page-block">
+          <h2 class="static-page-block-title">Formulaire de contact</h2>
+          <p class="static-page-block-hint">
+            Votre message sera envoyé à notre équipe. Nous vous répondons en général sous 48 h ouvrées.
+          </p>
+
+          @if (submitSuccess(); as successMsg) {
+            <p class="static-form-alert static-form-alert-success" role="status">{{ successMsg }}</p>
+          }
+          @if (submitError(); as errorMsg) {
+            <p class="static-form-alert static-form-alert-error" role="alert">{{ errorMsg }}</p>
+          }
+
+          <form class="static-contact-form" [formGroup]="contactForm" (ngSubmit)="submitContact()" novalidate>
+            <div class="static-form-row">
+              <label class="static-form-label" for="contact-name">Nom</label>
+              <input
+                id="contact-name"
+                type="text"
+                class="static-form-input"
+                formControlName="name"
+                autocomplete="name"
+              />
+              @if (fieldError('name'); as err) {
+                <span class="static-form-error">{{ err }}</span>
+              }
+            </div>
+
+            <div class="static-form-row">
+              <label class="static-form-label" for="contact-email">E-mail</label>
+              <input
+                id="contact-email"
+                type="email"
+                class="static-form-input"
+                formControlName="email"
+                autocomplete="email"
+              />
+              @if (fieldError('email'); as err) {
+                <span class="static-form-error">{{ err }}</span>
+              }
+            </div>
+
+            <div class="static-form-row">
+              <label class="static-form-label" for="contact-subject">Sujet</label>
+              <input id="contact-subject" type="text" class="static-form-input" formControlName="subject" />
+              @if (fieldError('subject'); as err) {
+                <span class="static-form-error">{{ err }}</span>
+              }
+            </div>
+
+            <div class="static-form-row">
+              <label class="static-form-label" for="contact-message">Message</label>
+              <textarea
+                id="contact-message"
+                class="static-form-input static-form-textarea"
+                formControlName="message"
+                rows="6"
+              ></textarea>
+              @if (fieldError('message'); as err) {
+                <span class="static-form-error">{{ err }}</span>
+              }
+            </div>
+
+            <div class="static-form-actions">
+              <button type="submit" class="static-form-submit" [disabled]="submitting()">
+                {{ submitting() ? 'Envoi en cours…' : 'Envoyer le message' }}
+              </button>
+            </div>
+          </form>
+        </section>
+      } @else {
+        <div class="static-page-body">
+          @for (section of content.sections; track section.heading) {
+            <section class="static-page-section">
+              <h2>{{ section.heading }}</h2>
+              @for (p of section.paragraphs; track p) {
+                <p>{{ p }}</p>
+              }
+            </section>
+          }
+        </div>
+      }
+
+      <footer class="static-page-foot">
+        <a routerLink="/" class="static-page-back-link">← Retour à l’accueil</a>
+      </footer>
+    </article>
+  </main>
+</app-public-shell>

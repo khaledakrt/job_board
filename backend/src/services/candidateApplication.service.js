@@ -6,8 +6,9 @@ const { JOB_STATUS, APPLICATION_STATUS } = require('../config/constants');
 const { generateUuid } = require('../utils/uuid');
 const { copyResumeToSnapshot } = require('../utils/fileStorage');
 const { generateCoverLetter } = require('../utils/coverLetterGenerator');
-const { validateQuizAnswers } = require('../utils/jobQuiz');
+const { validateQuizAnswers, buildQuizReview } = require('../utils/jobQuiz');
 const recruiterNotificationService = require('./recruiterNotification.service');
+const { isArchivedApplication } = require('./candidateDashboard.service');
 
 function formatApplication(application) {
   return {
@@ -18,6 +19,7 @@ function formatApplication(application) {
     coverLetter: application.cover_letter,
     resumeSnapshotUrl: application.resume_snapshot_url,
     rating: application.rating,
+    interviewAt: application.interview_at,
     createdAt: application.created_at,
     updatedAt: application.updated_at,
     job: application.job
@@ -39,20 +41,51 @@ function formatApplication(application) {
   };
 }
 
-async function listCandidateApplications(candidateId) {
+async function listCandidateApplications(candidateId, filters = {}) {
   const applications = await Application.findAll({
     where: { candidate_id: candidateId },
     include: [
       {
         model: Job,
         as: 'job',
+        attributes: [
+          'id',
+          'title',
+          'location',
+          'remote_type',
+          'contract_type',
+          'quiz_enabled',
+          'quiz_data',
+        ],
         include: [{ model: Company, as: 'company' }],
       },
     ],
     order: [['updated_at', 'DESC']],
   });
 
-  return applications.map(formatApplication);
+  let list = applications.map(formatApplication);
+
+  const scope = filters.scope || 'active';
+  if (scope === 'active') {
+    list = list.filter((_, i) => !isArchivedApplication(applications[i]));
+  } else if (scope === 'archived') {
+    list = list.filter((_, i) => isArchivedApplication(applications[i]));
+  }
+
+  if (filters.status) {
+    list = list.filter((a) => a.status === filters.status);
+  }
+
+  const q = (filters.q || '').trim().toLowerCase();
+  if (q) {
+    list = list.filter((a) => {
+      const title = (a.job?.title || '').toLowerCase();
+      const company = (a.job?.company?.name || '').toLowerCase();
+      return title.includes(q) || company.includes(q);
+    });
+  }
+
+  return list;
 }
 
 async function listAppliedJobIds(candidateId) {
@@ -144,6 +177,15 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
       {
         model: Job,
         as: 'job',
+        attributes: [
+          'id',
+          'title',
+          'location',
+          'remote_type',
+          'contract_type',
+          'quiz_enabled',
+          'quiz_data',
+        ],
         include: [{ model: Company, as: 'company' }],
       },
       {
@@ -160,9 +202,15 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
   }
 
   const formatted = formatApplication(application);
+  const quizReview =
+    application.job?.quiz_enabled && application.quiz_answers?.length
+      ? buildQuizReview(application.job.quiz_data, application.quiz_answers)
+      : null;
 
   return {
     ...formatted,
+    quizAnswers: application.quiz_answers ?? null,
+    quizReview,
     notes: (application.notes || []).map((note) => ({
       id: note.id,
       authorId: note.author_id,

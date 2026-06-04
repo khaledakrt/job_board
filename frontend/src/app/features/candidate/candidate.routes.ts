@@ -19,6 +19,11 @@ export const CANDIDATE_ROUTES: Routes = [
           import('./job-search/job-search.component').then((m) => m.JobSearchComponent),
       },
       {
+        path: 'saved',
+        loadComponent: () =>
+          import('./saved-jobs/saved-jobs-page.component').then((m) => m.SavedJobsPageComponent),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./profile-stepper/profile-stepper.component').then(

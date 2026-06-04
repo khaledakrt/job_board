@@ -1,28 +1,5 @@
-<div class="landing">
-  <header class="landing-header">
-    <div class="landing-container landing-header-inner">
-      <a routerLink="/" class="landing-logo" aria-label="JobBoard — Accueil">
-        <span class="landing-logo-mark">JB</span>
-        <span class="landing-logo-text">JobBoard</span>
-      </a>
-      <nav class="landing-nav" aria-label="Navigation principale">
-        <button type="button" class="landing-nav-link" (click)="scrollTo('candidats')">Candidats</button>
-        <button type="button" class="landing-nav-link" (click)="scrollTo('recruteurs')">Recruteurs</button>
-        <button type="button" class="landing-nav-link" (click)="scrollTo('offres')">Offres</button>
-        <button type="button" class="landing-nav-link" (click)="scrollTo('fonctionnalites')">Fonctionnalités</button>
-      </nav>
-      <div class="landing-header-actions">
-        @if (authService.isAuthenticated()) {
-          <a [routerLink]="workspaceLink()" class="landing-btn landing-btn-primary">Mon espace</a>
-          <button type="button" class="landing-btn landing-btn-ghost" (click)="logout()">Déconnexion</button>
-        } @else {
-          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">Connexion</a>
-          <a [routerLink]="routes.AUTH.REGISTER" class="landing-btn landing-btn-primary">Inscription</a>
-        }
-      </div>
-    </div>
-  </header>
-
+<app-public-shell>
+  <div class="landing">
   <section class="landing-hero">
     <div class="landing-container landing-hero-grid">
       <div class="landing-hero-copy">
@@ -252,19 +229,5 @@
     </section>
   }
 
-  <footer class="landing-footer">
-    <div class="landing-container landing-footer-inner">
-      <div class="landing-footer-brand">
-        <span class="landing-logo-mark">JB</span>
-        <span>JobBoard</span>
-        <p class="landing-footer-tagline">Recrutement simplifié pour candidats et entreprises.</p>
-      </div>
-      <div class="landing-footer-links">
-        <a [routerLink]="routes.AUTH.LOGIN">Connexion</a>
-        <a [routerLink]="routes.AUTH.REGISTER">Inscription</a>
-        <a [routerLink]="routes.AUTH.FORGOT_PASSWORD">Mot de passe oublié</a>
-      </div>
-      <p class="landing-footer-copy">© {{ year }} JobBoard. Tous droits réservés.</p>
-    </div>
-  </footer>
-</div>
+  </div>
+</app-public-shell>

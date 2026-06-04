@@ -62,9 +62,11 @@ const listMyApplications = asyncHandler(async (req, res) => {
   if (!req.candidate) {
     return res.status(200).json({ success: true, data: [] });
   }
-  const data = await candidateApplicationService.listCandidateApplications(
-    req.candidate.id
-  );
+  const data = await candidateApplicationService.listCandidateApplications(req.candidate.id, {
+    scope: req.query.scope,
+    status: req.query.status,
+    q: req.query.q,
+  });
 
   res.status(200).json({
     success: true,

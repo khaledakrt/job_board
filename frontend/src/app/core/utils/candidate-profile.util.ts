@@ -14,6 +14,8 @@ export function computeProfileCompletion(profile: CandidateProfile | null): numb
     (profile.skills?.length ?? 0) > 0,
     (profile.experiences?.length ?? 0) > 0,
     (profile.education?.length ?? 0) > 0,
+    (profile.languages?.length ?? 0) > 0,
+    Boolean(profile.linkedinUrl?.trim()),
   ];
 
   const done = checks.filter(Boolean).length;

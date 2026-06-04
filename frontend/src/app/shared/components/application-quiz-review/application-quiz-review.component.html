@@ -1,0 +1,30 @@
+<div class="quiz-review">
+  @if (showCorrectHints()) {
+    <p class="quiz-review-intro">
+      Vos réponses au quiz de présélection (indication : vert = correct, rouge = incorrect).
+    </p>
+  }
+  @for (q of review().questions; track q.questionIndex) {
+    <article class="quiz-review-card">
+      <p class="quiz-review-q">
+        <span class="quiz-review-num">Q{{ q.questionIndex + 1 }}</span>
+        {{ q.text }}
+      </p>
+      <ul class="quiz-review-choices">
+        @for (choice of q.choices; track $index; let ci = $index) {
+          <li
+            class="quiz-review-choice"
+            [class.quiz-choice-correct]="q.candidateChoiceIndex === ci && q.isCorrect"
+            [class.quiz-choice-wrong]="q.candidateChoiceIndex === ci && !q.isCorrect"
+            [class.quiz-choice-expected]="showCorrectHints() && q.correctChoiceIndex === ci && !q.isCorrect"
+          >
+            {{ choice.text }}
+            @if (q.candidateChoiceIndex === ci) {
+              <span class="quiz-choice-badge">Votre réponse</span>
+            }
+          </li>
+        }
+      </ul>
+    </article>
+  }
+</div>

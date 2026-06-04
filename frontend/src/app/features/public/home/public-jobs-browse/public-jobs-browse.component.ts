@@ -365,7 +365,9 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
     }
 
     if (this.authService.user()?.role === USER_ROLES.CANDIDATE) {
-      await this.router.navigate([APP_ROUTES.CANDIDATE.JOBS]);
+      await this.router.navigate([APP_ROUTES.CANDIDATE.JOBS], {
+        queryParams: { jobId: job.id, apply: '1' },
+      });
       return;
     }
 

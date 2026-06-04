@@ -1,0 +1,37 @@
+@if (visible()) {
+  <div class="onboarding-backdrop" role="dialog" aria-modal="true">
+    <article class="onboarding-card panel-card">
+      <p class="onboarding-eyebrow">Bienvenue sur JobBoard</p>
+      @switch (step()) {
+        @case (1) {
+          <h2>1. Complétez votre profil</h2>
+          <p>Ajoutez votre titre, expériences et compétences pour être visible des recruteurs.</p>
+          <a [routerLink]="routes.CANDIDATE.PROFILE" class="onboarding-link">Aller au profil →</a>
+        }
+        @case (2) {
+          <h2>2. Ajoutez votre CV</h2>
+          <p>Importez un PDF ou générez-le depuis votre profil — obligatoire pour postuler.</p>
+          <a [routerLink]="routes.CANDIDATE.PROFILE" class="onboarding-link">Ajouter mon CV →</a>
+        }
+        @case (3) {
+          <h2>3. Trouvez votre prochaine offre</h2>
+          <p>Recherchez, enregistrez des offres et créez des alertes emploi.</p>
+          <a [routerLink]="routes.CANDIDATE.JOBS" class="onboarding-link">Voir les offres →</a>
+        }
+      }
+      <div class="onboarding-dots">
+        @for (s of [1, 2, 3]; track s) {
+          <span class="onboarding-dot" [class.onboarding-dot-active]="step() === s"></span>
+        }
+      </div>
+      <div class="onboarding-actions">
+        <button type="button" class="btn-secondary !w-auto px-4" (click)="skip()" [disabled]="saving()">
+          Passer
+        </button>
+        <button type="button" class="btn-primary !w-auto px-4" (click)="next()" [disabled]="saving()">
+          {{ step() === 3 ? 'Terminer' : 'Suivant' }}
+        </button>
+      </div>
+    </article>
+  </div>
+}

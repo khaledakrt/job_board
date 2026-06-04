@@ -45,6 +45,22 @@ CandidateProfile.init(
       type: DataTypes.JSON,
       allowNull: true,
     },
+    languages: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    certifications: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    linkedin_url: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+    },
+    portfolio_url: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+    },
     experiences: {
       type: DataTypes.JSON,
       allowNull: true,
@@ -59,6 +75,18 @@ CandidateProfile.init(
     },
     min_salary: {
       type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+    },
+    job_preferences: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    notification_preferences: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    onboarding_completed_at: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
     updated_at: {

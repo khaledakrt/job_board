@@ -16,6 +16,8 @@ const candidateSavedJobsRoutes = require('./candidateSavedJobs.routes');
 const candidateJobAlertsRoutes = require('./candidateJobAlerts.routes');
 const candidateNotificationsRoutes = require('./candidateNotifications.routes');
 const adminRoutes = require('./admin.routes');
+const publicRoutes = require('./public.routes');
+const candidateDashboardRoutes = require('./candidateDashboard.routes');
 
 const router = express.Router();
 
@@ -34,7 +36,9 @@ router.use('/recruiter/team', recruiterTeamRoutes);
 router.use('/recruiter/jobs', recruiterJobsRoutes);
 router.use('/recruiter/notifications', recruiterNotificationsRoutes);
 router.use('/jobs', publicJobsRoutes);
+router.use('/public', publicRoutes);
 router.use('/applications', applicationsRoutes);
+router.use('/candidate/dashboard', candidateDashboardRoutes);
 router.use('/candidate/profile', candidateProfileRoutes);
 router.use('/candidate/resume', candidateResumeRoutes);
 router.use('/candidate/applications', candidateApplicationsRoutes);

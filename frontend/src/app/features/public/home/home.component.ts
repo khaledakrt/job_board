@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
+import { PublicShellComponent } from '../shared/public-shell.component';
 import { PublicJobsBrowseComponent } from './public-jobs-browse/public-jobs-browse.component';
 
 interface LandingFeature {
@@ -20,15 +21,13 @@ interface LandingStep {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, PublicJobsBrowseComponent],
+  imports: [RouterLink, PublicShellComponent, PublicJobsBrowseComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
   readonly authService = inject(AuthService);
   readonly routes = APP_ROUTES;
-  readonly year = new Date().getFullYear();
-
   readonly workspaceLink = computed(() => {
     const role = this.authService.user()?.role;
     if (role === USER_ROLES.ADMIN) {
@@ -105,11 +104,4 @@ export class HomeComponent {
     'E-mails transactionnels (candidature, équipe, alertes)',
   ];
 
-  scrollTo(id: string): void {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  logout(): void {
-    this.authService.logout();
-  }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,6 +12,9 @@ import {
   passwordMatchValidator,
   passwordStrengthValidator,
 } from '../../shared/validators/password.validators';
+import { CandidateContextService } from '../candidate/services/candidate-context.service';
+import { CandidateProfileService } from '../candidate/services/candidate-profile.service';
+import { NotificationPreferences } from '../../core/models/candidate-profile.model';
 
 @Component({
   selector: 'app-settings',
@@ -20,10 +23,12 @@ import {
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })
-export class SettingsComponent {
+export class SettingsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   readonly authService = inject(AuthService);
   private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly candidateContext = inject(CandidateContextService);
+  private readonly profileService = inject(CandidateProfileService);
 
   readonly passwordSubmitted = signal(false);
   readonly emailSubmitted = signal(false);
@@ -65,6 +70,48 @@ export class SettingsComponent {
 
   readonly userEmail = this.authService.user()?.email ?? '';
   readonly isCandidate = this.authService.isCandidate;
+
+  readonly notifPrefs = this.fb.nonNullable.group({
+    emailEnabled: [true],
+    inAppEnabled: [true],
+    statusChange: [true],
+    recruiterMessage: [true],
+    jobAlert: [true],
+  });
+
+  readonly notifSaved = signal(false);
+
+  ngOnInit(): void {
+    if (!this.isCandidate()) return;
+    if (this.candidateContext.profile()) {
+      this.patchNotifPrefs();
+    }
+    this.candidateContext.loadProfile().subscribe({
+      next: () => this.patchNotifPrefs(),
+    });
+  }
+
+  private patchNotifPrefs(): void {
+    const prefs = this.candidateContext.profile()?.notificationPreferences ?? {};
+    this.notifPrefs.patchValue({
+      emailEnabled: prefs.emailEnabled ?? true,
+      inAppEnabled: prefs.inAppEnabled ?? true,
+      statusChange: prefs.statusChange ?? true,
+      recruiterMessage: prefs.recruiterMessage ?? true,
+      jobAlert: prefs.jobAlert ?? true,
+    });
+  }
+
+  saveNotificationPrefs(): void {
+    const payload: NotificationPreferences = this.notifPrefs.getRawValue();
+    this.profileService.updateProfile({ notificationPreferences: payload }).subscribe({
+      next: (res) => {
+        if (res.data) this.candidateContext.setProfile(res.data);
+        this.notifSaved.set(true);
+        setTimeout(() => this.notifSaved.set(false), 3000);
+      },
+    });
+  }
 
   async onSubmitPassword(): Promise<void> {
     this.passwordSubmitted.set(true);

@@ -19,7 +19,9 @@ export class CandidateProfileService {
     return this.http.post<ApiResponse<CandidateProfile>>(this.base, this.toPayload(payload));
   }
 
-  updateProfile(payload: Partial<CandidateProfile>): Observable<ApiResponse<CandidateProfile>> {
+  updateProfile(
+    payload: Partial<CandidateProfile> & { onboardingCompleted?: boolean }
+  ): Observable<ApiResponse<CandidateProfile>> {
     return this.http.put<ApiResponse<CandidateProfile>>(this.base, this.toPayload(payload));
   }
 
@@ -45,7 +47,7 @@ export class CandidateProfileService {
     );
   }
 
-  private toPayload(p: Partial<CandidateProfile>) {
+  private toPayload(p: Partial<CandidateProfile> & { onboardingCompleted?: boolean }) {
     return {
       firstName: p.firstName,
       lastName: p.lastName,
@@ -53,9 +55,16 @@ export class CandidateProfileService {
       professionalTitle: p.professionalTitle,
       bio: p.bio,
       skills: p.skills,
+      languages: p.languages,
+      certifications: p.certifications,
+      linkedinUrl: p.linkedinUrl,
+      portfolioUrl: p.portfolioUrl,
       experiences: p.experiences,
       education: p.education,
       minSalary: p.minSalary,
+      jobPreferences: p.jobPreferences,
+      notificationPreferences: p.notificationPreferences,
+      onboardingCompleted: p.onboardingCompleted,
     };
   }
 }

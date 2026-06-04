@@ -251,6 +251,37 @@ async function sendRecruiterNewApplicationEmail({
   });
 }
 
+async function sendContactFormEmail({ to, name, email, subject, message }) {
+  const mailSubject = `[JobBoard Contact] ${subject}`;
+  const text = [
+    `Message reçu via le formulaire de contact JobBoard`,
+    ``,
+    `Nom : ${name}`,
+    `E-mail : ${email}`,
+    `Sujet : ${subject}`,
+    ``,
+    `Message :`,
+    message,
+  ].join('\n');
+
+  const bodyHtml = `
+  <p><strong>Nouveau message</strong> depuis le formulaire de contact.</p>
+  <table style="margin:16px 0;font-size:14px;border-collapse:collapse;">
+    <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Nom</td><td><strong>${escapeHtml(name)}</strong></td></tr>
+    <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">E-mail</td><td><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td></tr>
+    <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Sujet</td><td>${escapeHtml(subject)}</td></tr>
+  </table>
+  <div style="background:#f3f4f6;padding:16px;border-radius:8px;white-space:pre-wrap;">${escapeHtml(message)}</div>`;
+
+  return sendMail({
+    to,
+    subject: mailSubject,
+    text,
+    html: wrapEmailHtml({ title: 'Formulaire de contact', bodyHtml }),
+    replyTo: email,
+  });
+}
+
 module.exports = {
   sendMail,
   sendVerificationEmail,
@@ -259,4 +290,5 @@ module.exports = {
   buildCandidateAlertHtml,
   sendTeamInviteEmail,
   sendRecruiterNewApplicationEmail,
+  sendContactFormEmail,
 };
