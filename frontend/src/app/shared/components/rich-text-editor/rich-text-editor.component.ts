@@ -73,6 +73,10 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
   writeValue(value: string | null): void {
     const html = value ?? '';
     if (this.editorRef?.nativeElement) {
+      const next = sanitizeRichHtml(html);
+      if (next === this.currentSanitizedHtml()) {
+        return;
+      }
       this.setEditorHtml(html);
     } else {
       this.pendingHtml = html;
@@ -704,25 +708,31 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
   private setEditorHtml(html: string): void {
     const el = this.editorRef?.nativeElement;
     if (!el) return;
-    el.innerHTML = html || '';
-    el.dataset['placeholder'] = html ? 'false' : 'true';
+    const safe = sanitizeRichHtml(html) || '';
+    el.innerHTML = safe;
+    el.dataset['placeholder'] = safe ? 'false' : 'true';
+  }
+
+  private currentSanitizedHtml(): string {
+    const el = this.editorRef?.nativeElement;
+    return el ? sanitizeRichHtml(el.innerHTML) : '';
   }
 
   private normalizeEditor(): void {
     const el = this.editorRef?.nativeElement;
     if (!el) return;
     const sanitized = sanitizeRichHtml(el.innerHTML);
-    el.innerHTML = sanitized;
+    if (sanitized !== el.innerHTML) {
+      el.innerHTML = sanitized;
+    }
     el.dataset['placeholder'] = sanitized ? 'false' : 'true';
   }
 
+  /** Ne réécrit pas le DOM pendant la frappe (Entrée, etc.) — seulement notifie le formulaire. */
   private emitValue(): void {
     const el = this.editorRef?.nativeElement;
     if (!el) return;
     const sanitized = sanitizeRichHtml(el.innerHTML);
-    if (sanitized !== el.innerHTML) {
-      el.innerHTML = sanitized;
-    }
     el.dataset['placeholder'] = sanitized ? 'false' : 'true';
     this.onChange(sanitized);
   }

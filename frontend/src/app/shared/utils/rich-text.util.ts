@@ -208,7 +208,7 @@ export function sanitizeRichHtml(html: string | null | undefined): string {
   }
   const out = document.createElement('div');
   out.appendChild(fragment);
-  let result = out.innerHTML.replace(/<div><br><\/div>/gi, '').trim();
+  let result = out.innerHTML.replace(/<div><br\s*\/?><\/div>/gi, '<br>').trim();
   if (result === '<br>' || result === '<p><br></p>') return '';
   return result;
 }
