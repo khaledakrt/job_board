@@ -55,8 +55,48 @@
         <span class="rte-underline">U</span>
       </button>
     </div>
-    <span class="rte-hint">Surlignez → police ou B/I/U</span>
+    <div class="rte-toolbar-group rte-link-buttons" role="group" aria-label="Lien">
+      <button
+        type="button"
+        class="rte-btn rte-btn-link"
+        [class.rte-btn-active]="linkEditorOpen()"
+        [disabled]="disabled()"
+        (mousedown)="$event.preventDefault()"
+        (click)="openLinkEditor()"
+        title="Ajouter ou modifier un lien"
+        aria-label="Lien"
+      >
+        <span aria-hidden="true">🔗</span>
+      </button>
+    </div>
+    <span class="rte-hint">Surlignez → police, lien ou B/I/U</span>
   </div>
+  @if (linkEditorOpen()) {
+    <div class="rte-link-bar" role="dialog" aria-label="Insérer un lien">
+      <label class="rte-link-label" for="rte-link-url">URL</label>
+      <input
+        id="rte-link-url"
+        type="url"
+        class="rte-link-input form-input"
+        [value]="linkUrlInput()"
+        (input)="onLinkUrlInput($event)"
+        (keydown)="onLinkKeydown($event)"
+        placeholder="https://www.linkedin.com/…"
+        autocomplete="url"
+      />
+      <button type="button" class="rte-link-apply btn-secondary !w-auto" (mousedown)="$event.preventDefault()" (click)="applyLink()">
+        OK
+      </button>
+      @if (canRemoveLink()) {
+        <button type="button" class="rte-link-remove btn-secondary !w-auto" (mousedown)="$event.preventDefault()" (click)="removeLink()">
+          Retirer
+        </button>
+      }
+      <button type="button" class="rte-link-cancel" (mousedown)="$event.preventDefault()" (click)="closeLinkEditor()" aria-label="Fermer">
+        ×
+      </button>
+    </div>
+  }
   @if (fontHint()) {
     <p class="rte-font-hint" role="status">{{ fontHint() }}</p>
   }

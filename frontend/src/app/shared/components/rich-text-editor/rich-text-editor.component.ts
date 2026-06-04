@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import {
+  normalizeLinkUrl,
   RICH_TEXT_FONTS,
   RichTextFontId,
   sanitizeRichHtml,
@@ -37,6 +38,9 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
   readonly disabled = signal(false);
   readonly selectedFont = signal<RichTextFontId>('arial');
   readonly fontHint = signal<string | null>(null);
+  readonly linkEditorOpen = signal(false);
+  readonly linkUrlInput = signal('');
+  readonly canRemoveLink = signal(false);
 
   private pendingHtml: string | null = null;
   private savedRange: Range | null = null;
@@ -91,6 +95,119 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     const text = event.clipboardData?.getData('text/plain') ?? '';
     document.execCommand('insertText', false, text);
     this.emitValue();
+  }
+
+  openLinkEditor(): void {
+    if (this.disabled()) return;
+    this.focusEditor();
+    this.restoreSelection();
+
+    const anchor = this.findAnchorInSelection();
+    if (anchor) {
+      this.linkUrlInput.set(anchor.getAttribute('href') ?? '');
+      this.canRemoveLink.set(true);
+    } else {
+      const range = this.resolveActiveRange();
+      if (!range) {
+        this.fontHint.set('Sélectionnez du texte, puis cliquez sur le bouton lien.');
+        this.linkEditorOpen.set(false);
+        return;
+      }
+      this.linkUrlInput.set('');
+      this.canRemoveLink.set(false);
+    }
+
+    this.fontHint.set(null);
+    this.linkEditorOpen.set(true);
+  }
+
+  closeLinkEditor(): void {
+    this.linkEditorOpen.set(false);
+    this.linkUrlInput.set('');
+    this.canRemoveLink.set(false);
+  }
+
+  applyLink(): void {
+    if (this.disabled()) return;
+    const url = normalizeLinkUrl(this.linkUrlInput());
+    if (!url) {
+      this.fontHint.set('Indiquez une URL valide (ex. https://linkedin.com/…).');
+      return;
+    }
+
+    this.focusEditor();
+    this.restoreSelection();
+
+    const existing = this.findAnchorInSelection();
+    if (existing) {
+      existing.setAttribute('href', url);
+      existing.setAttribute('target', '_blank');
+      existing.setAttribute('rel', 'noopener noreferrer');
+      this.closeLinkEditor();
+      this.emitValue();
+      return;
+    }
+
+    const range = this.resolveActiveRange();
+    if (!range || range.collapsed) {
+      this.fontHint.set('Sélectionnez du texte à transformer en lien.');
+      return;
+    }
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    try {
+      const fragment = range.extractContents();
+      anchor.appendChild(fragment);
+      range.insertNode(anchor);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(anchor);
+      selection?.addRange(newRange);
+      this.savedRange = newRange.cloneRange();
+    } catch {
+      this.fontHint.set('Impossible d’ajouter le lien sur cette sélection.');
+      return;
+    }
+
+    this.closeLinkEditor();
+    this.emitValue();
+  }
+
+  removeLink(): void {
+    if (this.disabled()) return;
+    this.focusEditor();
+    this.restoreSelection();
+    const anchor = this.findAnchorInSelection();
+    if (!anchor?.parentNode) {
+      this.closeLinkEditor();
+      return;
+    }
+    const parent = anchor.parentNode;
+    while (anchor.firstChild) {
+      parent.insertBefore(anchor.firstChild, anchor);
+    }
+    parent.removeChild(anchor);
+    this.closeLinkEditor();
+    this.emitValue();
+  }
+
+  onLinkUrlInput(event: Event): void {
+    this.linkUrlInput.set((event.target as HTMLInputElement).value);
+  }
+
+  onLinkKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.applyLink();
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeLinkEditor();
+    }
   }
 
   format(command: 'bold' | 'italic' | 'underline'): void {
@@ -186,6 +303,26 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
       return this.savedRange;
     }
 
+    return null;
+  }
+
+  private findAnchorInSelection(): HTMLAnchorElement | null {
+    const editor = this.editorRef?.nativeElement;
+    if (!editor) return null;
+
+    const sel = window.getSelection();
+    if (!sel?.rangeCount) return null;
+
+    let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
+    if (node.nodeType === Node.TEXT_NODE) {
+      node = node.parentNode;
+    }
+    while (node && node !== editor) {
+      if (node instanceof HTMLAnchorElement) {
+        return node;
+      }
+      node = node.parentNode;
+    }
     return null;
   }
 

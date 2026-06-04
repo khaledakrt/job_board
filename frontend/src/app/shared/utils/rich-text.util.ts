@@ -1,4 +1,17 @@
-const ALLOWED_TAGS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'SPAN', 'BR', 'P', 'DIV']);
+const ALLOWED_TAGS = new Set([
+  'A',
+  'B',
+  'STRONG',
+  'I',
+  'EM',
+  'U',
+  'SPAN',
+  'BR',
+  'P',
+  'DIV',
+]);
+
+const SAFE_LINK_PROTOCOLS = /^(https?:|mailto:)/i;
 
 const FONT_CLASS_PREFIX = 'rte-font-';
 const ALLOWED_FONT_IDS = new Set([
@@ -73,6 +86,25 @@ function isAllowedFontFamily(style: string | null): boolean {
   return ALLOWED_FONT_FAMILY_NORMALIZED.has(normalized);
 }
 
+/** Normalise une URL saisie (ajoute https:// si besoin). Retourne null si dangereuse. */
+export function normalizeLinkUrl(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  if (/^javascript:/i.test(trimmed) || /^data:/i.test(trimmed)) return null;
+  if (/^mailto:/i.test(trimmed)) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed.replace(/^\/+/, '')}`;
+}
+
+function isSafeHref(href: string | null): boolean {
+  if (!href) return false;
+  const trimmed = href.trim();
+  if (!trimmed || /^javascript:/i.test(trimmed) || /^data:/i.test(trimmed)) {
+    return false;
+  }
+  return SAFE_LINK_PROTOCOLS.test(trimmed);
+}
+
 function allowedFontClasses(classAttr: string | null): string | null {
   if (!classAttr) return null;
   const kept = classAttr
@@ -95,6 +127,25 @@ function sanitizeNode(node: Node, out: Element | DocumentFragment): void {
     for (const child of Array.from(el.childNodes)) {
       sanitizeNode(child, out);
     }
+    return;
+  }
+
+  if (tag === 'A') {
+    const href = el.getAttribute('href');
+    if (!isSafeHref(href)) {
+      for (const child of Array.from(el.childNodes)) {
+        sanitizeNode(child, out);
+      }
+      return;
+    }
+    const anchor = document.createElement('a');
+    anchor.setAttribute('href', href!.trim());
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('rel', 'noopener noreferrer');
+    for (const child of Array.from(el.childNodes)) {
+      sanitizeNode(child, anchor);
+    }
+    out.appendChild(anchor);
     return;
   }
 

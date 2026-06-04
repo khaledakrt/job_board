@@ -17,6 +17,15 @@
   text-decoration: underline;
 }
 
+.safe-html a {
+  color: #0a66c2;
+  text-decoration: underline;
+}
+
+.safe-html a:hover {
+  color: #0958ab;
+}
+
 .safe-html p {
   margin: 0 0 0.5rem;
 }
