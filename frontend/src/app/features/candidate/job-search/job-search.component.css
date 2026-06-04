@@ -733,6 +733,7 @@
 .search-right {
   min-height: 420px;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .detail-sticky {
@@ -888,6 +889,29 @@
   margin-top: 0.5rem;
   font-size: 0.875rem;
   color: #334155;
+  pointer-events: auto;
+}
+
+.detail-text .safe-html,
+.detail-text .safe-html a {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.detail-text .safe-html a {
+  color: #0a66c2;
+  text-decoration: underline;
+  position: relative;
+  z-index: 1;
+}
+
+.detail-text .safe-html a:hover {
+  color: #0958ab;
+}
+
+.candidate-job-detail-body .detail-text .safe-html a {
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .detail-empty {

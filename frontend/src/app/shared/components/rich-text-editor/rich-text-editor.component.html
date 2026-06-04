@@ -1,12 +1,16 @@
 <div class="rte" [class.rte-disabled]="disabled()">
-  <div class="rte-toolbar" role="toolbar" aria-label="Mise en forme du texte">
+  <div
+    class="rte-toolbar"
+    role="toolbar"
+    [attr.aria-label]="editorId() ? 'Mise en forme — ' + editorId() : 'Mise en forme du texte'"
+  >
     <div class="rte-toolbar-group rte-font-buttons" role="group" aria-label="Police">
       <span class="rte-toolbar-label">Police</span>
       @for (font of fonts; track font.id) {
         <button
           type="button"
           class="rte-font-btn {{ font.className }}"
-          [class.rte-font-btn-active]="selectedFont() === font.id"
+          [class.rte-font-btn-active]="activeFontId() === font.id"
           [disabled]="disabled()"
           (mousedown)="$event.preventDefault()"
           (click)="applyFont(font.id)"
@@ -21,7 +25,7 @@
       <button
         type="button"
         class="rte-btn"
-        [class.rte-btn-active]="isFormatActive('bold')"
+        [class.rte-btn-active]="boldActive()"
         [disabled]="disabled()"
         (mousedown)="$event.preventDefault()"
         (click)="format('bold')"
@@ -33,7 +37,7 @@
       <button
         type="button"
         class="rte-btn"
-        [class.rte-btn-active]="isFormatActive('italic')"
+        [class.rte-btn-active]="italicActive()"
         [disabled]="disabled()"
         (mousedown)="$event.preventDefault()"
         (click)="format('italic')"
@@ -45,7 +49,7 @@
       <button
         type="button"
         class="rte-btn"
-        [class.rte-btn-active]="isFormatActive('underline')"
+        [class.rte-btn-active]="underlineActive()"
         [disabled]="disabled()"
         (mousedown)="$event.preventDefault()"
         (click)="format('underline')"
@@ -61,7 +65,7 @@
         class="rte-btn rte-btn-link"
         [class.rte-btn-active]="linkEditorOpen()"
         [disabled]="disabled()"
-        (mousedown)="$event.preventDefault()"
+        (mousedown)="onLinkButtonMouseDown($event)"
         (click)="openLinkEditor()"
         title="Ajouter ou modifier un lien"
         aria-label="Lien"
@@ -73,16 +77,22 @@
   </div>
   @if (linkEditorOpen()) {
     <div class="rte-link-bar" role="dialog" aria-label="Insérer un lien">
-      <label class="rte-link-label" for="rte-link-url">URL</label>
+      @if (linkSelectionPreview(); as preview) {
+        <p class="rte-link-selection-preview" role="status">{{ preview }}</p>
+      }
+      <div class="rte-link-bar-row">
+      <label class="rte-link-label" [attr.for]="linkInputId()">URL</label>
       <input
-        id="rte-link-url"
-        type="url"
+        #linkUrlField
+        [id]="linkInputId()"
+        type="text"
         class="rte-link-input form-input"
-        [value]="linkUrlInput()"
         (input)="onLinkUrlInput($event)"
+        (paste)="onLinkInputPaste($event)"
         (keydown)="onLinkKeydown($event)"
-        placeholder="https://www.linkedin.com/…"
+        placeholder="Collez l’URL ici (https://…)"
         autocomplete="url"
+        inputmode="url"
       />
       <button type="button" class="rte-link-apply btn-secondary !w-auto" (mousedown)="$event.preventDefault()" (click)="applyLink()">
         OK
@@ -95,6 +105,7 @@
       <button type="button" class="rte-link-cancel" (mousedown)="$event.preventDefault()" (click)="closeLinkEditor()" aria-label="Fermer">
         ×
       </button>
+      </div>
     </div>
   }
   @if (fontHint()) {
@@ -108,7 +119,8 @@
     [attr.data-placeholder]="placeholder()"
     [attr.aria-label]="placeholder()"
     (input)="onEditorInput()"
-    (blur)="onEditorBlur()"
+    (blur)="onEditorBlur($event)"
+    (focus)="onEditorFocus()"
     (mouseup)="onEditorSelectionChange()"
     (keyup)="onEditorSelectionChange()"
     (paste)="onPaste($event)"

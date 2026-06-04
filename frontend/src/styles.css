@@ -212,6 +212,18 @@
   }
 }
 
+/* Liens dans le HTML riche (innerHTML) — panneau offre, popup, pages publiques */
+.safe-html a {
+  color: #0a66c2;
+  text-decoration: underline;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.safe-html a:hover {
+  color: #0958ab;
+}
+
 /* Rich text : HTML inséré dynamiquement (contenteditable / innerHTML) */
 .rte-editor .rte-font-arial,
 .safe-html .rte-font-arial,

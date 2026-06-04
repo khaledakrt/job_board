@@ -140,13 +140,34 @@
 
 .rte-link-bar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   gap: 0.4rem;
   padding: 0.45rem 0.5rem;
   border: 1px solid #bfdbfe;
   border-radius: 0.5rem;
   background: #eff6ff;
+}
+
+.rte-link-selection-preview {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  line-height: 1.35;
+}
+
+.rte-link-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.rte-editor .rte-link-pending {
+  background: #fef08a;
+  border-radius: 0.15rem;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .rte-link-label {
@@ -228,6 +249,17 @@
 
 .rte-editor u {
   text-decoration: underline;
+}
+
+.rte-editor a {
+  color: #0a66c2;
+  text-decoration: underline;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.rte-editor a:hover {
+  color: #0958ab;
 }
 
 .rte-editor a {

@@ -88,12 +88,18 @@ function isAllowedFontFamily(style: string | null): boolean {
 
 /** Normalise une URL saisie (ajoute https:// si besoin). Retourne null si dangereuse. */
 export function normalizeLinkUrl(input: string): string | null {
-  const trimmed = input.trim();
+  let trimmed = input.trim().replace(/\s+/g, '');
   if (!trimmed) return null;
   if (/^javascript:/i.test(trimmed) || /^data:/i.test(trimmed)) return null;
   if (/^mailto:/i.test(trimmed)) return trimmed;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed.replace(/^\/+/, '')}`;
+  if (/^www\./i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  if (/^[a-z0-9][-a-z0-9.]*\.[a-z]{2,}(\/.*)?$/i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  return null;
 }
 
 function isSafeHref(href: string | null): boolean {

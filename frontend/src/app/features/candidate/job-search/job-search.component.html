@@ -555,7 +555,7 @@
     (click)="onCardsDetailDialogClick($event)"
     (close)="onCardsDetailDialogClosed()"
   >
-    <div class="candidate-job-detail-modal">
+    <div class="candidate-job-detail-modal" (click)="$event.stopPropagation()">
       <button type="button" class="candidate-job-detail-close" aria-label="Fermer" (click)="closeCardsDetail()">
         ✕
       </button>
