@@ -106,6 +106,9 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
 
     if (related instanceof Node && rteRoot?.contains(related)) {
       this.onTouched();
+      if (this.linkEditorOpen()) {
+        return;
+      }
       this.normalizeEditor();
       this.emitValue();
       return;
@@ -122,7 +125,9 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
       this.resetToolbarState();
     });
     this.onTouched();
-    this.normalizeEditor();
+    if (!this.linkEditorOpen()) {
+      this.normalizeEditor();
+    }
     this.emitValue();
   }
 
@@ -170,7 +175,6 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
         this.linkEditorOpen.set(false);
         return;
       }
-      this.applyPendingLinkHighlight();
       this.updateLinkSelectionPreview();
       this.linkUrlInput.set('');
       this.canRemoveLink.set(false);
@@ -223,14 +227,14 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
       this.applyAnchorAttrs(existing);
       this.closeLinkEditor();
       editor.focus();
-      this.emitValue();
+      this.emitValue(true);
       return;
     }
 
-    if (this.createLinkFromPendingMarker(url)) {
+    if (this.createLinkFromPendingMarker(url) || this.insertLinkFromSavedRange(url)) {
       this.closeLinkEditor();
       editor.focus();
-      this.emitValue();
+      this.emitValue(true);
       return;
     }
 
@@ -251,7 +255,7 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
       this.clearPendingLinkHighlight();
       this.normalizeAnchorsInEditor();
       this.closeLinkEditor();
-      this.emitValue();
+      this.emitValue(true);
       return;
     }
 
@@ -270,7 +274,7 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     }
 
     this.closeLinkEditor();
-    this.emitValue();
+    this.emitValue(true);
   }
 
   removeLink(): void {
@@ -288,7 +292,7 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     this.editingLinkAnchor = null;
     this.closeLinkEditor();
     editor.focus();
-    this.emitValue();
+    this.emitValue(true);
   }
 
   onLinkUrlInput(event: Event): void {
@@ -553,6 +557,27 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     this.pendingLinkMarker = null;
   }
 
+  private insertLinkFromSavedRange(url: string): boolean {
+    const editor = this.editorRef?.nativeElement;
+    if (!editor || !this.savedRange || this.savedRange.collapsed) return false;
+    if (!editor.contains(this.savedRange.commonAncestorContainer)) return false;
+
+    const range = this.savedRange.cloneRange();
+    const anchor = document.createElement('a');
+    anchor.setAttribute('href', url);
+    this.applyAnchorAttrs(anchor);
+    try {
+      const fragment = range.extractContents();
+      anchor.appendChild(fragment);
+      range.insertNode(anchor);
+      this.pendingLinkMarker = null;
+      this.savedRange = null;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private createLinkFromPendingMarker(url: string): boolean {
     const marker = this.pendingLinkMarker;
     if (!marker?.parentNode) return false;
@@ -728,11 +753,17 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     el.dataset['placeholder'] = sanitized ? 'false' : 'true';
   }
 
-  /** Ne réécrit pas le DOM pendant la frappe (Entrée, etc.) — seulement notifie le formulaire. */
-  private emitValue(): void {
+  /**
+   * @param syncDom true après ajout/retrait de lien : aligne le DOM sur le HTML sauvegardé.
+   * Pendant la frappe (Entrée), syncDom=false pour ne pas sauter le curseur.
+   */
+  private emitValue(syncDom = false): void {
     const el = this.editorRef?.nativeElement;
     if (!el) return;
     const sanitized = sanitizeRichHtml(el.innerHTML);
+    if (syncDom && sanitized !== el.innerHTML) {
+      el.innerHTML = sanitized;
+    }
     el.dataset['placeholder'] = sanitized ? 'false' : 'true';
     this.onChange(sanitized);
   }
