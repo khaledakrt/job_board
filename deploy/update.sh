@@ -15,7 +15,7 @@ git pull
 echo ">>> Backend"
 cd backend
 npm ci --omit=dev
-npm run db:migrate 2>/dev/null || true
+npm run db:migrate
 
 echo ">>> Frontend"
 cd ../frontend

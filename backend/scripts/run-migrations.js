@@ -13,6 +13,40 @@ const {
   DB_PASSWORD = '',
 } = process.env;
 
+const DUPLICATE_PATTERNS = [
+  /duplicate column/i,
+  /duplicate key name/i,
+  /already exists/i,
+  /duplicate entry/i,
+];
+
+function isBenignMigrationError(err) {
+  const msg = err?.message || String(err);
+  return DUPLICATE_PATTERNS.some((re) => re.test(msg));
+}
+
+async function ensureMigrationsTable(conn) {
+  await conn.query(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      name VARCHAR(255) NOT NULL,
+      applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+}
+
+async function isMigrationApplied(conn, name) {
+  const [rows] = await conn.query(
+    'SELECT 1 FROM schema_migrations WHERE name = ? LIMIT 1',
+    [name]
+  );
+  return rows.length > 0;
+}
+
+async function markMigrationApplied(conn, name) {
+  await conn.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
+}
+
 async function main() {
   const migrationsDir = path.join(__dirname, '..', 'migrations');
   const files = fs
@@ -29,14 +63,34 @@ async function main() {
     multipleStatements: true,
   });
 
+  await ensureMigrationsTable(conn);
+
   for (const file of files) {
+    if (await isMigrationApplied(conn, file)) {
+      console.log(`Skip ${file} (already applied)`);
+      continue;
+    }
+
     console.log(`Applying ${file}...`);
     const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
-    await conn.query(sql);
+
+    try {
+      await conn.query(sql);
+      await markMigrationApplied(conn, file);
+      console.log(`OK ${file}`);
+    } catch (err) {
+      if (isBenignMigrationError(err)) {
+        console.warn(`WARN ${file}: ${err.message} (marked as applied)`);
+        await markMigrationApplied(conn, file);
+        continue;
+      }
+      console.error(`FAILED ${file}:`, err.message);
+      process.exit(1);
+    }
   }
 
   await conn.end();
-  console.log('All migrations applied.');
+  console.log('Migrations complete.');
 }
 
 main().catch((err) => {

@@ -170,16 +170,31 @@ async function listUsers(query = {}) {
   };
 }
 
+const CANDIDATE_PROFILE_ADMIN_ATTRS = [
+  'id',
+  'user_id',
+  'first_name',
+  'last_name',
+  'phone',
+  'professional_title',
+];
+
 async function getUserById(userId) {
   const user = await User.findByPk(userId, {
     attributes: {
       exclude: ['password_hash', 'reset_token', 'reset_expires'],
     },
     include: [
-      { model: CandidateProfile, as: 'candidateProfile', required: false },
+      {
+        model: CandidateProfile,
+        as: 'candidateProfile',
+        attributes: CANDIDATE_PROFILE_ADMIN_ATTRS,
+        required: false,
+      },
       {
         model: RecruiterProfile,
         as: 'recruiterProfile',
+        attributes: ['id', 'company_id', 'job_title'],
         required: false,
         include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
       },
