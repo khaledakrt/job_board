@@ -6,11 +6,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { RegisterRole } from '../../../core/constants/roles.constant';
 import { passwordStrengthValidator } from '../../../shared/validators/password.validators';
+import { PublicShellComponent } from '../../public/shared/public-shell.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })

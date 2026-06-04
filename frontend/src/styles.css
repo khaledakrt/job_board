@@ -28,7 +28,7 @@
 
 @layer components {
   .auth-shell {
-    @apply min-h-screen bg-gradient-to-br from-brand-50 via-surface-50 to-accent-50;
+    @apply flex flex-1 flex-col items-center justify-center bg-gradient-to-br from-brand-50 via-surface-50 to-accent-50 px-4 py-10;
   }
 
   .auth-card {

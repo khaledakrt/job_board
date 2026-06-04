@@ -5,11 +5,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { passwordStrengthValidator } from '../../../shared/validators/password.validators';
+import { PublicShellComponent } from '../../public/shared/public-shell.component';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.css',
 })
