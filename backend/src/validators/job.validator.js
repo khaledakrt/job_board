@@ -25,6 +25,49 @@ const quizSchema = z.object({
   questions: z.array(quizQuestionSchema).length(2),
 });
 
+/**
+ * Nettoie tags / langues / avantages (skills) : ignore entrées vides,
+ * convertit en chaînes, limite la longueur et le nombre d’éléments.
+ */
+function cleanStringList(val, { maxItems, maxLen }) {
+  if (val == null) return null;
+
+  let list = val;
+  if (!Array.isArray(list)) {
+    if (typeof list === 'string') {
+      const trimmed = list.trim();
+      if (!trimmed) return null;
+      try {
+        const parsed = JSON.parse(trimmed);
+        list = Array.isArray(parsed) ? parsed : [trimmed];
+      } catch {
+        list = trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    } else {
+      return null;
+    }
+  }
+
+  const cleaned = [];
+  for (const item of list) {
+    const s = String(item ?? '').trim().slice(0, maxLen);
+    if (!s) continue;
+    cleaned.push(s);
+    if (cleaned.length >= maxItems) break;
+  }
+
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+function stringListSchema(maxItems, maxLen) {
+  return z.preprocess(
+    (val) => cleanStringList(val, { maxItems, maxLen }),
+    z
+      .union([z.array(z.string().min(1).max(maxLen)).max(maxItems), z.null()])
+      .optional()
+  );
+}
+
 const jobBodySchema = z.object({
   title: z.string().trim().min(3).max(255),
   description: z
@@ -35,9 +78,9 @@ const jobBodySchema = z.object({
       message: 'Description must be at least 20 characters',
     }),
   requirements: z.string().trim().optional().nullable(),
-  tags: z.array(z.string().trim().min(1).max(50)).max(20).optional().nullable(),
-  languages: z.array(z.string().trim().min(1).max(50)).max(15).optional().nullable(),
-  benefits: z.array(z.string().trim().min(1).max(80)).max(20).optional().nullable(),
+  tags: stringListSchema(20, 50),
+  languages: stringListSchema(15, 50),
+  benefits: stringListSchema(20, 80),
   experienceYears: z.preprocess(
     (val) => (val === '' || val === null || val === undefined ? null : val),
     z.coerce.number().int().min(0).max(50).nullable().optional()
@@ -95,9 +138,9 @@ const generateQuizSchema = z
       .optional()
       .nullable()
       .transform((v) => (v === '' ? null : v)),
-    tags: z.array(z.string().trim().min(1).max(50)).max(20).optional().nullable(),
-    languages: z.array(z.string().trim().min(1).max(50)).max(15).optional().nullable(),
-    benefits: z.array(z.string().trim().min(1).max(80)).max(20).optional().nullable(),
+    tags: stringListSchema(20, 50),
+    languages: stringListSchema(15, 50),
+    benefits: stringListSchema(20, 80),
   })
   .transform((data) => ({
     title: data.title.length >= 1 ? data.title : 'Offre d\'emploi',

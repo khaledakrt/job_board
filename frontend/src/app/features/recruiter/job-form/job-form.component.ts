@@ -56,6 +56,10 @@ import {
   toDateInputValue,
 
 } from '../../../core/utils/job-expiration.util';
+import {
+  normalizeStringList,
+  toNullableStringList,
+} from '../../../core/utils/string-list.util';
 
 
 
@@ -235,10 +239,10 @@ export class JobFormComponent implements OnInit {
 
         }
 
-        this.tags.set(job.tags || []);
+        this.tags.set(normalizeStringList(job.tags));
 
-        this.languages.set(job.languages || []);
-        this.benefits.set(job.benefits || []);
+        this.languages.set(normalizeStringList(job.languages));
+        this.benefits.set(normalizeStringList(job.benefits));
 
         this.quizEnabled.set(Boolean(job.quizEnabled));
         if (job.quiz?.questions?.length) {
@@ -399,7 +403,7 @@ export class JobFormComponent implements OnInit {
   }
 
   addBenefit(): void {
-    this.addToList(this.benefitInput, this.benefits, MAX_BENEFITS);
+    this.addToList(this.benefitInput, this.benefits, MAX_BENEFITS, 80);
   }
 
   onBenefitKeydown(event: KeyboardEvent): void {
@@ -422,7 +426,8 @@ export class JobFormComponent implements OnInit {
     } | null;
     const details = body?.errors
       ?.map((e) => {
-        const field = e.field ? `${e.field}: ` : '';
+        const label = e.field === 'tags' ? 'Compétences' : e.field === 'languages' ? 'Langues' : e.field;
+        const field = label ? `${label}: ` : '';
         return `${field}${e.message ?? ''}`;
       })
       .filter(Boolean);
@@ -445,27 +450,17 @@ export class JobFormComponent implements OnInit {
   }
 
   private addToList(
-
     input: ReturnType<typeof signal<string>>,
-
     list: ReturnType<typeof signal<string[]>>,
-
-    max: number
-
+    max: number,
+    maxItemLength = 50
   ): void {
-
-    const value = input().trim();
-
+    const value = input().trim().slice(0, maxItemLength);
     if (!value) return;
-
     if (list().includes(value)) return;
-
     if (list().length >= max) return;
-
     list.update((items) => [...items, value]);
-
     input.set('');
-
   }
 
 
@@ -526,11 +521,11 @@ export class JobFormComponent implements OnInit {
 
       experienceYears,
 
-      tags: this.tags(),
+      tags: toNullableStringList(this.tags()),
 
-      languages: this.languages(),
+      languages: toNullableStringList(this.languages()),
 
-      benefits: this.benefits().length ? this.benefits() : null,
+      benefits: toNullableStringList(this.benefits()),
 
       ...(this.isExpiredJob()
 
