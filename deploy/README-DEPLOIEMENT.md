@@ -19,7 +19,7 @@ Dépôt : [github.com/khaledakrt/job_board](https://github.com/khaledakrt/job_bo
 | 8b | `scripts/08-nginx-standalone.sh` | Nginx classique (sans aaPanel) |
 
 **Tout-en-un :** `deploy/deploy.sh`  
-**Mise à jour :** `deploy/update.sh`
+**Mise à jour :** `deploy/update.sh` — scripts complémentaires : voir `deploy/README-UPDATES.md`
 
 ---
 
@@ -273,10 +273,12 @@ Puis dans le navigateur : **http://5.189.190.131/**
 
 | Vous avez modifié… | Action prod |
 |--------------------|-------------|
-| Frontend seulement | `update.sh` suffit |
-| Backend seulement | `update.sh` (ou `git pull` + `cd backend && npm ci` + `pm2 restart jobboard-api`) |
+| Frontend seulement | `update.sh` suffit, ou `update-frontend-only.sh` |
+| Backend seulement | `update.sh` suffit, ou `update-backend-only.sh` |
 | Nouvelles tables / migrations SQL | `update.sh` lance `db:migrate` automatiquement |
-| Variables `.env` (SMTP, URL…) | Éditer **sur la VM** : `nano backend/.env` puis `pm2 restart jobboard-api` (pas dans git) |
+| Variables `.env` (SMTP, URL…) | `nano backend/.env` puis `update-env-restart.sh` |
+| Config Nginx (aaPanel) | `update.sh` puis `SKIP_GIT_PULL=1 sudo -E bash deploy/update-nginx.sh` |
+| Script custom futur | Copier `update_exemple.sh` → voir `README-UPDATES.md` |
 | Seed / données de test | **Ne pas** relancer `db:seed` en prod si la base a déjà des vrais utilisateurs |
 
 ### Schéma du flux
@@ -350,7 +352,14 @@ deploy/
 ├── README-DEPLOIEMENT.md          ← ce guide
 ├── DEPLOIEMENT-VM-ETAPE-PAR-ETAPE.txt
 ├── deploy.sh                      ← installation complète
-├── update.sh                      ← mise à jour
+├── update.sh                      ← mise à jour standard (ne pas modifier)
+├── update_exemple.sh              ← modèle scripts complémentaires
+├── update-env-restart.sh
+├── update-frontend-only.sh
+├── update-backend-only.sh
+├── update-nginx.sh
+├── README-UPDATES.md              ← quand utiliser chaque script
+├── lib/update-common.sh
 ├── env.production.example
 ├── pm2.ecosystem.config.cjs
 ├── nginx-aapanel.conf.template

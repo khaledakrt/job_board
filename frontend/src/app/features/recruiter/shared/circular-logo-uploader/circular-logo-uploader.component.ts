@@ -7,6 +7,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { resolveUploadUrl } from '../../../../core/utils/asset-url.util';
 
 @Component({
   selector: 'app-circular-logo-uploader',
@@ -27,7 +28,11 @@ export class CircularLogoUploaderComponent {
   readonly dragOver = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  readonly displayUrl = computed(() => this.previewUrl() || this.currentLogoUrl());
+  readonly displayUrl = computed(() => {
+    const preview = this.previewUrl();
+    if (preview) return preview;
+    return resolveUploadUrl(this.currentLogoUrl());
+  });
 
   openPicker(): void {
     if (this.disabled()) {

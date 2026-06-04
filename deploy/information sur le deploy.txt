@@ -1,0 +1,59 @@
+Les changements de base (nouvelles tables, colonnes, index, etc.) passent par les migrations SQL, pas par un script dédié « tables ». Les scripts de déploiement se contentent de les exécuter.
+
+Ce qui applique les migrations en prod
+Script	Lance db:migrate ?
+deploy/update.sh
+Oui (cas le plus courant)
+deploy/update-backend-only.sh
+Oui (si vous ne voulez pas rebuild le frontend)
+deploy/update-frontend-only.sh
+Non
+deploy/update-env-restart.sh
+Non
+deploy/update_exemple.sh
+Non (modèle vide par défaut)
+En pratique : après un git push qui contient de nouveaux fichiers dans backend/migrations/, sur la VM :
+
+cd /var/www/jobboard
+sudo bash deploy/update.sh
+C’est suffisant : le script fait git pull, puis dans backend :
+
+npm run db:migrate   # → node scripts/run-migrations.js
+Si seul le backend / la BDD a changé (pas Angular) :
+
+sudo bash deploy/update-backend-only.sh
+Ce que vous faites en développement (PC)
+Créer un fichier SQL numéroté dans backend/migrations/, par exemple :
+
+013_mon_changement.sql
+Nom suivant le dernier (actuellement 012_...).
+Y mettre le SQL (CREATE TABLE, ALTER TABLE, etc.).
+
+Tester en local :
+
+cd d:\khaled\Cursor\backend
+npm run db:migrate
+Commit + push (le fichier .sql doit être dans git).
+
+Sur la VM : sudo bash deploy/update.sh.
+
+Le runner lit tous les .sql par ordre alphabétique, enregistre ceux déjà faits dans schema_migrations, et n’applique que les nouveaux.
+
+Schéma simple
+PC : backend/migrations/013_xxx.sql
+  → git push
+VM : update.sh
+  → git pull
+  → npm run db:migrate  (applique 013_xxx.sql une seule fois)
+  → build frontend + restart API
+
+
+Si la migration échoue sur la VM
+update.sh s’arrête (set -e) : le build frontend ne part pas tant que la migration n’est pas OK.
+
+Vérifier :
+
+
+cd /var/www/jobboard/backend
+npm run db:migrate
+# lire l’erreur SQL
