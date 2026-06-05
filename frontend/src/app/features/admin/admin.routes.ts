@@ -33,6 +33,87 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./jobs-list/jobs-list.component').then((m) => m.JobsListComponent),
       },
+      {
+        path: 'training-centers',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./catalog-moderation/admin-catalog-moderation.component').then(
+                (m) => m.AdminCatalogModerationComponent
+              ),
+            data: { kind: 'training-centers' },
+          },
+          {
+            path: 'new',
+            loadComponent: () =>
+              import('./catalog-moderation/admin-catalog-form.component').then(
+                (m) => m.AdminCatalogFormComponent
+              ),
+            data: { kind: 'training-centers' },
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./catalog-moderation/admin-catalog-detail.component').then(
+                (m) => m.AdminCatalogDetailComponent
+              ),
+            data: { kind: 'training-centers' },
+          },
+        ],
+      },
+      {
+        path: 'training-formations',
+        loadComponent: () =>
+          import('./offerings-moderation/admin-offerings-moderation.component').then(
+            (m) => m.AdminOfferingsModerationComponent
+          ),
+        data: { kind: 'formations' },
+      },
+      {
+        path: 'training-events',
+        loadComponent: () =>
+          import('./offerings-moderation/admin-offerings-moderation.component').then(
+            (m) => m.AdminOfferingsModerationComponent
+          ),
+        data: { kind: 'events' },
+      },
+      {
+        path: 'private-institutions',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./catalog-moderation/admin-catalog-moderation.component').then(
+                (m) => m.AdminCatalogModerationComponent
+              ),
+            data: { kind: 'private-institutions' },
+          },
+          {
+            path: 'new',
+            loadComponent: () =>
+              import('./catalog-moderation/admin-catalog-form.component').then(
+                (m) => m.AdminCatalogFormComponent
+              ),
+            data: { kind: 'private-institutions' },
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./catalog-moderation/admin-catalog-detail.component').then(
+                (m) => m.AdminCatalogDetailComponent
+              ),
+            data: { kind: 'private-institutions' },
+          },
+        ],
+      },
+      {
+        path: 'private-institution-offerings',
+        loadComponent: () =>
+          import('./institution-offerings-moderation/admin-institution-offerings-moderation.component').then(
+            (m) => m.AdminInstitutionOfferingsModerationComponent
+          ),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },

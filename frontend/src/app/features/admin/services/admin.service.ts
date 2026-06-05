@@ -5,14 +5,18 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { PaginationMeta } from '../../../core/models/pagination.model';
 import {
+  AdminCatalogDetail,
+  AdminCatalogListItem,
   AdminJobListItem,
   AdminStats,
   AdminUserDetail,
   AdminUserListItem,
+  CatalogPublishStatus,
   CreateAdminUserRequest,
   LoginEvent,
   UpdateAdminUserRequest,
 } from '../../../core/models/admin.model';
+import { InstitutionOfferingItem, TrainingEventType } from '../../../core/models/catalog.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -88,4 +92,167 @@ export class AdminService {
   deleteJob(id: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.base}/jobs/${id}`);
   }
+
+  listTrainingCenters(params: Record<string, string | number>): Observable<
+    ApiResponse<AdminCatalogListItem[]> & { pagination: PaginationMeta }
+  > {
+    return this.http.get<ApiResponse<AdminCatalogListItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/training-centers`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
+    );
+  }
+
+  getTrainingCenter(id: string): Observable<ApiResponse<AdminCatalogDetail>> {
+    return this.http.get<ApiResponse<AdminCatalogDetail>>(`${this.base}/training-centers/${id}`);
+  }
+
+  createTrainingCenter(body: Record<string, unknown>): Observable<ApiResponse<AdminCatalogDetail>> {
+    return this.http.post<ApiResponse<AdminCatalogDetail>>(`${this.base}/training-centers`, body);
+  }
+
+  updateTrainingCenter(
+    id: string,
+    body: Record<string, unknown>
+  ): Observable<ApiResponse<AdminCatalogDetail>> {
+    return this.http.patch<ApiResponse<AdminCatalogDetail>>(
+      `${this.base}/training-centers/${id}`,
+      body
+    );
+  }
+
+  setTrainingCenterStatus(
+    id: string,
+    status: CatalogPublishStatus
+  ): Observable<ApiResponse<{ id: string; status: string }>> {
+    return this.http.patch<ApiResponse<{ id: string; status: string }>>(
+      `${this.base}/training-centers/${id}/status`,
+      { status }
+    );
+  }
+
+  listPrivateInstitutions(params: Record<string, string | number>): Observable<
+    ApiResponse<AdminCatalogListItem[]> & { pagination: PaginationMeta }
+  > {
+    return this.http.get<ApiResponse<AdminCatalogListItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/private-institutions`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
+    );
+  }
+
+  getPrivateInstitution(id: string): Observable<ApiResponse<AdminCatalogDetail>> {
+    return this.http.get<ApiResponse<AdminCatalogDetail>>(
+      `${this.base}/private-institutions/${id}`
+    );
+  }
+
+  createPrivateInstitution(
+    body: Record<string, unknown>
+  ): Observable<ApiResponse<AdminCatalogDetail>> {
+    return this.http.post<ApiResponse<AdminCatalogDetail>>(
+      `${this.base}/private-institutions`,
+      body
+    );
+  }
+
+  updatePrivateInstitution(
+    id: string,
+    body: Record<string, unknown>
+  ): Observable<ApiResponse<AdminCatalogDetail>> {
+    return this.http.patch<ApiResponse<AdminCatalogDetail>>(
+      `${this.base}/private-institutions/${id}`,
+      body
+    );
+  }
+
+  setPrivateInstitutionStatus(
+    id: string,
+    status: CatalogPublishStatus
+  ): Observable<ApiResponse<{ id: string; status: string }>> {
+    return this.http.patch<ApiResponse<{ id: string; status: string }>>(
+      `${this.base}/private-institutions/${id}/status`,
+      { status }
+    );
+  }
+
+  listTrainingFormations(params: Record<string, string | number>): Observable<
+    ApiResponse<AdminOfferingItem[]> & { pagination: PaginationMeta }
+  > {
+    return this.http.get<ApiResponse<AdminOfferingItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/training-formations`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
+    );
+  }
+
+  setTrainingFormationStatus(
+    id: string,
+    status: CatalogPublishStatus,
+    adminNote?: string | null
+  ): Observable<ApiResponse<AdminOfferingItem>> {
+    return this.http.patch<ApiResponse<AdminOfferingItem>>(
+      `${this.base}/training-formations/${id}/status`,
+      { status, adminNote: adminNote ?? null }
+    );
+  }
+
+  listTrainingEvents(params: Record<string, string | number>): Observable<
+    ApiResponse<AdminOfferingItem[]> & { pagination: PaginationMeta }
+  > {
+    return this.http.get<ApiResponse<AdminOfferingItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/training-events`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
+    );
+  }
+
+  setTrainingEventStatus(
+    id: string,
+    status: CatalogPublishStatus,
+    adminNote?: string | null
+  ): Observable<ApiResponse<AdminOfferingItem>> {
+    return this.http.patch<ApiResponse<AdminOfferingItem>>(
+      `${this.base}/training-events/${id}/status`,
+      { status, adminNote: adminNote ?? null }
+    );
+  }
+
+  setInstitutionOfferingStatus(
+    id: string,
+    status: CatalogPublishStatus,
+    adminNote?: string | null
+  ): Observable<ApiResponse<InstitutionOfferingItem>> {
+    return this.http.patch<ApiResponse<InstitutionOfferingItem>>(
+      `${this.base}/private-institution-offerings/${id}/status`,
+      { status, adminNote: adminNote ?? null }
+    );
+  }
+
+  listInstitutionOfferings(params: Record<string, string | number>): Observable<
+    ApiResponse<(InstitutionOfferingItem & { institution?: { id: string; name: string; status: string } | null })[]> & {
+      pagination: PaginationMeta;
+    }
+  > {
+    return this.http.get<
+      ApiResponse<(InstitutionOfferingItem & { institution?: { id: string; name: string; status: string } | null })[]> & {
+        pagination: PaginationMeta;
+      }
+    >(`${this.base}/private-institution-offerings`, {
+      params: new HttpParams({ fromObject: params as Record<string, string> }),
+    });
+  }
+}
+
+export interface AdminOfferingItem {
+  id: string;
+  centerId?: string;
+  centerName?: string | null;
+  title: string;
+  status: CatalogPublishStatus;
+  city?: string | null;
+  category?: string | null;
+  eventType?: TrainingEventType;
+  startDate?: string | null;
+  endDate?: string | null;
+  eventDate?: string | null;
+  startTime?: string | null;
+  price?: number | null;
+  createdAt?: string;
 }

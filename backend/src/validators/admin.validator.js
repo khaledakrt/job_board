@@ -64,6 +64,85 @@ const updateJobStatusBodySchema = z.object({
   status: z.enum(Object.values(JOB_STATUS)),
 });
 
+const listCatalogQuerySchema = z.object({
+  page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
+  status: z.enum(['pending', 'published', 'rejected']).optional(),
+  search: z.string().max(255).optional(),
+});
+
+const listInstitutionOfferingsQuerySchema = z.object({
+  page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
+  status: z.enum(['draft', 'pending', 'published', 'rejected']).optional(),
+  type: z.enum(['program', 'event', 'announcement', 'opportunity']).optional(),
+  search: z.string().max(255).optional(),
+  institutionSearch: z.string().max(255).optional(),
+});
+
+const catalogIdParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const { TRAINING_DELIVERY_MODES, INSTITUTION_TYPES, CATALOG_PUBLISH_STATUS } = require('../config/constants');
+
+function emptyToNull(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  return value;
+}
+
+const optionalUrl = z.preprocess(
+  emptyToNull,
+  z
+    .string()
+    .max(512)
+    .nullable()
+    .optional()
+    .refine((val) => val === null || /^https?:\/\/.+/i.test(val), 'URL invalide (https://)')
+);
+
+const optionalEmail = z.preprocess(
+  emptyToNull,
+  z.string().email('E-mail invalide').max(255).nullable().optional()
+);
+
+const catalogStatusSchema = z.enum([
+  CATALOG_PUBLISH_STATUS.PENDING,
+  CATALOG_PUBLISH_STATUS.PUBLISHED,
+  CATALOG_PUBLISH_STATUS.REJECTED,
+]);
+
+const adminCreateTrainingCenterSchema = z.object({
+  name: z.string().trim().min(2).max(255),
+  description: z.preprocess(emptyToNull, z.string().trim().max(20000).nullable().optional()),
+  city: z.preprocess(emptyToNull, z.string().trim().max(128).nullable().optional()),
+  address: z.preprocess(emptyToNull, z.string().trim().max(512).nullable().optional()),
+  phone: z.preprocess(emptyToNull, z.string().trim().max(64).nullable().optional()),
+  email: optionalEmail,
+  website: optionalUrl,
+  trainingDomain: z.preprocess(emptyToNull, z.string().trim().max(128).nullable().optional()),
+  deliveryMode: z.enum(TRAINING_DELIVERY_MODES).optional(),
+  status: catalogStatusSchema.optional().default(CATALOG_PUBLISH_STATUS.PUBLISHED),
+});
+
+const adminUpdateTrainingCenterSchema = adminCreateTrainingCenterSchema.partial();
+
+const adminCreatePrivateInstitutionSchema = z.object({
+  name: z.string().trim().min(2).max(255),
+  institutionType: z.enum(INSTITUTION_TYPES),
+  description: z.preprocess(emptyToNull, z.string().trim().max(20000).nullable().optional()),
+  city: z.preprocess(emptyToNull, z.string().trim().max(128).nullable().optional()),
+  address: z.preprocess(emptyToNull, z.string().trim().max(512).nullable().optional()),
+  phone: z.preprocess(emptyToNull, z.string().trim().max(64).nullable().optional()),
+  email: optionalEmail,
+  website: optionalUrl,
+  mapUrl: optionalUrl,
+  status: catalogStatusSchema.optional().default(CATALOG_PUBLISH_STATUS.PUBLISHED),
+});
+
+const adminUpdatePrivateInstitutionSchema = adminCreatePrivateInstitutionSchema.partial();
+
 module.exports = {
   listUsersQuerySchema,
   listJobsQuerySchema,
@@ -74,4 +153,11 @@ module.exports = {
   setPasswordBodySchema,
   banUserBodySchema,
   updateJobStatusBodySchema,
+  listCatalogQuerySchema,
+  listInstitutionOfferingsQuerySchema,
+  catalogIdParamsSchema,
+  adminCreateTrainingCenterSchema,
+  adminUpdateTrainingCenterSchema,
+  adminCreatePrivateInstitutionSchema,
+  adminUpdatePrivateInstitutionSchema,
 };

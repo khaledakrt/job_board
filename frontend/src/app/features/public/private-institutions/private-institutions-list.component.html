@@ -1,0 +1,102 @@
+<app-public-shell>
+  <main class="catalog-page-main catalog-page-main--institution">
+    <div class="catalog-page-inner">
+      <app-catalog-page-header
+        theme="institution"
+        title="Établissements privés"
+        subtitle="Écoles, collèges, lycées, instituts et universités privés."
+        breadcrumbLabel="Établissements privés"
+        [listRoute]="routes.PUBLIC.PRIVATE_INSTITUTIONS"
+        [registerRoute]="routes.PUBLIC.PRIVATE_INSTITUTION_REGISTER"
+        registerLabel="Inscrire mon établissement"
+        loginHint="Connexion espace établissement"
+        [showActions]="!authService.isAuthenticated()"
+      />
+
+      <section class="catalog-filters" aria-label="Filtres de recherche">
+        <p class="catalog-filters-title">Rechercher un établissement</p>
+        <div class="catalog-filters-grid catalog-filters-grid--institution">
+          <div>
+            <label class="catalog-label" for="pi-search">Mot-clé</label>
+            <input id="pi-search" class="catalog-input" [(ngModel)]="search" placeholder="Nom de l'établissement…" />
+          </div>
+          <div>
+            <label class="catalog-label" for="pi-city">Ville</label>
+            <input id="pi-city" class="catalog-input" [(ngModel)]="city" placeholder="Ex. Tunis" />
+          </div>
+          <div>
+            <label class="catalog-label" for="pi-type">Type</label>
+            <select id="pi-type" class="catalog-select" [(ngModel)]="type">
+              @for (opt of typeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="catalog-filters-actions">
+            <button type="button" class="catalog-btn catalog-btn--primary" (click)="load()">Rechercher</button>
+          </div>
+        </div>
+      </section>
+
+      @if (loading()) {
+        <div class="catalog-state">
+          <p class="catalog-state-icon">⏳</p>
+          <p class="catalog-state-title">Chargement…</p>
+        </div>
+      } @else if (error()) {
+        <div class="catalog-state catalog-state-error">
+          <p class="catalog-state-title">{{ error() }}</p>
+        </div>
+      } @else if (!items().length) {
+        <div class="catalog-state">
+          <p class="catalog-state-icon">🏫</p>
+          <p class="catalog-state-title">Aucun établissement publié</p>
+          <p>Revenez plus tard.</p>
+          @if (!authService.isAuthenticated()) {
+            <div class="catalog-state-actions">
+              <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION_REGISTER" class="catalog-btn catalog-btn--primary">
+                Inscrire mon établissement
+              </a>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="catalog-toolbar">
+          <p class="catalog-toolbar-count"><strong>{{ total() }}</strong> établissement(s) trouvé(s)</p>
+        </div>
+        <div class="catalog-grid">
+          @for (item of items(); track item.id) {
+            <a
+              [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION(item.id)"
+              class="catalog-card catalog-card--link"
+              [attr.aria-label]="'Voir la fiche de ' + item.name"
+            >
+              <div class="catalog-card-body">
+                @if (logoUrl(item.logoUrl); as src) {
+                  <img [src]="src" alt="" class="catalog-card-logo" />
+                } @else {
+                  <div class="catalog-card-logo catalog-card-logo-placeholder">EP</div>
+                }
+                <h2>{{ item.name }}</h2>
+                <div class="catalog-card-tags">
+                  <span class="catalog-tag">{{ institutionTypeLabel(item.institutionType) }}</span>
+                  @if (item.city) {
+                    <span class="catalog-tag">{{ item.city }}</span>
+                  }
+                </div>
+                @if (item.shortDescription) {
+                  <p class="catalog-card-desc">{{ item.shortDescription }}</p>
+                }
+              </div>
+              <div class="catalog-card-footer">
+                <span class="catalog-btn catalog-btn--primary catalog-btn--block">
+                  Voir la fiche
+                </span>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </main>
+</app-public-shell>

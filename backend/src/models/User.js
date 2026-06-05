@@ -23,7 +23,13 @@ User.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM(USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER, USER_ROLES.ADMIN),
+      type: DataTypes.ENUM(
+        USER_ROLES.CANDIDATE,
+        USER_ROLES.RECRUITER,
+        USER_ROLES.ADMIN,
+        USER_ROLES.TRAINING_PROVIDER,
+        USER_ROLES.INSTITUTION_PROVIDER
+      ),
       allowNull: false,
       defaultValue: USER_ROLES.CANDIDATE,
     },

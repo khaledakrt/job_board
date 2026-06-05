@@ -1,0 +1,123 @@
+<app-public-shell>
+  <main class="catalog-page-main">
+    <div class="catalog-page-inner">
+      <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS" class="landing-btn landing-btn-ghost">← Retour</a>
+      <div class="catalog-form-panel" style="margin-top: 1rem">
+        <h1 style="margin-top: 0">Présenter votre établissement privé</h1>
+        <p class="catalog-card-meta">
+          Remplissez une fiche professionnelle. La publication sera visible après validation administrateur.
+        </p>
+
+        @if (success()) {
+          <div class="catalog-success" style="margin: 1rem 0">{{ success() }}</div>
+        }
+        @if (error()) {
+          <p style="color: #b91c1c">{{ error() }}</p>
+        }
+
+        <form (ngSubmit)="submit()">
+          <div class="catalog-form-row">
+            <label>Nom officiel de l’établissement *</label>
+            <input class="catalog-input" [(ngModel)]="name" name="name" required placeholder="Ex. Institut privé Horizon" />
+          </div>
+          <div class="catalog-form-row">
+            <label>Type d’établissement *</label>
+            <select class="catalog-select" [(ngModel)]="institutionType" name="institutionType" required>
+              @for (opt of typeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="catalog-form-row">
+            <label>Lien du logo</label>
+            <input class="catalog-input" [(ngModel)]="logoUrl" name="logoUrl" placeholder="https://..." />
+          </div>
+          <div class="catalog-form-row">
+            <label>Présentation de l’établissement *</label>
+            <textarea
+              class="catalog-input"
+              rows="5"
+              [(ngModel)]="description"
+              name="description"
+              required
+              placeholder="Présentez vos niveaux, valeurs, points forts, conditions d’admission et services proposés."
+            ></textarea>
+          </div>
+          <div class="catalog-form-row">
+            <label>Adresse complète</label>
+            <input class="catalog-input" [(ngModel)]="address" name="address" placeholder="Rue, quartier, gouvernorat" />
+          </div>
+          <div class="catalog-form-row">
+            <label>Ville</label>
+            <input class="catalog-input" [(ngModel)]="city" name="city" />
+          </div>
+          <div class="catalog-form-row">
+            <label>Téléphone</label>
+            <input class="catalog-input" [(ngModel)]="phone" name="phone" />
+          </div>
+          <div class="catalog-form-row">
+            <label>E-mail de contact</label>
+            <input class="catalog-input" type="email" [(ngModel)]="email" name="email" placeholder="contact@etablissement.tn" />
+          </div>
+          <div class="catalog-form-row">
+            <label>Site web</label>
+            <input class="catalog-input" [(ngModel)]="website" name="website" placeholder="https://..." />
+          </div>
+          <div class="catalog-form-row">
+            <label>Lien Google Maps</label>
+            <input class="catalog-input" [(ngModel)]="mapUrl" name="mapUrl" placeholder="https://maps.google.com/…" />
+          </div>
+          <div class="catalog-form-row">
+            <label>Photos de l’établissement (un lien par ligne)</label>
+            <textarea class="catalog-input" rows="3" [(ngModel)]="photoUrlsText" name="photoUrlsText" placeholder="https://..."></textarea>
+          </div>
+          <div class="catalog-form-row">
+            <label>Réseaux sociaux (un lien par ligne)</label>
+            <textarea class="catalog-input" rows="2" [(ngModel)]="socialLinksText" name="socialLinksText" placeholder="Facebook, LinkedIn, Instagram..."></textarea>
+          </div>
+
+          <h2>Programmes et filières *</h2>
+          @for (prog of programs; track $index) {
+            <div class="catalog-repeat-block">
+              <div class="catalog-form-row">
+                <label>Nom du programme / filière</label>
+                <input class="catalog-input" [(ngModel)]="prog.title" [name]="'pt' + $index" required placeholder="Ex. Baccalauréat sciences, BTS informatique..." />
+              </div>
+              <div class="catalog-form-row">
+                <label>Description courte</label>
+                <textarea class="catalog-input" rows="2" [(ngModel)]="prog.description" [name]="'pd' + $index" placeholder="Durée, objectifs, conditions d’accès..."></textarea>
+              </div>
+              @if (programs.length > 1) {
+                <button type="button" class="landing-btn landing-btn-ghost" (click)="removeProgram($index)">Retirer</button>
+              }
+            </div>
+          }
+          <button type="button" class="landing-btn landing-btn-ghost" (click)="addProgram()">+ Programme</button>
+
+          <p style="margin-top: 1.25rem">
+            <button type="submit" class="landing-btn landing-btn-primary" [disabled]="submitting()">
+              {{ submitting() ? 'Envoi…' : 'Envoyer pour validation' }}
+            </button>
+          </p>
+        </form>
+
+        @if (confirmOpen()) {
+          <div class="catalog-confirm-backdrop" role="presentation">
+            <section class="catalog-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="publish-institution-confirm">
+              <h2 id="publish-institution-confirm">Confirmer l’envoi en validation</h2>
+              <p>
+                Votre fiche établissement sera transmise à l’administrateur. Elle sera publiée après vérification des informations.
+              </p>
+              <div class="catalog-form-actions">
+                <button type="button" class="catalog-btn catalog-btn--outline" [disabled]="submitting()" (click)="closeConfirm()">Annuler</button>
+                <button type="button" class="catalog-btn catalog-btn--primary" [disabled]="submitting()" (click)="confirmSubmit()">
+                  {{ submitting() ? 'Envoi…' : 'Confirmer' }}
+                </button>
+              </div>
+            </section>
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+</app-public-shell>

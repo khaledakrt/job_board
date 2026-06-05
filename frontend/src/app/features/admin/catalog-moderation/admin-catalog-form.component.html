@@ -1,0 +1,97 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <a [routerLink]="listLink()"> / {{ breadcrumbTitle() }}</a>
+        <span> / Nouveau</span>
+      </p>
+      <h1>{{ title() }}</h1>
+      <p class="admin-page-subtitle">
+        Fiche créée par l’administrateur (sans compte prestataire). Publiée directement si le statut est « Publié ».
+      </p>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  }
+
+  <form class="admin-form-panel" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="admin-form-grid">
+      <div class="admin-field admin-field--full">
+        <label for="name">Nom *</label>
+        <input id="name" class="form-input" formControlName="name" />
+      </div>
+      @if (kind() === 'private-institutions') {
+        <div class="admin-field">
+          <label for="institutionType">Type *</label>
+          <select id="institutionType" class="form-input" formControlName="institutionType">
+            @for (t of institutionTypes; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+      }
+      <div class="admin-field">
+        <label for="status">Statut</label>
+        <select id="status" class="form-input" formControlName="status">
+          <option value="published">Publié</option>
+          <option value="pending">En attente</option>
+          <option value="rejected">Refusé</option>
+        </select>
+      </div>
+      <div class="admin-field">
+        <label for="city">Ville</label>
+        <input id="city" class="form-input" formControlName="city" />
+      </div>
+      <div class="admin-field admin-field--full">
+        <label for="address">Adresse</label>
+        <input id="address" class="form-input" formControlName="address" />
+      </div>
+      <div class="admin-field">
+        <label for="phone">Téléphone</label>
+        <input id="phone" class="form-input" formControlName="phone" />
+      </div>
+      <div class="admin-field">
+        <label for="email">E-mail contact</label>
+        <input id="email" type="email" class="form-input" formControlName="email" />
+      </div>
+      <div class="admin-field admin-field--full">
+        <label for="website">Site web</label>
+        <input id="website" class="form-input" formControlName="website" placeholder="https://…" />
+      </div>
+      @if (kind() === 'training-centers') {
+        <div class="admin-field">
+          <label for="trainingDomain">Domaine</label>
+          <input id="trainingDomain" class="form-input" formControlName="trainingDomain" />
+        </div>
+        <div class="admin-field">
+          <label for="deliveryMode">Mode</label>
+          <select id="deliveryMode" class="form-input" formControlName="deliveryMode">
+            <option value="">—</option>
+            @for (m of deliveryOptions; track m.value) {
+              <option [value]="m.value">{{ m.label }}</option>
+            }
+          </select>
+        </div>
+      } @else {
+        <div class="admin-field admin-field--full">
+          <label for="mapUrl">Lien Google Maps</label>
+          <input id="mapUrl" class="form-input" formControlName="mapUrl" placeholder="https://…" />
+        </div>
+      }
+      <div class="admin-field admin-field--full">
+        <label for="description">Description</label>
+        <textarea id="description" class="form-input" rows="5" formControlName="description"></textarea>
+      </div>
+    </div>
+
+    <div class="admin-form-actions">
+      <a [routerLink]="listLink()" class="admin-btn-ghost">Annuler</a>
+      <button type="submit" class="btn-primary !w-auto px-5" [disabled]="saving()">
+        {{ saving() ? 'Création…' : 'Créer' }}
+      </button>
+    </div>
+  </form>
+</div>

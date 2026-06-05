@@ -167,7 +167,45 @@
     </div>
   </section>
 
-  <section id="fonctionnalites" class="landing-section landing-section-alt">
+  <section id="formations" class="landing-section landing-section-alt">
+    <div class="landing-container">
+      <div class="landing-section-head">
+        <p class="landing-eyebrow">Formation & éducation</p>
+        <h2 class="landing-section-title">Centres de formation et établissements privés</h2>
+        <p class="landing-section-lead">
+          Publiez votre organisme, présentez vos programmes et soyez visible par les visiteurs du site.
+        </p>
+      </div>
+      <div class="landing-audience-cards">
+        <article class="landing-audience-card">
+          <h3>Centre de formation</h3>
+          <p>Liste des centres publiés, formations et brochures. Inscription soumise à validation admin.</p>
+          <div class="landing-section-cta landing-section-cta--compact">
+            <a [routerLink]="routes.PUBLIC.TRAINING_CENTERS" class="landing-btn landing-btn-primary"
+              >Voir les centres</a
+            >
+            <a [routerLink]="routes.PUBLIC.TRAINING_CENTER_REGISTER" class="landing-btn landing-btn-ghost"
+              >Inscrire mon centre</a
+            >
+          </div>
+        </article>
+        <article class="landing-audience-card landing-audience-card-recruiter">
+          <h3>Établissement privé</h3>
+          <p>Écoles, collèges, lycées et instituts : fiche publique avec programmes et coordonnées.</p>
+          <div class="landing-section-cta landing-section-cta--compact">
+            <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS" class="landing-btn landing-btn-accent"
+              >Voir les établissements</a
+            >
+            <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION_REGISTER" class="landing-btn landing-btn-ghost"
+              >Inscrire mon établissement</a
+            >
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="fonctionnalites" class="landing-section">
     <div class="landing-container">
       <div class="landing-section-head landing-section-head-center">
         <p class="landing-eyebrow">Pourquoi JobBoard</p>

@@ -1,0 +1,101 @@
+<app-public-shell>
+  <main class="catalog-page-main catalog-page-main--institution">
+    <div class="catalog-page-inner">
+      <nav class="catalog-breadcrumb" aria-label="Fil d'Ariane">
+        <a routerLink="/">Accueil</a>
+        <span aria-hidden="true">/</span>
+        <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS">Établissements privés</a>
+        @if (item()?.institution) {
+          <span aria-hidden="true">/</span>
+          <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION(item()!.institution!.id)">
+            {{ item()!.institution!.name }}
+          </a>
+        }
+        <span aria-hidden="true">/</span>
+        <span>{{ item()?.title || 'Publication' }}</span>
+      </nav>
+
+      <div class="catalog-detail-bar">
+        @if (item()?.institution) {
+          <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION(item()!.institution!.id)" class="catalog-btn catalog-btn--ghost">
+            ← Retour à l’établissement
+          </a>
+        } @else {
+          <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS" class="catalog-btn catalog-btn--ghost">
+            ← Retour aux établissements
+          </a>
+        }
+      </div>
+
+      @if (loading()) {
+        <div class="catalog-state">
+          <p class="catalog-state-title">Chargement…</p>
+        </div>
+      } @else if (error()) {
+        <div class="catalog-state catalog-state-error">
+          <p class="catalog-state-title">{{ error() }}</p>
+        </div>
+      } @else if (item()) {
+        <article class="catalog-detail-layout">
+          <div class="catalog-detail-panel">
+            <div class="catalog-card-tags">
+              <span class="catalog-tag">{{ typeLabel(item()!.offeringType) }}</span>
+              @if (item()!.category) {
+                <span class="catalog-tag">{{ item()!.category }}</span>
+              }
+              @if (item()!.opportunityType) {
+                <span class="catalog-tag">{{ opportunityLabel(item()!.opportunityType) }}</span>
+              }
+            </div>
+            <h1>{{ item()!.title }}</h1>
+            @if (item()!.institution) {
+              <p class="catalog-card-meta">{{ item()!.institution!.name }}</p>
+            }
+
+            @if (item()!.summary) {
+              <p class="catalog-lead">{{ item()!.summary }}</p>
+            }
+
+            @if (item()!.description) {
+              <h2 class="catalog-section-title">Détails</h2>
+              <app-safe-html [content]="item()!.description ?? ''" />
+            }
+
+            @if (item()!.website) {
+              <p style="margin-top: 1.25rem">
+                <a [href]="item()!.website" target="_blank" rel="noopener noreferrer" class="catalog-btn catalog-btn--primary">
+                  Ouvrir le lien officiel
+                </a>
+              </p>
+            }
+          </div>
+
+          <aside class="catalog-detail-side">
+            <h3>Informations</h3>
+            @if (dateLabel(item()!)) {
+              <p><strong>Date</strong><br />{{ dateLabel(item()!) }}</p>
+            }
+            @if (item()!.startTime || item()!.endTime) {
+              <p><strong>Horaire</strong><br />{{ item()!.startTime || '—' }} - {{ item()!.endTime || '—' }}</p>
+            }
+            @if (item()!.city) {
+              <p><strong>Ville</strong><br />{{ item()!.city }}</p>
+            }
+            @if (item()!.address) {
+              <p><strong>Adresse</strong><br />{{ item()!.address }}</p>
+            }
+            @if (item()!.seats !== null && item()!.seats !== undefined) {
+              <p><strong>Places</strong><br />{{ item()!.seats }}</p>
+            }
+            @if (item()!.phone) {
+              <p><strong>Téléphone</strong><br />{{ item()!.phone }}</p>
+            }
+            @if (item()!.email) {
+              <p><strong>E-mail</strong><br /><a [href]="'mailto:' + item()!.email">{{ item()!.email }}</a></p>
+            }
+          </aside>
+        </article>
+      }
+    </div>
+  </main>
+</app-public-shell>

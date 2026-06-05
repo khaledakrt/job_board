@@ -17,7 +17,21 @@ const {
   setPasswordBodySchema,
   banUserBodySchema,
   updateJobStatusBodySchema,
+  listCatalogQuerySchema,
+  listInstitutionOfferingsQuerySchema,
+  catalogIdParamsSchema,
+  adminCreateTrainingCenterSchema,
+  adminUpdateTrainingCenterSchema,
+  adminCreatePrivateInstitutionSchema,
+  adminUpdatePrivateInstitutionSchema,
 } = require('../validators/admin.validator');
+const { updateCatalogStatusSchema } = require('../validators/publicCatalog.validator');
+const {
+  adminListOfferingsQuerySchema,
+  adminOfferingStatusSchema,
+  offeringIdParamsSchema,
+} = require('../validators/catalogOfferings.validator');
+const catalogOfferingsController = require('../controllers/catalogOfferings.controller');
 
 const router = express.Router();
 
@@ -82,5 +96,94 @@ router.delete(
 );
 
 router.get('/companies', validateQuery(listUsersQuerySchema.pick({ page: true, limit: true, search: true })), adminController.listCompanies);
+
+router.get(
+  '/training-centers',
+  validateQuery(listCatalogQuerySchema),
+  adminController.listTrainingCenters
+);
+router.post(
+  '/training-centers',
+  validateBody(adminCreateTrainingCenterSchema),
+  adminController.createTrainingCenter
+);
+router.get(
+  '/training-centers/:id',
+  validateParams(catalogIdParamsSchema),
+  adminController.getTrainingCenter
+);
+router.patch(
+  '/training-centers/:id',
+  validateParams(catalogIdParamsSchema),
+  validateBody(adminUpdateTrainingCenterSchema),
+  adminController.updateTrainingCenter
+);
+router.patch(
+  '/training-centers/:id/status',
+  validateParams(catalogIdParamsSchema),
+  validateBody(updateCatalogStatusSchema),
+  adminController.updateTrainingCenterStatus
+);
+router.get(
+  '/private-institutions',
+  validateQuery(listCatalogQuerySchema),
+  adminController.listPrivateInstitutions
+);
+router.post(
+  '/private-institutions',
+  validateBody(adminCreatePrivateInstitutionSchema),
+  adminController.createPrivateInstitution
+);
+router.get(
+  '/private-institutions/:id',
+  validateParams(catalogIdParamsSchema),
+  adminController.getPrivateInstitution
+);
+router.patch(
+  '/private-institutions/:id',
+  validateParams(catalogIdParamsSchema),
+  validateBody(adminUpdatePrivateInstitutionSchema),
+  adminController.updatePrivateInstitution
+);
+router.patch(
+  '/private-institutions/:id/status',
+  validateParams(catalogIdParamsSchema),
+  validateBody(updateCatalogStatusSchema),
+  adminController.updatePrivateInstitutionStatus
+);
+router.get(
+  '/private-institution-offerings',
+  validateQuery(listInstitutionOfferingsQuerySchema),
+  adminController.listInstitutionOfferings
+);
+router.patch(
+  '/private-institution-offerings/:id/status',
+  validateParams(offeringIdParamsSchema),
+  validateBody(adminOfferingStatusSchema),
+  adminController.updateInstitutionOfferingStatus
+);
+
+router.get(
+  '/training-formations',
+  validateQuery(adminListOfferingsQuerySchema),
+  catalogOfferingsController.adminListFormations
+);
+router.patch(
+  '/training-formations/:id/status',
+  validateParams(offeringIdParamsSchema),
+  validateBody(adminOfferingStatusSchema),
+  catalogOfferingsController.adminSetFormationStatus
+);
+router.get(
+  '/training-events',
+  validateQuery(adminListOfferingsQuerySchema),
+  catalogOfferingsController.adminListEvents
+);
+router.patch(
+  '/training-events/:id/status',
+  validateParams(offeringIdParamsSchema),
+  validateBody(adminOfferingStatusSchema),
+  catalogOfferingsController.adminSetEventStatus
+);
 
 module.exports = router;

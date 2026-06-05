@@ -9,12 +9,16 @@ const {
   CandidateProfile,
   RecruiterProfile,
   UserLoginEvent,
+  TrainingCenter,
+  PrivateInstitution,
 } = require('../models');
+const { CATALOG_PUBLISH_STATUS } = require('../config/constants');
 const { USER_ROLES, JOB_STATUS } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
 const { hashPassword } = require('../utils/password');
 const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
+const { formatStoredIpAddress, normalizeIpAddress } = require('../utils/clientIp');
 const { expireDueJobs } = require('../utils/jobExpiration');
 
 function formatUserListItem(user) {
@@ -26,7 +30,7 @@ function formatUserListItem(user) {
     isBanned: Boolean(user.is_banned),
     banReason: user.ban_reason,
     bannedAt: user.banned_at,
-    lastLoginIp: user.last_login_ip,
+    lastLoginIp: formatStoredIpAddress(user.last_login_ip),
     createdAt: user.created_at,
     candidateProfile: user.candidateProfile
       ? {
@@ -86,17 +90,33 @@ function formatJobAdmin(job) {
 }
 
 async function getStats() {
-  const [usersTotal, candidates, recruiters, admins, banned, jobsTotal, applicationsTotal, companiesTotal] =
-    await Promise.all([
-      User.count(),
-      User.count({ where: { role: USER_ROLES.CANDIDATE } }),
-      User.count({ where: { role: USER_ROLES.RECRUITER } }),
-      User.count({ where: { role: USER_ROLES.ADMIN } }),
-      User.count({ where: { is_banned: true } }),
-      Job.count(),
-      Application.count(),
-      Company.count(),
-    ]);
+  const [
+    usersTotal,
+    candidates,
+    recruiters,
+    admins,
+    banned,
+    jobsTotal,
+    applicationsTotal,
+    companiesTotal,
+    trainingCentersTotal,
+    trainingCentersPending,
+    privateInstitutionsTotal,
+    privateInstitutionsPending,
+  ] = await Promise.all([
+    User.count(),
+    User.count({ where: { role: USER_ROLES.CANDIDATE } }),
+    User.count({ where: { role: USER_ROLES.RECRUITER } }),
+    User.count({ where: { role: USER_ROLES.ADMIN } }),
+    User.count({ where: { is_banned: true } }),
+    Job.count(),
+    Application.count(),
+    Company.count(),
+    TrainingCenter.count(),
+    TrainingCenter.count({ where: { status: CATALOG_PUBLISH_STATUS.PENDING } }),
+    PrivateInstitution.count(),
+    PrivateInstitution.count({ where: { status: CATALOG_PUBLISH_STATUS.PENDING } }),
+  ]);
 
   return {
     usersTotal,
@@ -107,6 +127,10 @@ async function getStats() {
     jobsTotal,
     applicationsTotal,
     companiesTotal,
+    trainingCentersTotal,
+    trainingCentersPending,
+    privateInstitutionsTotal,
+    privateInstitutionsPending,
   };
 }
 
@@ -122,9 +146,13 @@ async function listUsers(query = {}) {
     userWhere.is_banned = false;
   }
   if (query.ip) {
-    const ip = String(query.ip).trim().slice(0, 45);
+    const ip = normalizeIpAddress(String(query.ip).trim()) || String(query.ip).trim().slice(0, 45);
+    const ipv6Mapped = ip.includes('.') ? `::ffff:${ip}` : null;
+    const ipOr = [{ ip_address: ip }];
+    if (ipv6Mapped) ipOr.push({ ip_address: ipv6Mapped });
+    if (ip === '127.0.0.1') ipOr.push({ ip_address: '::1' });
     const events = await UserLoginEvent.findAll({
-      where: { ip_address: ip },
+      where: { [Op.or]: ipOr },
       attributes: ['user_id'],
       raw: true,
     });
@@ -226,7 +254,7 @@ async function listUserLoginEvents(userId, query = {}) {
   return {
     items: paginated.items.map((e) => ({
       id: e.id,
-      ipAddress: e.ip_address,
+      ipAddress: formatStoredIpAddress(e.ip_address),
       userAgent: e.user_agent,
       createdAt: e.created_at,
     })),

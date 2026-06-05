@@ -1,0 +1,176 @@
+.provider-layout-shell {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  min-height: 100vh;
+  background: #f1f5f9;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .provider-layout-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #334155;
+  }
+}
+
+.provider-sidebar {
+  display: flex;
+  flex-direction: column;
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1.15rem;
+  gap: 1rem;
+}
+
+.provider-sidebar-brand {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #334155;
+}
+
+.provider-sidebar-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.provider-sidebar-mark {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.provider-sidebar-org {
+  margin: 0.65rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.3;
+}
+
+.provider-sidebar-city {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.provider-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.provider-sidebar-label {
+  margin: 0.6rem 0 0.2rem;
+  padding: 0 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.provider-sidebar-label:first-child {
+  margin-top: 0;
+}
+
+.provider-sidebar-link {
+  display: block;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+}
+
+.provider-sidebar-link:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.provider-nav-active {
+  background: #2563eb !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.provider-sidebar-link--action {
+  font-weight: 600;
+}
+
+.provider-sidebar-foot {
+  padding-top: 0.75rem;
+  border-top: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.provider-sidebar-logout {
+  color: #fca5a5;
+}
+
+.provider-layout-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  flex: 1;
+}
+
+.provider-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.5rem;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.provider-topbar-role {
+  font-weight: 700;
+  color: #334155;
+}
+
+.provider-topbar-pill {
+  font-size: 0.75rem;
+}
+
+.provider-layout-content {
+  flex: 1;
+  width: 100%;
+  max-width: none;
+  padding: 1.25rem 2rem 2.5rem 2.75rem;
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+.provider-layout-content > * {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}

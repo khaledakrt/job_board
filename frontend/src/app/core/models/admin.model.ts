@@ -1,4 +1,5 @@
 import { UserRole } from '../constants/roles.constant';
+import { InstitutionOfferingItem, InstitutionType, TrainingDeliveryMode } from './catalog.model';
 import { PaginationMeta } from './pagination.model';
 
 export interface AdminStats {
@@ -10,6 +11,10 @@ export interface AdminStats {
   jobsTotal: number;
   applicationsTotal: number;
   companiesTotal: number;
+  trainingCentersTotal: number;
+  trainingCentersPending: number;
+  privateInstitutionsTotal: number;
+  privateInstitutionsPending: number;
 }
 
 export interface AdminUserListItem {
@@ -83,3 +88,48 @@ export interface UpdateAdminUserRequest {
 }
 
 export type AdminPaginated<T> = { data: T; pagination: PaginationMeta };
+
+export type CatalogPublishStatus = 'pending' | 'published' | 'rejected';
+
+export interface AdminCatalogListItem {
+  id: string;
+  name: string;
+  city: string | null;
+  phone: string | null;
+  email: string | null;
+  trainingDomain?: string | null;
+  institutionType?: InstitutionType;
+  status: CatalogPublishStatus;
+  ownerEmail: string | null;
+  createdAt: string;
+}
+
+export interface AdminCatalogDetail {
+  id: string;
+  name: string;
+  status: CatalogPublishStatus;
+  ownerEmail: string | null;
+  ownerId: string | null;
+  ownerVerified: boolean | null;
+  createdAt: string;
+  updatedAt: string;
+  city: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  description: string | null;
+  logoUrl: string | null;
+  trainingDomain?: string | null;
+  deliveryMode?: TrainingDeliveryMode | null;
+  institutionType?: InstitutionType;
+  mapUrl?: string | null;
+  brochures?: string[];
+  courses?: { id: string; title: string; description?: string | null; status?: string }[];
+  programs?: { title: string; description?: string | null }[];
+  institutionOfferings?: InstitutionOfferingItem[];
+  publishedPrograms?: InstitutionOfferingItem[];
+  publishedEvents?: InstitutionOfferingItem[];
+  publishedAnnouncements?: InstitutionOfferingItem[];
+  publishedOpportunities?: InstitutionOfferingItem[];
+}

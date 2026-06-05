@@ -1,0 +1,48 @@
+.admin-offerings-page--formations .admin-offerings-header {
+  border-left: 4px solid #2563eb;
+  padding-left: 1rem;
+}
+
+.admin-offerings-page--events .admin-offerings-header {
+  border-left: 4px solid #7c3aed;
+  padding-left: 1rem;
+}
+
+.admin-offerings-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-offerings-filters {
+  max-width: 28rem;
+}
+
+.admin-offering-title {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.admin-offerings-table .col-num {
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-offerings-empty {
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+}
+
+.admin-offerings-empty-title {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+@media (max-width: 1100px) {
+  .admin-offerings-table .col-num,
+  .admin-offerings-table thead th:nth-child(5),
+  .admin-offerings-table tbody td:nth-child(5) {
+    display: none;
+  }
+}

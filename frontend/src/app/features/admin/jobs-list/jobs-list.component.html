@@ -76,9 +76,10 @@
               <td>
                 <select
                   class="input-field admin-status-select"
-                  [value]="j.status"
+                  [value]="selectedStatus(j)"
+                  [class.admin-status-select--changed]="hasStatusChange(j)"
                   [disabled]="statusUpdating() === j.id"
-                  (change)="changeStatus(j, $any($event.target).value)"
+                  (change)="setPendingStatus(j, $any($event.target).value)"
                 >
                   @for (s of statuses; track s) {
                     <option [value]="s">{{ statusLabels[s] }}</option>
@@ -91,15 +92,27 @@
               <td class="date-cell">
                 {{ j.expiresAt ? (j.expiresAt | date: 'dd/MM/yyyy') : '—' }}
               </td>
-              <td class="actions-cell">
+              <td class="actions-cell admin-actions-nowrap">
+                <div class="admin-actions-inline">
+                @if (hasStatusChange(j)) {
+                  <button
+                    type="button"
+                    class="admin-action-chip admin-action-chip--publish"
+                    [disabled]="statusUpdating() === j.id"
+                    (click)="saveStatus(j)"
+                  >
+                    Enregistrer
+                  </button>
+                }
                 <button
                   type="button"
-                  class="btn-text-danger"
+                  class="admin-action-chip admin-action-chip--reject"
                   [disabled]="statusUpdating() === j.id"
                   (click)="deleteJob(j)"
                 >
                   Supprimer
                 </button>
+                </div>
               </td>
             </tr>
           } @empty {

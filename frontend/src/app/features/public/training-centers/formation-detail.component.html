@@ -1,0 +1,122 @@
+<app-public-shell>
+  <main class="catalog-page-main catalog-page-main--detail">
+    <div class="catalog-page-inner catalog-page-inner--detail">
+      @if (loading()) {
+        <p>Chargement…</p>
+      } @else if (error()) {
+        <p class="catalog-state-title">{{ error() }}</p>
+      } @else if (formation()) {
+        <nav class="catalog-breadcrumb">
+          <a routerLink="/">Accueil</a>
+          <span>/</span>
+          <a [routerLink]="routes.PUBLIC.TRAINING_CENTERS">Centres de formation</a>
+          @if (formation()!.centerId) {
+            <span>/</span>
+            <a [routerLink]="routes.PUBLIC.TRAINING_CENTER(formation()!.centerId!)">{{ formation()!.centerName }}</a>
+          }
+          <span>/</span>
+          <span>{{ formation()!.title }}</span>
+        </nav>
+
+        <div class="catalog-detail-layout">
+          <div class="catalog-detail-panel">
+            <div class="catalog-offering-detail-head">
+              @if (mediaUrl(formation()!.mainImageUrl); as img) {
+                <div class="catalog-offering-hero-wrap">
+                  <img [src]="img" alt="" class="catalog-offering-hero" />
+                </div>
+              }
+              <div class="catalog-offering-detail-intro">
+                <h1>{{ formation()!.title }}</h1>
+                @if (formation()!.category) {
+                  <span class="catalog-tag">{{ formation()!.category }}</span>
+                }
+                @if (formation()!.shortDescription) {
+                  <p class="catalog-offering-lead">{{ formation()!.shortDescription }}</p>
+                }
+              </div>
+            </div>
+            @if (formation()!.description) {
+              <div class="catalog-detail-prose">
+                <app-safe-html [content]="formation()!.description!" />
+              </div>
+            }
+            @if (formation()!.gallery?.length) {
+              <div class="catalog-gallery">
+                @for (photo of formation()!.gallery!; track photo) {
+                  @if (mediaUrl(photo); as src) {
+                    <img [src]="src" alt="" />
+                  }
+                }
+              </div>
+            }
+          </div>
+
+          <aside class="catalog-detail-side">
+            <h3>Informations</h3>
+            @if (formation()!.startDate) {
+              <p><strong>Début</strong><br />{{ formation()!.startDate }}</p>
+            }
+            @if (formation()!.endDate) {
+              <p><strong>Fin</strong><br />{{ formation()!.endDate }}</p>
+            }
+            @if (formation()!.durationLabel) {
+              <p><strong>Durée</strong><br />{{ formation()!.durationLabel }}</p>
+            }
+            @if (formation()!.deliveryMode) {
+              <p><strong>Mode</strong><br />{{ deliveryModeLabel(formation()!.deliveryMode) }}</p>
+            }
+            @if (formation()!.city) {
+              <p><strong>Ville</strong><br />{{ formation()!.city }}</p>
+            }
+            @if (formation()!.address) {
+              <p><strong>Adresse</strong><br />{{ formation()!.address }}</p>
+            }
+            @if (formation()!.price != null) {
+              <p><strong>Prix</strong><br />{{ formation()!.price }} TND</p>
+            }
+            @if (formation()!.seats != null) {
+              <p><strong>Places</strong><br />{{ formation()!.seats }}</p>
+            }
+            <p class="catalog-side-participants">
+              <strong>Inscrits</strong><br />
+              <span class="catalog-offering-participants catalog-offering-participants--side">{{
+                participantsCount()
+              }}</span>
+            </p>
+            @if (formation()!.certificateDelivered) {
+              <p>Certificat délivré</p>
+            }
+
+            <div class="catalog-participate">
+              @if (actionMsg()) {
+                <p class="catalog-participate-msg">{{ actionMsg() }}</p>
+              }
+              @if (hasParticipated()) {
+                <p class="catalog-participate-msg">Vous êtes inscrit(e).</p>
+              }
+              <button
+                type="button"
+                class="catalog-btn catalog-btn--primary catalog-btn--block"
+                [disabled]="participateButtonsDisabled()"
+                (click)="participate()"
+              >
+                S'inscrire
+              </button>
+            </div>
+
+            @if (formation()!.phone) {
+              <p><strong>Tél.</strong> {{ formation()!.phone }}</p>
+            }
+            @if (formation()!.email) {
+              <p><a [href]="'mailto:' + formation()!.email">{{ formation()!.email }}</a></p>
+            }
+            @if (formation()!.website) {
+              <p><a [href]="formation()!.website!" target="_blank" rel="noopener">Site web →</a></p>
+            }
+          </aside>
+        </div>
+      }
+    </div>
+  </main>
+</app-public-shell>

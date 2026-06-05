@@ -1,0 +1,152 @@
+<div class="provider-page provider-form-page">
+  <h1 class="provider-page-title">Profil & documents</h1>
+  <p class="provider-page-sub">
+    Logo, coordonnées, brochure et présentation publique de votre
+    {{ ctx.isTraining ? 'centre de formation' : 'établissement privé' }}.
+  </p>
+
+  @if (ctx.loading() && !ctx.dashboard()) {
+    <p class="provider-muted">Chargement…</p>
+  } @else if (ctx.dashboard()) {
+    @if (!ctx.dashboard()!.profileComplete) {
+      <aside class="provider-alert">
+        <strong>Profil à compléter</strong>
+        <ul class="provider-checklist">
+          <li [class.is-done]="!!mediaUrl(ctx.dashboard()!.organization.logoUrl)">Logo</li>
+          <li [class.is-done]="descriptionPlainLen() >= 20">Description (20 car. min.)</li>
+          <li [class.is-done]="!!city.trim()">Ville</li>
+        </ul>
+      </aside>
+    }
+
+    @if (saveMsg) {
+      <p class="publish-success">{{ saveMsg }}</p>
+    }
+    @if (saveError) {
+      <p class="publish-error">{{ saveError }}</p>
+    }
+
+    <section class="provider-card">
+      <div class="provider-profile-layout">
+        <div class="provider-profile-aside">
+          <div class="provider-upload-box">
+            <span class="provider-upload-label">Logo</span>
+            <p class="provider-upload-hint">Ajoutez un logo carré ou horizontal, JPG/PNG/WEBP — 2 Mo max.</p>
+            <label class="provider-file-btn">
+              Importer le logo
+              <input type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+            </label>
+            @if (mediaUrl(ctx.dashboard()!.organization.logoUrl); as logo) {
+              <img [src]="logo" alt="Logo" class="provider-logo-preview" />
+            }
+          </div>
+          <div class="provider-upload-box">
+            <span class="provider-upload-label">Brochure PDF</span>
+            <p class="provider-upload-hint">Ajoutez une plaquette officielle téléchargeable depuis votre fiche publique.</p>
+            <label class="provider-file-btn provider-file-btn--secondary">
+              Importer une brochure
+              <input type="file" accept="application/pdf" hidden (change)="onBrochureSelected($event)" />
+            </label>
+            @if (ctx.dashboard()!.organization.brochures?.length) {
+              <ul class="provider-brochure-list">
+                @for (b of ctx.dashboard()!.organization.brochures!; track b; let i = $index) {
+                  <li>
+                    <a [href]="mediaUrl(b)!" target="_blank" rel="noopener">Brochure {{ i + 1 }}</a>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+
+        <div>
+          <div class="provider-field provider-field--rte provider-field--rte-block">
+            <label for="prof-desc">
+              Description de {{ ctx.isTraining ? 'votre centre' : 'votre établissement' }} *
+            </label>
+            <div class="provider-field-body">
+              <app-rich-text-editor
+                editorId="provider-profile-description"
+                editorSize="large"
+                [(ngModel)]="description"
+                name="providerDescription"
+                [placeholder]="ctx.isTraining ? 'Présentez votre centre, ses domaines et ses avantages…' : 'Présentez votre établissement, ses niveaux, ses valeurs et ses points forts…'"
+              />
+            </div>
+            <p class="provider-field-hint">
+              Minimum 20 caractères. Vous pouvez utiliser les polices, le gras et ajouter des liens utiles.
+            </p>
+          </div>
+
+          <div class="provider-fields">
+            <div class="provider-field provider-field--city">
+              <label for="prof-city">Ville *</label>
+              <input id="prof-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
+            </div>
+            <div class="provider-field provider-field--phone">
+              <label for="prof-phone">Téléphone</label>
+              <input
+                id="prof-phone"
+                type="tel"
+                class="provider-input"
+                [(ngModel)]="phone"
+                name="phone"
+                inputmode="tel"
+                autocomplete="tel"
+                placeholder="+216 …"
+              />
+            </div>
+            <div class="provider-field provider-field--email">
+              <label for="prof-email">E-mail</label>
+              <input id="prof-email" type="email" class="provider-input" [(ngModel)]="email" name="email" autocomplete="email" />
+            </div>
+            <div class="provider-field provider-field--address">
+              <label for="prof-address">Adresse</label>
+              <input id="prof-address" class="provider-input" [(ngModel)]="address" name="address" autocomplete="street-address" />
+            </div>
+            <div class="provider-field provider-field--url">
+              <label for="prof-web">Site web</label>
+              <input id="prof-web" type="url" class="provider-input" [(ngModel)]="website" name="website" placeholder="https://…" />
+            </div>
+            @if (ctx.isTraining) {
+              <div class="provider-field provider-field--domain">
+                <label for="prof-domain">Domaine de formation</label>
+                <input id="prof-domain" class="provider-input" [(ngModel)]="trainingDomain" name="trainingDomain" />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <footer class="provider-card-foot provider-form-actions" style="border-top: none; padding-top: 0; margin-top: 0">
+        <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving" (click)="saveProfile()">
+          {{ saving ? 'Enregistrement…' : 'Enregistrer le profil' }}
+        </button>
+      </footer>
+    </section>
+
+    @if (confirmOpen) {
+      <div class="provider-confirm-backdrop" role="presentation">
+        <section class="provider-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="profile-confirm-title">
+          <h2 id="profile-confirm-title">Confirmer l’enregistrement du profil</h2>
+          <p>
+            Vos informations de profil seront enregistrées.
+            @if (ctx.dashboard()!.accountStatus === 'published') {
+              La fiche publique sera mise à jour.
+            } @else {
+              Votre compte reste soumis à validation administrateur avant publication.
+            }
+          </p>
+          <div class="provider-confirm-actions">
+            <button type="button" class="provider-btn provider-btn--outline" [disabled]="saving" (click)="closeConfirm()">
+              Annuler
+            </button>
+            <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving" (click)="confirmSaveProfile()">
+              {{ saving ? 'Enregistrement…' : 'Confirmer' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    }
+  }
+</div>

@@ -8,7 +8,7 @@ import { PaginationMeta } from '../../../core/models/pagination.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { RouterLink } from '@angular/router';
-import { JOB_STATUSES, JOB_STATUS_LABELS } from '../../../core/constants/job.constant';
+import { JOB_STATUSES, JOB_STATUS_LABELS, JobStatus } from '../../../core/constants/job.constant';
 import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { adminPageSummary } from '../shared/admin-pagination.util';
 
@@ -35,6 +35,7 @@ export class JobsListComponent implements OnInit {
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly statusUpdating = signal<string | null>(null);
+  readonly pendingStatuses = signal<Record<string, JobStatus>>({});
 
   readonly filters = this.fb.nonNullable.group({
     search: [''],
@@ -59,6 +60,7 @@ export class JobsListComponent implements OnInit {
       next: (res) => {
         this.jobs.set(res.data || []);
         this.pagination.set(res.pagination);
+        this.pendingStatuses.set({});
         this.loading.set(false);
       },
       error: () => {
@@ -77,11 +79,50 @@ export class JobsListComponent implements OnInit {
     this.load(1);
   }
 
-  changeStatus(job: AdminJobListItem, status: string): void {
+  selectedStatus(job: AdminJobListItem): JobStatus {
+    return this.pendingStatuses()[job.id] ?? (job.status as JobStatus);
+  }
+
+  hasStatusChange(job: AdminJobListItem): boolean {
+    return Boolean(this.pendingStatuses()[job.id] && this.pendingStatuses()[job.id] !== job.status);
+  }
+
+  setPendingStatus(job: AdminJobListItem, status: JobStatus): void {
+    this.pendingStatuses.update((current) => {
+      const next = { ...current };
+      if (status === job.status) {
+        delete next[job.id];
+      } else {
+        next[job.id] = status;
+      }
+      return next;
+    });
+  }
+
+  async saveStatus(job: AdminJobListItem): Promise<void> {
+    const status = this.pendingStatuses()[job.id];
+    if (!status || status === job.status) return;
+
+    const ok = await this.confirmDialog.confirm({
+      title: 'Confirmer le changement de statut',
+      message: `Passer l’offre « ${job.title} » au statut « ${this.statusLabels[status]} » ?`,
+      confirmLabel: 'Confirmer',
+    });
+    if (!ok) return;
+
+    this.changeStatus(job, status);
+  }
+
+  private changeStatus(job: AdminJobListItem, status: string): void {
     this.statusUpdating.set(job.id);
     this.adminService.updateJobStatus(job.id, status).subscribe({
       next: () => {
         this.statusUpdating.set(null);
+        this.pendingStatuses.update((current) => {
+          const next = { ...current };
+          delete next[job.id];
+          return next;
+        });
         this.load(this.pagination()?.page || 1);
       },
       error: () => this.statusUpdating.set(null),

@@ -36,6 +36,12 @@ export class HomeComponent {
     if (role === USER_ROLES.RECRUITER) {
       return APP_ROUTES.RECRUITER.DASHBOARD;
     }
+    if (role === USER_ROLES.TRAINING_PROVIDER) {
+      return APP_ROUTES.PROVIDER.TRAINING;
+    }
+    if (role === USER_ROLES.INSTITUTION_PROVIDER) {
+      return APP_ROUTES.PROVIDER.INSTITUTION;
+    }
     return APP_ROUTES.CANDIDATE.DASHBOARD;
   });
 

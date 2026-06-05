@@ -9,6 +9,7 @@
     </div>
 
     <nav class="sidebar-nav">
+      <p class="nav-section-label">Vue d'ensemble</p>
       <a
         [routerLink]="routes.ADMIN.DASHBOARD"
         routerLinkActive="nav-active"
@@ -17,19 +18,50 @@
       >
         Tableau de bord
       </a>
-      <a
-        [routerLink]="routes.ADMIN.USERS"
-        routerLinkActive="nav-active"
-        class="nav-link"
-      >
+
+      <p class="nav-section-label">Modération</p>
+      <a [routerLink]="routes.ADMIN.USERS" routerLinkActive="nav-active" class="nav-link">
         Utilisateurs
       </a>
+      <a [routerLink]="routes.ADMIN.JOBS" routerLinkActive="nav-active" class="nav-link">
+        Offres d'emploi
+      </a>
+
+      <p class="nav-section-label">Catalogue</p>
       <a
-        [routerLink]="routes.ADMIN.JOBS"
+        [routerLink]="routes.ADMIN.TRAINING_CENTERS"
         routerLinkActive="nav-active"
         class="nav-link"
       >
-        Offres
+        Centres de formation
+      </a>
+      <a
+        [routerLink]="routes.ADMIN.PRIVATE_INSTITUTIONS"
+        routerLinkActive="nav-active"
+        class="nav-link"
+      >
+        Établissements privés
+      </a>
+      <a
+        [routerLink]="routes.ADMIN.PRIVATE_INSTITUTION_OFFERINGS"
+        routerLinkActive="nav-active"
+        class="nav-link"
+      >
+        Publications établissements
+      </a>
+      <a
+        [routerLink]="routes.ADMIN.TRAINING_FORMATIONS"
+        routerLinkActive="nav-active"
+        class="nav-link"
+      >
+        Formations (modération)
+      </a>
+      <a
+        [routerLink]="routes.ADMIN.TRAINING_EVENTS"
+        routerLinkActive="nav-active"
+        class="nav-link"
+      >
+        Événements (modération)
       </a>
     </nav>
 

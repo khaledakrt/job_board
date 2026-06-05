@@ -1,0 +1,305 @@
+/* Formulaires prestataire — largeurs calibrées sur le contenu réel saisi */
+
+.provider-form-page {
+  --pf-w-phone: 11.25rem;      /* +216 00 000 000 */
+  --pf-w-date: 10.5rem;        /* sélecteur date */
+  --pf-w-time: 8.25rem;        /* HH:MM */
+  --pf-w-city: 12.5rem;        /* Tunis, Sfax… */
+  --pf-w-duration: 9rem;       /* 40 h, 3 mois */
+  --pf-w-category: 14.5rem;
+  --pf-w-mode: 10.5rem;        /* présentiel / distanciel */
+  --pf-w-event-type: 12.5rem;
+  --pf-w-price: 7.5rem;        /* montant TND */
+  --pf-w-seats: 6.25rem;       /* 1–999 */
+  --pf-w-email: 18.5rem;
+  --pf-w-url: 24rem;
+  --pf-w-domain: 20rem;
+  --pf-w-title: 34rem;
+  --pf-w-address: 30rem;
+  --pf-w-short: 36rem;
+  --pf-w-file: 22rem;
+
+  width: 100%;
+}
+
+.provider-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Rangées flex : champs côte à côte, largeur = contenu attendu */
+.provider-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+  align-items: flex-start;
+}
+
+.provider-field {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.provider-field .provider-input,
+.provider-field select.provider-input,
+.provider-field textarea.provider-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.provider-field .provider-field-body {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* —— Largeurs par type (max-width du bloc label+input) —— */
+.provider-field--phone {
+  width: var(--pf-w-phone);
+}
+
+.provider-field--date {
+  width: var(--pf-w-date);
+}
+
+.provider-field--time {
+  width: var(--pf-w-time);
+}
+
+.provider-field--city {
+  width: var(--pf-w-city);
+}
+
+.provider-field--duration {
+  width: var(--pf-w-duration);
+}
+
+.provider-field--category {
+  width: var(--pf-w-category);
+}
+
+.provider-field--mode {
+  width: var(--pf-w-mode);
+}
+
+.provider-field--event-type {
+  width: var(--pf-w-event-type);
+}
+
+.provider-field--price {
+  width: var(--pf-w-price);
+}
+
+.provider-field--seats,
+.provider-field--number {
+  width: var(--pf-w-seats);
+}
+
+.provider-field--email {
+  width: var(--pf-w-email);
+}
+
+.provider-field--url {
+  width: var(--pf-w-url);
+}
+
+.provider-field--domain {
+  width: var(--pf-w-domain);
+}
+
+.provider-field--title {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: var(--pf-w-title);
+}
+
+.provider-field--address {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: var(--pf-w-address);
+}
+
+.provider-field--short {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: var(--pf-w-short);
+}
+
+.provider-field--file {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: var(--pf-w-file);
+}
+
+.provider-field--rte {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+.provider-field--rte-block {
+  margin-bottom: 1rem;
+}
+
+.provider-field--full {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .provider-form-page {
+    --pf-w-title: 100%;
+    --pf-w-address: 100%;
+    --pf-w-short: 100%;
+    --pf-w-url: 100%;
+    --pf-w-email: 100%;
+    --pf-w-domain: 100%;
+    --pf-w-file: 100%;
+  }
+
+  .provider-field--phone,
+  .provider-field--date,
+  .provider-field--time,
+  .provider-field--city,
+  .provider-field--duration,
+  .provider-field--category,
+  .provider-field--mode,
+  .provider-field--event-type,
+  .provider-field--price,
+  .provider-field--seats,
+  .provider-field--number,
+  .provider-field--email {
+    width: 100%;
+  }
+}
+
+.provider-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.provider-field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.provider-field-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.provider-input {
+  min-height: 2.65rem;
+  font-size: 0.95rem;
+}
+
+.provider-field--date .provider-input,
+.provider-field--time .provider-input,
+.provider-field--phone .provider-input,
+.provider-field--price .provider-input,
+.provider-field--seats .provider-input {
+  min-height: 2.5rem;
+}
+
+select.provider-input {
+  min-height: 2.65rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+textarea.provider-input {
+  min-height: 4.75rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+textarea.provider-input--short {
+  min-height: 4.25rem;
+}
+
+.provider-field--rte app-rich-text-editor {
+  display: block;
+  width: 100%;
+}
+
+.provider-card--desc {
+  border-color: #cbd5e1;
+}
+
+.provider-card--desc h2 {
+  color: #1e40af;
+}
+
+.provider-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem 0 0;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 0.25rem;
+}
+
+.provider-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .provider-profile-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.provider-profile-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.publish-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.publish-preview-img {
+  max-width: 200px;
+  margin-top: 0.65rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.publish-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.publish-gallery-item {
+  position: relative;
+}
+
+.publish-gallery-item img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}

@@ -1,0 +1,239 @@
+<div class="provider-page provider-form-page">
+  <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline provider-btn--sm">
+    ← Tableau de bord
+  </a>
+  <h1 class="provider-page-title">{{ formationId() ? 'Modifier la formation' : 'Publier une formation' }}</h1>
+  <p class="provider-page-sub">Remplissez les sections ci-dessous. La description détaillée accepte mise en forme (polices, gras, liens).</p>
+
+  @if (loading()) {
+    <p class="provider-muted">Chargement…</p>
+  } @else {
+    @if (status()) {
+      <p class="provider-muted">Statut : {{ statusLabel(status()!) }}</p>
+    }
+    @if (error()) {
+      <p class="publish-error">{{ error() }}</p>
+    }
+    @if (success()) {
+      <p class="publish-success">{{ success() }}</p>
+    }
+
+    @if (formationId()) {
+      <section class="provider-card provider-formation-inscrits">
+        <div class="provider-card-head">
+            <h2>Inscrits à cette formation</h2>
+            <p>
+              {{ registeredCount() }} inscrit(s)
+            @if (seats != null && seats > 0) {
+              <span class="provider-muted"> — places max. {{ seats }}</span>
+            }
+          </p>
+        </div>
+        @if (!participants().length) {
+          <p class="provider-muted">Aucun inscrit pour le moment.</p>
+        } @else {
+          <ul class="provider-inscrits-list">
+            @for (p of participants(); track p.id) {
+              <li class="provider-inscrits-item">
+                <div>
+                  <strong>{{ p.candidate.displayName }}</strong>
+                  <span
+                    [class]="
+                      p.participationType === 'registered'
+                        ? 'provider-pill provider-pill--ok'
+                        : 'provider-pill'
+                    "
+                  >
+                    {{ p.participationLabel }}
+                  </span>
+                  <a class="provider-inscrits-email" [href]="'mailto:' + p.candidate.email">{{
+                    p.candidate.email
+                  }}</a>
+                  @if (p.candidate.phone) {
+                    <span class="provider-muted">{{ p.candidate.phone }}</span>
+                  }
+                </div>
+                <time class="provider-muted">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+              </li>
+            }
+          </ul>
+        }
+        <p class="provider-muted" style="margin-top: 0.75rem">
+          <a [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS">Voir tous les participants</a>
+        </p>
+      </section>
+    }
+
+    <form class="provider-form" (ngSubmit)="submit()">
+      <section class="provider-card">
+        <h2>Informations générales</h2>
+        <div class="provider-fields">
+          <div class="provider-field provider-field--title">
+            <label for="pf-title">Titre *</label>
+            <input id="pf-title" class="provider-input" [(ngModel)]="title" name="title" required />
+          </div>
+          <div class="provider-field provider-field--category">
+            <label for="pf-cat">Catégorie</label>
+            <select id="pf-cat" class="provider-input" [(ngModel)]="category" name="category">
+              <option value="">— Choisir —</option>
+              @for (c of categories; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+          </div>
+          <div class="provider-field provider-field--duration">
+            <label for="pf-dur">Durée</label>
+            <input
+              id="pf-dur"
+              class="provider-input"
+              [(ngModel)]="durationLabel"
+              name="durationLabel"
+              placeholder="Ex. 40 h"
+            />
+          </div>
+          <div class="provider-field provider-field--short">
+            <label for="pf-short">Description courte</label>
+            <textarea
+              id="pf-short"
+              class="provider-input"
+              rows="3"
+              maxlength="500"
+              [(ngModel)]="shortDescription"
+              name="shortDescription"
+              placeholder="Résumé pour les listes (texte simple)"
+            ></textarea>
+            <p class="provider-field-hint">Max. 500 caractères — affiché sur les cartes du catalogue.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-card provider-card--desc">
+        <h2>Description détaillée</h2>
+        <div class="provider-field provider-field--rte">
+          <label for="pf-desc">Programme & contenu</label>
+          <div class="provider-field-body">
+            <app-rich-text-editor
+              editorId="formation-description"
+              editorSize="large"
+              [(ngModel)]="description"
+              name="description"
+              placeholder="Programme, prérequis, débouchés…"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-card">
+        <h2>Dates & lieu</h2>
+        <div class="provider-fields">
+          <div class="provider-field provider-field--date">
+            <label for="pf-start">Début</label>
+            <input type="date" id="pf-start" class="provider-input" [(ngModel)]="startDate" name="startDate" />
+          </div>
+          <div class="provider-field provider-field--date">
+            <label for="pf-end">Fin</label>
+            <input type="date" id="pf-end" class="provider-input" [(ngModel)]="endDate" name="endDate" />
+          </div>
+          <div class="provider-field provider-field--city">
+            <label for="pf-city">Ville</label>
+            <input id="pf-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
+          </div>
+          <div class="provider-field provider-field--mode">
+            <label for="pf-mode">Modalité</label>
+            <select id="pf-mode" class="provider-input" [(ngModel)]="deliveryMode" name="deliveryMode">
+              <option value="">—</option>
+              @for (o of deliveryOptions; track o.value) {
+                <option [value]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="provider-field provider-field--address">
+            <label for="pf-addr">Adresse</label>
+            <input id="pf-addr" class="provider-input" [(ngModel)]="address" name="address" autocomplete="street-address" />
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-card">
+        <h2>Tarif, places & contact</h2>
+        <div class="provider-fields">
+          <div class="provider-field provider-field--price">
+            <label for="pf-price">Prix (TND)</label>
+            <input type="number" id="pf-price" min="0" step="0.01" class="provider-input" [(ngModel)]="price" name="price" />
+          </div>
+          <div class="provider-field provider-field--seats">
+            <label for="pf-seats">Places</label>
+            <input type="number" id="pf-seats" min="0" max="9999" class="provider-input" [(ngModel)]="seats" name="seats" />
+          </div>
+          <div class="provider-field provider-field--phone">
+            <label for="pf-phone">Téléphone</label>
+            <input id="pf-phone" type="tel" class="provider-input" [(ngModel)]="phone" name="phone" inputmode="tel" autocomplete="tel" />
+          </div>
+          <div class="provider-field provider-field--email">
+            <label for="pf-email">E-mail</label>
+            <input type="email" id="pf-email" class="provider-input" [(ngModel)]="email" name="email" autocomplete="email" />
+          </div>
+          <div class="provider-field provider-field--url">
+            <label for="pf-web">Site web</label>
+            <input id="pf-web" type="url" class="provider-input" [(ngModel)]="website" name="website" placeholder="https://…" />
+          </div>
+        </div>
+        <label class="publish-check">
+          <input type="checkbox" [(ngModel)]="certificateDelivered" name="certificateDelivered" />
+          Certificat délivré à l’issue de la formation
+        </label>
+      </section>
+
+      <section class="provider-card">
+        <h2>Médias</h2>
+        <div class="provider-fields">
+          <div class="provider-field provider-field--file">
+            <label>Image principale</label>
+            <input type="file" accept="image/*" (change)="onMainImage($event)" />
+            @if (mediaUrl(mainImageUrl); as img) {
+              <img [src]="img" alt="" class="publish-preview-img" />
+            }
+          </div>
+          <div class="provider-field provider-field--file">
+            <label>Galerie (max. 8)</label>
+            <input type="file" accept="image/*" multiple (change)="onGallery($event)" />
+            <div class="publish-gallery">
+              @for (g of gallery; track g) {
+                @if (mediaUrl(g); as src) {
+                  <div class="publish-gallery-item">
+                    <img [src]="src" alt="" />
+                    <button type="button" class="provider-btn provider-btn--ghost provider-btn--sm" (click)="removeGallery(g)">×</button>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="provider-form-actions">
+        <button type="submit" class="provider-btn provider-btn--primary" [disabled]="saving()">
+          {{ formationId() ? 'Enregistrer les modifications' : 'Soumettre pour validation' }}
+        </button>
+        <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline">Annuler</a>
+      </div>
+    </form>
+
+    @if (confirmOpen()) {
+      <div class="provider-confirm-backdrop" role="presentation">
+        <section class="provider-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="formation-confirm-title">
+          <h2 id="formation-confirm-title">{{ confirmTitle() }}</h2>
+          <p>{{ confirmMessage() }}</p>
+          <div class="provider-confirm-actions">
+            <button type="button" class="provider-btn provider-btn--outline" [disabled]="saving()" (click)="closeConfirm()">
+              Annuler
+            </button>
+            <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving()" (click)="confirmSubmit()">
+              {{ saving() ? 'Enregistrement…' : 'Confirmer' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    }
+  }
+</div>

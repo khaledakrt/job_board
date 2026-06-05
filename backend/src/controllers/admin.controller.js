@@ -1,6 +1,7 @@
 'use strict';
 
 const adminService = require('../services/admin.service');
+const publicCatalogService = require('../services/publicCatalog.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const getStats = asyncHandler(async (req, res) => {
@@ -86,6 +87,82 @@ const listCompanies = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
 });
 
+const listTrainingCenters = asyncHandler(async (req, res) => {
+  const result = await publicCatalogService.adminListTrainingCenters(req.validatedQuery);
+  res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+});
+
+const getTrainingCenter = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminGetTrainingCenterById(req.validatedParams.id);
+  res.status(200).json({ success: true, data });
+});
+
+const createTrainingCenter = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminCreateTrainingCenter(req.validatedBody);
+  res.status(201).json({ success: true, message: 'Centre créé', data });
+});
+
+const updateTrainingCenter = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminUpdateTrainingCenter(
+    req.validatedParams.id,
+    req.validatedBody
+  );
+  res.status(200).json({ success: true, message: 'Centre mis à jour', data });
+});
+
+const updateTrainingCenterStatus = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminUpdateTrainingCenterStatus(
+    req.validatedParams.id,
+    req.validatedBody.status
+  );
+  res.status(200).json({ success: true, message: 'Statut mis à jour', data });
+});
+
+const listPrivateInstitutions = asyncHandler(async (req, res) => {
+  const result = await publicCatalogService.adminListPrivateInstitutions(req.validatedQuery);
+  res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+});
+
+const getPrivateInstitution = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminGetPrivateInstitutionById(req.validatedParams.id);
+  res.status(200).json({ success: true, data });
+});
+
+const createPrivateInstitution = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminCreatePrivateInstitution(req.validatedBody);
+  res.status(201).json({ success: true, message: 'Établissement créé', data });
+});
+
+const updatePrivateInstitution = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminUpdatePrivateInstitution(
+    req.validatedParams.id,
+    req.validatedBody
+  );
+  res.status(200).json({ success: true, message: 'Établissement mis à jour', data });
+});
+
+const updatePrivateInstitutionStatus = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminUpdatePrivateInstitutionStatus(
+    req.validatedParams.id,
+    req.validatedBody.status
+  );
+  res.status(200).json({ success: true, message: 'Statut mis à jour', data });
+});
+
+const listInstitutionOfferings = asyncHandler(async (req, res) => {
+  const result = await publicCatalogService.adminListInstitutionOfferings(req.validatedQuery);
+  res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+});
+
+const updateInstitutionOfferingStatus = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.adminUpdateInstitutionOfferingStatus(
+    req.validatedParams.id,
+    req.validatedBody.status,
+    req.validatedBody.adminNote
+  );
+  res.status(200).json({ success: true, message: 'Publication mise à jour', data });
+});
+
 module.exports = {
   getStats,
   listUsers,
@@ -101,4 +178,16 @@ module.exports = {
   updateJobStatus,
   deleteJob,
   listCompanies,
+  listTrainingCenters,
+  getTrainingCenter,
+  createTrainingCenter,
+  updateTrainingCenter,
+  updateTrainingCenterStatus,
+  listPrivateInstitutions,
+  getPrivateInstitution,
+  createPrivateInstitution,
+  updatePrivateInstitution,
+  updatePrivateInstitutionStatus,
+  listInstitutionOfferings,
+  updateInstitutionOfferingStatus,
 };

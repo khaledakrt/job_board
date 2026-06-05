@@ -498,6 +498,11 @@
   line-height: 1.45;
 }
 
+.landing-section-cta--compact {
+  margin-top: 1rem;
+  justify-content: flex-start;
+}
+
 .landing-section-cta {
   display: flex;
   flex-wrap: wrap;

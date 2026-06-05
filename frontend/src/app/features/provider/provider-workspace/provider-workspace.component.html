@@ -1,0 +1,295 @@
+<div class="provider-shell">
+  <header class="provider-header">
+    <a routerLink="/" class="provider-brand">
+      <span class="provider-brand-mark">JB</span>
+      <span class="provider-brand-text">JobBoard</span>
+    </a>
+    <nav class="provider-nav" aria-label="Espace prestataire">
+      <a routerLink="/" class="provider-nav-link">Accueil</a>
+      @if (dashboard()?.accountStatus === 'published') {
+        <a [routerLink]="publicPageLink()" target="_blank" rel="noopener" class="provider-nav-link">
+          Ma page publique ↗
+        </a>
+      }
+    </nav>
+    <span class="provider-header-role">{{ isTraining ? 'Centre de formation' : 'Établissement privé' }}</span>
+    <button type="button" class="provider-btn provider-btn--ghost" (click)="authService.logout()">
+      Déconnexion
+    </button>
+  </header>
+
+  <main class="provider-main">
+    @if (loading()) {
+      <div class="provider-state">
+        <p class="provider-state-title">Chargement de votre espace…</p>
+      </div>
+    } @else if (error()) {
+      <div class="provider-state provider-state--error">
+        <p>{{ error() }}</p>
+      </div>
+    } @else if (dashboard()) {
+      <header class="provider-hero">
+        <div class="provider-hero-text">
+          <p class="provider-hero-eyebrow">Espace prestataire</p>
+          <h1 class="provider-hero-title">{{ dashboard()!.organization.name || 'Mon organisme' }}</h1>
+          @if (dashboard()!.organization.city) {
+            <p class="provider-hero-meta">{{ dashboard()!.organization.city }}</p>
+          }
+        </div>
+        <span
+          class="provider-pill"
+          [class.provider-pill--ok]="dashboard()!.accountStatus === 'published'"
+          [class.provider-pill--warn]="dashboard()!.accountStatus === 'pending'"
+          [class.provider-pill--danger]="dashboard()!.accountStatus === 'rejected'"
+        >
+          {{ statusLabel(dashboard()!.accountStatus) }}
+        </span>
+      </header>
+
+      @if (!dashboard()!.profileComplete) {
+        <aside class="provider-alert" role="status">
+          <strong>Profil à compléter</strong>
+          <p>Ajoutez un logo, une description d’au moins 20 caractères et une ville pour publier formations et événements.</p>
+          <ul class="provider-checklist">
+            <li [class.is-done]="!!mediaUrl(dashboard()!.organization.logoUrl)">Logo</li>
+            <li [class.is-done]="(description.trim().length >= 20)">Description</li>
+            <li [class.is-done]="!!dashboard()!.organization.city">Ville</li>
+          </ul>
+        </aside>
+      }
+
+      @if (isTraining && dashboard()!.accountStatus === 'published' && statsSummary(); as stats) {
+        <div class="provider-stats">
+          <div class="provider-stat-card">
+            <span class="provider-stat-value">{{ stats.formationsTotal }}</span>
+            <span class="provider-stat-label">Formations</span>
+            <span class="provider-stat-sub">{{ stats.formationsPublished }} publiée(s)</span>
+          </div>
+          <div class="provider-stat-card">
+            <span class="provider-stat-value">{{ stats.eventsTotal }}</span>
+            <span class="provider-stat-label">Événements</span>
+            <span class="provider-stat-sub">{{ stats.eventsPublished }} publié(s)</span>
+          </div>
+          <div class="provider-stat-card provider-stat-card--accent">
+            <span class="provider-stat-value">{{ stats.pendingTotal }}</span>
+            <span class="provider-stat-label">En validation</span>
+            <span class="provider-stat-sub">Par l’administrateur</span>
+          </div>
+        </div>
+      }
+
+      <div class="provider-layout">
+        <section class="provider-card">
+          <div class="provider-card-head">
+            <h2>Profil & documents</h2>
+            <p>Informations visibles sur votre fiche publique.</p>
+          </div>
+
+          <div class="provider-upload-grid">
+            <div class="provider-upload-box">
+              <span class="provider-upload-label">Logo</span>
+              <p class="provider-upload-hint">JPG, PNG ou WEBP — 2 Mo max.</p>
+              <label class="provider-file-btn">
+                Choisir une image
+                <input type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+              </label>
+              @if (mediaUrl(dashboard()!.organization.logoUrl); as logo) {
+                <img [src]="logo" alt="Logo" class="provider-logo-preview" />
+              }
+            </div>
+            <div class="provider-upload-box">
+              <span class="provider-upload-label">Brochure PDF</span>
+              <p class="provider-upload-hint">Document téléchargeable par les visiteurs.</p>
+              <label class="provider-file-btn provider-file-btn--secondary">
+                Ajouter un PDF
+                <input type="file" accept="application/pdf" hidden (change)="onBrochureSelected($event)" />
+              </label>
+              @if (dashboard()!.organization.brochures?.length) {
+                <ul class="provider-brochure-list">
+                  @for (b of dashboard()!.organization.brochures!; track b; let i = $index) {
+                    <li>
+                      <a [href]="mediaUrl(b)!" target="_blank" rel="noopener">Brochure {{ i + 1 }}</a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+
+          <div class="provider-form-grid">
+            <div class="provider-field provider-field--full">
+              <label for="provider-desc">Description</label>
+              <textarea
+                id="provider-desc"
+                class="provider-input"
+                rows="4"
+                [(ngModel)]="description"
+                placeholder="Présentez votre centre, vos spécialités…"
+              ></textarea>
+            </div>
+            <div class="provider-field">
+              <label for="provider-web">Site web</label>
+              <input
+                id="provider-web"
+                class="provider-input"
+                [(ngModel)]="website"
+                placeholder="https://…"
+              />
+            </div>
+            @if (isTraining) {
+              <div class="provider-field">
+                <label for="provider-domain">Domaine de formation</label>
+                <input
+                  id="provider-domain"
+                  class="provider-input"
+                  [(ngModel)]="trainingDomain"
+                  placeholder="Ex. Informatique, langues…"
+                />
+              </div>
+            }
+          </div>
+
+          <footer class="provider-card-foot">
+            <button type="button" class="provider-btn provider-btn--primary" (click)="saveProfile()">
+              Enregistrer le profil
+            </button>
+          </footer>
+        </section>
+
+        @if (dashboard()!.accountStatus === 'published') {
+          <section class="provider-card">
+            <div class="provider-card-head">
+              <h2>{{ isTraining ? 'Formations & événements' : 'Programmes' }}</h2>
+              @if (isTraining) {
+                <p>Chaque publication est validée par un administrateur avant mise en ligne.</p>
+              }
+            </div>
+
+            @if (!dashboard()!.canPublishOfferings) {
+              <p class="provider-muted">Complétez votre profil pour débloquer la publication.</p>
+            } @else if (isTraining) {
+              <div class="provider-cta-grid">
+                <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_NEW" class="provider-cta-card provider-cta-card--primary">
+                  <span class="provider-cta-icon" aria-hidden="true">📚</span>
+                  <span class="provider-cta-title">Publier une formation</span>
+                  <span class="provider-cta-desc">Parcours, dates, tarif, places…</span>
+                </a>
+                <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_NEW" class="provider-cta-card">
+                  <span class="provider-cta-icon" aria-hidden="true">📅</span>
+                  <span class="provider-cta-title">Publier un événement</span>
+                  <span class="provider-cta-desc">Workshop, conférence, webinaire…</span>
+                </a>
+              </div>
+
+              <div class="provider-list-block">
+                <div class="provider-list-head">
+                  <h3>Mes formations</h3>
+                  <span class="provider-count">{{ formations().length }}</span>
+                </div>
+                @if (!formations().length) {
+                  <div class="provider-empty">
+                    <p>Aucune formation pour le moment.</p>
+                    <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_NEW" class="provider-btn provider-btn--outline provider-btn--sm">
+                      Créer une formation
+                    </a>
+                  </div>
+                } @else {
+                  <ul class="provider-offer-list">
+                    @for (f of formations(); track f.id) {
+                      <li class="provider-offer-item">
+                        <div class="provider-offer-main">
+                          <strong>{{ f.title }}</strong>
+                          @if (f.category) {
+                            <span class="provider-offer-meta">{{ f.category }}</span>
+                          }
+                        </div>
+                        <span class="provider-badge" [class]="offeringStatusClass(f.status)">
+                          {{ offeringStatusLabel(f.status) }}
+                        </span>
+                        <div class="provider-offer-actions">
+                          <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(f.id)" class="provider-btn provider-btn--outline provider-btn--sm">
+                            Modifier
+                          </a>
+                          <button
+                            type="button"
+                            class="provider-btn provider-btn--danger provider-btn--sm"
+                            (click)="deleteFormation(f.id)"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+
+              <div class="provider-list-block">
+                <div class="provider-list-head">
+                  <h3>Mes événements</h3>
+                  <span class="provider-count">{{ events().length }}</span>
+                </div>
+                @if (!events().length) {
+                  <div class="provider-empty">
+                    <p>Aucun événement pour le moment.</p>
+                    <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_NEW" class="provider-btn provider-btn--outline provider-btn--sm">
+                      Créer un événement
+                    </a>
+                  </div>
+                } @else {
+                  <ul class="provider-offer-list">
+                    @for (ev of events(); track ev.id) {
+                      <li class="provider-offer-item">
+                        <div class="provider-offer-main">
+                          <strong>{{ ev.title }}</strong>
+                          <span class="provider-offer-meta">{{ eventTypeLabel(ev.eventType) }}</span>
+                        </div>
+                        <span class="provider-badge" [class]="offeringStatusClass(ev.status)">
+                          {{ offeringStatusLabel(ev.status) }}
+                        </span>
+                        <div class="provider-offer-actions">
+                          <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_EDIT(ev.id)" class="provider-btn provider-btn--outline provider-btn--sm">
+                            Modifier
+                          </a>
+                          <button
+                            type="button"
+                            class="provider-btn provider-btn--danger provider-btn--sm"
+                            (click)="deleteEvent(ev.id)"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            } @else {
+              <div class="provider-inline-form">
+                <input
+                  class="provider-input"
+                  [(ngModel)]="newProgramTitle"
+                  placeholder="Titre du programme"
+                />
+                <button type="button" class="provider-btn provider-btn--primary" (click)="addProgram()">
+                  Ajouter un programme
+                </button>
+              </div>
+              @if (programs().length) {
+                <ul class="provider-offer-list">
+                  @for (p of programs(); track p.title) {
+                    <li class="provider-offer-item">
+                      <div class="provider-offer-main">
+                        <strong>{{ p.title }}</strong>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            }
+          </section>
+        }
+      </div>
+    }
+  </main>
+</div>

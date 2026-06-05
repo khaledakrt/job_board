@@ -227,6 +227,35 @@ async function sendTeamInviteEmail({
   });
 }
 
+async function sendProviderParticipationEmail({
+  to,
+  candidateName,
+  offeringTitle,
+  offeringKind,
+  participationLabel,
+  dashboardUrl,
+}) {
+  const url =
+    dashboardUrl ||
+    `${env.CLIENT_URL}/provider/centre/participants`;
+  const subject = `${participationLabel} — ${offeringTitle}`;
+  const text = `${candidateName} — ${participationLabel} pour votre ${offeringKind} « ${offeringTitle} ».\n\nVoir les participants : ${url}`;
+
+  const bodyHtml = `
+  <p><strong>${escapeHtml(candidateName)}</strong> — <strong>${escapeHtml(participationLabel)}</strong></p>
+  <p>Pour votre ${escapeHtml(offeringKind)} <strong>« ${escapeHtml(offeringTitle)} »</strong>.</p>
+  <p style="margin-top:20px;">${brandButton(url, 'Voir les participants')}</p>`;
+
+  return sendMail({
+    to,
+    subject,
+    text,
+    html: wrapEmailHtml({ title: 'Nouveau participant', bodyHtml }),
+    devLinkLabel: 'Participants centre',
+    devLinkUrl: url,
+  });
+}
+
 async function sendRecruiterNewApplicationEmail({
   to,
   candidateName,
@@ -290,5 +319,6 @@ module.exports = {
   buildCandidateAlertHtml,
   sendTeamInviteEmail,
   sendRecruiterNewApplicationEmail,
+  sendProviderParticipationEmail,
   sendContactFormEmail,
 };

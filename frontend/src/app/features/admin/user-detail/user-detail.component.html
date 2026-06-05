@@ -60,7 +60,7 @@
             <span class="admin-meta-value">{{ user()!.createdAt | date: 'medium' }}</span>
           </div>
           <div class="admin-meta-item">
-            <span class="admin-meta-label">Dernière IP</span>
+            <span class="admin-meta-label">Dernière IP (IPv4)</span>
             <span class="admin-meta-value">{{ user()!.lastLoginIp || '—' }}</span>
           </div>
         </div>
@@ -163,8 +163,13 @@
         >
       </div>
       <p class="admin-empty-hint">
-        Les adresses IP sont enregistrées à chaque connexion. Utilisez le filtre « même IP » pour
-        détecter les comptes multiples.
+        Les adresses IP sont enregistrées à chaque connexion (IPv4 en priorité ; l’IPv6 locale
+        <code>::1</code> ou <code>::ffff:…</code> est convertie en IPv4 lisible). Utilisez le filtre
+        « même IP » pour détecter les comptes multiples.
+      </p>
+      <p class="admin-empty-hint">
+        L’adresse MAC de l’appareil n’est pas transmise par le navigateur au serveur (limitation
+        Web/HTTP) : seule l’IP publique ou locale est visible.
       </p>
 
       @if (loginPagination()) {
@@ -182,7 +187,7 @@
           <thead>
             <tr>
               <th>Date</th>
-              <th>Adresse IP</th>
+              <th>Adresse IP (IPv4)</th>
               <th>Navigateur</th>
               <th class="col-actions">Action</th>
             </tr>

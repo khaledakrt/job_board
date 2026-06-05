@@ -1,0 +1,116 @@
+<div class="provider-page provider-participants-page">
+  <div class="provider-participants-screen no-print">
+    <h1 class="provider-page-title">Participants</h1>
+    <p class="provider-page-sub">
+      Liste des candidats inscrits à vos formations et événements.
+      Filtrez par formation ou événement, puis imprimez la liste.
+    </p>
+
+    @if (loading()) {
+      <p class="provider-muted">Chargement…</p>
+    } @else if (error()) {
+      <p class="provider-muted">{{ error() }}</p>
+    } @else if (data()) {
+      <div class="provider-stats provider-participants-stats">
+        <div class="provider-stat-card provider-stat-card--accent">
+          <span class="provider-stat-value">{{ filteredItems().length }}</span>
+          <span class="provider-stat-label">Inscrits (filtre actif)</span>
+        </div>
+        <div class="provider-stat-card">
+          <span class="provider-stat-value">{{ registeredItems().length }}</span>
+          <span class="provider-stat-label">Total inscrits</span>
+        </div>
+      </div>
+
+      <section class="provider-card">
+        <div class="provider-participants-filters">
+          <label>
+            <span class="provider-filter-label">Type de publication</span>
+            <select
+              class="provider-input"
+              [ngModel]="kindFilter()"
+              (ngModelChange)="onKindFilterChange($event)"
+            >
+              <option value="">Toutes</option>
+              <option value="formation">Formations</option>
+              <option value="event">Événements</option>
+            </select>
+          </label>
+          <label class="provider-filter-offering">
+            <span class="provider-filter-label">Formation ou événement</span>
+            <select
+              class="provider-input"
+              [ngModel]="offeringFilter()"
+              (ngModelChange)="onOfferingFilterChange($event)"
+            >
+              <option value="">Toutes les publications</option>
+              @for (opt of offeringOptions(); track opt.key) {
+                <option [value]="opt.key">
+                  {{ opt.kind === 'formation' ? 'Formation' : 'Événement' }} — {{ opt.title }}
+                </option>
+              }
+            </select>
+          </label>
+          <div class="provider-participants-actions">
+            <button
+              type="button"
+              class="provider-btn provider-btn--primary"
+              [disabled]="!canPrint()"
+              (click)="printList()"
+            >
+              Imprimer la liste
+            </button>
+          </div>
+        </div>
+
+        @if (!filteredItems().length) {
+          <div class="provider-empty">
+            <p>Aucun inscrit pour ce filtre.</p>
+            <p class="provider-muted">Choisissez une autre formation ou événement.</p>
+          </div>
+        } @else {
+          <div class="provider-participants-table-wrap">
+            <table class="provider-participants-table">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Prénom</th>
+                  <th>E-mail</th>
+                  <th>Téléphone</th>
+                  <th>Publication</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of pageItems(); track row.id) {
+                  <tr>
+                    <td>{{ candidateLastName(row) }}</td>
+                    <td>{{ candidateFirstName(row) }}</td>
+                    <td>
+                      <a class="provider-participants-email" [href]="'mailto:' + row.candidate.email">
+                        {{ row.candidate.email }}
+                      </a>
+                    </td>
+                    <td>{{ row.candidate.phone || '—' }}</td>
+                    <td>
+                      <span class="provider-participants-kind">{{ offeringKindLabel(row) }}</span>
+                      <strong>{{ row.offeringTitle }}</strong>
+                    </td>
+                    <td class="provider-participants-date">{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-provider-list-pagination
+            [page]="page()"
+            [total]="filteredItems().length"
+            [pageSize]="pageSize"
+            (pageChange)="page.set($event)"
+          />
+        }
+      </section>
+    }
+  </div>
+
+</div>

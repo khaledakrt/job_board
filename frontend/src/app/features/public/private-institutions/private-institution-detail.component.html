@@ -1,0 +1,187 @@
+<app-public-shell>
+  <main class="catalog-page-main catalog-page-main--institution">
+    <div class="catalog-page-inner">
+      <nav class="catalog-breadcrumb" aria-label="Fil d'Ariane">
+        <a routerLink="/">Accueil</a>
+        <span aria-hidden="true">/</span>
+        <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS">Établissements privés</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ item()?.name || 'Détail' }}</span>
+      </nav>
+
+      <div class="catalog-detail-bar">
+        <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS" class="catalog-btn catalog-btn--ghost">← Retour à la liste</a>
+        <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION_REGISTER" class="catalog-btn catalog-btn--outline">
+          Inscrire un établissement
+        </a>
+      </div>
+
+      @if (loading()) {
+        <div class="catalog-state">
+          <p class="catalog-state-title">Chargement…</p>
+        </div>
+      } @else if (error()) {
+        <div class="catalog-state catalog-state-error">
+          <p class="catalog-state-title">{{ error() }}</p>
+        </div>
+      } @else if (item()) {
+        <div class="catalog-detail-layout">
+          <div class="catalog-detail-panel">
+            <div class="catalog-detail-head">
+              @if (mediaUrl(item()!.logoUrl); as logo) {
+                <img [src]="logo" alt="" class="catalog-card-logo" />
+              } @else {
+                <div class="catalog-card-logo catalog-card-logo-placeholder">EP</div>
+              }
+              <div>
+                <h1>{{ item()!.name }}</h1>
+                <div class="catalog-card-tags">
+                  <span class="catalog-tag">{{ institutionTypeLabel(item()!.institutionType) }}</span>
+                  @if (item()!.city) {
+                    <span class="catalog-tag">{{ item()!.city }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @if (item()!.photos.length) {
+              <div class="catalog-gallery">
+                @for (photo of item()!.photos; track photo) {
+                  @if (mediaUrl(photo); as src) {
+                    <img [src]="src" alt="" />
+                  }
+                }
+              </div>
+            }
+
+            @if (item()!.description) {
+              <h2 class="catalog-section-title">Présentation</h2>
+              <app-safe-html [content]="item()!.description ?? ''" />
+            }
+
+            @if (item()!.brochures?.length) {
+              <h2 class="catalog-section-title">Brochures</h2>
+              <ul class="catalog-brochure-list">
+                @for (b of item()!.brochures!; track b; let i = $index) {
+                  <li>
+                    @if (mediaUrl(b); as pdf) {
+                      <a [href]="pdf" target="_blank" rel="noopener noreferrer">📄 Télécharger le PDF {{ i + 1 }}</a>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+
+            <h2 class="catalog-section-title">Publications</h2>
+            <div class="catalog-offerings-tools" aria-label="Filtres des publications">
+              <label>
+                <span>Type</span>
+                <select
+                  class="catalog-select"
+                  [ngModel]="publicationTypeFilter()"
+                  (ngModelChange)="publicationTypeFilter.set($event); onPublicationFilterChange()"
+                >
+                  <option value="">Tous les types</option>
+                  <option value="program">Programmes</option>
+                  <option value="event">Événements</option>
+                  <option value="announcement">Actualités & annonces</option>
+                  <option value="opportunity">Offres & stages</option>
+                </select>
+              </label>
+              <label class="catalog-offerings-search">
+                <span>Recherche</span>
+                <input
+                  class="catalog-input"
+                  [ngModel]="publicationSearch()"
+                  (ngModelChange)="publicationSearch.set($event); onPublicationFilterChange()"
+                  placeholder="Rechercher par titre, résumé, catégorie..."
+                />
+              </label>
+            </div>
+
+            @if (!filteredPublications().length) {
+              <p class="catalog-card-meta">Aucune publication trouvée.</p>
+            } @else {
+              <div class="catalog-publications-grid">
+                @for (prog of pagedPublications(); track prog.id) {
+                <a
+                  [href]="routes.PUBLIC.PRIVATE_INSTITUTION_PUBLICATION(prog.id)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="catalog-repeat-block catalog-publication-card"
+                >
+                  <strong>{{ prog.title }}</strong>
+                  <p class="catalog-card-meta">
+                    {{ publicationTypeLabel(prog) }}
+                    @if (prog.category) {
+                      <span> · {{ prog.category }}</span>
+                    }
+                    @if (prog.city) {
+                      <span> · {{ prog.city }}</span>
+                    }
+                    @if (offeringDate(prog)) {
+                      <span> · {{ offeringDate(prog) }}</span>
+                    }
+                  </p>
+                  @if (prog.summary) {
+                    <p class="catalog-card-desc" style="-webkit-line-clamp: unset">{{ prog.summary }}</p>
+                  }
+                  <span class="catalog-publication-cta">Voir le détail →</span>
+                </a>
+                }
+              </div>
+              @if (publicationsTotalPages() > 1) {
+                <nav class="catalog-offerings-pagination" aria-label="Pagination des publications">
+                  <button
+                    type="button"
+                    class="catalog-btn catalog-btn--outline"
+                    [disabled]="publicationsPage() <= 1"
+                    (click)="setPublicationsPage(publicationsPage() - 1)"
+                  >
+                    Précédent
+                  </button>
+                  <span>Page {{ publicationsPage() }} / {{ publicationsTotalPages() }}</span>
+                  <button
+                    type="button"
+                    class="catalog-btn catalog-btn--outline"
+                    [disabled]="publicationsPage() >= publicationsTotalPages()"
+                    (click)="setPublicationsPage(publicationsPage() + 1)"
+                  >
+                    Suivant
+                  </button>
+                </nav>
+              }
+            }
+
+            @if (item()!.mapUrl) {
+              <p style="margin-top: 1.25rem">
+                <a [href]="item()!.mapUrl" target="_blank" rel="noopener noreferrer" class="catalog-btn catalog-btn--primary">
+                  Voir sur Google Maps
+                </a>
+              </p>
+            }
+          </div>
+
+          <aside class="catalog-detail-side">
+            <h3>Coordonnées</h3>
+            @if (item()!.address) {
+              <p><strong>Adresse</strong><br />{{ item()!.address }}</p>
+            }
+            @if (item()!.phone) {
+              <p><strong>Téléphone</strong><br />{{ item()!.phone }}</p>
+            }
+            @if (item()!.email) {
+              <p><a [href]="'mailto:' + item()!.email">{{ item()!.email }}</a></p>
+            }
+            @if (item()!.website) {
+              <p><a [href]="item()!.website" target="_blank" rel="noopener noreferrer">Site web →</a></p>
+            }
+            @for (s of item()!.socialLinks; track s.url) {
+              <p><a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.label || s.url }}</a></p>
+            }
+          </aside>
+        </div>
+      }
+    </div>
+  </main>
+</app-public-shell>

@@ -245,3 +245,13 @@
 .safe-html .rte-font-modern {
   font-family: 'Comic Sans MS', 'Comic Sans', cursive !important;
 }
+
+/* Espace prestataire : éditeur riche pleine largeur */
+.provider-page .provider-field--rte app-rich-text-editor {
+  display: block;
+  width: 100%;
+}
+
+.provider-page .provider-card--desc .rte-toolbar {
+  flex-wrap: wrap;
+}

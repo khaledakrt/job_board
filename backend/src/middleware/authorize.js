@@ -19,9 +19,19 @@ function authorizeRoles(...allowedRoles) {
 
 const requireRecruiterRole = authorizeRoles(USER_ROLES.RECRUITER, USER_ROLES.ADMIN);
 const requireCandidateRole = authorizeRoles(USER_ROLES.CANDIDATE);
+const requireTrainingProviderRole = authorizeRoles(
+  USER_ROLES.TRAINING_PROVIDER,
+  USER_ROLES.ADMIN
+);
+const requireInstitutionProviderRole = authorizeRoles(
+  USER_ROLES.INSTITUTION_PROVIDER,
+  USER_ROLES.ADMIN
+);
 
 module.exports = {
   authorizeRoles,
   requireRecruiterRole,
   requireCandidateRole,
+  requireTrainingProviderRole,
+  requireInstitutionProviderRole,
 };

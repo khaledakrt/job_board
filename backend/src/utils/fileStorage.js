@@ -8,6 +8,8 @@ const {
   RESUME_UPLOAD,
   AVATAR_UPLOAD,
   CV_SNAPSHOT_UPLOAD,
+  CATALOG_BROCHURE_UPLOAD,
+  CATALOG_IMAGE_UPLOAD,
 } = require('../config/constants');
 const ApiError = require('./ApiError');
 const logger = require('./logger');
@@ -36,6 +38,14 @@ function getSnapshotDirectory() {
   return getDirectoryForSubdir(CV_SNAPSHOT_UPLOAD.SUBDIRECTORY);
 }
 
+function getBrochureDirectory() {
+  return getDirectoryForSubdir(CATALOG_BROCHURE_UPLOAD.SUBDIRECTORY);
+}
+
+function getCatalogImageDirectory() {
+  return getDirectoryForSubdir(CATALOG_IMAGE_UPLOAD.SUBDIRECTORY);
+}
+
 function buildPublicUrl(subdirectory, filename) {
   return `${env.API_PUBLIC_URL}/uploads/${subdirectory}/${filename}`;
 }
@@ -54,6 +64,14 @@ function buildAvatarPublicUrl(filename) {
 
 function buildSnapshotPublicUrl(filename) {
   return buildPublicUrl(CV_SNAPSHOT_UPLOAD.SUBDIRECTORY, filename);
+}
+
+function buildBrochurePublicUrl(filename) {
+  return buildPublicUrl(CATALOG_BROCHURE_UPLOAD.SUBDIRECTORY, filename);
+}
+
+function buildCatalogImagePublicUrl(filename) {
+  return buildPublicUrl(CATALOG_IMAGE_UPLOAD.SUBDIRECTORY, filename);
 }
 
 function resolveFilePathFromUrl(fileUrl, subdirectory) {
@@ -95,6 +113,14 @@ async function ensureAvatarDirectory() {
 
 async function ensureSnapshotDirectory() {
   await ensureDirectory(getSnapshotDirectory());
+}
+
+async function ensureBrochureDirectory() {
+  await ensureDirectory(getBrochureDirectory());
+}
+
+async function ensureCatalogImageDirectory() {
+  await ensureDirectory(getCatalogImageDirectory());
 }
 
 async function deleteFileFromUrl(fileUrl, subdirectory) {
@@ -181,6 +207,12 @@ module.exports = {
   ensureResumeDirectory,
   ensureAvatarDirectory,
   ensureSnapshotDirectory,
+  ensureBrochureDirectory,
+  ensureCatalogImageDirectory,
+  buildBrochurePublicUrl,
+  buildCatalogImagePublicUrl,
+  getBrochureDirectory,
+  getCatalogImageDirectory,
   deleteLogoFile,
   deleteResumeFile,
   deleteAvatarFile,

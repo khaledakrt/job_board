@@ -1,0 +1,108 @@
+<app-public-shell>
+  <main class="catalog-page-main">
+    <div class="catalog-page-inner">
+      <app-catalog-page-header
+        theme="training"
+        title="Centres de formation"
+        subtitle="Parcourez les centres publiés, leurs formations et documents."
+        breadcrumbLabel="Centres de formation"
+        [listRoute]="routes.PUBLIC.TRAINING_CENTERS"
+        [registerRoute]="routes.PUBLIC.TRAINING_CENTER_REGISTER"
+        registerLabel="Inscrire mon centre"
+        loginHint="Connexion espace centre"
+        [showActions]="!authService.isAuthenticated()"
+      />
+
+      <section class="catalog-filters" aria-label="Filtres de recherche">
+        <p class="catalog-filters-title">Rechercher un centre</p>
+        <div class="catalog-filters-grid catalog-filters-grid--training">
+          <div>
+            <label class="catalog-label" for="tc-search">Mot-clé</label>
+            <input id="tc-search" class="catalog-input" [(ngModel)]="search" placeholder="Nom, domaine…" />
+          </div>
+          <div>
+            <label class="catalog-label" for="tc-city">Ville</label>
+            <input id="tc-city" class="catalog-input" [(ngModel)]="city" placeholder="Ex. Tunis" />
+          </div>
+          <div>
+            <label class="catalog-label" for="tc-domain">Domaine</label>
+            <input id="tc-domain" class="catalog-input" [(ngModel)]="domain" placeholder="Ex. Informatique" />
+          </div>
+          <div>
+            <label class="catalog-label" for="tc-mode">Mode</label>
+            <select id="tc-mode" class="catalog-select" [(ngModel)]="deliveryMode">
+              @for (opt of deliveryOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="catalog-filters-actions">
+            <button type="button" class="catalog-btn catalog-btn--primary" (click)="load()">Rechercher</button>
+          </div>
+        </div>
+      </section>
+
+      @if (loading()) {
+        <div class="catalog-state">
+          <p class="catalog-state-icon">⏳</p>
+          <p class="catalog-state-title">Chargement…</p>
+        </div>
+      } @else if (error()) {
+        <div class="catalog-state catalog-state-error">
+          <p class="catalog-state-title">{{ error() }}</p>
+        </div>
+      } @else if (!items().length) {
+        <div class="catalog-state">
+          <p class="catalog-state-icon">📚</p>
+          <p class="catalog-state-title">Aucun centre publié</p>
+          <p>Revenez plus tard ou inscrivez votre centre.</p>
+          <div class="catalog-state-actions">
+            <a [routerLink]="routes.PUBLIC.TRAINING_CENTER_REGISTER" class="catalog-btn catalog-btn--primary">
+              Inscrire mon centre
+            </a>
+          </div>
+        </div>
+      } @else {
+        <div class="catalog-toolbar">
+          <p class="catalog-toolbar-count"><strong>{{ total() }}</strong> centre(s) trouvé(s)</p>
+        </div>
+        <div class="catalog-grid">
+          @for (c of items(); track c.id) {
+            <a
+              [routerLink]="routes.PUBLIC.TRAINING_CENTER(c.id)"
+              class="catalog-card catalog-card--link"
+              [attr.aria-label]="'Voir la fiche de ' + c.name"
+            >
+              <div class="catalog-card-body">
+                @if (logoUrl(c.logoUrl); as src) {
+                  <img [src]="src" alt="" class="catalog-card-logo" />
+                } @else {
+                  <div class="catalog-card-logo catalog-card-logo-placeholder">CF</div>
+                }
+                <h2>{{ c.name }}</h2>
+                <div class="catalog-card-tags">
+                  @if (c.city) {
+                    <span class="catalog-tag">{{ c.city }}</span>
+                  }
+                  @if (c.trainingDomain) {
+                    <span class="catalog-tag">{{ c.trainingDomain }}</span>
+                  }
+                  @if (c.deliveryMode) {
+                    <span class="catalog-tag">{{ deliveryModeLabel(c.deliveryMode) }}</span>
+                  }
+                </div>
+                @if (c.shortDescription) {
+                  <p class="catalog-card-desc">{{ c.shortDescription }}</p>
+                }
+                <p class="catalog-card-stat">{{ c.courseCount }} formation(s)</p>
+              </div>
+              <div class="catalog-card-footer">
+                <span class="catalog-card-cta">Voir la fiche</span>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </main>
+</app-public-shell>

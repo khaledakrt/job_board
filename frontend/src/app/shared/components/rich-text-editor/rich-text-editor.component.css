@@ -220,6 +220,11 @@
   outline: none;
 }
 
+.rte-large .rte-editor {
+  min-height: 11rem;
+  max-height: 22rem;
+}
+
 .rte-editor:empty::before,
 .rte-editor[data-placeholder='true']::before {
   content: attr(data-placeholder);

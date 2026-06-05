@@ -10,7 +10,9 @@
     "db:migrate": "node scripts/run-migrations.js",
     "db:seed": "node scripts/seed-test-users.js",
     "db:seed:jobs": "node scripts/seed-jobs.js",
-    "db:seed:demo": "node scripts/seed-demo-data.js"
+    "db:seed:demo": "node scripts/seed-demo-data.js",
+    "db:seed:formations": "node scripts/seed-training-formations.js",
+    "db:seed:institution-offerings": "node scripts/seed-institution-offerings.js"
   },
   "engines": {
     "node": ">=18.0.0"

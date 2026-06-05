@@ -1,0 +1,233 @@
+<app-public-shell>
+  <main class="catalog-page-main catalog-page-main--detail">
+    <div class="catalog-page-inner catalog-page-inner--detail">
+      <nav class="catalog-breadcrumb" aria-label="Fil d'Ariane">
+        <a routerLink="/">Accueil</a>
+        <span aria-hidden="true">/</span>
+        <a [routerLink]="routes.PUBLIC.TRAINING_CENTERS">Centres de formation</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ center()?.name || 'Détail' }}</span>
+      </nav>
+
+      <div class="catalog-detail-bar">
+        <a [routerLink]="routes.PUBLIC.TRAINING_CENTERS" class="catalog-btn catalog-btn--ghost">← Retour à la liste</a>
+        <a [routerLink]="routes.PUBLIC.TRAINING_CENTER_REGISTER" class="catalog-btn catalog-btn--outline">
+          Inscrire un centre
+        </a>
+      </div>
+
+      @if (loading()) {
+        <div class="catalog-state">
+          <p class="catalog-state-title">Chargement…</p>
+        </div>
+      } @else if (error()) {
+        <div class="catalog-state catalog-state-error">
+          <p class="catalog-state-title">{{ error() }}</p>
+        </div>
+      } @else if (center()) {
+        <div class="catalog-detail-layout">
+          <div class="catalog-detail-panel">
+            <div class="catalog-detail-head">
+              @if (mediaUrl(center()!.logoUrl); as logo) {
+                <img [src]="logo" alt="" class="catalog-card-logo" />
+              } @else {
+                <div class="catalog-card-logo catalog-card-logo-placeholder">CF</div>
+              }
+              <div class="catalog-detail-head-text">
+                <h1>{{ center()!.name }}</h1>
+                <div class="catalog-card-tags">
+                  @if (center()!.city) {
+                    <span class="catalog-tag">{{ center()!.city }}</span>
+                  }
+                  @if (center()!.trainingDomain) {
+                    <span class="catalog-tag">{{ center()!.trainingDomain }}</span>
+                  }
+                  @if (center()!.deliveryMode) {
+                    <span class="catalog-tag">{{ deliveryModeLabel(center()!.deliveryMode) }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @if (center()!.photos.length) {
+              <div class="catalog-gallery">
+                @for (photo of center()!.photos; track photo) {
+                  @if (mediaUrl(photo); as src) {
+                    <img [src]="src" alt="" />
+                  }
+                }
+              </div>
+            }
+
+            @if (center()!.description) {
+              <section class="catalog-detail-block">
+                <h2 class="catalog-section-title">Présentation</h2>
+                <div class="catalog-detail-prose">
+                  <app-safe-html [content]="center()!.description ?? ''" />
+                </div>
+              </section>
+            }
+
+            @if (center()!.brochures?.length) {
+              <section class="catalog-detail-block">
+                <h2 class="catalog-section-title">Brochures</h2>
+                <ul class="catalog-brochure-list">
+                  @for (b of center()!.brochures!; track b; let i = $index) {
+                    <li>
+                      @if (mediaUrl(b); as pdf) {
+                        <a [href]="pdf" target="_blank" rel="noopener noreferrer">📄 Télécharger le PDF {{ i + 1 }}</a>
+                      }
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+
+            <section class="catalog-detail-block catalog-offerings-section">
+              <div class="catalog-offerings-header">
+                <h2 class="catalog-section-title">Formations & événements</h2>
+                <span class="catalog-offerings-count">
+                  {{ filteredOfferingCards().length }} résultat(s)
+                </span>
+              </div>
+
+              <div class="catalog-offerings-tools">
+                <label>
+                  <span>Type</span>
+                  <select
+                    class="catalog-input"
+                    [ngModel]="offeringKindFilter()"
+                    (ngModelChange)="offeringKindFilter.set($event); onOfferingsFilterChange()"
+                  >
+                    <option value="all">Tout</option>
+                    <option value="formation">Formations</option>
+                    <option value="event">Événements</option>
+                  </select>
+                </label>
+                <label class="catalog-offerings-search">
+                  <span>Recherche par nom</span>
+                  <input
+                    class="catalog-input"
+                    type="search"
+                    placeholder="Nom de formation ou événement..."
+                    [ngModel]="offeringSearch()"
+                    (ngModelChange)="offeringSearch.set($event); onOfferingsFilterChange()"
+                  />
+                </label>
+              </div>
+
+              @if (pagedOfferingCards().length) {
+                <div class="catalog-offerings-grid">
+                  @for (item of pagedOfferingCards(); track item.kind + ':' + item.id) {
+                    <a [routerLink]="item.route" class="catalog-offering-card catalog-offering-card--tile">
+                      @if (mediaUrl(item.imageUrl); as img) {
+                        <img [src]="img" alt="" class="catalog-offering-thumb" />
+                      } @else {
+                        <div
+                          class="catalog-offering-thumb-placeholder"
+                          [class.catalog-offering-thumb-placeholder--event]="item.kind === 'event'"
+                          aria-hidden="true"
+                        >
+                          {{ item.placeholder }}
+                        </div>
+                      }
+                      <div class="catalog-offering-body">
+                        <h3 class="catalog-offering-title">{{ item.title }}</h3>
+                        <div class="catalog-offering-tags">
+                          @if (item.primaryTag) {
+                            <span class="catalog-tag">{{ item.primaryTag }}</span>
+                          }
+                          @if (item.secondaryTag) {
+                            <span class="catalog-tag catalog-tag--muted">{{ item.secondaryTag }}</span>
+                          }
+                        </div>
+                        @if (item.description) {
+                          <p class="catalog-offering-desc">{{ item.description }}</p>
+                        }
+                        <div class="catalog-offering-footer">
+                          @if (formatPrice(item.price); as p) {
+                            <span class="catalog-offering-price">{{ p }}</span>
+                          }
+                          @if (item.participantsCount != null) {
+                            <span class="catalog-offering-participants" [attr.title]="'Participants inscrits'">
+                              {{ item.participantsCount }}
+                            </span>
+                          }
+                          @if (item.meta) {
+                            <span class="catalog-offering-meta">{{ item.meta }}</span>
+                          }
+                        </div>
+                        <span class="catalog-offering-cta">{{ item.cta }}</span>
+                      </div>
+                    </a>
+                  }
+                </div>
+
+                @if (filteredOfferingCards().length > offeringsPageSize) {
+                  <nav class="catalog-offerings-pagination" aria-label="Pagination des publications">
+                    <button
+                      type="button"
+                      class="catalog-btn catalog-btn--outline"
+                      [disabled]="offeringsPage() <= 1"
+                      (click)="setOfferingsPage(offeringsPage() - 1)"
+                    >
+                      Précédent
+                    </button>
+                    <span>Page {{ offeringsPage() }} / {{ offeringsTotalPages() }}</span>
+                    <button
+                      type="button"
+                      class="catalog-btn catalog-btn--outline"
+                      [disabled]="offeringsPage() >= offeringsTotalPages()"
+                      (click)="setOfferingsPage(offeringsPage() + 1)"
+                    >
+                      Suivant
+                    </button>
+                  </nav>
+                }
+              } @else if (
+                offeringKindFilter() === 'formation' &&
+                !offeringSearch().trim() &&
+                center()!.courses.length
+              ) {
+                <div class="catalog-offerings-list-legacy">
+                  @for (course of center()!.courses; track course.id) {
+                    <div class="catalog-repeat-block">
+                      <strong>{{ course.title }}</strong>
+                      @if (course.deliveryMode) {
+                        <span class="catalog-tag">{{ deliveryModeLabel(course.deliveryMode) }}</span>
+                      }
+                      @if (course.description) {
+                        <p class="catalog-card-desc">{{ course.description }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="catalog-empty-hint">Aucun résultat pour ce filtre.</p>
+              }
+            </section>
+          </div>
+
+          <aside class="catalog-detail-side">
+            <h3>Contact</h3>
+            @if (center()!.address) {
+              <p><strong>Adresse</strong><br />{{ center()!.address }}</p>
+            }
+            @if (center()!.phone) {
+              <p><strong>Téléphone</strong><br />{{ center()!.phone }}</p>
+            }
+            @if (center()!.email) {
+              <p><a [href]="'mailto:' + center()!.email">{{ center()!.email }}</a></p>
+            }
+            @if (center()!.website) {
+              <p><a [href]="center()!.website" target="_blank" rel="noopener noreferrer">Site web →</a></p>
+            }
+            @for (s of center()!.socialLinks; track s.url) {
+              <p><a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.label || s.url }}</a></p>
+            }
+          </aside>
+        </div>
+      }
+    </div>
+  </main>
+</app-public-shell>

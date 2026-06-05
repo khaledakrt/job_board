@@ -35,6 +35,17 @@ function errorHandler(err, req, res, next) {
   } else if (err.message && err.message.includes('Invalid file type')) {
     statusCode = 400;
     message = err.message;
+  } else if (
+    err.name === 'SequelizeDatabaseError' ||
+    err.original?.code === 'ER_NO_SUCH_TABLE' ||
+    err.original?.code === 'ER_BAD_FIELD_ERROR'
+  ) {
+    statusCode = 503;
+    message =
+      'Base de données non à jour. Exécutez les migrations : cd backend && npm run db:migrate';
+    if (process.env.NODE_ENV === 'development' && err.original?.sqlMessage) {
+      message = `${message} (${err.original.sqlMessage})`;
+    }
   }
 
   if (statusCode >= 500) {

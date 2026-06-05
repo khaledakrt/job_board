@@ -1,0 +1,81 @@
+<app-public-shell>
+  <main class="catalog-page-main" [class.catalog-page-main--institution]="providerType() === 'private_institution'">
+    <div class="catalog-page-inner">
+      <nav class="catalog-breadcrumb" aria-label="Fil d'Ariane">
+        <a routerLink="/">Accueil</a>
+        <span aria-hidden="true">/</span>
+        <a [routerLink]="backLink()">{{
+          providerType() === 'training_center' ? 'Centres de formation' : 'Établissements privés'
+        }}</a>
+        <span aria-hidden="true">/</span>
+        <span>Inscription</span>
+      </nav>
+
+      <section
+        class="catalog-hero catalog-form-hero"
+        [class.catalog-hero--institution]="providerType() === 'private_institution'"
+        style="margin-bottom: 1.25rem"
+      >
+        <div class="catalog-hero-text" style="align-items: center">
+          <span class="catalog-hero-badge" aria-hidden="true">
+            {{ providerType() === 'training_center' ? '📚' : '🏫' }}
+          </span>
+          <div>
+            <h1 style="margin: 0">{{ title() }}</h1>
+            <p style="margin: 0.35rem 0 0">
+              Créez votre compte. Un administrateur validera votre demande avant publication.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div class="catalog-form-panel">
+        @if (success()) {
+          <div class="catalog-success">
+            <p>{{ success() }}</p>
+            <div class="catalog-form-actions">
+              <button type="button" class="catalog-btn catalog-btn--primary" (click)="goLogin()">
+                Aller à la connexion
+              </button>
+            </div>
+          </div>
+        } @else {
+          <a [routerLink]="routes.AUTH.LOGIN" class="catalog-btn catalog-btn--ghost" style="margin-bottom: 1rem">
+            Déjà inscrit ? Connexion
+          </a>
+          @if (error()) {
+            <p class="catalog-state-error" style="padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem">{{ error() }}</p>
+          }
+          <form (ngSubmit)="submit()">
+            <div class="catalog-form-row">
+              <label for="orgName">Nom du {{ providerType() === 'training_center' ? 'centre' : 'établissement' }} *</label>
+              <input id="orgName" class="catalog-input" [(ngModel)]="organizationName" name="organizationName" required />
+            </div>
+            <div class="catalog-form-row">
+              <label for="regEmail">E-mail (connexion) *</label>
+              <input id="regEmail" class="catalog-input" type="email" [(ngModel)]="email" name="email" required />
+            </div>
+            <div class="catalog-form-row">
+              <label for="regPass">Mot de passe *</label>
+              <input id="regPass" class="catalog-input" type="password" [(ngModel)]="password" name="password" required minlength="8" />
+            </div>
+            <div class="catalog-form-row">
+              <label for="regCity">Ville</label>
+              <input id="regCity" class="catalog-input" [(ngModel)]="city" name="city" />
+            </div>
+            <div class="catalog-form-row">
+              <label for="regPhone">Téléphone</label>
+              <input id="regPhone" class="catalog-input" [(ngModel)]="phone" name="phone" />
+            </div>
+            <div class="catalog-form-actions">
+              <a [routerLink]="backLink()" class="catalog-btn catalog-btn--outline">Annuler</a>
+              <button type="submit" class="catalog-btn catalog-btn--primary" [disabled]="submitting()">
+                {{ submitting() ? 'Envoi…' : 'Envoyer ma demande' }}
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  </main>
+</app-public-shell>

@@ -1,0 +1,146 @@
+<div class="provider-page">
+  <h1 class="provider-page-title">{{ labels().plural }}</h1>
+  <p class="provider-page-sub">{{ labels().subtitle }}</p>
+
+  @if (error()) {
+    <p class="provider-message provider-message--error">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="provider-message provider-message--success">{{ success() }}</p>
+  }
+
+  <section class="provider-card institution-form-card">
+    <div class="provider-card-head">
+      <h2>{{ formTitle() }}</h2>
+      <p>Soignez le titre, le résumé et la description. Les liens, le gras et les polices sont disponibles dans l’éditeur.</p>
+    </div>
+
+    <div class="institution-form-grid">
+      <label>
+        <span>{{ labels().titleLabel }} *</span>
+        <input class="provider-input" [(ngModel)]="title" [placeholder]="labels().titlePlaceholder" />
+      </label>
+      <label>
+        <span>Action</span>
+        <select class="provider-input" [(ngModel)]="status">
+          <option value="draft">Enregistrer en brouillon</option>
+          <option value="pending">Soumettre à validation</option>
+        </select>
+      </label>
+      <label>
+        <span>{{ labels().categoryLabel }}</span>
+        <input class="provider-input" [(ngModel)]="category" placeholder="Ex. Informatique, admission, business..." />
+      </label>
+      @if (type() === 'event') {
+        <label>
+          <span>Type d’événement</span>
+          <select class="provider-input" [(ngModel)]="eventType">
+            <option value="open_day">Journée portes ouvertes</option>
+            <option value="conference">Conférence</option>
+            <option value="seminar">Séminaire</option>
+            <option value="workshop">Workshop</option>
+            <option value="webinar">Webinaire</option>
+            <option value="admission_contest">Concours d'admission</option>
+            <option value="other">Autre</option>
+          </select>
+        </label>
+      }
+      @if (type() === 'opportunity') {
+        <label>
+          <span>Type</span>
+          <select class="provider-input" [(ngModel)]="opportunityType">
+            <option value="internship">Stage</option>
+            <option value="job">Emploi</option>
+          </select>
+        </label>
+      }
+      <label class="institution-form-wide">
+        <span>{{ labels().summaryLabel }} *</span>
+        <textarea
+          class="provider-input institution-summary"
+          rows="3"
+          maxlength="500"
+          [(ngModel)]="summary"
+          [placeholder]="labels().summaryPlaceholder"
+        ></textarea>
+        <small>Texte court visible dans les cartes et listes publiques. Maximum 500 caractères.</small>
+      </label>
+      <div class="institution-form-wide provider-field provider-field--rte-block">
+        <label>{{ labels().descriptionLabel }}</label>
+        <app-rich-text-editor
+          [editorId]="'institution-offering-description-' + type()"
+          editorSize="large"
+          [(ngModel)]="description"
+          name="institutionOfferingDescription"
+          [placeholder]="labels().descriptionPlaceholder"
+        />
+        <p class="provider-field-hint">Sélectionnez un texte pour appliquer une police, le mettre en gras ou ajouter un lien.</p>
+      </div>
+      <label>
+        <span>{{ labels().dateStartLabel }}</span>
+        <input type="date" class="provider-input" [(ngModel)]="startDate" />
+      </label>
+      <label>
+        <span>{{ labels().dateEndLabel }}</span>
+        <input type="date" class="provider-input" [(ngModel)]="endDate" />
+      </label>
+      <label>
+        <span>Ville</span>
+        <input class="provider-input" [(ngModel)]="city" placeholder="Ex. Tunis" />
+      </label>
+      <label>
+        <span>{{ labels().seatsLabel }}</span>
+        <input type="number" min="0" class="provider-input" [(ngModel)]="seats" />
+      </label>
+      <label class="institution-form-wide">
+        <span>Adresse</span>
+        <input class="provider-input" [(ngModel)]="address" placeholder="Adresse complète ou lieu de l’événement" />
+      </label>
+      <label>
+        <span>Téléphone</span>
+        <input type="tel" class="provider-input" [(ngModel)]="phone" placeholder="+216 ..." />
+      </label>
+      <label>
+        <span>E-mail de contact</span>
+        <input type="email" class="provider-input" [(ngModel)]="email" placeholder="contact@etablissement.tn" />
+      </label>
+      <label class="institution-form-wide">
+        <span>Lien externe</span>
+        <input class="provider-input" [(ngModel)]="website" placeholder="https://..." />
+      </label>
+    </div>
+
+    <div class="provider-form-actions">
+      <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving()" (click)="save()">
+        {{ status === 'pending' ? 'Soumettre à validation' : 'Enregistrer le brouillon' }}
+      </button>
+      @if (editingId()) {
+        <button type="button" class="provider-btn provider-btn--outline" (click)="resetForm()">Annuler</button>
+      }
+    </div>
+  </section>
+
+  @if (confirmOpen()) {
+    <div class="provider-confirm-backdrop" role="presentation">
+      <section class="provider-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="institution-confirm-title">
+        <h2 id="institution-confirm-title">{{ confirmTitle() }}</h2>
+        <p>{{ confirmMessage() }}</p>
+        <div class="provider-confirm-actions">
+          <button type="button" class="provider-btn provider-btn--outline" [disabled]="saving()" (click)="closeConfirm()">
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="provider-btn"
+            [class.provider-btn--primary]="confirmMode() === 'save'"
+            [class.provider-btn--danger-solid]="confirmMode() === 'delete'"
+            [disabled]="saving()"
+            (click)="confirmAction()"
+          >
+            {{ saving() ? 'Traitement...' : 'Confirmer' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

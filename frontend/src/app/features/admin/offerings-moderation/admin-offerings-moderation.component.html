@@ -1,0 +1,227 @@
+<div class="admin-page admin-offerings-page" [class]="pageClass()">
+  <header class="admin-page-header admin-offerings-header">
+    <div class="admin-offerings-header-text">
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / Catalogue</span>
+        <span> / {{ title() }}</span>
+      </p>
+      <h1>{{ title() }}</h1>
+      <p class="admin-page-subtitle">{{ subtitle() }}</p>
+    </div>
+    <a
+      [routerLink]="routes.ADMIN.TRAINING_CENTERS"
+      class="admin-btn-ghost !w-auto px-4 shrink-0"
+    >
+      Centres de formation
+    </a>
+  </header>
+
+  <div class="admin-status-tabs" role="tablist" [attr.aria-label]="'Filtrer les ' + title()">
+    <button
+      type="button"
+      class="admin-status-tab"
+      [class.admin-status-tab--active]="filters.controls.status.value === ''"
+      (click)="setStatusFilter('')"
+    >
+      Tous
+    </button>
+    <button
+      type="button"
+      class="admin-status-tab"
+      [class.admin-status-tab--active]="filters.controls.status.value === 'pending'"
+      (click)="setStatusFilter('pending')"
+    >
+      En attente
+    </button>
+    <button
+      type="button"
+      class="admin-status-tab"
+      [class.admin-status-tab--active]="filters.controls.status.value === 'published'"
+      (click)="setStatusFilter('published')"
+    >
+      Publiés
+    </button>
+    <button
+      type="button"
+      class="admin-status-tab"
+      [class.admin-status-tab--active]="filters.controls.status.value === 'rejected'"
+      (click)="setStatusFilter('rejected')"
+    >
+      Refusés
+    </button>
+  </div>
+
+  <form class="admin-filters admin-offerings-filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <div class="admin-field">
+      <label for="offStatus">Statut</label>
+      <select id="offStatus" formControlName="status" class="form-input">
+        <option value="">Tous</option>
+        <option value="pending">En attente</option>
+        <option value="published">Publié</option>
+        <option value="rejected">Refusé</option>
+      </select>
+    </div>
+    <div class="admin-filter-actions">
+      <button type="button" class="admin-btn-ghost" (click)="resetFilters()">Réinitialiser</button>
+      <button type="submit" class="btn-primary !w-auto px-5">Appliquer</button>
+    </div>
+  </form>
+
+  @if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  }
+  @if (successMessage()) {
+    <div class="alert-success admin-alerts">{{ successMessage() }}</div>
+  }
+
+  @if (pagination()) {
+    <div class="admin-toolbar">
+      <span>{{ toolbarSummary() }}</span>
+    </div>
+  }
+
+  <div class="admin-table-wrap" [class.admin-table-wrap--loading]="loading()">
+    @if (loading()) {
+      <div class="admin-table-loading">Chargement…</div>
+    }
+    <div class="table-panel">
+      <table class="data-table admin-offerings-table">
+        <thead>
+          <tr>
+            <th class="col-title">Titre</th>
+            <th>Centre</th>
+            @if (kind() === 'formations') {
+              <th>Catégorie</th>
+              <th>Date(s)</th>
+            } @else {
+              <th>Type</th>
+              <th>Date</th>
+            }
+            <th>Ville</th>
+            <th class="col-num">Prix</th>
+            <th class="col-status">Statut</th>
+            <th>Soumis le</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.id) {
+            <tr>
+              <td>
+                @if (publicLink(row); as pub) {
+                  <a [href]="pub" target="_blank" rel="noopener" class="admin-link">{{ row.title }}</a>
+                } @else {
+                  <span class="admin-offering-title">{{ row.title }}</span>
+                }
+              </td>
+              <td>
+                @if (centerAdminLink(row.centerId); as centerUrl) {
+                  <a [routerLink]="centerUrl" class="admin-link">{{ row.centerName || '—' }}</a>
+                } @else {
+                  {{ row.centerName || '—' }}
+                }
+              </td>
+              @if (kind() === 'formations') {
+                <td>{{ row.category || '—' }}</td>
+                <td class="admin-muted">{{ formatSchedule(row) }}</td>
+              } @else {
+                <td>{{ row.eventType ? eventTypeLabel(row.eventType) : '—' }}</td>
+                <td class="admin-muted">{{ formatSchedule(row) }}</td>
+              }
+              <td>{{ row.city || '—' }}</td>
+              <td class="col-num">
+                @if (row.price != null) {
+                  {{ row.price | number: '1.0-2' }} TND
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <span class="status-pill" [attr.data-status]="row.status">
+                  {{ statusLabels[row.status] }}
+                </span>
+              </td>
+              <td>{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '—' }}</td>
+              <td class="col-actions admin-actions-nowrap">
+                <div class="admin-actions-inline">
+                  @if (publicLink(row); as pub) {
+                    <a [href]="pub" target="_blank" rel="noopener" class="admin-action-chip admin-action-chip--view">
+                      Voir en ligne
+                    </a>
+                  }
+                  @if (row.status === 'pending') {
+                    <button
+                      type="button"
+                      class="admin-action-chip admin-action-chip--publish"
+                      [disabled]="actionLoading() === row.id"
+                      (click)="setStatus(row, 'published', $event)"
+                    >
+                      Publier
+                    </button>
+                    <button
+                      type="button"
+                      class="admin-action-chip admin-action-chip--reject"
+                      [disabled]="actionLoading() === row.id"
+                      (click)="setStatus(row, 'rejected', $event)"
+                    >
+                      Refuser
+                    </button>
+                  }
+                  @if (row.status === 'published') {
+                    <button
+                      type="button"
+                      class="admin-action-chip admin-action-chip--reject"
+                      [disabled]="actionLoading() === row.id"
+                      (click)="setStatus(row, 'rejected', $event)"
+                    >
+                      Dépublier
+                    </button>
+                  }
+                  @if (row.status === 'rejected') {
+                    <button
+                      type="button"
+                      class="admin-action-chip admin-action-chip--publish"
+                      [disabled]="actionLoading() === row.id"
+                      (click)="setStatus(row, 'published', $event)"
+                    >
+                      Publier
+                    </button>
+                    <button
+                      type="button"
+                      class="admin-action-chip admin-action-chip--pending"
+                      [disabled]="actionLoading() === row.id"
+                      (click)="setStatus(row, 'pending', $event)"
+                    >
+                      En attente
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            @if (!loading()) {
+              <tr>
+                <td [attr.colspan]="kind() === 'formations' ? 9 : 9" class="admin-empty-cell">
+                  <div class="admin-offerings-empty">
+                    <p class="admin-offerings-empty-title">Aucun élément pour ce filtre</p>
+                    <p class="admin-muted">
+                      Les {{ kind() === 'formations' ? 'formations' : 'événements' }} soumis par les centres apparaîtront ici.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-admin-pagination
+    [pagination]="pagination()"
+    [loading]="loading()"
+    [itemLabel]="kind() === 'formations' ? 'formation' : 'événement'"
+    (pageChange)="load($event)"
+  />
+</div>

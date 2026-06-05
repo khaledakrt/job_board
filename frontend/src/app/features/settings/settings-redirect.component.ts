@@ -21,7 +21,11 @@ export class SettingsRedirectComponent implements OnInit {
         ? APP_ROUTES.ADMIN.DASHBOARD
         : role === USER_ROLES.RECRUITER
           ? APP_ROUTES.RECRUITER.SETTINGS
-          : APP_ROUTES.CANDIDATE.SETTINGS;
+          : role === USER_ROLES.TRAINING_PROVIDER
+            ? APP_ROUTES.PROVIDER.TRAINING
+            : role === USER_ROLES.INSTITUTION_PROVIDER
+              ? APP_ROUTES.PROVIDER.INSTITUTION
+              : APP_ROUTES.CANDIDATE.SETTINGS;
     void this.router.navigateByUrl(target, { replaceUrl: true });
   }
 }

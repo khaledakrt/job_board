@@ -1,0 +1,31 @@
+<section class="catalog-hero" [class.catalog-hero--institution]="theme() === 'institution'">
+  <nav class="catalog-breadcrumb" aria-label="Fil d'Ariane">
+    <a routerLink="/">Accueil</a>
+    <span aria-hidden="true">/</span>
+    <span>{{ breadcrumbLabel() }}</span>
+  </nav>
+
+  <div class="catalog-hero-body">
+    <div class="catalog-hero-text">
+      <span class="catalog-hero-badge" aria-hidden="true">
+        @if (theme() === 'training') {
+          📚
+        } @else {
+          🏫
+        }
+      </span>
+      <div>
+        <h1>{{ title() }}</h1>
+        @if (subtitle()) {
+          <p>{{ subtitle() }}</p>
+        }
+      </div>
+    </div>
+    @if (showActions()) {
+      <div class="catalog-hero-actions">
+        <a [routerLink]="routes.AUTH.LOGIN" class="catalog-btn catalog-btn--outline">{{ loginHint() }}</a>
+        <a [routerLink]="registerRoute()" class="catalog-btn catalog-btn--primary">{{ registerLabel() }}</a>
+      </div>
+    }
+  </div>
+</section>

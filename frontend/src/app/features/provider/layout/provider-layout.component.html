@@ -1,0 +1,125 @@
+<div class="provider-layout-shell">
+  <aside class="provider-sidebar" aria-label="Menu prestataire">
+    <div class="provider-sidebar-brand">
+      <a routerLink="/" class="provider-sidebar-logo">
+        <span class="provider-sidebar-mark">JB</span>
+        <span>JobBoard</span>
+      </a>
+      <p class="provider-sidebar-org">{{ ctx.dashboard()?.organization?.name || 'Mon organisme' }}</p>
+      @if (ctx.dashboard()?.organization?.city) {
+        <p class="provider-sidebar-city">{{ ctx.dashboard()!.organization!.city }}</p>
+      }
+    </div>
+
+    <nav class="provider-sidebar-nav">
+      <p class="provider-sidebar-label">Menu</p>
+      <a
+        [routerLink]="[basePath, 'dashboard']"
+        routerLinkActive="provider-nav-active"
+        class="provider-sidebar-link"
+      >
+        Tableau de bord
+      </a>
+      <a
+        [routerLink]="[basePath, 'profil']"
+        routerLinkActive="provider-nav-active"
+        class="provider-sidebar-link"
+      >
+        Profil & documents
+      </a>
+      @if (isTraining) {
+        <a
+          [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS"
+          routerLinkActive="provider-nav-active"
+          class="provider-sidebar-link"
+        >
+          Participants
+        </a>
+        <p class="provider-sidebar-label">Publier</p>
+        <a
+          [routerLink]="routes.PROVIDER.TRAINING_FORMATION_NEW"
+          routerLinkActive="provider-nav-active"
+          class="provider-sidebar-link provider-sidebar-link--action"
+        >
+          Publier une formation
+        </a>
+        <a
+          [routerLink]="routes.PROVIDER.TRAINING_EVENT_NEW"
+          routerLinkActive="provider-nav-active"
+          class="provider-sidebar-link provider-sidebar-link--action"
+        >
+          Publier un événement
+        </a>
+      } @else {
+        <p class="provider-sidebar-label">Gérer</p>
+        <a
+          [routerLink]="routes.PROVIDER.INSTITUTION_PROGRAMS"
+          routerLinkActive="provider-nav-active"
+          class="provider-sidebar-link"
+        >
+          Programmes
+        </a>
+        <a
+          [routerLink]="routes.PROVIDER.INSTITUTION_EVENTS"
+          routerLinkActive="provider-nav-active"
+          class="provider-sidebar-link"
+        >
+          Événements
+        </a>
+        <a
+          [routerLink]="routes.PROVIDER.INSTITUTION_ANNOUNCEMENTS"
+          routerLinkActive="provider-nav-active"
+          class="provider-sidebar-link"
+        >
+          Actualités & annonces
+        </a>
+        <a
+          [routerLink]="routes.PROVIDER.INSTITUTION_OPPORTUNITIES"
+          routerLinkActive="provider-nav-active"
+          class="provider-sidebar-link"
+        >
+          Offres & stages
+        </a>
+      }
+    </nav>
+
+    <div class="provider-sidebar-foot">
+      @if (ctx.dashboard()?.accountStatus === 'published') {
+        <a [routerLink]="publicPageLink()" target="_blank" rel="noopener" class="provider-sidebar-link">
+          Ma page publique ↗
+        </a>
+      }
+      <a routerLink="/" class="provider-sidebar-link">Accueil site</a>
+      <button type="button" class="provider-sidebar-link provider-sidebar-logout" (click)="logout()">
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <div class="provider-layout-main">
+    <header class="provider-topbar">
+      <span class="provider-topbar-role">
+        {{ isTraining ? 'Centre de formation' : 'Établissement privé' }}
+      </span>
+      @if (ctx.dashboard()) {
+        <span
+          class="provider-pill provider-topbar-pill"
+          [class.provider-pill--ok]="ctx.dashboard()!.accountStatus === 'published'"
+          [class.provider-pill--warn]="ctx.dashboard()!.accountStatus === 'pending'"
+          [class.provider-pill--danger]="ctx.dashboard()!.accountStatus === 'rejected'"
+        >
+          @if (ctx.dashboard()!.accountStatus === 'published') {
+            Compte validé
+          } @else if (ctx.dashboard()!.accountStatus === 'pending') {
+            En attente
+          } @else if (ctx.dashboard()!.accountStatus === 'rejected') {
+            Refusé
+          }
+        </span>
+      }
+    </header>
+    <div class="provider-layout-content">
+      <router-outlet />
+    </div>
+  </div>
+</div>

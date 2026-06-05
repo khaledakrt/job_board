@@ -1,0 +1,87 @@
+.provider-participants-stats {
+  margin-bottom: 1rem;
+}
+
+.provider-participants-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.provider-participants-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.provider-filter-offering {
+  flex: 1;
+  min-width: 16rem;
+  max-width: 28rem;
+}
+
+.provider-filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.provider-participants-actions {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.provider-participants-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.provider-participants-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.provider-participants-table th,
+.provider-participants-table td {
+  text-align: left;
+  padding: 0.75rem 0.65rem;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+
+.provider-participants-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.provider-participants-email {
+  color: #0a66c2;
+  text-decoration: none;
+}
+
+.provider-participants-email:hover {
+  text-decoration: underline;
+}
+
+.provider-participants-kind {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+.provider-participants-date {
+  white-space: nowrap;
+  color: #64748b;
+  font-size: 0.85rem;
+}

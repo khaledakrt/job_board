@@ -1,0 +1,194 @@
+<div class="provider-page provider-form-page">
+  <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline provider-btn--sm">
+    ← Tableau de bord
+  </a>
+  <h1 class="provider-page-title">{{ eventId() ? 'Modifier l’événement' : 'Publier un événement' }}</h1>
+  <p class="provider-page-sub">Décrivez votre événement avec mise en forme (polices, gras, liens).</p>
+
+  @if (loading()) {
+    <p class="provider-muted">Chargement…</p>
+  } @else {
+    @if (status()) {
+      <p class="provider-muted">Statut : {{ statusLabel(status()!) }}</p>
+    }
+    @if (error()) {
+      <p class="publish-error">{{ error() }}</p>
+    }
+    @if (success()) {
+      <p class="publish-success">{{ success() }}</p>
+    }
+
+    @if (eventId()) {
+      <section class="provider-card provider-formation-inscrits">
+        <div class="provider-card-head">
+          <h2>Inscrits à cet événement</h2>
+          <p>
+            {{ registeredCount() }} inscrit(s)
+            @if (seats != null && seats > 0) {
+              <span class="provider-muted"> — places max. {{ seats }}</span>
+            }
+          </p>
+        </div>
+        @if (!participants().length) {
+          <p class="provider-muted">Aucun inscrit pour le moment.</p>
+        } @else {
+          <ul class="provider-inscrits-list">
+            @for (p of participants(); track p.id) {
+              <li class="provider-inscrits-item">
+                <div>
+                  <strong>{{ p.candidate.displayName }}</strong>
+                  <span class="provider-pill provider-pill--ok">{{ p.participationLabel }}</span>
+                  <a class="provider-inscrits-email" [href]="'mailto:' + p.candidate.email">{{
+                    p.candidate.email
+                  }}</a>
+                  @if (p.candidate.phone) {
+                    <span class="provider-muted">{{ p.candidate.phone }}</span>
+                  }
+                </div>
+                <time class="provider-muted">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+              </li>
+            }
+          </ul>
+        }
+        <p class="provider-muted" style="margin-top: 0.75rem">
+          <a [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS" [queryParams]="{ eventId: eventId() }">
+            Voir tous les inscrits
+          </a>
+        </p>
+      </section>
+    }
+
+    <form class="provider-form" (ngSubmit)="submit()">
+      <section class="provider-card">
+        <h2>Événement</h2>
+        <div class="provider-fields">
+          <div class="provider-field provider-field--title">
+            <label for="ev-title">Titre *</label>
+            <input id="ev-title" class="provider-input" [(ngModel)]="title" name="title" required />
+          </div>
+          <div class="provider-field provider-field--event-type">
+            <label for="ev-type">Type *</label>
+            <select id="ev-type" class="provider-input" [(ngModel)]="eventType" name="eventType" required>
+              @for (t of eventTypes; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-card provider-card--desc">
+        <h2>Description</h2>
+        <div class="provider-field provider-field--rte">
+          <label for="ev-desc">Présentation</label>
+          <div class="provider-field-body">
+            <app-rich-text-editor
+              editorId="event-description"
+              editorSize="large"
+              [(ngModel)]="description"
+              name="description"
+              placeholder="Programme, intervenants…"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-card">
+        <h2>Date, lieu & tarif</h2>
+        <div class="provider-fields">
+          <div class="provider-field provider-field--date">
+            <label for="ev-date">Date</label>
+            <input type="date" id="ev-date" class="provider-input" [(ngModel)]="eventDate" name="eventDate" />
+          </div>
+          <div class="provider-field provider-field--time">
+            <label for="ev-start">Début</label>
+            <input type="time" id="ev-start" class="provider-input" [(ngModel)]="startTime" name="startTime" />
+          </div>
+          <div class="provider-field provider-field--time">
+            <label for="ev-end">Fin</label>
+            <input type="time" id="ev-end" class="provider-input" [(ngModel)]="endTime" name="endTime" />
+          </div>
+          <div class="provider-field provider-field--city">
+            <label for="ev-city">Ville</label>
+            <input id="ev-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
+          </div>
+          <div class="provider-field provider-field--price">
+            <label for="ev-price">Prix (TND)</label>
+            <input type="number" id="ev-price" min="0" step="0.01" class="provider-input" [(ngModel)]="price" name="price" />
+          </div>
+          <div class="provider-field provider-field--seats">
+            <label for="ev-seats">Places</label>
+            <input type="number" id="ev-seats" min="0" max="9999" class="provider-input" [(ngModel)]="seats" name="seats" />
+          </div>
+          <div class="provider-field provider-field--address">
+            <label for="ev-addr">Adresse</label>
+            <input id="ev-addr" class="provider-input" [(ngModel)]="address" name="address" autocomplete="street-address" />
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-card">
+        <h2>Contact & médias</h2>
+        <div class="provider-fields">
+          <div class="provider-field provider-field--phone">
+            <label for="ev-phone">Téléphone</label>
+            <input id="ev-phone" type="tel" class="provider-input" [(ngModel)]="phone" name="phone" inputmode="tel" autocomplete="tel" />
+          </div>
+          <div class="provider-field provider-field--email">
+            <label for="ev-email">E-mail</label>
+            <input type="email" id="ev-email" class="provider-input" [(ngModel)]="email" name="email" autocomplete="email" />
+          </div>
+          <div class="provider-field provider-field--url">
+            <label for="ev-web">Site web</label>
+            <input id="ev-web" type="url" class="provider-input" [(ngModel)]="website" name="website" placeholder="https://…" />
+          </div>
+          <div class="provider-field provider-field--file">
+            <label>Affiche / image</label>
+            <input type="file" accept="image/*" (change)="onPoster($event)" />
+            @if (mediaUrl(posterImageUrl); as img) {
+              <img [src]="img" alt="" class="publish-preview-img" />
+            }
+          </div>
+          <div class="provider-field provider-field--file">
+            <label>Galerie photos</label>
+            <input type="file" accept="image/*" multiple (change)="onGallery($event)" />
+            <div class="publish-gallery">
+              @for (g of gallery; track g) {
+                @if (mediaUrl(g); as src) {
+                  <div class="publish-gallery-item">
+                    <img [src]="src" alt="" />
+                    <button type="button" class="provider-btn provider-btn--ghost provider-btn--sm" (click)="removeGallery(g)">×</button>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="provider-form-actions">
+        <button type="submit" class="provider-btn provider-btn--primary" [disabled]="saving()">
+          {{ eventId() ? 'Enregistrer les modifications' : 'Soumettre pour validation' }}
+        </button>
+        <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline">Annuler</a>
+      </div>
+    </form>
+
+    @if (confirmOpen()) {
+      <div class="provider-confirm-backdrop" role="presentation">
+        <section class="provider-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="event-confirm-title">
+          <h2 id="event-confirm-title">{{ confirmTitle() }}</h2>
+          <p>{{ confirmMessage() }}</p>
+          <div class="provider-confirm-actions">
+            <button type="button" class="provider-btn provider-btn--outline" [disabled]="saving()" (click)="closeConfirm()">
+              Annuler
+            </button>
+            <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving()" (click)="confirmSubmit()">
+              {{ saving() ? 'Enregistrement…' : 'Confirmer' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    }
+  }
+</div>

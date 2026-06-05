@@ -14,6 +14,15 @@ const Subscription = require('./Subscription');
 const SavedJob = require('./SavedJob');
 const JobAlert = require('./JobAlert');
 const UserLoginEvent = require('./UserLoginEvent');
+const TrainingCenter = require('./TrainingCenter');
+const TrainingCourse = require('./TrainingCourse');
+const TrainingFormation = require('./TrainingFormation');
+const TrainingEvent = require('./TrainingEvent');
+const FormationParticipation = require('./FormationParticipation');
+const EventParticipation = require('./EventParticipation');
+const PrivateInstitution = require('./PrivateInstitution');
+const InstitutionOffering = require('./InstitutionOffering');
+const InstitutionParticipation = require('./InstitutionParticipation');
 
 User.hasOne(RecruiterProfile, { foreignKey: 'user_id', as: 'recruiterProfile' });
 RecruiterProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -83,6 +92,59 @@ RecruiterNotificationRead.belongsTo(RecruiterProfile, {
   as: 'recruiter',
 });
 
+User.hasOne(TrainingCenter, { foreignKey: 'user_id', as: 'trainingCenter' });
+TrainingCenter.belongsTo(User, { foreignKey: 'user_id', as: 'owner' });
+
+User.hasOne(PrivateInstitution, { foreignKey: 'user_id', as: 'privateInstitution' });
+PrivateInstitution.belongsTo(User, { foreignKey: 'user_id', as: 'owner' });
+
+TrainingCenter.hasMany(TrainingCourse, { foreignKey: 'center_id', as: 'courses' });
+TrainingCourse.belongsTo(TrainingCenter, { foreignKey: 'center_id', as: 'center' });
+
+TrainingCenter.hasMany(TrainingFormation, { foreignKey: 'center_id', as: 'formations' });
+TrainingFormation.belongsTo(TrainingCenter, { foreignKey: 'center_id', as: 'center' });
+
+TrainingCenter.hasMany(TrainingEvent, { foreignKey: 'center_id', as: 'events' });
+TrainingEvent.belongsTo(TrainingCenter, { foreignKey: 'center_id', as: 'center' });
+
+TrainingFormation.hasMany(FormationParticipation, {
+  foreignKey: 'formation_id',
+  as: 'participations',
+});
+FormationParticipation.belongsTo(TrainingFormation, {
+  foreignKey: 'formation_id',
+  as: 'formation',
+});
+FormationParticipation.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(FormationParticipation, { foreignKey: 'user_id', as: 'formationParticipations' });
+
+TrainingEvent.hasMany(EventParticipation, { foreignKey: 'event_id', as: 'participations' });
+EventParticipation.belongsTo(TrainingEvent, { foreignKey: 'event_id', as: 'event' });
+EventParticipation.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(EventParticipation, { foreignKey: 'user_id', as: 'eventParticipations' });
+
+PrivateInstitution.hasMany(InstitutionOffering, {
+  foreignKey: 'institution_id',
+  as: 'offerings',
+});
+InstitutionOffering.belongsTo(PrivateInstitution, {
+  foreignKey: 'institution_id',
+  as: 'institution',
+});
+InstitutionOffering.hasMany(InstitutionParticipation, {
+  foreignKey: 'offering_id',
+  as: 'participations',
+});
+InstitutionParticipation.belongsTo(InstitutionOffering, {
+  foreignKey: 'offering_id',
+  as: 'offering',
+});
+InstitutionParticipation.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(InstitutionParticipation, {
+  foreignKey: 'user_id',
+  as: 'institutionParticipations',
+});
+
 module.exports = {
   User,
   Company,
@@ -98,4 +160,13 @@ module.exports = {
   SavedJob,
   JobAlert,
   UserLoginEvent,
+  TrainingCenter,
+  TrainingCourse,
+  TrainingFormation,
+  TrainingEvent,
+  FormationParticipation,
+  EventParticipation,
+  PrivateInstitution,
+  InstitutionOffering,
+  InstitutionParticipation,
 };

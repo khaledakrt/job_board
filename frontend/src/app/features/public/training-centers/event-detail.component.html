@@ -1,0 +1,111 @@
+<app-public-shell>
+  <main class="catalog-page-main catalog-page-main--detail">
+    <div class="catalog-page-inner catalog-page-inner--detail">
+      @if (loading()) {
+        <p>Chargement…</p>
+      } @else if (error()) {
+        <p class="catalog-state-title">{{ error() }}</p>
+      } @else if (event()) {
+        <nav class="catalog-breadcrumb">
+          <a routerLink="/">Accueil</a>
+          <span>/</span>
+          <a [routerLink]="routes.PUBLIC.TRAINING_CENTERS">Centres de formation</a>
+          @if (event()!.centerId) {
+            <span>/</span>
+            <a [routerLink]="routes.PUBLIC.TRAINING_CENTER(event()!.centerId!)">{{ event()!.centerName }}</a>
+          }
+          <span>/</span>
+          <span>{{ event()!.title }}</span>
+        </nav>
+
+        <div class="catalog-detail-layout">
+          <div class="catalog-detail-panel">
+            <div class="catalog-offering-detail-head">
+              @if (mediaUrl(event()!.posterImageUrl); as img) {
+                <div class="catalog-offering-hero-wrap">
+                  <img [src]="img" alt="" class="catalog-offering-hero" />
+                </div>
+              }
+              <div class="catalog-offering-detail-intro">
+                <h1>{{ event()!.title }}</h1>
+                <span class="catalog-tag">{{ eventTypeLabel(event()!.eventType) }}</span>
+              </div>
+            </div>
+            @if (event()!.description) {
+              <div class="catalog-detail-prose">
+                <app-safe-html [content]="event()!.description!" />
+              </div>
+            }
+            @if (event()!.gallery?.length) {
+              <div class="catalog-gallery">
+                @for (photo of event()!.gallery!; track photo) {
+                  @if (mediaUrl(photo); as src) {
+                    <img [src]="src" alt="" />
+                  }
+                }
+              </div>
+            }
+          </div>
+
+          <aside class="catalog-detail-side">
+            <h3>Informations</h3>
+            @if (event()!.eventDate) {
+              <p><strong>Date</strong><br />{{ event()!.eventDate }}</p>
+            }
+            @if (event()!.startTime) {
+              <p><strong>Début</strong><br />{{ event()!.startTime }}</p>
+            }
+            @if (event()!.endTime) {
+              <p><strong>Fin</strong><br />{{ event()!.endTime }}</p>
+            }
+            @if (event()!.city) {
+              <p><strong>Ville</strong><br />{{ event()!.city }}</p>
+            }
+            @if (event()!.address) {
+              <p><strong>Adresse</strong><br />{{ event()!.address }}</p>
+            }
+            @if (event()!.price != null) {
+              <p><strong>Prix</strong><br />{{ event()!.price }} TND</p>
+            }
+            @if (event()!.seats != null) {
+              <p><strong>Places</strong><br />{{ event()!.seats }}</p>
+            }
+            <p class="catalog-side-participants">
+              <strong>Inscrits</strong><br />
+              <span class="catalog-offering-participants catalog-offering-participants--side">{{
+                participantsCount()
+              }}</span>
+            </p>
+
+            <div class="catalog-participate">
+              @if (actionMsg()) {
+                <p class="catalog-participate-msg">{{ actionMsg() }}</p>
+              }
+              @if (hasParticipated()) {
+                <p class="catalog-participate-msg">Vous êtes inscrit(e).</p>
+              }
+              <button
+                type="button"
+                class="catalog-btn catalog-btn--primary catalog-btn--block"
+                [disabled]="participateButtonsDisabled()"
+                (click)="participate()"
+              >
+                S'inscrire
+              </button>
+            </div>
+
+            @if (event()!.phone) {
+              <p><strong>Tél.</strong> {{ event()!.phone }}</p>
+            }
+            @if (event()!.email) {
+              <p><a [href]="'mailto:' + event()!.email">{{ event()!.email }}</a></p>
+            }
+            @if (event()!.website) {
+              <p><a [href]="event()!.website!" target="_blank" rel="noopener">Site web →</a></p>
+            }
+          </aside>
+        </div>
+      }
+    </div>
+  </main>
+</app-public-shell>

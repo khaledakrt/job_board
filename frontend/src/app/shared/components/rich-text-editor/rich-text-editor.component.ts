@@ -32,6 +32,8 @@ import {
 export class RichTextEditorComponent implements ControlValueAccessor, AfterViewInit {
   readonly editorId = input<string | undefined>(undefined);
   readonly placeholder = input('Saisissez votre texte…');
+  /** `large` : zone de saisie plus haute (formulaires prestataire, offres). */
+  readonly editorSize = input<'default' | 'large'>('default');
   readonly fonts = RICH_TEXT_FONTS;
 
   @ViewChild('editor') private editorRef?: ElementRef<HTMLDivElement>;

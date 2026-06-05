@@ -1,0 +1,140 @@
+.provider-inscrits-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.provider-inscrits-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.provider-inscrits-item:last-child {
+  border-bottom: none;
+}
+
+.provider-inscrits-email {
+  display: block;
+  font-size: 0.85rem;
+  color: #0a66c2;
+  text-decoration: none;
+  margin-top: 0.15rem;
+}
+
+.publish-form-main {
+  max-width: none;
+}
+
+.publish-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .publish-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.publish-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.publish-preview-img {
+  max-width: 200px;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+}
+
+.publish-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.publish-gallery-item {
+  position: relative;
+}
+
+.publish-gallery-item img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.publish-gallery-item button {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  padding: 0 6px;
+  min-height: auto;
+}
+
+.publish-error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.publish-success {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #047857;
+  font-weight: 600;
+}
+
+.provider-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.provider-confirm-modal {
+  width: min(100%, 460px);
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+}
+
+.provider-confirm-modal h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.provider-confirm-modal p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.provider-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}

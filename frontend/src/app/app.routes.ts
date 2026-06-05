@@ -49,6 +49,81 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'centres-formation',
+    loadComponent: () =>
+      import('./features/public/training-centers/training-centers-list.component').then(
+        (m) => m.TrainingCentersListComponent
+      ),
+  },
+  {
+    path: 'centres-formation/inscription',
+    loadComponent: () =>
+      import('./features/provider/provider-register/provider-register.component').then(
+        (m) => m.ProviderRegisterComponent
+      ),
+    data: { providerType: 'training_center' },
+  },
+  {
+    path: 'centres-formation/publier',
+    redirectTo: 'centres-formation/inscription',
+    pathMatch: 'full',
+  },
+  {
+    path: 'centres-formation/formations/:id',
+    loadComponent: () =>
+      import('./features/public/training-centers/formation-detail.component').then(
+        (m) => m.FormationDetailComponent
+      ),
+  },
+  {
+    path: 'centres-formation/evenements/:id',
+    loadComponent: () =>
+      import('./features/public/training-centers/event-detail.component').then(
+        (m) => m.EventDetailComponent
+      ),
+  },
+  {
+    path: 'centres-formation/:id',
+    loadComponent: () =>
+      import('./features/public/training-centers/training-center-detail.component').then(
+        (m) => m.TrainingCenterDetailComponent
+      ),
+  },
+  {
+    path: 'etablissements-prives',
+    loadComponent: () =>
+      import('./features/public/private-institutions/private-institutions-list.component').then(
+        (m) => m.PrivateInstitutionsListComponent
+      ),
+  },
+  {
+    path: 'etablissements-prives/inscription',
+    loadComponent: () =>
+      import('./features/provider/provider-register/provider-register.component').then(
+        (m) => m.ProviderRegisterComponent
+      ),
+    data: { providerType: 'private_institution' },
+  },
+  {
+    path: 'etablissements-prives/publier',
+    redirectTo: 'etablissements-prives/inscription',
+    pathMatch: 'full',
+  },
+  {
+    path: 'etablissements-prives/publications/:id',
+    loadComponent: () =>
+      import('./features/public/private-institutions/institution-offering-detail.component').then(
+        (m) => m.InstitutionOfferingDetailComponent
+      ),
+  },
+  {
+    path: 'etablissements-prives/:id',
+    loadComponent: () =>
+      import('./features/public/private-institutions/private-institution-detail.component').then(
+        (m) => m.PrivateInstitutionDetailComponent
+      ),
+  },
+  {
     path: 'auth',
     loadChildren: () =>
       import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
@@ -78,6 +153,12 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard([USER_ROLES.ADMIN])],
     loadChildren: () =>
       import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
+  {
+    path: 'provider',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/provider/provider.routes').then((m) => m.PROVIDER_ROUTES),
   },
   {
     path: '**',

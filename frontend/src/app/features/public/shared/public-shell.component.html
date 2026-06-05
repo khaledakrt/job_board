@@ -5,28 +5,48 @@
         <span class="landing-logo-mark">JB</span>
         <span class="landing-logo-text">JobBoard</span>
       </a>
-      <nav class="landing-nav" aria-label="Navigation principale">
-        @for (item of mainNav; track item.label) {
-          @if (item.homeFragment) {
-            <a
-              routerLink="/"
-              [fragment]="item.homeFragment"
-              class="landing-nav-link landing-nav-link-anchor"
-              >{{ item.label }}</a
-            >
-          } @else if (item.route) {
-            <a [routerLink]="item.route" class="landing-nav-link landing-nav-link-anchor">{{ item.label }}</a>
+
+      <div class="landing-header-menu" aria-label="Navigation du site">
+        <nav class="landing-nav landing-nav-primary">
+          @for (item of mainNavPrimary; track item.label) {
+            @if (item.homeFragment) {
+              <a
+                routerLink="/"
+                [fragment]="item.homeFragment"
+                class="landing-nav-link-anchor"
+                >{{ item.label }}</a
+              >
+            } @else if (item.route) {
+              <a [routerLink]="item.route" class="landing-nav-link-anchor">{{ item.label }}</a>
+            }
           }
-        }
-      </nav>
-      <div class="landing-header-actions">
-        @if (authService.isAuthenticated()) {
-          <a [routerLink]="workspaceLink()" class="landing-btn landing-btn-primary">Mon espace</a>
-          <button type="button" class="landing-btn landing-btn-ghost" (click)="logout()">Déconnexion</button>
-        } @else {
-          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">Connexion</a>
-          <a [routerLink]="routes.AUTH.REGISTER" class="landing-btn landing-btn-primary">Inscription</a>
-        }
+        </nav>
+
+        <div class="landing-header-actions">
+          @if (authService.isAuthenticated()) {
+            <a [routerLink]="workspaceLink()" class="landing-btn landing-btn-primary landing-btn--compact">{{
+              workspaceLabel()
+            }}</a>
+            <button type="button" class="landing-btn landing-btn-ghost landing-btn--compact" (click)="logout()">
+              Déconnexion
+            </button>
+          } @else {
+            <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost landing-btn--compact"
+              >Connexion</a
+            >
+            <a [routerLink]="routes.AUTH.REGISTER" class="landing-btn landing-btn-primary landing-btn--compact"
+              >Inscription</a
+            >
+          }
+        </div>
+
+        <nav class="landing-nav landing-nav-secondary" aria-label="Informations">
+          @for (item of mainNavSecondary; track item.label) {
+            @if (item.route) {
+              <a [routerLink]="item.route" class="landing-nav-link-anchor">{{ item.label }}</a>
+            }
+          }
+        </nav>
       </div>
     </div>
   </header>
@@ -50,6 +70,8 @@
             <li>
               @if (item.homeFragment) {
                 <a routerLink="/" [fragment]="item.homeFragment">{{ item.label }}</a>
+              } @else if (item.route) {
+                <a [routerLink]="item.route">{{ item.label }}</a>
               }
             </li>
           }
