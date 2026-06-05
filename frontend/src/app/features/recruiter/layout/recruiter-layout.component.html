@@ -66,12 +66,18 @@
   </aside>
 
   <main class="recruiter-main">
-    <header class="recruiter-topbar">
-      <app-recruiter-notification-bell />
-    </header>
+    @if (context.profile()) {
+      <header class="recruiter-topbar">
+        <app-recruiter-notification-bell />
+      </header>
+    }
     @if (context.loading()) {
       <div class="loading-bar">Chargement...</div>
     }
-    <router-outlet />
+    @if (context.profile()) {
+      <router-outlet />
+    } @else if (!context.loading()) {
+      <div class="loading-bar">Espace recruteur indisponible pour ce compte.</div>
+    }
   </main>
 </div>

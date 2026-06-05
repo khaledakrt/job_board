@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { RecruiterContextService } from '../services/recruiter-context.service';
@@ -16,9 +16,18 @@ export class RecruiterLayoutComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly context = inject(RecruiterContextService);
   readonly routes = APP_ROUTES;
+  private readonly router = inject(Router);
 
   ngOnInit(): void {
-    this.context.loadContext().subscribe({ error: () => undefined });
+    this.context.loadContext().subscribe({
+      next: (response) => {
+        if (!response.data) {
+          this.authService.logout(false);
+          void this.router.navigate([APP_ROUTES.HOME]);
+        }
+      },
+      error: () => undefined,
+    });
   }
 
   logout(): void {
