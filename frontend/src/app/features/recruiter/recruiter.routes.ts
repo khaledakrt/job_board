@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { ownerGuard } from './guards/owner.guard';
+import { recruiterWorkspaceGuard } from './guards/recruiter-workspace.guard';
 
 export const RECRUITER_ROUTES: Routes = [
   {
@@ -9,6 +10,7 @@ export const RECRUITER_ROUTES: Routes = [
     children: [
       {
         path: 'dashboard',
+        canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>
           import('./recruiter-dashboard/recruiter-dashboard.component').then(
             (m) => m.RecruiterDashboardComponent
@@ -23,7 +25,7 @@ export const RECRUITER_ROUTES: Routes = [
       },
       {
         path: 'team',
-        canActivate: [ownerGuard],
+        canActivate: [recruiterWorkspaceGuard, ownerGuard],
         loadComponent: () =>
           import('./team-management/team-management.component').then(
             (m) => m.TeamManagementComponent
@@ -31,31 +33,37 @@ export const RECRUITER_ROUTES: Routes = [
       },
       {
         path: 'jobs',
+        canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>
           import('./jobs-list/jobs-list.component').then((m) => m.JobsListComponent),
       },
       {
         path: 'jobs/new',
+        canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>
           import('./job-form/job-form.component').then((m) => m.JobFormComponent),
       },
       {
         path: 'jobs/:id/edit',
+        canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>
           import('./job-form/job-form.component').then((m) => m.JobFormComponent),
       },
       {
         path: 'jobs/:id',
+        canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>
           import('./job-preview/job-preview.component').then((m) => m.JobPreviewComponent),
       },
       {
         path: 'ats',
+        canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>
           import('./ats-panel/ats-panel.component').then((m) => m.AtsPanelComponent),
       },
       {
         path: 'settings',
+        canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>
           import('../settings/settings.component').then((m) => m.SettingsComponent),
       },

@@ -76,6 +76,8 @@
     }
     @if (context.profile()) {
       <router-outlet />
+    } @else if (isOnboardingRoute()) {
+      <router-outlet />
     } @else if (!context.loading()) {
       <div class="loading-bar">Espace recruteur indisponible pour ce compte.</div>
     }

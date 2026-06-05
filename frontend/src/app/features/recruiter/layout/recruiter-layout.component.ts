@@ -19,15 +19,21 @@ export class RecruiterLayoutComponent implements OnInit {
   private readonly router = inject(Router);
 
   ngOnInit(): void {
+    if (this.context.profile()) return;
+
     this.context.loadContext().subscribe({
       next: (response) => {
-        if (!response.data) {
+        if (!response.data && !this.isOnboardingRoute()) {
           this.authService.logout(false);
           void this.router.navigate([APP_ROUTES.HOME]);
         }
       },
       error: () => undefined,
     });
+  }
+
+  isOnboardingRoute(): boolean {
+    return this.router.url.startsWith(APP_ROUTES.RECRUITER.ONBOARDING);
   }
 
   logout(): void {
