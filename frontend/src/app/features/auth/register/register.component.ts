@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
@@ -17,7 +17,6 @@ import { PublicShellComponent } from '../../public/shared/public-shell.component
 })
 export class RegisterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   readonly authService = inject(AuthService);
 
@@ -70,9 +69,10 @@ export class RegisterComponent implements OnInit {
         next: (response) => {
           this.successMessage.set(
             response.message ||
-              'Registration successful. Please verify your email before signing in.'
+              'Inscription réussie. Un e-mail de vérification a été envoyé, vérifiez aussi vos spams.'
           );
-          void this.router.navigate([APP_ROUTES.AUTH.LOGIN]);
+          this.form.reset();
+          this.submitted.set(false);
         },
         error: (error: HttpErrorResponse) => {
           const message = error.error?.message || 'Registration failed. Please try again.';

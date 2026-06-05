@@ -13,11 +13,13 @@ export class RecruiterContextService {
 
   private readonly profileState = signal<RecruiterProfile | null>(null);
   private readonly companyState = signal<Company | null>(null);
+  private readonly checkedState = signal(false);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
   readonly profile = this.profileState.asReadonly();
   readonly company = this.companyState.asReadonly();
+  readonly checked = this.checkedState.asReadonly();
 
   readonly isOwner = computed(
     () => this.profileState()?.companyRole === 'owner'
@@ -69,10 +71,12 @@ export class RecruiterContextService {
                 });
               }
             }
+            this.checkedState.set(true);
             this.loading.set(false);
           },
           error: () => {
             this.error.set('Unable to load recruiter workspace context.');
+            this.checkedState.set(true);
             this.loading.set(false);
           },
         }),
@@ -80,6 +84,7 @@ export class RecruiterContextService {
           this.profileState.set(null);
           this.companyState.set(null);
           this.error.set('Unable to load recruiter workspace context.');
+          this.checkedState.set(true);
           this.loading.set(false);
           return of({ success: false, message: 'Contexte recruteur indisponible.', data: null });
         })
