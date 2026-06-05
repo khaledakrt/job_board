@@ -1,0 +1,25 @@
+{
+  "name": "job-board-test-suite",
+  "version": "1.0.0",
+  "description": "Tests transverses pour la plateforme Job Board.",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:smoke:local && npm run test:e2e",
+    "test:smoke:local": "node tests/smoke/local-smoke.mjs",
+    "test:smoke:prod": "node tests/smoke/prod-smoke.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:install-browsers": "playwright install"
+  },
+  "keywords": [
+    "job-board",
+    "smoke-tests",
+    "playwright"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { NavigationCancel, NavigationEnd, NavigationError, Router, RouterOutlet } from '@angular/router';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -11,4 +11,19 @@ import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confi
 })
 export class AppComponent {
   readonly title = 'JobBoard';
+  readonly bootstrapped = signal(false);
+
+  private readonly router = inject(Router);
+
+  constructor() {
+    this.router.events.subscribe((event) => {
+      if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      ) {
+        this.bootstrapped.set(true);
+      }
+    });
+  }
 }

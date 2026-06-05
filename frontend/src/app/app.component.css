@@ -2,3 +2,47 @@
   display: block;
   min-height: 100%;
 }
+
+.app-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.app-loading-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 14px 40px rgb(15 23 42 / 8%);
+}
+
+.app-loading-logo {
+  display: inline-grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: #0a66c2;
+  color: #fff;
+  font-weight: 800;
+}
+
+.app-loading-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.app-loading-text {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}

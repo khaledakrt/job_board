@@ -1,2 +1,13 @@
+@if (!bootstrapped()) {
+  <div class="app-loading-screen" role="status" aria-live="polite">
+    <div class="app-loading-card">
+      <span class="app-loading-logo">JB</span>
+      <div>
+        <p class="app-loading-title">JobBoard</p>
+        <p class="app-loading-text">Chargement...</p>
+      </div>
+    </div>
+  </div>
+}
 <router-outlet />
 <app-confirm-dialog />
