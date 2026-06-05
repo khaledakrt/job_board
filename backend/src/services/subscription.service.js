@@ -23,7 +23,7 @@ async function verifyActiveSubscription(companyId) {
   return Boolean(subscription);
 }
 
-async function createMockSubscription(companyId, planType = 'enterprise') {
+async function createMockSubscription(companyId, planType = 'enterprise', options = {}) {
   const periodEnd = new Date();
   periodEnd.setFullYear(periodEnd.getFullYear() + 1);
 
@@ -38,6 +38,7 @@ async function createMockSubscription(companyId, planType = 'enterprise') {
       created_at: new Date(),
       updated_at: new Date(),
     },
+    transaction: options.transaction,
   });
 
   return subscription;

@@ -120,7 +120,7 @@ async function createCompany({ userId, payload }) {
       { transaction }
     );
 
-    await subscriptionService.createMockSubscription(company.id, 'starter');
+    await subscriptionService.createMockSubscription(company.id, 'starter', { transaction });
 
     await transaction.commit();
 
