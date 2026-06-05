@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs';
+import { catchError, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Company } from '../../../core/models/company.model';
@@ -75,6 +75,13 @@ export class RecruiterContextService {
             this.error.set('Unable to load recruiter workspace context.');
             this.loading.set(false);
           },
+        }),
+        catchError(() => {
+          this.profileState.set(null);
+          this.companyState.set(null);
+          this.error.set('Unable to load recruiter workspace context.');
+          this.loading.set(false);
+          return of({ success: false, message: 'Contexte recruteur indisponible.', data: null });
         })
       );
   }

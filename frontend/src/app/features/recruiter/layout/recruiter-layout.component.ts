@@ -18,7 +18,7 @@ export class RecruiterLayoutComponent implements OnInit {
   readonly routes = APP_ROUTES;
 
   ngOnInit(): void {
-    this.context.loadContext().subscribe();
+    this.context.loadContext().subscribe({ error: () => undefined });
   }
 
   logout(): void {

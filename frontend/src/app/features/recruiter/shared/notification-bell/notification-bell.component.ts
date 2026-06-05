@@ -38,10 +38,10 @@ export class RecruiterNotificationBellComponent implements OnInit, OnDestroy {
   private pollSub?: Subscription;
 
   ngOnInit(): void {
-    this.notificationService.refresh().subscribe();
+    this.notificationService.refresh().subscribe({ error: () => undefined });
     this.pollSub = interval(20_000)
       .pipe(switchMap(() => this.notificationService.refresh()))
-      .subscribe();
+      .subscribe({ error: () => undefined });
   }
 
   ngOnDestroy(): void {

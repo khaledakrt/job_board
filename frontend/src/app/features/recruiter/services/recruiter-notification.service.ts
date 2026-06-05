@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { RecruiterNotification } from '../../../core/models/recruiter-notification.model';
@@ -28,6 +28,12 @@ export class RecruiterNotificationService {
             this.loading.set(false);
           },
           error: () => this.loading.set(false),
+        }),
+        catchError(() => {
+          this.notifications.set([]);
+          this.unreadCount.set(0);
+          this.loading.set(false);
+          return of({ success: false, message: 'Notifications indisponibles.', data: [], meta: { unreadCount: 0 } });
         })
       );
   }
