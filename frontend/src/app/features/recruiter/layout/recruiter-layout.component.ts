@@ -19,7 +19,7 @@ export class RecruiterLayoutComponent implements OnInit {
   private readonly router = inject(Router);
 
   ngOnInit(): void {
-    if (this.context.profile()) return;
+    if (this.context.profile() || this.context.checked()) return;
 
     this.context.loadContext().subscribe({
       next: (response) => {
