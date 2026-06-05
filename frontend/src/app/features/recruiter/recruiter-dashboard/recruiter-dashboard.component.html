@@ -14,7 +14,9 @@
 <app-analytics-grid [jobs]="jobs()" />
 
 <div class="quick-actions">
-  <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">+ Créer une offre</a>
+  @if (context.canPostJob()) {
+    <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">+ Créer une offre</a>
+  }
   <a [routerLink]="routes.RECRUITER.ATS" class="quick-card">Voir les candidatures</a>
   @if (context.isOwner()) {
     <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">Gérer l’équipe</a>

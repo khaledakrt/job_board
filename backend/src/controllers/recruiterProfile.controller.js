@@ -2,9 +2,22 @@
 
 const asyncHandler = require('../utils/asyncHandler');
 const { formatCompany } = require('../services/company.service');
+const { RecruiterProfile, Company } = require('../models');
 
 const getProfile = asyncHandler(async (req, res) => {
-  const recruiter = req.recruiter;
+  const recruiter = await RecruiterProfile.findOne({
+    where: { user_id: req.user.id },
+    include: [{ model: Company, as: 'company' }],
+  });
+
+  if (!recruiter) {
+    return res.status(200).json({
+      success: true,
+      message: 'Profil recruteur à compléter.',
+      data: null,
+      meta: { onboardingRequired: true },
+    });
+  }
 
   res.status(200).json({
     success: true,
@@ -18,7 +31,7 @@ const getProfile = asyncHandler(async (req, res) => {
       canPostJob: recruiter.can_post_job,
       canDecideApplication: recruiter.can_decide_application,
       canEditCompany: recruiter.can_edit_company,
-      company: req.company ? formatCompany(req.company) : null,
+      company: recruiter.company ? formatCompany(recruiter.company) : null,
     },
   });
 });

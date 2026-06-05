@@ -83,7 +83,7 @@
           @for (app of column.items; track app.id) {
             <article
               class="candidate-card"
-              draggable="true"
+              [attr.draggable]="context.canDecideApplication() ? 'true' : null"
               (dragstart)="onDragStart($event, app.id)"
               (click)="openPanel(app, 'profile')"
             >
