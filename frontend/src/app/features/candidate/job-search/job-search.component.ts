@@ -754,19 +754,40 @@ export class JobSearchComponent implements OnInit {
   }
 
   async createAlert(): Promise<void> {
+    const searchFilters = { ...this.filters() };
+    if (!this.hasMeaningfulAlertFilters(searchFilters)) {
+      this.error.set('Remplissez au moins un champ de recherche avant de créer une alerte.');
+      this.success.set(null);
+      return;
+    }
+
     const ok = await this.confirmDialog.confirm({
       title: 'Créer une alerte',
-      message: 'Créer une alerte emploi avec les filtres actuels ?',
+      message: 'Créer une alerte emploi avec les critères renseignés ?',
       confirmLabel: 'Créer',
     });
     if (!ok) return;
 
     this.alertService
-      .create({ searchFilters: { ...this.appliedFilters() } as Record<string, unknown> })
+      .create({ searchFilters: searchFilters as Record<string, unknown> })
       .subscribe({
-      next: () => this.success.set('Alerte emploi créée avec les filtres actuels.'),
+      next: () => this.success.set('Alerte emploi créée avec les critères renseignés.'),
       error: () => this.error.set('Impossible de créer l\'alerte.'),
     });
+  }
+
+  private hasMeaningfulAlertFilters(filters: JobSearchFilters): boolean {
+    return (
+      !!filters.keywords.trim() ||
+      !!filters.location.trim() ||
+      !!filters.company.trim() ||
+      !!filters.industry.trim() ||
+      filters.contracts.length > 0 ||
+      filters.remotes.length > 0 ||
+      filters.experience !== 'all' ||
+      filters.quizOnly ||
+      (filters.minSalary != null && filters.minSalary > 0)
+    );
   }
 
   isSaved(jobId: string): boolean {

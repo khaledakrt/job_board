@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -32,6 +32,21 @@ export class SavedJobsPageComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly editingAlertId = signal<string | null>(null);
+  readonly savedPage = signal(1);
+  readonly alertsPage = signal(1);
+  readonly pageSize = 6;
+
+  readonly sortedAlerts = computed(() =>
+    [...this.alerts()].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    })
+  );
+  readonly pagedSavedJobs = computed(() => this.paginate(this.savedJobs(), this.savedPage()));
+  readonly pagedAlerts = computed(() => this.paginate(this.sortedAlerts(), this.alertsPage()));
+  readonly savedTotalPages = computed(() => this.totalPages(this.savedJobs().length));
+  readonly alertsTotalPages = computed(() => this.totalPages(this.alerts().length));
 
   readonly alertEditForm = this.fb.nonNullable.group({
     label: [''],
@@ -62,10 +77,9 @@ export class SavedJobsPageComponent implements OnInit {
     this.tab.set(t);
   }
 
-  openJob(jobId: string, apply = false): void {
-    void this.router.navigate([this.routes.CANDIDATE.JOBS], {
-      queryParams: { jobId, ...(apply ? { apply: '1' } : {}) },
-    });
+  viewJob(jobId: string): void {
+    const url = this.router.serializeUrl(this.router.createUrlTree(['/offres', jobId]));
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   logo(url: string | null | undefined): string | null {
@@ -77,11 +91,32 @@ export class SavedJobsPageComponent implements OnInit {
   }
 
   formatAlertFilters(filters: Record<string, unknown>): string {
-    const parts: string[] = [];
-    if (filters['keywords']) parts.push(String(filters['keywords']));
-    if (filters['location']) parts.push(String(filters['location']));
-    if (filters['company']) parts.push(String(filters['company']));
-    return parts.length ? parts.join(' · ') : 'Critères larges';
+    const parts = this.alertFilterParts(filters);
+    return parts.length ? parts.map((p) => p.value).join(' · ') : 'Critères larges';
+  }
+
+  alertFilterParts(filters: Record<string, unknown>): { label: string; value: string }[] {
+    const parts: { label: string; value: string }[] = [];
+    const add = (label: string, raw: unknown) => {
+      if (raw == null) return;
+      const value = Array.isArray(raw) ? raw.filter(Boolean).join(', ') : String(raw).trim();
+      if (value && value !== 'all' && value !== 'date') {
+        parts.push({ label, value });
+      }
+    };
+
+    add('Mots-clés', filters['keywords']);
+    add('Lieu', filters['location']);
+    add('Entreprise', filters['company']);
+    add('Secteur', filters['industry']);
+    add('Contrats', filters['contracts']);
+    add('Télétravail', filters['remotes']);
+    add('Expérience', filters['experience']);
+    add('Salaire min.', filters['minSalary']);
+    if (filters['quizOnly']) {
+      parts.push({ label: 'Quiz', value: 'Avec quiz' });
+    }
+    return parts;
   }
 
   startEditAlert(alert: JobAlertItem): void {
@@ -91,6 +126,14 @@ export class SavedJobsPageComponent implements OnInit {
       frequency: alert.frequency,
       isActive: alert.isActive,
     });
+  }
+
+  setSavedPage(page: number): void {
+    this.savedPage.set(Math.min(Math.max(1, page), this.savedTotalPages()));
+  }
+
+  setAlertsPage(page: number): void {
+    this.alertsPage.set(Math.min(Math.max(1, page), this.alertsTotalPages()));
   }
 
   cancelEditAlert(): void {
@@ -126,7 +169,10 @@ export class SavedJobsPageComponent implements OnInit {
     });
     if (!ok) return;
     this.savedService.remove(item.id).subscribe({
-      next: () => this.savedJobs.update((l) => l.filter((s) => s.id !== item.id)),
+      next: () => {
+        this.savedJobs.update((l) => l.filter((s) => s.id !== item.id));
+        this.setSavedPage(this.savedPage());
+      },
     });
   }
 
@@ -139,7 +185,19 @@ export class SavedJobsPageComponent implements OnInit {
     });
     if (!ok) return;
     this.alertService.remove(alert.id).subscribe({
-      next: () => this.alerts.update((l) => l.filter((a) => a.id !== alert.id)),
+      next: () => {
+        this.alerts.update((l) => l.filter((a) => a.id !== alert.id));
+        this.setAlertsPage(this.alertsPage());
+      },
     });
+  }
+
+  private paginate<T>(items: T[], page: number): T[] {
+    const start = (page - 1) * this.pageSize;
+    return items.slice(start, start + this.pageSize);
+  }
+
+  private totalPages(total: number): number {
+    return Math.max(1, Math.ceil(total / this.pageSize));
   }
 }

@@ -15,7 +15,6 @@ const {
   verifyEmailSchema,
   resendVerificationSchema,
 } = require('../validators/auth.validator');
-const { requireCandidateRole } = require('../middleware/authorize');
 
 const router = express.Router();
 
@@ -69,7 +68,6 @@ router.post(
 router.post(
   '/change-email',
   authenticate,
-  requireCandidateRole,
   moderateAuthRateLimiter,
   validateBody(changeEmailSchema),
   authController.changeEmail

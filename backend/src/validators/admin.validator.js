@@ -6,7 +6,7 @@ const { USER_ROLES, JOB_STATUS } = require('../config/constants');
 const listUsersQuerySchema = z.object({
   page: z.coerce.number().optional(),
   limit: z.coerce.number().optional(),
-  role: z.enum([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER, USER_ROLES.ADMIN]).optional(),
+  role: z.enum(Object.values(USER_ROLES)).optional(),
   banned: z.enum(['true', 'false']).optional(),
   search: z.string().max(255).optional(),
   ip: z.string().max(45).optional(),

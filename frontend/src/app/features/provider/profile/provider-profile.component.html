@@ -1,14 +1,26 @@
 <div class="provider-page provider-form-page">
-  <h1 class="provider-page-title">Profil & documents</h1>
-  <p class="provider-page-sub">
-    Logo, coordonnées, brochure et présentation publique de votre
-    {{ ctx.isTraining ? 'centre de formation' : 'établissement privé' }}.
-  </p>
+  <div class="page-header-row">
+    <div>
+      <h1 class="provider-page-title">
+        {{ accountOnly ? 'Modifier infos personnelles' : 'Profil & documents' }}
+      </h1>
+      @if (accountOnly) {
+        <p class="provider-page-sub">
+          Gérez l’e-mail de connexion et le mot de passe de votre compte.
+        </p>
+      } @else {
+        <p class="provider-page-sub">
+          Logo, coordonnées, brochure et présentation publique de votre
+          {{ ctx.isTraining ? 'centre de formation' : 'établissement privé' }}.
+        </p>
+      }
+    </div>
+  </div>
 
   @if (ctx.loading() && !ctx.dashboard()) {
     <p class="provider-muted">Chargement…</p>
   } @else if (ctx.dashboard()) {
-    @if (!ctx.dashboard()!.profileComplete) {
+    @if (!accountOnly && !ctx.dashboard()!.profileComplete) {
       <aside class="provider-alert">
         <strong>Profil à compléter</strong>
         <ul class="provider-checklist">
@@ -19,13 +31,14 @@
       </aside>
     }
 
-    @if (saveMsg) {
+    @if (!accountOnly && saveMsg) {
       <p class="publish-success">{{ saveMsg }}</p>
     }
-    @if (saveError) {
+    @if (!accountOnly && saveError) {
       <p class="publish-error">{{ saveError }}</p>
     }
 
+    @if (!accountOnly) {
     <section class="provider-card">
       <div class="provider-profile-layout">
         <div class="provider-profile-aside">
@@ -79,6 +92,31 @@
           </div>
 
           <div class="provider-fields">
+            <div class="provider-field provider-field--title">
+              <label for="prof-name">Nom de {{ ctx.isTraining ? 'votre centre' : 'votre établissement' }} *</label>
+              <input
+                id="prof-name"
+                class="provider-input"
+                [(ngModel)]="name"
+                name="name"
+                autocomplete="organization"
+              />
+            </div>
+            @if (!ctx.isTraining) {
+              <div class="provider-field provider-field--domain">
+                <label for="prof-institution-type">Type d’établissement *</label>
+                <select
+                  id="prof-institution-type"
+                  class="provider-input"
+                  [(ngModel)]="institutionType"
+                  name="institutionType"
+                >
+                  @for (type of institutionTypeOptions; track type.value) {
+                    <option [value]="type.value">{{ type.label }}</option>
+                  }
+                </select>
+              </div>
+            }
             <div class="provider-field provider-field--city">
               <label for="prof-city">Ville *</label>
               <input id="prof-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
@@ -124,6 +162,124 @@
         </button>
       </footer>
     </section>
+    }
+
+    @if (showAccountForm) {
+    <section id="personal-info-form" class="provider-card">
+      <h2>Compte de connexion</h2>
+      <p class="provider-field-hint">
+        Ces informations concernent l’accès à votre espace. Après modification de l’e-mail ou du mot de passe, une
+        reconnexion est demandée.
+      </p>
+
+      @if (accountMsg) {
+        <p class="publish-success">{{ accountMsg }}</p>
+      }
+      @if (accountError) {
+        <p class="publish-error">{{ accountError }}</p>
+      }
+
+        <div class="provider-fields">
+          <div class="provider-field provider-field--email">
+            <label for="account-current-email">E-mail actuel</label>
+            <input
+              id="account-current-email"
+              class="provider-input"
+              [value]="authService.user()?.email ?? ''"
+              disabled
+            />
+          </div>
+          <div class="provider-field provider-field--email">
+            <label for="account-new-email">Nouvel e-mail</label>
+            <input
+              id="account-new-email"
+              type="email"
+              class="provider-input"
+              [(ngModel)]="accountEmail"
+              name="accountEmail"
+              autocomplete="email"
+            />
+          </div>
+          <div class="provider-field provider-field--email">
+            <label for="account-confirm-email">Confirmer l’e-mail</label>
+            <input
+              id="account-confirm-email"
+              type="email"
+              class="provider-input"
+              [(ngModel)]="accountEmailConfirm"
+              name="accountEmailConfirm"
+              autocomplete="email"
+            />
+          </div>
+          <div class="provider-field provider-field--email">
+            <label for="account-email-password">Mot de passe actuel</label>
+            <input
+              id="account-email-password"
+              type="password"
+              class="provider-input"
+              [(ngModel)]="accountEmailPassword"
+              name="accountEmailPassword"
+              autocomplete="current-password"
+            />
+          </div>
+        </div>
+
+        <div class="provider-fields">
+          <div class="provider-field provider-field--email">
+            <label for="account-current-password">Mot de passe actuel</label>
+            <input
+              id="account-current-password"
+              type="password"
+              class="provider-input"
+              [(ngModel)]="currentPassword"
+              name="currentPassword"
+              autocomplete="current-password"
+            />
+          </div>
+          <div class="provider-field provider-field--email">
+            <label for="account-new-password">Nouveau mot de passe</label>
+            <input
+              id="account-new-password"
+              type="password"
+              class="provider-input"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="provider-field provider-field--email">
+            <label for="account-confirm-password">Confirmer le mot de passe</label>
+            <input
+              id="account-confirm-password"
+              type="password"
+              class="provider-input"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              autocomplete="new-password"
+            />
+          </div>
+        </div>
+
+        <footer class="provider-card-foot provider-form-actions">
+          <button
+            type="button"
+            class="provider-btn provider-btn--outline"
+            [disabled]="accountSaving"
+            (click)="cancelAccountForm()"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="provider-btn provider-btn--primary"
+            [disabled]="accountSaving"
+            (click)="prepareAccountSave()"
+          >
+            {{ accountSaving ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </footer>
+    </section>
+    }
 
     @if (confirmOpen) {
       <div class="provider-confirm-backdrop" role="presentation">
@@ -143,6 +299,36 @@
             </button>
             <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving" (click)="confirmSaveProfile()">
               {{ saving ? 'Enregistrement…' : 'Confirmer' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    }
+
+    @if (accountConfirmOpen) {
+      <div class="provider-confirm-backdrop" role="presentation">
+        <section class="provider-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="account-confirm-title">
+          <h2 id="account-confirm-title">Confirmer la modification</h2>
+          <p>
+            Cette modification concerne vos informations de connexion.
+            Après validation, vous serez redirigé vers la page de connexion.
+          </p>
+          <div class="provider-confirm-actions">
+            <button
+              type="button"
+              class="provider-btn provider-btn--outline"
+              [disabled]="accountSaving"
+              (click)="closeAccountConfirm()"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="provider-btn provider-btn--primary"
+              [disabled]="accountSaving"
+              (click)="confirmAccountSave()"
+            >
+              {{ accountSaving ? 'Enregistrement…' : 'Confirmer' }}
             </button>
           </div>
         </section>

@@ -160,6 +160,18 @@ export const PROVIDER_ROUTES: Routes = [
 
       {
 
+        path: 'infos-personnelles',
+
+        loadComponent: () =>
+
+          import('./profile/provider-profile.component').then((m) => m.ProviderProfileComponent),
+
+        data: { accountOnly: true },
+
+      },
+
+      {
+
         path: 'programmes',
 
         loadComponent: () =>

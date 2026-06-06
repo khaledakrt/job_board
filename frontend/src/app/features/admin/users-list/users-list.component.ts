@@ -88,6 +88,8 @@ export class UsersListComponent implements OnInit {
   roleLabel(role: string): string {
     if (role === USER_ROLES.ADMIN) return 'Admin';
     if (role === USER_ROLES.RECRUITER) return 'Recruteur';
+    if (role === USER_ROLES.TRAINING_PROVIDER) return 'Centre de formation';
+    if (role === USER_ROLES.INSTITUTION_PROVIDER) return 'Établissement';
     return 'Candidat';
   }
 }
