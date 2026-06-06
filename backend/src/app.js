@@ -9,6 +9,7 @@ const cookieParser = require('cookie-parser');
 const { env, corsOptions, globalRateLimiter } = require('./config');
 const { getUploadRoot } = require('./utils/fileStorage');
 const routes = require('./routes');
+const seoRoutes = require('./routes/seo.routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -59,6 +60,8 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 app.use(cookieParser());
+
+app.use(seoRoutes);
 
 app.use(env.API_PREFIX, routes);
 

@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Meta, Title } from '@angular/platform-browser';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
@@ -36,6 +37,8 @@ export class PublicJobPageComponent implements OnInit {
   private readonly candidateContext = inject(CandidateContextService);
   private readonly applicationsService = inject(CandidateApplicationsService);
   private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
 
   readonly routes = APP_ROUTES;
 
@@ -72,6 +75,7 @@ export class PublicJobPageComponent implements OnInit {
           this.error.set('Cette offre n’existe pas ou n’est plus disponible.');
         } else {
           this.activeQuizJobId = job.id;
+          this.updatePageMeta(job);
         }
         this.loading.set(false);
       },
@@ -118,6 +122,39 @@ export class PublicJobPageComponent implements OnInit {
 
   formatExperience(job: Job): string | null {
     return experienceDisplayLabel(job);
+  }
+
+  private updatePageMeta(job: Job): void {
+    const companyName = job.company?.name || 'JobBoard';
+    const pageTitle = `${job.title} - ${companyName}`;
+    const description = this.truncate(
+      this.stripHtml(job.description) || 'Consultez cette offre sur JobBoard.',
+      160
+    );
+    const imageUrl = this.companyLogo(job);
+
+    this.title.setTitle(pageTitle);
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ property: 'og:title', content: pageTitle });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:type', content: 'article' });
+    this.meta.updateTag({ name: 'twitter:card', content: imageUrl ? 'summary_large_image' : 'summary' });
+    this.meta.updateTag({ name: 'twitter:title', content: pageTitle });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+
+    if (imageUrl) {
+      this.meta.updateTag({ property: 'og:image', content: imageUrl });
+      this.meta.updateTag({ name: 'twitter:image', content: imageUrl });
+    }
+  }
+
+  private stripHtml(value: string): string {
+    return value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  private truncate(value: string, maxLength: number): string {
+    if (value.length <= maxLength) return value;
+    return `${value.slice(0, maxLength - 1).trim()}…`;
   }
 
   isQuizEnabled(job: Job): boolean {

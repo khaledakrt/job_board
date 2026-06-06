@@ -25,6 +25,7 @@ function formatPublicJob(job) {
     status: job.status,
     viewsCount: job.views_count,
     applicationsCount: job.applications_count,
+    expiresAt: job.expires_at,
     quizEnabled: Boolean(job.quiz_enabled) && Boolean(job.quiz_data),
     quiz:
       job.quiz_enabled && job.quiz_data
@@ -185,8 +186,44 @@ async function getPublicJobById(jobId) {
   return formatPublicJob(job);
 }
 
+async function getPublicJobPreviewById(jobId) {
+  await expireDueJobs();
+
+  const job = await Job.findOne({
+    where: {
+      id: jobId,
+      status: JOB_STATUS.ACTIVE,
+    },
+    include: [
+      {
+        model: Company,
+        as: 'company',
+        attributes: [
+          'id',
+          'name',
+          'logo_url',
+          'website',
+          'industry',
+          'description',
+          'street_address',
+          'postal_code',
+          'city',
+          'country',
+        ],
+      },
+    ],
+  });
+
+  if (!job) {
+    throw ApiError.notFound('Job not found or no longer active');
+  }
+
+  return formatPublicJob(job);
+}
+
 module.exports = {
   searchJobs,
   getPublicJobById,
+  getPublicJobPreviewById,
   formatPublicJob,
 };
