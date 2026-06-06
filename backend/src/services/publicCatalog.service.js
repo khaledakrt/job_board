@@ -181,6 +181,25 @@ async function getPublishedInstitutionOfferingById(id) {
   };
 }
 
+async function getPublishedInstitutionOfferingPreviewById(id) {
+  const row = await InstitutionOffering.findOne({
+    where: { id, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
+    include: [
+      {
+        model: PrivateInstitution,
+        as: 'institution',
+        where: { status: { [Op.in]: [...CATALOG_PUBLIC_STATUSES] } },
+        required: true,
+      },
+    ],
+  });
+  if (!row) throw ApiError.notFound('Publication introuvable ou non publiée');
+  return {
+    ...formatInstitutionOffering(row),
+    institution: formatInstitutionCard(row.institution),
+  };
+}
+
 async function syncProviderUserOnStatus(userId, status) {
   if (!userId) return;
   if (status === CATALOG_PUBLISH_STATUS.PUBLISHED) {
@@ -725,6 +744,7 @@ module.exports = {
   listPrivateInstitutions,
   getPrivateInstitutionById,
   getPublishedInstitutionOfferingById,
+  getPublishedInstitutionOfferingPreviewById,
   submitPrivateInstitution,
   adminListTrainingCenters,
   adminGetTrainingCenterById,

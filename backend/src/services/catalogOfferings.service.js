@@ -255,7 +255,13 @@ async function uploadCatalogImages(files) {
 async function getPublishedFormationById(id, userId = null) {
   const row = await TrainingFormation.findOne({
     where: { id, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
-    include: [{ model: TrainingCenter, as: 'center', attributes: ['id', 'name', 'status'] }],
+    include: [
+      {
+        model: TrainingCenter,
+        as: 'center',
+        attributes: ['id', 'name', 'logo_url', 'website', 'city', 'status'],
+      },
+    ],
   });
   if (!row || !row.center || row.center.status !== CATALOG_PUBLISH_STATUS.PUBLISHED) {
     throw ApiError.notFound('Formation introuvable');
@@ -282,7 +288,13 @@ async function getPublishedFormationById(id, userId = null) {
 async function getPublishedEventById(id, userId = null) {
   const row = await TrainingEvent.findOne({
     where: { id, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
-    include: [{ model: TrainingCenter, as: 'center', attributes: ['id', 'name', 'status'] }],
+    include: [
+      {
+        model: TrainingCenter,
+        as: 'center',
+        attributes: ['id', 'name', 'logo_url', 'website', 'city', 'status'],
+      },
+    ],
   });
   if (!row || !row.center || row.center.status !== CATALOG_PUBLISH_STATUS.PUBLISHED) {
     throw ApiError.notFound('Événement introuvable');
