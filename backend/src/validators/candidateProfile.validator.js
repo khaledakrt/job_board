@@ -7,14 +7,17 @@ const skillSchema = z.union([z.string().min(1).max(80), z.array(z.string().min(1
 const experienceSchema = z.object({
   company: z.string().max(255).optional(),
   title: z.string().max(255).optional(),
+  city: z.string().max(128).optional(),
   startDate: z.string().max(32).optional(),
   endDate: z.string().max(32).optional(),
+  current: z.boolean().optional(),
   description: z.string().max(5000).optional(),
 });
 
 const educationSchema = z.object({
   institution: z.string().max(255).optional(),
   degree: z.string().max(255).optional(),
+  city: z.string().max(128).optional(),
   startDate: z.string().max(32).optional(),
   endDate: z.string().max(32).optional(),
 });

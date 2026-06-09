@@ -35,6 +35,30 @@ export const CANDIDATE_ROUTES: Routes = [
         loadComponent: () =>
           import('../settings/settings.component').then((m) => m.SettingsComponent),
       },
+      {
+        path: 'annuaire-societes',
+        loadComponent: () =>
+          import('./directory/candidate-directory.component').then(
+            (m) => m.CandidateDirectoryComponent
+          ),
+        data: { directory: 'companies' },
+      },
+      {
+        path: 'annuaire-formations',
+        loadComponent: () =>
+          import('./directory/candidate-directory.component').then(
+            (m) => m.CandidateDirectoryComponent
+          ),
+        data: { directory: 'training' },
+      },
+      {
+        path: 'annuaire-etablissements',
+        loadComponent: () =>
+          import('./directory/candidate-directory.component').then(
+            (m) => m.CandidateDirectoryComponent
+          ),
+        data: { directory: 'institutions' },
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },

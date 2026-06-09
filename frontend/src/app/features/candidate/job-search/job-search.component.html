@@ -1,10 +1,20 @@
 <ng-template #filtersPanel>
   <div class="public-jobs-filters candidate-search-filters">
     <div class="public-jobs-filters-head">
-      <h3 class="public-jobs-filters-title">Recherche avancée</h3>
+      <div>
+        <p class="public-jobs-filters-kicker">Recherche emploi</p>
+        <h3 class="public-jobs-filters-title">Trouvez rapidement l’offre qui vous correspond</h3>
+      </div>
       <div class="public-jobs-filters-actions">
-        <button type="button" class="landing-btn landing-btn-primary" (click)="applyFilters()">
-          Rechercher
+        <button
+          type="button"
+          class="landing-btn landing-btn-ghost"
+          (click)="toggleAdvancedFilters()"
+        >
+          {{ showAdvancedFilters() ? 'Masquer les filtres' : 'Filtres avancés' }}
+          @if (activeFiltersCount() > 0) {
+            <span class="filter-count">{{ activeFiltersCount() }}</span>
+          }
         </button>
         @if (hasActiveFilters()) {
           <button type="button" class="landing-btn landing-btn-ghost" (click)="resetFilters()">
@@ -17,8 +27,8 @@
       </div>
     </div>
 
-    <div class="public-jobs-filters-grid">
-      <div class="public-jobs-filter-field">
+    <div class="search-primary-row">
+      <div class="public-jobs-filter-field search-primary-field">
         <label class="public-jobs-label">Mots-clés</label>
         <input
           class="public-jobs-input"
@@ -28,7 +38,7 @@
           (keydown.enter)="applyFilters()"
         />
       </div>
-      <div class="public-jobs-filter-field">
+      <div class="public-jobs-filter-field search-primary-field">
         <label class="public-jobs-label">Localisation</label>
         <input
           class="public-jobs-input"
@@ -38,17 +48,7 @@
           (keydown.enter)="applyFilters()"
         />
       </div>
-      <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Entreprise</label>
-        <input
-          class="public-jobs-input"
-          placeholder="Nom de l'employeur…"
-          [value]="filters().company"
-          (input)="updateCompany($any($event.target).value)"
-          (keydown.enter)="applyFilters()"
-        />
-      </div>
-      <div class="public-jobs-filter-field">
+      <div class="public-jobs-filter-field search-primary-field">
         <label class="public-jobs-label">Secteur</label>
         <input
           class="public-jobs-input"
@@ -58,29 +58,23 @@
           (keydown.enter)="applyFilters()"
         />
       </div>
-      <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Salaire min. (€/an)</label>
+      <div class="public-jobs-filter-field search-primary-field">
+        <label class="public-jobs-label">Entreprise</label>
         <input
           class="public-jobs-input"
-          type="number"
-          min="0"
-          placeholder="Ex. 35000"
-          [value]="filters().minSalary ?? ''"
-          (input)="updateMinSalary($any($event.target).value)"
+          placeholder="Nom de l'employeur…"
+          [value]="filters().company"
+          (input)="updateCompany($any($event.target).value)"
+          (keydown.enter)="applyFilters()"
         />
-        @if (candidateContext.profile()?.minSalary; as profMin) {
-          <button type="button" class="salary-hint-btn" (click)="applyProfileMinSalary()">
-            Utiliser mon profil ({{ profMin }} €)
-          </button>
-        }
       </div>
-      <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Tri</label>
-        <select class="public-jobs-select" [value]="filters().sortBy" (change)="setSortBy($any($event.target).value)">
-          <option value="date">Plus récentes</option>
-          <option value="salary">Salaire</option>
-        </select>
-      </div>
+      <button type="button" class="search-primary-submit" (click)="applyFilters()">
+        Rechercher
+      </button>
+    </div>
+
+    @if (showAdvancedFilters()) {
+    <div class="public-jobs-filters-grid advanced-filters-grid">
       <div class="public-jobs-filter-field">
         <label class="public-jobs-label">Expérience</label>
         <select
@@ -91,6 +85,14 @@
           @for (opt of experienceOptions; track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
           }
+        </select>
+      </div>
+      <div class="public-jobs-filter-field">
+        <label class="public-jobs-label">Tri</label>
+        <select class="public-jobs-select" [value]="filters().sortBy" (change)="setSortBy($any($event.target).value)">
+          <option value="date">Plus récentes</option>
+          <option value="salary">Salaire</option>
+          <option value="experience">Expérience</option>
         </select>
       </div>
       <div class="public-jobs-filter-field public-jobs-filter-field-check">
@@ -134,6 +136,7 @@
         </div>
       </div>
     </div>
+    }
   </div>
 </ng-template>
 
@@ -303,56 +306,43 @@
 </ng-template>
 
 <div class="search-page" [class.search-page-apply-active]="applyFlowOpen()">
-  <header class="page-header page-header-row">
-    <div>
-      <h1 class="page-title">Rechercher une offre</h1>
-      <p class="page-subtitle">
-        {{ filteredJobs().length }} sur {{ totalJobs() || filteredJobs().length }} offre(s)
-        @if (totalPages() > 1) {
-          — page {{ currentPage() }} / {{ totalPages() }}
-        }
-      </p>
-      @if (totalPages() > 1 && !useClientFilters()) {
-        <div class="jobs-pagination">
-          <button type="button" class="landing-btn landing-btn-ghost" [disabled]="currentPage() <= 1" (click)="goToPage(currentPage() - 1)">
-            Précédent
-          </button>
-          <button
-            type="button"
-            class="landing-btn landing-btn-ghost"
-            [disabled]="currentPage() >= totalPages()"
-            (click)="goToPage(currentPage() + 1)"
-          >
-            Suivant
-          </button>
-        </div>
-      }
-    </div>
-    <div class="view-mode-toggle" role="group" aria-label="Mode d'affichage des offres">
-      <button
-        type="button"
-        class="view-mode-btn"
-        [class.view-mode-btn-active]="viewMode() === 'linkedin'"
-        (click)="setViewMode('linkedin')"
-      >
-        Vue liste
-      </button>
-      <button
-        type="button"
-        class="view-mode-btn"
-        [class.view-mode-btn-active]="viewMode() === 'cards'"
-        (click)="setViewMode('cards')"
-      >
-        Vue cartes
-      </button>
-    </div>
-  </header>
+  @if (totalPages() > 1 && !useClientFilters()) {
+    <header class="search-toolbar">
+      <div class="jobs-pagination">
+        <button type="button" class="landing-btn landing-btn-ghost" [disabled]="currentPage() <= 1" (click)="goToPage(currentPage() - 1)">
+          Précédent
+        </button>
+        <span class="jobs-pagination-label">Page {{ currentPage() }} / {{ totalPages() }}</span>
+        <button
+          type="button"
+          class="landing-btn landing-btn-ghost"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+        >
+          Suivant
+        </button>
+      </div>
+    </header>
+  }
 
   <ng-container *ngTemplateOutlet="filtersPanel" />
 
   @if (viewMode() === 'linkedin') {
   <div class="search-shell">
     <aside class="search-left">
+      <div class="results-summary">
+        <div>
+          <p class="results-summary-eyebrow">Résultats</p>
+          <h2 class="results-summary-title">
+            {{ filteredJobs().length }} offre(s) trouvée(s)
+          </h2>
+        </div>
+        @if (hasActiveFilters()) {
+          <button type="button" class="results-summary-reset" (click)="resetFilters()">
+            Effacer les filtres
+          </button>
+        }
+      </div>
       <div class="job-list">
         @if (loading()) {
           <p class="table-loading panel-card">Chargement des offres...</p>
@@ -441,7 +431,17 @@
           </article>
         } @empty {
           @if (!loading()) {
-            <p class="empty-cell panel-card">Aucune offre ne correspond à vos filtres.</p>
+            <div class="empty-cell panel-card results-empty">
+              <p class="results-empty-title">Aucune offre trouvée</p>
+              <p class="results-empty-hint">
+                Essayez d’élargir la localisation, de retirer le salaire minimum ou d’effacer les filtres.
+              </p>
+              @if (hasActiveFilters()) {
+                <button type="button" class="landing-btn landing-btn-outline" (click)="resetFilters()">
+                  Effacer les filtres
+                </button>
+              }
+            </div>
           }
         }
       </div>

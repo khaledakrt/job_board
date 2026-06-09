@@ -28,6 +28,9 @@ export interface Job {
     name: string;
     logoUrl: string | null;
     industry?: string | null;
+    city?: string | null;
+    website?: string | null;
+    description?: string | null;
   };
 }
 

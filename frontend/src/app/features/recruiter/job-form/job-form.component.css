@@ -58,7 +58,7 @@
   font-weight: 700;
   line-height: 1.1;
   text-align: right;
-  color: #64748b;
+  color: #334155;
   white-space: nowrap;
 }
 
@@ -82,7 +82,14 @@
   padding: var(--job-input-py) var(--job-input-px);
   font-size: var(--job-input-fs);
   line-height: 1.35;
+  border-color: #94a3b8;
+  border-width: 1.5px;
   border-radius: 0.5rem;
+}
+
+.job-form .form-input:focus {
+  border-color: #0a66c2;
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.12);
 }
 
 .job-form select.form-input {
@@ -174,6 +181,8 @@
 }
 
 .job-form .rte-editor {
+  border-color: #94a3b8;
+  border-width: 1.5px;
   border-radius: 0.5rem;
 }
 

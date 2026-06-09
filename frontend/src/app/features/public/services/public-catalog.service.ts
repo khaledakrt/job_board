@@ -87,4 +87,11 @@ export class PublicCatalogService {
       { participationType: 'registered' }
     );
   }
+
+  participateInstitutionOffering(id: string) {
+    return this.http.post<ApiResponse<{ participationType: ParticipationType }>>(
+      `${this.base}/private-institutions/publications/${id}/participate`,
+      { participationType: 'registered' }
+    );
+  }
 }

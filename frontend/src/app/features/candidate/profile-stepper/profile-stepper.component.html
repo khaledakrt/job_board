@@ -1,13 +1,35 @@
 <div class="profile-page">
-<div class="page-header">
-  <h1 class="page-title">Mon profil</h1>
-  <p class="page-subtitle">
-    Complétez votre profil en quatre étapes pour postuler et être visible des recruteurs.
-    @if (context.hasProfile()) {
-      <span class="profile-completion"> — {{ context.profileCompletion() }}% complété</span>
-    }
-  </p>
-</div>
+<section class="profile-hero panel-card">
+  <div class="profile-hero-main">
+    <p class="profile-hero-kicker">Profil candidat</p>
+    <h1 class="profile-hero-title">
+      Construisez un profil clair pour postuler plus vite
+    </h1>
+    <p class="profile-hero-text">
+      Complétez les informations essentielles, ajoutez votre CV et mettez en avant vos expériences.
+    </p>
+  </div>
+  <div class="profile-progress-card">
+    <div class="profile-progress-head">
+      <span>Progression</span>
+      <strong>{{ context.hasProfile() ? context.profileCompletion() : 0 }}%</strong>
+    </div>
+    <div class="profile-progress-bar" aria-hidden="true">
+      <span [style.width.%]="context.hasProfile() ? context.profileCompletion() : 0"></span>
+    </div>
+    <p class="profile-progress-next">
+      @if (!context.hasProfile()) {
+        Créez votre profil pour commencer à postuler.
+      } @else if (!context.profile()?.resumeUrl) {
+        Ajoutez ou générez votre CV PDF.
+      } @else if (context.profileIncomplete()) {
+        Continuez à enrichir votre profil.
+      } @else {
+        Profil prêt pour les recruteurs.
+      }
+    </p>
+  </div>
+</section>
 
 <div class="stepper-nav">
   @for (step of [1, 2, 3, 4]; track step) {
@@ -18,12 +40,15 @@
       [class.step-pill-done]="currentStep() > step"
       (click)="currentStep.set(step)"
     >
+      <span class="step-pill-index">{{ currentStep() > step ? '✓' : step }}</span>
+      <span class="step-pill-text">
       @switch (step) {
         @case (1) { Identité & CV }
         @case (2) { Expérience }
         @case (3) { Formation }
         @case (4) { Préférences }
       }
+      </span>
     </button>
   }
 </div>
@@ -37,7 +62,17 @@
 
 @if (currentStep() === 1) {
   <section class="step-panel panel-card">
-    <h2 class="panel-title">CV et identité</h2>
+    <div class="panel-heading">
+      <div>
+        <p class="panel-kicker">Étape 1</p>
+        <h2 class="panel-title">CV et identité</h2>
+      </div>
+      @if (context.profile()?.resumeUrl) {
+        <span class="panel-status panel-status-ok">CV disponible</span>
+      } @else {
+        <span class="panel-status">CV à compléter</span>
+      }
+    </div>
 
     <div class="cv-tools">
       <div class="cv-mode-tabs" role="tablist">
@@ -51,11 +86,12 @@
         </button>
         <button
           type="button"
-          class="cv-mode-tab"
-          [class.cv-mode-tab--active]="cvMode() === 'import'"
-          (click)="setCvMode('import')"
+          class="cv-mode-tab cv-mode-tab--disabled"
+          disabled
+          aria-disabled="true"
+          title="Import PDF bientôt disponible"
         >
-          Importer un PDF
+          Importer un PDF — bientôt
         </button>
       </div>
 
@@ -162,8 +198,11 @@
 
 @if (currentStep() === 2) {
   <section class="step-panel panel-card">
-    <div class="row-between">
-      <h2 class="panel-title">Expérience professionnelle</h2>
+    <div class="row-between panel-heading">
+      <div>
+        <p class="panel-kicker">Étape 2</p>
+        <h2 class="panel-title">Expérience professionnelle</h2>
+      </div>
       <button type="button" class="btn-secondary !w-auto px-3" (click)="addExperience()">+ Ajouter une expérience</button>
     </div>
     @for (group of experiencesArray.controls; track $index; let i = $index) {
@@ -171,7 +210,7 @@
         <p class="block-card-label">Expérience {{ i + 1 }}</p>
         <div class="block-grid">
           <div class="form-field">
-            <label class="form-label">Intitulé du poste</label>
+            <label class="form-label">Poste</label>
             <input class="form-input" formControlName="title" placeholder="Ex. Développeur full-stack" />
           </div>
           <div class="form-field">
@@ -179,20 +218,39 @@
             <input class="form-input" formControlName="company" placeholder="Nom de l'entreprise" />
           </div>
           <div class="form-field">
+            <label class="form-label">Ville</label>
+            <input class="form-input" formControlName="city" placeholder="Ex. Tunis, Paris, Remote" />
+          </div>
+          <div class="form-field">
             <label class="form-label">Début</label>
-            <input class="form-input" formControlName="startDate" placeholder="AAAA-MM" />
+            <input class="form-input date-input" type="month" formControlName="startDate" />
           </div>
           <div class="form-field">
             <label class="form-label">Fin</label>
-            <input class="form-input" formControlName="endDate" placeholder="AAAA-MM ou vide si en poste" />
+            <input
+              type="month"
+              class="form-input date-input"
+              formControlName="endDate"
+              [readonly]="$any(group).controls.current.value"
+            />
+          </div>
+          <div class="form-field current-role-field">
+            <label class="current-role-check">
+              <input
+                type="checkbox"
+                formControlName="current"
+                (change)="setExperienceCurrent(i, $any($event.target).checked)"
+              />
+              <span>Poste occupé jusqu’à présent</span>
+            </label>
           </div>
           <div class="form-field span-2">
-            <label class="form-label">Description des missions</label>
+            <label class="form-label">Missions principales</label>
             <textarea
               class="form-input"
-              rows="4"
+              rows="3"
               formControlName="description"
-              placeholder="Une ligne par mission ou par réalisation…"
+              placeholder="Résumez vos responsabilités, réalisations ou technologies utilisées…"
             ></textarea>
           </div>
         </div>
@@ -206,8 +264,11 @@
 
 @if (currentStep() === 3) {
   <section class="step-panel panel-card">
-    <div class="row-between">
-      <h2 class="panel-title">Formation</h2>
+    <div class="row-between panel-heading">
+      <div>
+        <p class="panel-kicker">Étape 3</p>
+        <h2 class="panel-title">Formation</h2>
+      </div>
       <button type="button" class="btn-secondary !w-auto px-3" (click)="addEducation()">+ Ajouter une formation</button>
     </div>
     @for (group of educationArray.controls; track $index; let i = $index) {
@@ -219,16 +280,20 @@
             <input class="form-input" formControlName="institution" placeholder="Université, école…" />
           </div>
           <div class="form-field">
-            <label class="form-label">Diplôme</label>
+            <label class="form-label">Diplôme / spécialité</label>
             <input class="form-input" formControlName="degree" placeholder="Ex. Master informatique" />
           </div>
           <div class="form-field">
-            <label class="form-label">Début</label>
-            <input class="form-input" formControlName="startDate" placeholder="AAAA-MM" />
+            <label class="form-label">Ville</label>
+            <input class="form-input" formControlName="city" placeholder="Ex. Tunis, Sousse, Paris" />
           </div>
           <div class="form-field">
-            <label class="form-label">Fin</label>
-            <input class="form-input" formControlName="endDate" placeholder="AAAA-MM" />
+            <label class="form-label">Début</label>
+            <input class="form-input date-input" type="month" formControlName="startDate" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Fin / obtention</label>
+            <input class="form-input date-input" type="month" formControlName="endDate" />
           </div>
         </div>
         @if (education.length > 1) {
@@ -241,7 +306,12 @@
 
 @if (currentStep() === 4) {
   <section class="step-panel prefs-panel" [formGroup]="identityForm">
-    <h2 class="panel-title">Préférences & liens</h2>
+    <div class="panel-heading">
+      <div>
+        <p class="panel-kicker">Étape 4</p>
+        <h2 class="panel-title">Préférences & liens</h2>
+      </div>
+    </div>
     <p class="panel-hint">
       Liens affichés sur le CV PDF. Photo et résumé : étape
       <button type="button" class="step-link-btn" (click)="currentStep.set(1)">Identité & CV</button>.
@@ -249,18 +319,18 @@
 
     <div class="prefs-form-grid prefs-links-full">
       <div class="form-field">
-        <label class="form-label">LinkedIn</label>
+        <label class="form-label">Profil LinkedIn</label>
         <input class="form-input" formControlName="linkedinUrl" placeholder="https://linkedin.com/in/…" />
       </div>
       <div class="form-field">
-        <label class="form-label">Portfolio</label>
+        <label class="form-label">Portfolio / site personnel</label>
         <input class="form-input" formControlName="portfolioUrl" placeholder="https://…" />
       </div>
-      <div class="form-field span-2">
+      <div class="form-field">
         <label class="form-label">Mobilité</label>
-        <input class="form-input" formControlName="mobility" placeholder="Ex. France, télétravail" />
+        <input class="form-input" formControlName="mobility" placeholder="Ex. Tunisie, France, télétravail, hybride" />
       </div>
-      <div class="form-field span-2">
+      <div class="form-field">
         <label class="form-label">Lieux souhaités</label>
         <input
           class="form-input"
@@ -271,10 +341,10 @@
     </div>
 
     <div class="prefs-block">
-      <h3 class="prefs-section-title">Langues</h3>
+      <h3 class="prefs-section-title">Lang.</h3>
       <div class="tag-row">
         <input
-          class="form-input"
+          class="form-input compact-tag-input"
           [value]="langInput()"
           (input)="langInput.set($any($event.target).value)"
           (keydown.enter)="addLang(); $event.preventDefault()"
@@ -290,10 +360,10 @@
     </div>
 
     <div class="prefs-block">
-      <h3 class="prefs-section-title">Certifications</h3>
+      <h3 class="prefs-section-title">Certif.</h3>
       <div class="tag-row">
         <input
-          class="form-input"
+          class="form-input compact-tag-input"
           [value]="certInput()"
           (input)="certInput.set($any($event.target).value)"
           (keydown.enter)="addCert(); $event.preventDefault()"

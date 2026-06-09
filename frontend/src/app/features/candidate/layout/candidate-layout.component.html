@@ -60,6 +60,33 @@
       >
         Paramètres
       </a>
+
+      <div class="sidebar-nav-separator" aria-hidden="true"></div>
+      <p class="sidebar-section-label">Annuaires</p>
+      <a
+        [routerLink]="routes.CANDIDATE.COMPANY_DIRECTORY"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link nav-link-directory"
+      >
+        Annuaire sociétés
+      </a>
+      <a
+        [routerLink]="routes.CANDIDATE.TRAINING_DIRECTORY"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link nav-link-directory"
+      >
+        Annuaire formations
+      </a>
+      <a
+        [routerLink]="routes.CANDIDATE.INSTITUTION_DIRECTORY"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link nav-link-directory"
+      >
+        Annuaire établissements
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -72,9 +99,34 @@
     <header class="candidate-topbar">
       <div class="candidate-page-shell candidate-topbar-inner">
         <div class="topbar-left">
-          <p class="topbar-greeting">Bonjour, {{ displayName() }}</p>
+          <p class="topbar-greeting">
+            Bonjour, {{ displayName() }}
+            @if (pageContextTitle(); as title) {
+              <span class="topbar-context">, {{ title }}</span>
+            }
+          </p>
         </div>
         <div class="topbar-actions">
+          @if (isJobsPage()) {
+            <div class="view-mode-toggle" role="group" aria-label="Mode d'affichage des offres">
+              <button
+                type="button"
+                class="view-mode-btn"
+                [class.view-mode-btn-active]="jobViewMode.mode() === 'linkedin'"
+                (click)="setJobViewMode('linkedin')"
+              >
+                Vue liste
+              </button>
+              <button
+                type="button"
+                class="view-mode-btn"
+                [class.view-mode-btn-active]="jobViewMode.mode() === 'cards'"
+                (click)="setJobViewMode('cards')"
+              >
+                Vue cartes
+              </button>
+            </div>
+          }
           <app-candidate-notification-bell />
         </div>
       </div>

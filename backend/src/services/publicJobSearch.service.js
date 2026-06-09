@@ -38,6 +38,9 @@ function formatPublicJob(job) {
           name: job.company.name,
           logoUrl: job.company.logo_url,
           industry: job.company.industry,
+          city: job.company.city,
+          website: job.company.website,
+          description: job.company.description,
         }
       : null,
   };
@@ -130,10 +133,15 @@ async function searchJobs(query) {
           ['salary_label', 'DESC'],
           ['created_at', 'DESC'],
         ]
-      : [
-          ['created_at', 'DESC'],
-          ['applications_count', 'DESC'],
-        ];
+      : query.sortBy === 'experience'
+        ? [
+            ['experience_years', 'DESC'],
+            ['created_at', 'DESC'],
+          ]
+        : [
+            ['created_at', 'DESC'],
+            ['applications_count', 'DESC'],
+          ];
 
   const { rows, count } = await Job.findAndCountAll({
     where,
@@ -141,7 +149,7 @@ async function searchJobs(query) {
       {
         model: Company,
         as: 'company',
-        attributes: ['id', 'name', 'logo_url', 'industry'],
+        attributes: ['id', 'name', 'logo_url', 'industry', 'city', 'website', 'description'],
       },
     ],
     order,

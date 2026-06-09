@@ -24,12 +24,27 @@ const listPrivateInstitutions = asyncHandler(async (req, res) => {
 });
 
 const getPrivateInstitution = asyncHandler(async (req, res) => {
-  const data = await publicCatalogService.getPrivateInstitutionById(req.params.id);
+  const data = await publicCatalogService.getPrivateInstitutionById(
+    req.params.id,
+    req.user?.id ?? null
+  );
   res.json({ success: true, data });
 });
 
 const getInstitutionOffering = asyncHandler(async (req, res) => {
-  const data = await publicCatalogService.getPublishedInstitutionOfferingById(req.params.id);
+  const data = await publicCatalogService.getPublishedInstitutionOfferingById(
+    req.params.id,
+    req.user?.id ?? null
+  );
+  res.json({ success: true, data });
+});
+
+const participateInstitutionOffering = asyncHandler(async (req, res) => {
+  const data = await publicCatalogService.participateInstitutionOffering(
+    req.params.id,
+    req.user,
+    req.validatedBody.participationType
+  );
   res.json({ success: true, data });
 });
 
@@ -45,5 +60,6 @@ module.exports = {
   listPrivateInstitutions,
   getPrivateInstitution,
   getInstitutionOffering,
+  participateInstitutionOffering,
   submitPrivateInstitution,
 };

@@ -13,7 +13,7 @@ export interface JobSearchParams {
   contractType?: string;
   remoteType?: string;
   minSalary?: number;
-  sortBy?: 'date' | 'salary';
+  sortBy?: 'date' | 'salary' | 'experience';
   page?: number;
   limit?: number;
 }

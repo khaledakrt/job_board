@@ -1,6 +1,6 @@
 export type ExperienceFilter = 'all' | 'junior' | 'mid' | 'senior';
 
-export type JobSortBy = 'date' | 'salary';
+export type JobSortBy = 'date' | 'salary' | 'experience';
 
 export interface JobSearchFilters {
   keywords: string;

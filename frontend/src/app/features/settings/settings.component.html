@@ -62,9 +62,9 @@
         </div>
       }
 
-      <form [formGroup]="emailForm" (ngSubmit)="onSubmitEmail()" novalidate class="settings-form-grid">
-        <div class="form-field span-2">
-          <label class="form-label" for="newEmail">Nouvelle adresse e-mail</label>
+      <form [formGroup]="emailForm" (ngSubmit)="onSubmitEmail()" novalidate class="settings-form-grid settings-auth-form">
+        <div class="form-field settings-compact-field">
+          <label class="form-label" for="newEmail">Nouvel e-mail</label>
           <input
             id="newEmail"
             type="email"
@@ -81,8 +81,8 @@
           }
         </div>
 
-        <div class="form-field span-2">
-          <label class="form-label" for="confirmNewEmail">Confirmer la nouvelle adresse</label>
+        <div class="form-field settings-compact-field">
+          <label class="form-label" for="confirmNewEmail">Confirmation</label>
           <input
             id="confirmNewEmail"
             type="email"
@@ -99,8 +99,8 @@
           }
         </div>
 
-        <div class="form-field span-2">
-          <label class="form-label" for="emailCurrentPassword">Mot de passe actuel</label>
+        <div class="form-field settings-compact-field">
+          <label class="form-label" for="emailCurrentPassword">Mot de passe</label>
           <input
             id="emailCurrentPassword"
             type="password"
@@ -135,9 +135,9 @@
       <div class="alert alert-success">{{ passwordSuccessMessage() }}</div>
     }
 
-    <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" novalidate class="settings-form-grid">
-      <div class="form-field span-2">
-        <label class="form-label" for="currentPassword">Mot de passe actuel</label>
+    <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" novalidate class="settings-form-grid settings-auth-form">
+      <div class="form-field settings-compact-field">
+        <label class="form-label" for="currentPassword">Actuel</label>
         <input
           id="currentPassword"
           type="password"
@@ -151,8 +151,8 @@
         }
       </div>
 
-      <div class="form-field">
-        <label class="form-label" for="newPassword">Nouveau mot de passe</label>
+      <div class="form-field settings-compact-field">
+        <label class="form-label" for="newPassword">Nouveau</label>
         <input
           id="newPassword"
           type="password"
@@ -169,8 +169,8 @@
         }
       </div>
 
-      <div class="form-field">
-        <label class="form-label" for="confirmPassword">Confirmer le nouveau mot de passe</label>
+      <div class="form-field settings-compact-field">
+        <label class="form-label" for="confirmPassword">Confirmation</label>
         <input
           id="confirmPassword"
           type="password"

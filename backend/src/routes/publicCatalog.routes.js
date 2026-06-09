@@ -49,12 +49,21 @@ router.get(
 router.get(
   '/private-institutions/publications/:id',
   validateParams(idParamsSchema),
+  optionalAuthenticate,
   publicCatalogController.getInstitutionOffering
 );
 router.get(
   '/private-institutions/:id',
   validateParams(idParamsSchema),
+  optionalAuthenticate,
   publicCatalogController.getPrivateInstitution
+);
+router.post(
+  '/private-institutions/publications/:id/participate',
+  authenticate,
+  validateParams(idParamsSchema),
+  validateBody(participateBodySchema),
+  publicCatalogController.participateInstitutionOffering
 );
 router.post(
   '/private-institutions',

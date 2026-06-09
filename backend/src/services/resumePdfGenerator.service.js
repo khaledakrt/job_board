@@ -123,16 +123,17 @@ function drawProfileLinks(doc, links, options = {}) {
   }
 
   let lineY = y ?? doc.y;
+  let linkX = textX;
   links.forEach((link, index) => {
     if (index > 0) {
-      doc.fillColor('#64748b').text('  •  ', textX, lineY, { width: textWidth, continued: true });
+      linkX += 42;
     }
-    doc.fillColor('#0a66c2').text(link.label, textX, lineY, {
-      width: textWidth,
+    doc.fillColor('#0a66c2').text(link.label, linkX, lineY, {
+      width: doc.widthOfString(link.label) + 4,
       link: link.url,
       underline: true,
-      continued: index < links.length - 1,
     });
+    linkX += doc.widthOfString(link.label);
   });
 
   doc.fillColor('#111827');
@@ -263,7 +264,11 @@ async function generateResumePdfFile(profile) {
       validEdu.forEach((edu, index) => {
         if (index > 0) doc.moveDown(0.3);
         doc.font('Helvetica-Bold').fontSize(11).text(text(edu.degree) || 'Diplôme');
-        const meta = [text(edu.institution), formatPeriod(edu.startDate, edu.endDate)].filter(Boolean);
+        const meta = [
+          text(edu.institution),
+          text(edu.city),
+          formatPeriod(edu.startDate, edu.endDate),
+        ].filter(Boolean);
         if (meta.length) {
           doc.font('Helvetica').fontSize(9).fillColor('#475569').text(meta.join(' — '));
           doc.fillColor('#111827');
@@ -278,7 +283,11 @@ async function generateResumePdfFile(profile) {
       validExp.forEach((exp, index) => {
         if (index > 0) doc.moveDown(0.35);
         doc.font('Helvetica-Bold').fontSize(11).text(text(exp.title) || 'Poste');
-        const meta = [text(exp.company), formatPeriod(exp.startDate, exp.endDate)].filter(Boolean);
+        const meta = [
+          text(exp.company),
+          text(exp.city),
+          formatPeriod(exp.startDate, exp.current ? 'Présent' : exp.endDate),
+        ].filter(Boolean);
         if (meta.length) {
           doc.font('Helvetica-Oblique').fontSize(9).fillColor('#475569').text(meta.join(' — '));
           doc.fillColor('#111827');
@@ -300,6 +309,14 @@ async function generateResumePdfFile(profile) {
     if (languages.length) {
       writeSectionTitle(doc, 'Langues');
       doc.font('Helvetica').fontSize(10).text(languages.map((l) => text(l)).join('  •  '));
+    }
+
+    const certifications = Array.isArray(profile.certifications)
+      ? profile.certifications.filter((c) => text(c))
+      : [];
+    if (certifications.length) {
+      writeSectionTitle(doc, 'Certifications');
+      doc.font('Helvetica').fontSize(10).text(certifications.map((c) => text(c)).join('  •  '));
     }
 
     doc.moveDown(1);

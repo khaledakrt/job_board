@@ -49,6 +49,9 @@ export const APP_ROUTES = {
     SAVED: '/candidate/saved',
     PROFILE: '/candidate/profile',
     SETTINGS: '/candidate/settings',
+    COMPANY_DIRECTORY: '/candidate/annuaire-societes',
+    TRAINING_DIRECTORY: '/candidate/annuaire-formations',
+    INSTITUTION_DIRECTORY: '/candidate/annuaire-etablissements',
   },
   RECRUITER: {
     ROOT: '/recruiter',

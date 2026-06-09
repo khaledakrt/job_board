@@ -11,6 +11,7 @@
     "db:seed": "node scripts/seed-test-users.js",
     "db:seed:jobs": "node scripts/seed-jobs.js",
     "db:seed:demo": "node scripts/seed-demo-data.js",
+    "db:seed:directories": "node scripts/seed-directory-demo.js",
     "db:seed:formations": "node scripts/seed-training-formations.js",
     "db:seed:institution-offerings": "node scripts/seed-institution-offerings.js"
   },

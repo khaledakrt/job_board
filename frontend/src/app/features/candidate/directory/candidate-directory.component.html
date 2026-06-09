@@ -1,0 +1,722 @@
+<section class="directory-page">
+  @if (!hasDetailView()) {
+    <header class="directory-hero panel-card">
+      <div>
+        <p class="directory-kicker">Espace candidat</p>
+        <h1>{{ title() }}</h1>
+        <p>{{ subtitle() }}</p>
+      </div>
+      <strong>{{ total() }} résultat(s)</strong>
+    </header>
+
+    <section class="directory-filters panel-card">
+      <div class="directory-field directory-field-search">
+        <label>Recherche</label>
+        <input
+          [(ngModel)]="search"
+          (keydown.enter)="load()"
+          placeholder="Nom, domaine, secteur..."
+        />
+      </div>
+
+      <div class="directory-field">
+        <label>Ville</label>
+        <input [(ngModel)]="city" (keydown.enter)="load()" placeholder="Ville..." />
+      </div>
+
+      @if (kind() === 'companies' || kind() === 'training') {
+        <div class="directory-field">
+          <label>Domaine</label>
+          <input [(ngModel)]="domain" (keydown.enter)="load()" placeholder="Ex. informatique, commerce" />
+        </div>
+      }
+
+      @if (kind() === 'training') {
+        <div class="directory-field">
+          <label>Mode</label>
+          <select [(ngModel)]="deliveryMode">
+            @for (option of deliveryOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      @if (kind() === 'institutions') {
+        <div class="directory-field">
+          <label>Type</label>
+          <select [(ngModel)]="institutionType">
+            @for (option of institutionTypes; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="directory-actions">
+        <button type="button" class="directory-btn directory-btn-primary" (click)="load()">
+          Rechercher
+        </button>
+        <button type="button" class="directory-btn directory-btn-ghost" (click)="resetFilters()">
+          Réinitialiser
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (loading()) {
+    <p class="directory-state panel-card">Chargement...</p>
+  } @else if (error()) {
+    <p class="directory-state directory-state-error panel-card">{{ error() }}</p>
+  } @else {
+    @if (detailLoading()) {
+      <section class="directory-detail panel-card">
+        <button type="button" class="back-link" (click)="backToDirectory()">← Retour à l’annuaire</button>
+        <p class="directory-state">Chargement des détails...</p>
+      </section>
+    }
+
+    @if (selectedCompany(); as company) {
+      <section class="directory-detail directory-detail-company panel-card">
+        <button type="button" class="back-link" (click)="backToDirectory()">← Retour à l’annuaire</button>
+        <div class="company-profile-header">
+          <div class="company-main-info">
+            @if (logoUrl(company.logoUrl); as logo) {
+              <img [src]="logo" alt="" class="company-profile-logo" />
+            } @else {
+              <div class="company-profile-logo company-profile-logo-placeholder">
+                {{ company.name.charAt(0) }}
+              </div>
+            }
+            <div>
+              <p class="directory-kicker">Société sélectionnée</p>
+              <h2>{{ company.name }}</h2>
+              <p class="company-meta">
+                {{ company.industry || 'Secteur non précisé' }} ·
+                {{ company.city || company.cities[0] || 'Ville non précisée' }}
+              </p>
+              @if (company.description) {
+                <p class="company-description">{{ textPreview(company.description, 280) }}</p>
+              }
+              @if (companyTags(company).length) {
+                <div class="company-tags">
+                  @for (tag of companyTags(company); track tag) {
+                    <span>{{ tag }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <aside class="company-side-info">
+            <strong>{{ company.jobsCount }} offre(s) active(s)</strong>
+            <p>{{ company.cities.length ? company.cities.join(', ') : 'Ville non précisée' }}</p>
+            @if (company.website) {
+              <a [href]="company.website" target="_blank" rel="noopener noreferrer">
+                Site web
+              </a>
+            }
+          </aside>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h3>Offres publiées</h3>
+            <p>Cliquez sur une offre pour ouvrir sa fiche complète et postuler.</p>
+          </div>
+        </div>
+
+        <div class="linked-content-grid company-jobs-grid">
+          @for (job of company.jobs; track job.id) {
+            <button
+              type="button"
+              class="linked-card"
+              [class.linked-card-active]="selectedJob()?.id === job.id"
+              (click)="selectJob(job, $event)"
+            >
+              <span>Offre</span>
+              <h3>{{ job.title }}</h3>
+              <p>{{ job.location || 'Lieu non précisé' }} · {{ job.contractType }}</p>
+              <small>{{ job.salaryLabel || 'Salaire non précisé' }}</small>
+              @if (hasApplied(job.id)) {
+                <em>Déjà postulé</em>
+              }
+            </button>
+          }
+        </div>
+      </section>
+    }
+
+    @if (selectedTrainingCenter(); as center) {
+      <section class="directory-detail directory-detail-training panel-card">
+        <button type="button" class="back-link" (click)="backToDirectory()">← Retour à l’annuaire</button>
+
+        <div class="training-profile-header">
+          <div class="training-main-info">
+            @if (logoUrl(center.logoUrl); as logo) {
+              <img [src]="logo" alt="" class="training-profile-logo" />
+            } @else {
+              <div class="training-profile-logo training-profile-logo-placeholder">CF</div>
+            }
+            <div>
+              <p class="directory-kicker">Centre sélectionné</p>
+              <h2>{{ center.name }}</h2>
+              <p class="company-meta">
+                {{ center.trainingDomain || 'Domaine non précisé' }} ·
+                {{ center.city || 'Ville non précisée' }} ·
+                {{ deliveryLabel(center.deliveryMode) || 'Mode non précisé' }}
+              </p>
+              @if (center.shortDescription || center.description) {
+                <p class="company-description">
+                  {{ center.shortDescription || textPreview(center.description, 280) }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <aside class="company-side-info">
+            <strong>{{ trainingContents(center).length }} publication(s)</strong>
+            @if (center.address) {
+              <p>{{ center.address }}</p>
+            }
+            @if (center.phone) {
+              <p>{{ center.phone }}</p>
+            }
+            @if (center.email) {
+              <a [href]="'mailto:' + center.email">{{ center.email }}</a>
+            }
+            @if (center.website) {
+              <a [href]="center.website" target="_blank" rel="noopener noreferrer">Site web</a>
+            }
+          </aside>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h3>Formations & événements</h3>
+            <p>Cliquez sur une carte pour voir le détail et vous inscrire.</p>
+          </div>
+        </div>
+
+        <div class="linked-content-grid training-content-grid">
+          @for (content of trainingContents(center); track content.id) {
+            <button
+              type="button"
+              class="linked-card"
+              [class.linked-card-active]="selectedTrainingContent()?.id === content.id"
+              (click)="selectTrainingContent(content, $event)"
+            >
+              <span>{{ contentKind(content) }}</span>
+              <h3>{{ content.title }}</h3>
+              <p>{{ content.city || center.city || 'Ville non précisée' }}</p>
+              <small>{{ formatDate(contentDate(content)) }}</small>
+              @if (hasTrainingParticipation(content)) {
+                <em>Déjà inscrit</em>
+              }
+            </button>
+          } @empty {
+            <p class="directory-state">Aucune formation ou événement publié.</p>
+          }
+        </div>
+      </section>
+    }
+
+    @if (selectedInstitution(); as institution) {
+      <section class="directory-detail directory-detail-institution panel-card">
+        <button type="button" class="back-link" (click)="backToDirectory()">← Retour à l’annuaire</button>
+
+        <div class="institution-profile-header">
+          <div class="institution-main-info">
+            @if (logoUrl(institution.logoUrl); as logo) {
+              <img [src]="logo" alt="" class="training-profile-logo" />
+            } @else {
+              <div class="training-profile-logo training-profile-logo-placeholder">EP</div>
+            }
+            <div>
+              <p class="directory-kicker">Établissement sélectionné</p>
+              <h2>{{ institution.name }}</h2>
+              <p class="company-meta">
+                {{ institutionLabel(institution.institutionType) }} ·
+                {{ institution.city || 'Ville non précisée' }}
+              </p>
+              @if (institution.shortDescription || institution.description) {
+                <p class="company-description">
+                  {{ institution.shortDescription || textPreview(institution.description, 280) }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <aside class="company-side-info">
+            <strong>{{ institutionOfferings(institution).length }} publication(s)</strong>
+            @if (institution.address) {
+              <p>{{ institution.address }}</p>
+            }
+            @if (institution.phone) {
+              <p>{{ institution.phone }}</p>
+            }
+            @if (institution.email) {
+              <a [href]="'mailto:' + institution.email">{{ institution.email }}</a>
+            }
+            @if (institution.website) {
+              <a [href]="institution.website" target="_blank" rel="noopener noreferrer">Site web</a>
+            }
+          </aside>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h3>Publications</h3>
+            <p>Programmes, événements, annonces et opportunités publiés par l’établissement.</p>
+          </div>
+        </div>
+
+        <div class="linked-content-grid institution-content-grid">
+          @for (offering of institutionOfferings(institution); track offering.id) {
+            <button
+              type="button"
+              class="linked-card"
+              [class.linked-card-active]="selectedOffering()?.id === offering.id"
+              (click)="selectOffering(offering, $event)"
+            >
+              <span>{{ offeringKind(offering) }}</span>
+              <h3>{{ offering.title }}</h3>
+              <p>{{ offering.city || institution.city || 'Ville non précisée' }}</p>
+              <small>{{ offering.category || formatDate(offering.startDate) }}</small>
+              @if (hasInstitutionParticipation(offering)) {
+                <em>{{ institutionDoneLabel(offering) }}</em>
+              }
+            </button>
+          } @empty {
+            <p class="directory-state">Aucune publication disponible.</p>
+          }
+        </div>
+      </section>
+    }
+
+    @if (!hasDetailView()) {
+      <div class="directory-grid">
+      @if (kind() === 'companies') {
+        @for (company of companies(); track company.id) {
+          <article
+            class="directory-card directory-card-clickable"
+            [class.directory-card-active]="selectedCompany()?.id === company.id"
+            role="button"
+            tabindex="0"
+            (click)="selectCompany(company)"
+            (keydown.enter)="selectCompany(company)"
+          >
+            @if (logoUrl(company.logoUrl); as logo) {
+              <img [src]="logo" alt="" class="directory-logo" />
+            } @else {
+              <div class="directory-logo directory-logo-placeholder">{{ company.name.charAt(0) }}</div>
+            }
+            <div class="directory-card-body">
+              <h2>{{ company.name }}</h2>
+              <p>{{ company.industry || 'Secteur non précisé' }}</p>
+              <span>{{ company.cities.length ? company.cities.join(', ') : 'Ville non précisée' }}</span>
+              <small>{{ company.jobsCount }} offre(s) active(s)</small>
+            </div>
+          </article>
+        } @empty {
+          <p class="directory-state panel-card">Aucune société trouvée.</p>
+        }
+      } @else if (kind() === 'training') {
+        @for (center of trainingCenters(); track center.id) {
+          <article
+            class="directory-card directory-card-clickable"
+            [class.directory-card-active]="selectedTrainingCenter()?.id === center.id"
+            role="button"
+            tabindex="0"
+            (click)="selectTrainingCenter(center)"
+            (keydown.enter)="selectTrainingCenter(center)"
+          >
+            @if (logoUrl(center.logoUrl); as logo) {
+              <img [src]="logo" alt="" class="directory-logo" />
+            } @else {
+              <div class="directory-logo directory-logo-placeholder">CF</div>
+            }
+            <div class="directory-card-body">
+              <h2>{{ center.name }}</h2>
+              <p>{{ center.trainingDomain || 'Domaine non précisé' }}</p>
+              <span>{{ center.city || 'Ville non précisée' }} · {{ deliveryLabel(center.deliveryMode) || 'Mode non précisé' }}</span>
+              @if (center.shortDescription) {
+                <p class="directory-description">{{ center.shortDescription }}</p>
+              }
+            </div>
+          </article>
+        } @empty {
+          <p class="directory-state panel-card">Aucun centre trouvé.</p>
+        }
+      } @else {
+        @for (institution of institutions(); track institution.id) {
+          <article
+            class="directory-card directory-card-clickable"
+            [class.directory-card-active]="selectedInstitution()?.id === institution.id"
+            role="button"
+            tabindex="0"
+            (click)="selectInstitution(institution)"
+            (keydown.enter)="selectInstitution(institution)"
+          >
+            @if (logoUrl(institution.logoUrl); as logo) {
+              <img [src]="logo" alt="" class="directory-logo" />
+            } @else {
+              <div class="directory-logo directory-logo-placeholder">EP</div>
+            }
+            <div class="directory-card-body">
+              <h2>{{ institution.name }}</h2>
+              <p>{{ institutionLabel(institution.institutionType) }}</p>
+              <span>{{ institution.city || 'Ville non précisée' }}</span>
+              @if (institution.shortDescription) {
+                <p class="directory-description">{{ institution.shortDescription }}</p>
+              }
+            </div>
+          </article>
+        } @empty {
+          <p class="directory-state panel-card">Aucun établissement trouvé.</p>
+        }
+      }
+      </div>
+    }
+  }
+</section>
+
+@if (jobPopupOpen() && jobPopup(); as job) {
+  <div class="directory-modal-backdrop" (click)="closeJobPopup()">
+    <article class="job-popup-card" (click)="$event.stopPropagation()">
+      <button type="button" class="job-popup-close" aria-label="Fermer" (click)="closeJobPopup()">
+        ✕
+      </button>
+
+      <header class="job-popup-header">
+        <div class="job-popup-company">
+          @if (companyLogo(job); as logo) {
+            <img [src]="logo" alt="" class="job-popup-logo" />
+          } @else {
+            <div class="job-popup-logo job-popup-logo-placeholder">
+              {{ job.company?.name?.charAt(0) || '?' }}
+            </div>
+          }
+          <div>
+            <p class="directory-kicker">Offre sélectionnée</p>
+            <h2>{{ job.title }}</h2>
+            <p>{{ job.company?.name || 'Entreprise' }}</p>
+          </div>
+        </div>
+
+        <div class="job-popup-actions">
+          @if (hasApplied(job.id)) {
+            <button type="button" class="directory-btn directory-btn-primary" disabled>
+              Déjà postulé
+            </button>
+          } @else {
+            <button type="button" class="directory-btn directory-btn-primary" (click)="startApply(job)">
+              Postuler
+            </button>
+          }
+        </div>
+      </header>
+
+      @if (jobPopupLoading()) {
+        <p class="directory-state">Chargement de l’offre...</p>
+      }
+
+      <div class="job-popup-meta">
+        <span>{{ job.location || 'Lieu non précisé' }}</span>
+        <span>{{ job.contractType }}</span>
+        <span>{{ formatRemote(job.remoteType) }}</span>
+        @if (formatSalary(job); as salary) {
+          <span>{{ salary }}</span>
+        }
+        @if (job.experienceYears !== null) {
+          <span>{{ job.experienceYears }} an(s) d’expérience</span>
+        }
+      </div>
+
+      @if (job.tags?.length) {
+        <div class="job-popup-tags">
+          @for (tag of job.tags; track $index) {
+            <span>{{ tag }}</span>
+          }
+        </div>
+      }
+
+      @if (job.benefits?.length) {
+        <h3 class="job-popup-section-title">Avantages</h3>
+        <div class="job-popup-tags job-popup-tags-benefits">
+          @for (benefit of job.benefits; track $index) {
+            <span>{{ benefit }}</span>
+          }
+        </div>
+      }
+
+      <h3 class="job-popup-section-title">Description du poste</h3>
+      <div class="job-popup-rich">
+        <app-safe-html [content]="job.description" />
+      </div>
+
+      @if (job.requirements) {
+        <h3 class="job-popup-section-title">Profil recherché</h3>
+        <div class="job-popup-rich">
+          <app-safe-html [content]="job.requirements" />
+        </div>
+      }
+
+      @if (error()) {
+        <p class="job-popup-message job-popup-message-error">{{ error() }}</p>
+      }
+      @if (success()) {
+        <p class="job-popup-message job-popup-message-success">{{ success() }}</p>
+      }
+    </article>
+  </div>
+}
+
+@if (trainingPopupOpen() && trainingPopup(); as content) {
+  <div class="directory-modal-backdrop" (click)="closeTrainingPopup()">
+    <article class="training-popup-card" (click)="$event.stopPropagation()">
+      <button type="button" class="job-popup-close" aria-label="Fermer" (click)="closeTrainingPopup()">
+        ✕
+      </button>
+
+      <header class="training-popup-header">
+        <div>
+          <p class="directory-kicker">{{ contentKind(content) }} sélectionné(e)</p>
+          <h2>{{ content.title }}</h2>
+          <p>{{ content.city || selectedTrainingCenter()?.city || 'Ville non précisée' }}</p>
+        </div>
+        <div class="job-popup-actions">
+          @if (hasTrainingParticipation(content)) {
+            <button type="button" class="directory-btn directory-btn-primary" disabled>
+              Déjà inscrit
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="directory-btn directory-btn-primary"
+              [disabled]="trainingActionLoading()"
+              (click)="registerTrainingContent(content)"
+            >
+              @if (trainingActionLoading()) {
+                Inscription...
+              } @else {
+                S'inscrire
+              }
+            </button>
+          }
+        </div>
+      </header>
+
+      @if (contentImage(content); as image) {
+        <img [src]="image" alt="" class="training-popup-image" />
+      }
+
+      <div class="job-popup-meta">
+        <span>{{ contentKind(content) }}</span>
+        <span>{{ formatDate(contentDate(content)) }}</span>
+        @if (contentPrice(content); as price) {
+          <span>{{ price }}</span>
+        }
+        @if (content.seats) {
+          <span>{{ content.seats }} place(s)</span>
+        }
+        @if (content.participantsCount != null) {
+          <span>{{ content.participantsCount }} inscrit(s)</span>
+        }
+      </div>
+
+      @if (formationDuration(content); as duration) {
+        <p class="training-popup-highlight"><strong>Durée :</strong> {{ duration }}</p>
+      }
+
+      @if (!isEvent(content) && content.certificateDelivered) {
+        <p class="training-popup-highlight">Certificat délivré à l’issue de la formation.</p>
+      }
+
+      <h3 class="job-popup-section-title">Présentation</h3>
+      <div class="job-popup-rich">
+        <app-safe-html [content]="contentDescription(content)" />
+      </div>
+
+      @if (content.address || content.phone || content.email || content.website) {
+        <h3 class="job-popup-section-title">Contact</h3>
+        <div class="training-popup-contact">
+          @if (content.address) {
+            <span>{{ content.address }}</span>
+          }
+          @if (content.phone) {
+            <span>{{ content.phone }}</span>
+          }
+          @if (content.email) {
+            <a [href]="'mailto:' + content.email">{{ content.email }}</a>
+          }
+          @if (content.website) {
+            <a [href]="content.website" target="_blank" rel="noopener noreferrer">Site web</a>
+          }
+        </div>
+      }
+
+      @if (trainingActionMsg()) {
+        <p
+          class="job-popup-message"
+          [class.job-popup-message-success]="trainingActionMsg() === 'Inscription enregistrée.'"
+          [class.job-popup-message-error]="trainingActionMsg() !== 'Inscription enregistrée.'"
+        >
+          {{ trainingActionMsg() }}
+        </p>
+      }
+    </article>
+  </div>
+}
+
+@if (institutionPopupOpen() && institutionPopup(); as offering) {
+  <div class="directory-modal-backdrop" (click)="closeInstitutionPopup()">
+    <article class="training-popup-card" (click)="$event.stopPropagation()">
+      <button type="button" class="job-popup-close" aria-label="Fermer" (click)="closeInstitutionPopup()">
+        ✕
+      </button>
+
+      <header class="training-popup-header">
+        <div>
+          <p class="directory-kicker">{{ offeringKind(offering) }} sélectionné(e)</p>
+          <h2>{{ offering.title }}</h2>
+          <p>{{ offering.city || selectedInstitution()?.city || 'Ville non précisée' }}</p>
+        </div>
+        <div class="job-popup-actions">
+          @if (hasInstitutionParticipation(offering)) {
+            <button type="button" class="directory-btn directory-btn-primary" disabled>
+              {{ institutionDoneLabel(offering) }}
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="directory-btn directory-btn-primary"
+              [disabled]="institutionActionLoading()"
+              (click)="registerInstitutionOffering(offering)"
+            >
+              @if (institutionActionLoading()) {
+                Traitement...
+              } @else {
+                {{ institutionActionLabel(offering) }}
+              }
+            </button>
+          }
+        </div>
+      </header>
+
+      <div class="job-popup-meta">
+        <span>{{ offeringKind(offering) }}</span>
+        @if (offering.category) {
+          <span>{{ offering.category }}</span>
+        }
+        <span>{{ offeringDate(offering) }}</span>
+        @if (offering.seats) {
+          <span>{{ offering.seats }} place(s)</span>
+        }
+        @if (offering.registrationsCount != null) {
+          <span>{{ offering.registrationsCount }} réponse(s)</span>
+        }
+      </div>
+
+      @if (offering.summary) {
+        <p class="training-popup-highlight">{{ offering.summary }}</p>
+      }
+
+      <h3 class="job-popup-section-title">Détails</h3>
+      <div class="job-popup-rich">
+        <app-safe-html [content]="offering.description || offering.summary || 'Aucune description disponible.'" />
+      </div>
+
+      @if (offering.address || offering.phone || offering.email || offering.website) {
+        <h3 class="job-popup-section-title">Contact</h3>
+        <div class="training-popup-contact">
+          @if (offering.address) {
+            <span>{{ offering.address }}</span>
+          }
+          @if (offering.phone) {
+            <span>{{ offering.phone }}</span>
+          }
+          @if (offering.email) {
+            <a [href]="'mailto:' + offering.email">{{ offering.email }}</a>
+          }
+          @if (offering.website) {
+            <a [href]="offering.website" target="_blank" rel="noopener noreferrer">Lien officiel</a>
+          }
+        </div>
+      }
+
+      @if (institutionActionMsg()) {
+        <p
+          class="job-popup-message"
+          [class.job-popup-message-success]="
+            institutionActionMsg() === 'Inscription enregistrée.' ||
+            institutionActionMsg() === 'Intérêt enregistré.' ||
+            institutionActionMsg() === 'Candidature enregistrée.'
+          "
+          [class.job-popup-message-error]="
+            institutionActionMsg() !== 'Inscription enregistrée.' &&
+            institutionActionMsg() !== 'Intérêt enregistré.' &&
+            institutionActionMsg() !== 'Candidature enregistrée.'
+          "
+        >
+          {{ institutionActionMsg() }}
+        </p>
+      }
+    </article>
+  </div>
+}
+
+@if (applyOpen() && jobPopup(); as job) {
+  <div class="directory-modal-backdrop directory-modal-backdrop-top" (click)="cancelApply()">
+    <article class="job-popup-card apply-letter-popup" (click)="$event.stopPropagation()">
+      <button type="button" class="job-popup-close" aria-label="Fermer" (click)="cancelApply()">
+        ✕
+      </button>
+
+      <header class="apply-letter-header">
+        <p class="directory-kicker">Candidature</p>
+        <h2>Postuler — {{ job.title }}</h2>
+        <p>{{ job.company?.name || 'Entreprise' }}</p>
+      </header>
+
+      <section class="job-popup-apply">
+        <h3>Lettre de motivation</h3>
+        <p>Ajoutez une lettre de motivation, ou générez une proposition personnalisée.</p>
+
+        <button type="button" class="ai-link" (click)="generateLetter()" [disabled]="generatingLetter()">
+          @if (generatingLetter()) {
+            Génération en cours...
+          } @else {
+            Assistant IA : générer une lettre personnalisée
+          }
+        </button>
+
+        <form [formGroup]="applyForm" (ngSubmit)="submitApplication()">
+          <label class="job-popup-label">Lettre de motivation</label>
+          <textarea
+            class="job-popup-textarea"
+            rows="10"
+            formControlName="coverLetter"
+            placeholder="Votre lettre de motivation..."
+          ></textarea>
+          <div class="job-popup-form-actions">
+            <button type="button" class="directory-btn directory-btn-ghost" (click)="cancelApply()">
+              Annuler
+            </button>
+            <button type="submit" class="directory-btn directory-btn-primary" [disabled]="applying()">
+              @if (applying()) {
+                Envoi...
+              } @else {
+                Envoyer ma candidature
+              }
+            </button>
+          </div>
+        </form>
+      </section>
+
+      @if (error()) {
+        <p class="job-popup-message job-popup-message-error">{{ error() }}</p>
+      }
+    </article>
+  </div>
+}

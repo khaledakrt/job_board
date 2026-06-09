@@ -37,10 +37,12 @@ import { CandidateJobService, JobSearchParams } from '../services/candidate-job.
 import { CandidateContextService } from '../services/candidate-context.service';
 import { SavedJobService } from '../services/saved-job.service';
 import { JobAlertService } from '../services/job-alert.service';
+import {
+  CandidateJobsViewMode,
+  CandidateJobViewModeService,
+} from '../services/candidate-job-view-mode.service';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 import { stripHtml } from '../../../shared/utils/rich-text.util';
-
-export type CandidateJobsViewMode = 'linkedin' | 'cards';
 
 const API_MAX_LIMIT = 50;
 const PAGE_SIZE = 20;
@@ -62,6 +64,7 @@ export class JobSearchComponent implements OnInit {
   private readonly jobService = inject(CandidateJobService);
   private readonly savedJobService = inject(SavedJobService);
   private readonly alertService = inject(JobAlertService);
+  private readonly viewModeService = inject(CandidateJobViewModeService);
   readonly candidateContext = inject(CandidateContextService);
 
   private readonly detailDialog = viewChild<ElementRef<HTMLDialogElement>>('detailDialog');
@@ -96,7 +99,7 @@ export class JobSearchComponent implements OnInit {
   readonly quizSelections = signal<Record<number, number>>({});
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
-  readonly viewMode = signal<CandidateJobsViewMode>('linkedin');
+  readonly viewMode = this.viewModeService.mode;
   readonly cardsDetailOpen = signal(false);
   readonly currentPage = signal(1);
   readonly totalPages = signal(1);
@@ -141,6 +144,40 @@ export class JobSearchComponent implements OnInit {
       f.sortBy !== 'date'
     );
   });
+
+  readonly advancedFiltersOpen = signal(false);
+
+  readonly activeFiltersCount = computed(() => {
+    const f = this.appliedFilters();
+    let count = 0;
+    if (f.keywords.trim()) count += 1;
+    if (f.location.trim()) count += 1;
+    if (f.company.trim()) count += 1;
+    if (f.industry.trim()) count += 1;
+    if (f.contracts.length) count += 1;
+    if (f.remotes.length) count += 1;
+    if (f.experience !== 'all') count += 1;
+    if (f.quizOnly) count += 1;
+    if (f.sortBy !== 'date') count += 1;
+    return count;
+  });
+
+  readonly hasAdvancedFilters = computed(() => {
+    const f = this.appliedFilters();
+    return (
+      !!f.company.trim() ||
+      !!f.industry.trim() ||
+      f.contracts.length > 0 ||
+      f.remotes.length > 0 ||
+      f.experience !== 'all' ||
+      f.quizOnly ||
+      f.sortBy !== 'date'
+    );
+  });
+
+  readonly showAdvancedFilters = computed(
+    () => this.advancedFiltersOpen() || this.hasAdvancedFilters()
+  );
 
   constructor() {
     effect(() => {
@@ -206,6 +243,10 @@ export class JobSearchComponent implements OnInit {
     this.fetchJobs();
   }
 
+  toggleAdvancedFilters(): void {
+    this.advancedFiltersOpen.update((open) => !open);
+  }
+
   applyProfileMinSalary(): void {
     const min = this.candidateContext.profile()?.minSalary;
     if (min != null && min > 0) {
@@ -220,7 +261,8 @@ export class JobSearchComponent implements OnInit {
   }
 
   setSortBy(value: string): void {
-    this.filters.update((f) => ({ ...f, sortBy: value === 'salary' ? 'salary' : 'date' }));
+    const sortBy = value === 'salary' || value === 'experience' ? value : 'date';
+    this.filters.update((f) => ({ ...f, sortBy }));
   }
 
   goToPage(page: number): void {
@@ -350,7 +392,7 @@ export class JobSearchComponent implements OnInit {
     }
     this.closeCardsDetail();
     this.closeApplyModal();
-    this.viewMode.set(mode);
+    this.viewModeService.setMode(mode);
   }
 
   selectJob(job: Job): void {

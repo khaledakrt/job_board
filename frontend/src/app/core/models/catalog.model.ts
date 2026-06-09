@@ -221,6 +221,7 @@ export interface InstitutionOfferingItem {
   viewsCount: number;
   clicksCount: number;
   registrationsCount: number;
+  participationType?: ParticipationType | null;
   createdAt: string;
   updatedAt: string;
 }

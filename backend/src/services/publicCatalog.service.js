@@ -10,12 +10,15 @@ const {
   TrainingEvent,
   PrivateInstitution,
   InstitutionOffering,
+  InstitutionParticipation,
 } = require('../models');
 const { formatFormation, formatEvent } = require('../utils/catalogOfferingFormat.util');
 const catalogParticipationsService = require('./catalogParticipations.service');
 const {
   CATALOG_PUBLISH_STATUS,
   CATALOG_PUBLIC_STATUSES,
+  PARTICIPATION_TYPES,
+  USER_ROLES,
 } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
@@ -144,13 +147,53 @@ function formatInstitutionOffering(row) {
     viewsCount: row.views_count,
     clicksCount: row.clicks_count,
     registrationsCount: 0,
+    participationType: null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-function attachInstitutionOfferings(detail, offerings) {
-  const formatted = offerings.map(formatInstitutionOffering);
+async function countInstitutionRegistrationsByOfferingIds(offeringIds) {
+  const map = new Map();
+  if (!offeringIds.length) return map;
+  const rows = await InstitutionParticipation.findAll({
+    where: {
+      offering_id: { [Op.in]: offeringIds },
+      participation_type: PARTICIPATION_TYPES.REGISTERED,
+    },
+    attributes: ['offering_id'],
+  });
+  rows.forEach((row) => {
+    map.set(row.offering_id, (map.get(row.offering_id) || 0) + 1);
+  });
+  return map;
+}
+
+async function participationTypeForOfferings(offeringIds, userId) {
+  const map = new Map();
+  if (!offeringIds.length || !userId) return map;
+  const rows = await InstitutionParticipation.findAll({
+    where: {
+      offering_id: { [Op.in]: offeringIds },
+      user_id: userId,
+    },
+    attributes: ['offering_id', 'participation_type'],
+  });
+  rows.forEach((row) => map.set(row.offering_id, row.participation_type));
+  return map;
+}
+
+async function attachInstitutionOfferings(detail, offerings, userId = null) {
+  const ids = offerings.map((offering) => offering.id);
+  const [registrations, participationTypes] = await Promise.all([
+    countInstitutionRegistrationsByOfferingIds(ids),
+    participationTypeForOfferings(ids, userId),
+  ]);
+  const formatted = offerings.map((offering) => ({
+    ...formatInstitutionOffering(offering),
+    registrationsCount: registrations.get(offering.id) ?? 0,
+    participationType: participationTypes.get(offering.id) ?? null,
+  }));
   return {
     ...detail,
     institutionOfferings: formatted,
@@ -161,7 +204,7 @@ function attachInstitutionOfferings(detail, offerings) {
   };
 }
 
-async function getPublishedInstitutionOfferingById(id) {
+async function getPublishedInstitutionOfferingById(id, userId = null) {
   const row = await InstitutionOffering.findOne({
     where: { id, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
     include: [
@@ -175,8 +218,14 @@ async function getPublishedInstitutionOfferingById(id) {
   });
   if (!row) throw ApiError.notFound('Publication introuvable ou non publiée');
   await row.increment('views_count');
+  const [registrations, participationTypes] = await Promise.all([
+    countInstitutionRegistrationsByOfferingIds([row.id]),
+    participationTypeForOfferings([row.id], userId),
+  ]);
   return {
     ...formatInstitutionOffering(row),
+    registrationsCount: registrations.get(row.id) ?? 0,
+    participationType: participationTypes.get(row.id) ?? null,
     institution: formatInstitutionCard(row.institution),
   };
 }
@@ -384,7 +433,7 @@ async function listPrivateInstitutions(query) {
   });
 }
 
-async function getPrivateInstitutionById(id) {
+async function getPrivateInstitutionById(id, userId = null) {
   const row = await PrivateInstitution.findOne({
     where: { id, status: { [Op.in]: [...CATALOG_PUBLIC_STATUSES] } },
   });
@@ -398,7 +447,64 @@ async function getPrivateInstitutionById(id) {
     },
     order: [['start_date', 'ASC'], ['created_at', 'DESC']],
   });
-  return attachInstitutionOfferings(formatInstitutionDetail(row), offerings);
+  return attachInstitutionOfferings(formatInstitutionDetail(row), offerings, userId);
+}
+
+function assertCandidateUser(user) {
+  if (!user) throw ApiError.unauthorized('Connexion requise');
+  if (user.role !== USER_ROLES.CANDIDATE) {
+    throw ApiError.forbidden('Seuls les candidats connectés peuvent effectuer cette action');
+  }
+}
+
+async function assertInstitutionRegistrationAllowed(offering) {
+  if (!offering?.seats || offering.seats <= 0) return;
+  const registeredCount = await InstitutionParticipation.count({
+    where: {
+      offering_id: offering.id,
+      participation_type: PARTICIPATION_TYPES.REGISTERED,
+    },
+  });
+  if (registeredCount >= offering.seats) {
+    throw ApiError.conflict('Plus de places disponibles pour cette publication.');
+  }
+}
+
+async function participateInstitutionOffering(id, user, participationType) {
+  assertCandidateUser(user);
+  const offering = await InstitutionOffering.findOne({
+    where: { id, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
+    include: [
+      {
+        model: PrivateInstitution,
+        as: 'institution',
+        where: { status: { [Op.in]: [...CATALOG_PUBLIC_STATUSES] } },
+        required: true,
+      },
+    ],
+  });
+  if (!offering) throw ApiError.notFound('Publication introuvable ou non publiée');
+
+  const existing = await InstitutionParticipation.findOne({
+    where: { offering_id: id, user_id: user.id },
+  });
+  if (existing) {
+    throw ApiError.conflict('Vous avez déjà répondu à cette publication.');
+  }
+
+  if (participationType === PARTICIPATION_TYPES.REGISTERED) {
+    await assertInstitutionRegistrationAllowed(offering);
+  }
+
+  await InstitutionParticipation.create({
+    id: generateUuid(),
+    offering_id: id,
+    user_id: user.id,
+    participation_type: participationType,
+    created_at: new Date(),
+  });
+
+  return { participationType, updated: false };
 }
 
 async function submitPrivateInstitution(payload) {
@@ -499,7 +605,7 @@ async function adminGetPrivateInstitutionById(id) {
     where: { institution_id: id },
     order: [['created_at', 'DESC']],
   });
-  const detail = attachInstitutionOfferings(formatInstitutionDetail(row), offerings);
+  const detail = await attachInstitutionOfferings(formatInstitutionDetail(row), offerings);
   return {
     ...detail,
     status: row.status,
@@ -745,6 +851,7 @@ module.exports = {
   getPrivateInstitutionById,
   getPublishedInstitutionOfferingById,
   getPublishedInstitutionOfferingPreviewById,
+  participateInstitutionOffering,
   submitPrivateInstitution,
   adminListTrainingCenters,
   adminGetTrainingCenterById,

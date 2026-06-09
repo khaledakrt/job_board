@@ -1,14 +1,17 @@
 export interface ExperienceBlock {
   company?: string;
   title?: string;
+  city?: string;
   startDate?: string;
   endDate?: string;
+  current?: boolean;
   description?: string;
 }
 
 export interface EducationBlock {
   institution?: string;
   degree?: string;
+  city?: string;
   startDate?: string;
   endDate?: string;
 }

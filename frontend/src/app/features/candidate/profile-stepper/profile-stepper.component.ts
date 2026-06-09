@@ -109,8 +109,10 @@ export class ProfileStepperComponent implements OnInit {
     return this.fb.group({
       company: [data?.company || ''],
       title: [data?.title || ''],
+      city: [data?.city || ''],
       startDate: [data?.startDate || ''],
       endDate: [data?.endDate || ''],
+      current: [Boolean(data?.current || (!data?.endDate && (data?.title || data?.company)))],
       description: [data?.description || ''],
     });
   }
@@ -119,6 +121,7 @@ export class ProfileStepperComponent implements OnInit {
     return this.fb.group({
       institution: [data?.institution || ''],
       degree: [data?.degree || ''],
+      city: [data?.city || ''],
       startDate: [data?.startDate || ''],
       endDate: [data?.endDate || ''],
     });
@@ -150,7 +153,7 @@ export class ProfileStepperComponent implements OnInit {
       this.education.clear();
       p.education.forEach((e) => this.education.push(this.createEducationGroup(e)));
     }
-    this.cvMode.set(p.resumeUrl ? 'import' : 'manual');
+    this.cvMode.set('manual');
   }
 
   onCvSelected(file: File): void {
@@ -316,6 +319,14 @@ export class ProfileStepperComponent implements OnInit {
     if (this.experiences.length > 1) this.experiences.removeAt(i);
   }
 
+  setExperienceCurrent(index: number, checked: boolean): void {
+    const group = this.experiences.at(index);
+    group.patchValue({
+      current: checked,
+      endDate: checked ? '' : group.value.endDate,
+    });
+  }
+
   addEducation(): void {
     this.education.push(this.createEducationGroup());
   }
@@ -441,9 +452,12 @@ export class ProfileStepperComponent implements OnInit {
   }
 
   private buildExperiencesPayload(): ExperienceBlock[] {
-    return (this.experiences.getRawValue() as ExperienceBlock[]).filter(
-      (e) => e.title?.trim() || e.company?.trim()
-    );
+    return (this.experiences.getRawValue() as ExperienceBlock[])
+      .filter((e) => e.title?.trim() || e.company?.trim())
+      .map((e) => ({
+        ...e,
+        endDate: e.current ? '' : e.endDate,
+      }));
   }
 
   private buildEducationPayload(): EducationBlock[] {

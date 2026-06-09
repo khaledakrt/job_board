@@ -1,11 +1,15 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { CandidateContextService } from '../services/candidate-context.service';
 import { CandidateNotificationBellComponent } from '../shared/notification-bell/notification-bell.component';
 import { CandidateOnboardingComponent } from '../shared/candidate-onboarding/candidate-onboarding.component';
+import {
+  CandidateJobsViewMode,
+  CandidateJobViewModeService,
+} from '../services/candidate-job-view-mode.service';
 
 @Component({
   selector: 'app-candidate-layout',
@@ -24,6 +28,8 @@ export class CandidateLayoutComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly context = inject(CandidateContextService);
   readonly routes = APP_ROUTES;
+  private readonly router = inject(Router);
+  readonly jobViewMode = inject(CandidateJobViewModeService);
 
   ngOnInit(): void {
     this.context.loadProfile().subscribe();
@@ -35,6 +41,27 @@ export class CandidateLayoutComponent implements OnInit {
       return [p.firstName, p.lastName].filter(Boolean).join(' ');
     }
     return this.authService.user()?.email || 'Candidat';
+  }
+
+  pageContextTitle(): string | null {
+    const url = this.router.url.split('?')[0];
+    if (url === APP_ROUTES.CANDIDATE.JOBS) return 'Rechercher une offre';
+    if (url === APP_ROUTES.CANDIDATE.DASHBOARD) return 'Tableau de bord';
+    if (url === APP_ROUTES.CANDIDATE.SAVED) return 'Offres enregistrées';
+    if (url === APP_ROUTES.CANDIDATE.PROFILE) return 'Mon profil';
+    if (url === APP_ROUTES.CANDIDATE.SETTINGS) return 'Paramètres';
+    if (url === APP_ROUTES.CANDIDATE.COMPANY_DIRECTORY) return 'Annuaire sociétés';
+    if (url === APP_ROUTES.CANDIDATE.TRAINING_DIRECTORY) return 'Annuaire formations';
+    if (url === APP_ROUTES.CANDIDATE.INSTITUTION_DIRECTORY) return 'Annuaire établissements';
+    return null;
+  }
+
+  isJobsPage(): boolean {
+    return this.router.url.split('?')[0] === APP_ROUTES.CANDIDATE.JOBS;
+  }
+
+  setJobViewMode(mode: CandidateJobsViewMode): void {
+    this.jobViewMode.setMode(mode);
   }
 
   avatarUrl(): string | null {
