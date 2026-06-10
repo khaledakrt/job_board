@@ -18,6 +18,29 @@ const STATUS_LABELS = {
   rejected: 'Mise à jour de candidature',
 };
 
+const DEFAULT_NOTIFICATION_PREFERENCES = {
+  emailEnabled: true,
+  inAppEnabled: true,
+  statusChange: true,
+  recruiterMessage: true,
+  jobAlert: true,
+};
+
+function resolveNotificationPreferences(candidate) {
+  return {
+    ...DEFAULT_NOTIFICATION_PREFERENCES,
+    ...(candidate?.notification_preferences || {}),
+  };
+}
+
+function preferenceAllowsType(preferences, type) {
+  if (!type) return true;
+  if (type === 'statusChange') return preferences.statusChange !== false;
+  if (type === 'recruiterMessage') return preferences.recruiterMessage !== false;
+  if (type === 'jobAlert') return preferences.jobAlert !== false;
+  return true;
+}
+
 async function createInAppNotification({ candidateId, title, messageText }) {
   return CandidateNotification.create({
     id: generateUuid(),
@@ -58,6 +81,7 @@ async function notifyCandidate({
   jobTitle,
   recruiterEmail,
   recruiterName,
+  preferenceType,
 }) {
   const contact = await resolveCandidateContact(candidateId);
 
@@ -65,21 +89,37 @@ async function notifyCandidate({
     return { notification: null, email: { sent: false, reason: 'candidate_not_found' } };
   }
 
-  const notification = await createInAppNotification({
-    candidateId,
-    title,
-    messageText,
-  });
+  const preferences = resolveNotificationPreferences(contact.candidate);
+  const typeAllowed = preferenceAllowsType(preferences, preferenceType);
 
-  const emailResult = await emailAlertService.sendCandidateAlertEmail({
-    to: contact.email,
-    replyTo: recruiterEmail,
-    subject: title,
-    messageText,
-    companyName,
-    jobTitle,
-    recruiterName,
-  });
+  if (!typeAllowed) {
+    return {
+      notification: null,
+      email: { sent: false, reason: `${preferenceType || 'notification'}_disabled` },
+    };
+  }
+
+  const notification =
+    preferences.inAppEnabled === false
+      ? null
+      : await createInAppNotification({
+          candidateId,
+          title,
+          messageText,
+        });
+
+  const emailResult =
+    preferences.emailEnabled === false
+      ? { sent: false, reason: 'email_disabled' }
+      : await emailAlertService.sendCandidateAlertEmail({
+          to: contact.email,
+          replyTo: recruiterEmail,
+          subject: title,
+          messageText,
+          companyName,
+          jobTitle,
+          recruiterName,
+        });
 
   return { notification, email: emailResult };
 }
@@ -121,6 +161,7 @@ async function notifyApplicationStatusChange({
     jobTitle,
     recruiterEmail: recruiterUser.email,
     recruiterName,
+    preferenceType: 'statusChange',
   });
 }
 
@@ -150,6 +191,7 @@ async function notifyApplicationNote({
     jobTitle,
     recruiterEmail: recruiterUser.email,
     recruiterName: recruiterUser.email,
+    preferenceType: 'recruiterMessage',
   });
 }
 

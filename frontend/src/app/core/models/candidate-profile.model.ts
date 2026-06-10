@@ -98,7 +98,8 @@ export interface JobAlertItem {
   searchFilters: Record<string, unknown>;
   label: string | null;
   isActive: boolean;
-  frequency: 'daily' | 'weekly';
+  frequency: 'weekly' | 'monthly';
+  lastSentAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

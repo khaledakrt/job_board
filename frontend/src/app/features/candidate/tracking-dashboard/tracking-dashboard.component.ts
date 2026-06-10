@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   Injector,
+  OnDestroy,
   OnInit,
   signal,
 } from '@angular/core';
@@ -20,7 +21,10 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { Application, ApplicationDetail } from '../../../core/models/application.model';
 import { SavedJobItem, JobAlertItem } from '../../../core/models/candidate-profile.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
-import { CandidateApplicationsService } from '../services/candidate-applications.service';
+import {
+  CandidateApplicationsService,
+  PaginationMeta,
+} from '../services/candidate-applications.service';
 import { SavedJobService } from '../services/saved-job.service';
 import { JobAlertService } from '../services/job-alert.service';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
@@ -38,7 +42,7 @@ import { salaryDisplayLabel } from '../../../core/utils/job-display.util';
   templateUrl: './tracking-dashboard.component.html',
   styleUrl: './tracking-dashboard.component.css',
 })
-export class TrackingDashboardComponent implements OnInit {
+export class TrackingDashboardComponent implements OnInit, OnDestroy {
   private readonly applicationsService = inject(CandidateApplicationsService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly savedJobService = inject(SavedJobService);
@@ -46,6 +50,7 @@ export class TrackingDashboardComponent implements OnInit {
   private readonly dashboardService = inject(CandidateDashboardService);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
+  private searchDebounce: ReturnType<typeof setTimeout> | null = null;
 
   readonly routes = APP_ROUTES;
   readonly statusLabels = APPLICATION_STATUS_LABELS;
@@ -53,8 +58,11 @@ export class TrackingDashboardComponent implements OnInit {
   readonly appScope = signal<'active' | 'archived'>('active');
   readonly filterStatus = signal<string>('');
   readonly searchQ = signal('');
+  readonly appPage = signal(1);
+  readonly appLimit = 8;
 
   readonly applications = signal<Application[]>([]);
+  readonly applicationsPagination = signal<PaginationMeta | null>(null);
   readonly dashboardSummary = signal<DashboardSummary | null>(null);
   readonly recommendedJobs = signal<(Job & { matchScore?: number })[]>([]);
   readonly savedJobs = signal<SavedJobItem[]>([]);
@@ -78,6 +86,8 @@ export class TrackingDashboardComponent implements OnInit {
       alerts: this.alerts().length,
     };
   });
+  readonly savedJobsPreview = computed(() => this.savedJobs().slice(0, 4));
+  readonly alertsPreview = computed(() => this.alerts().slice(0, 4));
 
   ngOnInit(): void {
     this.loadApplications();
@@ -91,12 +101,43 @@ export class TrackingDashboardComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    if (this.searchDebounce) clearTimeout(this.searchDebounce);
+  }
+
   reloadApplications(): void {
+    this.appPage.set(1);
     this.loadApplications();
   }
 
   setAppScope(scope: 'active' | 'archived'): void {
     this.appScope.set(scope);
+    this.appPage.set(1);
+    this.loadApplications();
+  }
+
+  setApplicationStatusFilter(status: string): void {
+    this.filterStatus.set(status);
+    this.appPage.set(1);
+    this.loadApplications();
+  }
+
+  setApplicationSearch(query: string): void {
+    this.searchQ.set(query);
+    this.appPage.set(1);
+    if (this.searchDebounce) clearTimeout(this.searchDebounce);
+    this.searchDebounce = setTimeout(() => {
+      this.loadApplications();
+      this.searchDebounce = null;
+    }, 350);
+  }
+
+  goToApplicationsPage(page: number): void {
+    const pagination = this.applicationsPagination();
+    const totalPages = pagination?.totalPages ?? 1;
+    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    if (nextPage === this.appPage() && pagination) return;
+    this.appPage.set(nextPage);
     this.loadApplications();
   }
 
@@ -107,10 +148,16 @@ export class TrackingDashboardComponent implements OnInit {
         scope: this.appScope(),
         status: this.filterStatus() || undefined,
         q: this.searchQ() || undefined,
+        page: this.appPage(),
+        limit: this.appLimit,
       })
       .subscribe({
       next: (res) => {
         this.applications.set(res.data || []);
+        this.applicationsPagination.set(res.pagination || null);
+        if (res.pagination?.page && res.pagination.page !== this.appPage()) {
+          this.appPage.set(res.pagination.page);
+        }
         this.loadingApps.set(false);
       },
       error: () => {
@@ -229,6 +276,25 @@ export class TrackingDashboardComponent implements OnInit {
   companyName(app: Application): string {
     const job = app.job as { company?: { name?: string } } | undefined;
     return job?.company?.name || '—';
+  }
+
+  statusDescription(status: Application['status']): string {
+    const descriptions: Record<Application['status'], string> = {
+      applied: 'Votre candidature a bien été envoyée au recruteur.',
+      screening: 'Le recruteur analyse votre profil et vos réponses.',
+      interview: 'Vous êtes dans l’étape entretien. Consultez les messages et la date prévue.',
+      offer: 'Bonne nouvelle : le recruteur a marqué cette candidature comme offre.',
+      rejected: 'Cette candidature n’a pas été retenue pour cette offre.',
+    };
+    return descriptions[status];
+  }
+
+  applicationRangeLabel(): string {
+    const pagination = this.applicationsPagination();
+    if (!pagination || pagination.totalItems === 0) return 'Aucune candidature';
+    const start = (pagination.page - 1) * pagination.limit + 1;
+    const end = Math.min(pagination.page * pagination.limit, pagination.totalItems);
+    return `${start}-${end} sur ${pagination.totalItems}`;
   }
 
   formatAlertFilters(filters: Record<string, unknown>): string {

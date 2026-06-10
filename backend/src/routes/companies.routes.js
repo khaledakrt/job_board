@@ -23,9 +23,18 @@ const {
 } = require('../validators/company.validator');
 
 const publicCompanyController = require('../controllers/publicCompany.controller');
-const { publicCompanyQuerySchema } = require('../validators/publicCompany.validator');
+const {
+  publicCompanyDirectoryQuerySchema,
+  publicCompanyQuerySchema,
+} = require('../validators/publicCompany.validator');
 
 const router = express.Router();
+
+router.get(
+  '/public-directory',
+  validateQuery(publicCompanyDirectoryQuerySchema),
+  publicCompanyController.listPublicCompanies
+);
 
 router.get(
   '/:id/public',

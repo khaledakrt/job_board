@@ -17,7 +17,7 @@ export class JobAlertService {
   create(payload: {
     searchFilters: Record<string, unknown>;
     label?: string | null;
-    frequency?: 'daily' | 'weekly';
+    frequency?: 'weekly' | 'monthly';
     isActive?: boolean;
   }): Observable<ApiResponse<JobAlertItem>> {
     return this.http.post<ApiResponse<JobAlertItem>>(this.base, payload);
@@ -28,7 +28,7 @@ export class JobAlertService {
     payload: {
       searchFilters?: Record<string, unknown>;
       label?: string | null;
-      frequency?: 'daily' | 'weekly';
+      frequency?: 'weekly' | 'monthly';
       isActive?: boolean;
     }
   ): Observable<ApiResponse<JobAlertItem>> {

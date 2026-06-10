@@ -50,7 +50,7 @@ export class SavedJobsPageComponent implements OnInit {
 
   readonly alertEditForm = this.fb.nonNullable.group({
     label: [''],
-    frequency: ['weekly' as 'daily' | 'weekly'],
+    frequency: ['weekly' as 'weekly' | 'monthly'],
     isActive: [true],
   });
 
@@ -123,9 +123,15 @@ export class SavedJobsPageComponent implements OnInit {
     this.editingAlertId.set(alert.id);
     this.alertEditForm.patchValue({
       label: alert.label || '',
-      frequency: alert.frequency,
+      frequency: alert.frequency === 'monthly' ? 'monthly' : 'weekly',
       isActive: alert.isActive,
     });
+  }
+
+  frequencyLabel(alert: JobAlertItem): string {
+    return alert.frequency === 'monthly'
+      ? 'Mensuelle - le 1er jour du mois'
+      : 'Hebdomadaire - dimanche';
   }
 
   setSavedPage(page: number): void {

@@ -306,7 +306,7 @@
 </ng-template>
 
 <div class="search-page" [class.search-page-apply-active]="applyFlowOpen()">
-  @if (totalPages() > 1 && !useClientFilters()) {
+  @if (totalPages() > 1) {
     <header class="search-toolbar">
       <div class="jobs-pagination">
         <button type="button" class="landing-btn landing-btn-ghost" [disabled]="currentPage() <= 1" (click)="goToPage(currentPage() - 1)">

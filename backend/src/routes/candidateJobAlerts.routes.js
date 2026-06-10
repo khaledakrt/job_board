@@ -19,14 +19,14 @@ router.use(requireCandidateProfile);
 const createAlertSchema = z.object({
   searchFilters: z.record(z.unknown()),
   label: z.string().trim().max(120).optional().nullable(),
-  frequency: z.enum(['daily', 'weekly']).optional(),
+  frequency: z.enum(['weekly', 'monthly']).optional(),
   isActive: z.boolean().optional(),
 });
 
 const updateAlertSchema = z.object({
   searchFilters: z.record(z.unknown()).optional(),
   label: z.string().trim().max(120).optional().nullable(),
-  frequency: z.enum(['daily', 'weekly']).optional(),
+  frequency: z.enum(['weekly', 'monthly']).optional(),
   isActive: z.boolean().optional(),
 });
 

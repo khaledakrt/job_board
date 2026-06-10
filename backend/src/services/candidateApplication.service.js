@@ -42,6 +42,9 @@ function formatApplication(application) {
 }
 
 async function listCandidateApplications(candidateId, filters = {}) {
+  const page = Math.max(Number(filters.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(filters.limit) || 8, 1), 25);
+
   const applications = await Application.findAll({
     where: { candidate_id: candidateId },
     include: [
@@ -85,7 +88,23 @@ async function listCandidateApplications(candidateId, filters = {}) {
     });
   }
 
-  return list;
+  const totalItems = list.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * limit;
+  const items = list.slice(start, start + limit);
+
+  return {
+    items,
+    pagination: {
+      page: safePage,
+      limit,
+      totalItems,
+      totalPages,
+      hasNextPage: safePage < totalPages,
+      hasPreviousPage: safePage > 1,
+    },
+  };
 }
 
 async function listAppliedJobIds(candidateId) {

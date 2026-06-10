@@ -15,14 +15,16 @@ function formatNotification(row) {
 }
 
 async function listForCandidate({ candidateId, limit = DEFAULT_LIMIT }) {
-  const rows = await CandidateNotification.findAll({
-    where: { candidate_id: candidateId },
-    order: [['created_at', 'DESC']],
-    limit,
-  });
+  const [rows, unreadCount] = await Promise.all([
+    CandidateNotification.findAll({
+      where: { candidate_id: candidateId },
+      order: [['created_at', 'DESC']],
+      limit,
+    }),
+    getUnreadCount({ candidateId }),
+  ]);
 
   const items = rows.map(formatNotification);
-  const unreadCount = items.filter((n) => !n.isRead).length;
 
   return { items, unreadCount };
 }

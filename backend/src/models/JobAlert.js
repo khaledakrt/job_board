@@ -13,10 +13,11 @@ JobAlert.init(
     label: { type: DataTypes.STRING(120), allowNull: true },
     is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     frequency: {
-      type: DataTypes.ENUM('daily', 'weekly'),
+      type: DataTypes.ENUM('weekly', 'monthly'),
       allowNull: false,
       defaultValue: 'weekly',
     },
+    last_sent_at: { type: DataTypes.DATE, allowNull: true },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   },

@@ -57,12 +57,34 @@ function buildSearchWhereClause(filters) {
     };
   }
 
-  if (filters.contractType) {
-    where.contract_type = filters.contractType;
+  const contractTypes = filters.contracts?.length
+    ? filters.contracts
+    : filters.contractType
+      ? [filters.contractType]
+      : [];
+  if (contractTypes.length) {
+    where.contract_type = { [Op.in]: contractTypes };
   }
 
-  if (filters.remoteType) {
-    where.remote_type = filters.remoteType;
+  const remoteTypes = filters.remotes?.length
+    ? filters.remotes
+    : filters.remoteType
+      ? [filters.remoteType]
+      : [];
+  if (remoteTypes.length) {
+    where.remote_type = { [Op.in]: remoteTypes };
+  }
+
+  if (filters.quizOnly) {
+    where.quiz_enabled = true;
+  }
+
+  if (filters.experience === 'junior') {
+    where.experience_years = { [Op.lte]: 2 };
+  } else if (filters.experience === 'mid') {
+    where.experience_years = { [Op.between]: [3, 5] };
+  } else if (filters.experience === 'senior') {
+    where.experience_years = { [Op.gte]: 6 };
   }
 
   if (filters.minSalary != null && filters.minSalary > 0) {
@@ -112,6 +134,20 @@ function buildSearchWhereClause(filters) {
   return where;
 }
 
+function buildCompanyWhereClause(filters) {
+  const where = {};
+
+  if (filters.company) {
+    where.name = { [Op.like]: `%${filters.company.trim()}%` };
+  }
+
+  if (filters.industry) {
+    where.industry = { [Op.like]: `%${filters.industry.trim()}%` };
+  }
+
+  return where;
+}
+
 async function searchJobs(query) {
   await expireDueJobs();
 
@@ -120,16 +156,25 @@ async function searchJobs(query) {
   const filters = {
     keywords: query.keywords,
     location: query.location,
+    company: query.company,
+    industry: query.industry,
     contractType: query.contractType,
     remoteType: query.remoteType,
+    contracts: query.contracts,
+    remotes: query.remotes,
+    experience: query.experience,
+    quizOnly: query.quizOnly,
     minSalary: query.minSalary,
   };
 
   const where = buildSearchWhereClause(filters);
+  const companyWhere = buildCompanyWhereClause(filters);
+  const hasCompanyFilters = Object.keys(companyWhere).length > 0;
 
   const order =
     query.sortBy === 'salary'
       ? [
+          [Sequelize.literal("salary_label REGEXP '[0-9]'"), 'DESC'],
           ['salary_label', 'DESC'],
           ['created_at', 'DESC'],
         ]
@@ -150,6 +195,8 @@ async function searchJobs(query) {
         model: Company,
         as: 'company',
         attributes: ['id', 'name', 'logo_url', 'industry', 'city', 'website', 'description'],
+        where: hasCompanyFilters ? companyWhere : undefined,
+        required: hasCompanyFilters,
       },
     ],
     order,

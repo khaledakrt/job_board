@@ -31,34 +31,15 @@
   </div>
 </section>
 
-<div class="stepper-nav">
-  @for (step of [1, 2, 3, 4]; track step) {
-    <button
-      type="button"
-      class="step-pill"
-      [class.step-pill-active]="currentStep() === step"
-      [class.step-pill-done]="currentStep() > step"
-      (click)="currentStep.set(step)"
-    >
-      <span class="step-pill-index">{{ currentStep() > step ? '✓' : step }}</span>
-      <span class="step-pill-text">
-      @switch (step) {
-        @case (1) { Identité & CV }
-        @case (2) { Expérience }
-        @case (3) { Formation }
-        @case (4) { Préférences }
-      }
-      </span>
-    </button>
-  }
-</div>
-
 @if (message()) {
   <div class="alert alert-success">{{ message() }}</div>
 }
 @if (error()) {
   <div class="alert alert-error">{{ error() }}</div>
 }
+
+<div class="profile-workspace">
+<main class="profile-workspace-main">
 
 @if (currentStep() === 1) {
   <section class="step-panel panel-card">
@@ -140,6 +121,15 @@
         <p class="field-hint identity-photo-hint">Photo affichée sur le CV PDF</p>
       </div>
       <form [formGroup]="identityForm" class="identity-form">
+        <div class="form-section-card span-2">
+          <div class="form-section-head">
+            <span>01</span>
+            <div>
+              <h3>Informations personnelles</h3>
+              <p>Les informations de base visibles sur votre CV et vos candidatures.</p>
+            </div>
+          </div>
+          <div class="identity-section-grid">
           <div class="form-field">
             <label class="form-label">Prénom</label>
             <input class="form-input" formControlName="firstName" />
@@ -160,7 +150,17 @@
             <label class="form-label">Salaire minimum souhaité (€)</label>
             <input class="form-input" type="number" formControlName="minSalary" />
           </div>
+          </div>
+        </div>
+
           <div class="form-field resume-field span-2">
+            <div class="form-section-head form-section-head-compact">
+              <span>02</span>
+              <div>
+                <h3>Résumé professionnel</h3>
+                <p>Un paragraphe court, clair et orienté recruteur.</p>
+              </div>
+            </div>
             <label class="form-label" for="profile-resume-bio">Résumé</label>
             <p class="field-hint">
               Obligatoire pour le CV PDF : ce texte apparaît en premier, sous votre photo (section « Résumé »).
@@ -173,7 +173,15 @@
               placeholder="Ex. Développeur full-stack passionné, 5 ans d'expérience sur des applications web Angular / Node.js…"
             ></textarea>
           </div>
-          <div class="form-field span-2">
+
+          <div class="form-field skills-field span-2">
+            <div class="form-section-head form-section-head-compact">
+              <span>03</span>
+              <div>
+                <h3>Compétences clés</h3>
+                <p>Ajoutez vos compétences les plus recherchées, une par une.</p>
+              </div>
+            </div>
             <label class="form-label">Compétences</label>
             <div class="tag-row">
               <input
@@ -207,7 +215,12 @@
     </div>
     @for (group of experiencesArray.controls; track $index; let i = $index) {
       <div class="block-card" [formGroup]="$any(group)">
-        <p class="block-card-label">Expérience {{ i + 1 }}</p>
+        <div class="block-card-head">
+          <p class="block-card-label">Expérience {{ i + 1 }}</p>
+          @if (experiences.length > 1) {
+            <button type="button" class="btn-text-danger" (click)="removeExperience(i)">Supprimer</button>
+          }
+        </div>
         <div class="block-grid">
           <div class="form-field">
             <label class="form-label">Poste</label>
@@ -254,9 +267,6 @@
             ></textarea>
           </div>
         </div>
-        @if (experiences.length > 1) {
-          <button type="button" class="btn-text-danger" (click)="removeExperience(i)">Supprimer</button>
-        }
       </div>
     }
   </section>
@@ -273,7 +283,12 @@
     </div>
     @for (group of educationArray.controls; track $index; let i = $index) {
       <div class="block-card" [formGroup]="$any(group)">
-        <p class="block-card-label">Formation {{ i + 1 }}</p>
+        <div class="block-card-head">
+          <p class="block-card-label">Formation {{ i + 1 }}</p>
+          @if (education.length > 1) {
+            <button type="button" class="btn-text-danger" (click)="removeEducation(i)">Supprimer</button>
+          }
+        </div>
         <div class="block-grid">
           <div class="form-field">
             <label class="form-label">Établissement</label>
@@ -296,9 +311,6 @@
             <input class="form-input date-input" type="month" formControlName="endDate" />
           </div>
         </div>
-        @if (education.length > 1) {
-          <button type="button" class="btn-text-danger" (click)="removeEducation(i)">Supprimer</button>
-        }
       </div>
     }
   </section>
@@ -317,7 +329,14 @@
       <button type="button" class="step-link-btn" (click)="currentStep.set(1)">Identité & CV</button>.
     </p>
 
-    <div class="prefs-form-grid prefs-links-full">
+    <div class="prefs-form-grid prefs-links-full form-section-card">
+      <div class="form-section-head prefs-section-head span-2">
+        <span>01</span>
+        <div>
+          <h3>Liens et mobilité</h3>
+          <p>Ces informations aident les recruteurs à comprendre vos disponibilités et votre présence en ligne.</p>
+        </div>
+      </div>
       <div class="form-field">
         <label class="form-label">Profil LinkedIn</label>
         <input class="form-input" formControlName="linkedinUrl" placeholder="https://linkedin.com/in/…" />
@@ -340,8 +359,14 @@
       </div>
     </div>
 
-    <div class="prefs-block">
-      <h3 class="prefs-section-title">Lang.</h3>
+    <div class="prefs-block form-section-card">
+      <div class="form-section-head form-section-head-compact">
+        <span>02</span>
+        <div>
+          <h3>Langues</h3>
+          <p>Ajoutez les langues utiles pour vos candidatures.</p>
+        </div>
+      </div>
       <div class="tag-row">
         <input
           class="form-input compact-tag-input"
@@ -359,8 +384,14 @@
       </div>
     </div>
 
-    <div class="prefs-block">
-      <h3 class="prefs-section-title">Certif.</h3>
+    <div class="prefs-block form-section-card">
+      <div class="form-section-head form-section-head-compact">
+        <span>03</span>
+        <div>
+          <h3>Certifications</h3>
+          <p>Ajoutez vos certifications, diplômes courts ou badges professionnels.</p>
+        </div>
+      </div>
       <div class="tag-row">
         <input
           class="form-input compact-tag-input"
@@ -413,6 +444,40 @@
       }
     </button>
   }
+</div>
+
+</main>
+
+<aside class="profile-step-aside" aria-label="Navigation du profil">
+  <div class="profile-step-card">
+    <p class="profile-step-card-kicker">Étapes du profil</p>
+    <div class="stepper-nav">
+      @for (step of [1, 2, 3, 4]; track step) {
+        <button
+          type="button"
+          class="step-pill"
+          [class.step-pill-active]="currentStep() === step"
+          [class.step-pill-done]="currentStep() > step"
+          (click)="currentStep.set(step)"
+        >
+          <span class="step-pill-index">{{ currentStep() > step ? '✓' : step }}</span>
+          <span class="step-pill-text">
+            @switch (step) {
+              @case (1) { Identité & CV }
+              @case (2) { Expérience }
+              @case (3) { Formation }
+              @case (4) { Préférences }
+            }
+          </span>
+        </button>
+      }
+    </div>
+    <div class="profile-step-note">
+      <strong>{{ context.hasProfile() ? context.profileCompletion() : 0 }}%</strong>
+      <span>Complétion du profil</span>
+    </div>
+  </div>
+</aside>
 </div>
 
 @if (parsePreviewOpen() && parsePreviewData(); as previewData) {

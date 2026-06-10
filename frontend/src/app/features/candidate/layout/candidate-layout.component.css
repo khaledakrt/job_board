@@ -16,6 +16,12 @@
 .candidate-sidebar {
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
   border-right: 1px solid #e2e8f0;
   background: #ffffff;
   padding: 1.25rem;
@@ -94,7 +100,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.15rem;
 }
 
 .nav-link {
@@ -148,7 +157,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  margin-top: 1rem;
+  flex-shrink: 0;
+  margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid #e2e8f0;
 }
@@ -291,7 +301,16 @@
   }
 
   .candidate-sidebar {
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
     border-right: none;
     border-bottom: 1px solid #e2e8f0;
+  }
+
+  .sidebar-nav {
+    overflow: visible;
+    padding-right: 0;
   }
 }

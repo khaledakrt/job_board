@@ -44,7 +44,6 @@ import {
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 import { stripHtml } from '../../../shared/utils/rich-text.util';
 
-const API_MAX_LIMIT = 50;
 const PAGE_SIZE = 20;
 
 @Component({
@@ -109,22 +108,7 @@ export class JobSearchComponent implements OnInit {
     coverLetter: [''],
   });
 
-  readonly useClientFilters = computed(() => {
-    const f = this.appliedFilters();
-    return (
-      f.contracts.length > 1 ||
-      f.remotes.length > 1 ||
-      !!f.company.trim() ||
-      !!f.industry.trim() ||
-      f.experience !== 'all' ||
-      f.quizOnly
-    );
-  });
-
-  readonly filteredJobs = computed(() => {
-    const f = this.appliedFilters();
-    return this.allJobs().filter((job) => this.matchesClientFilters(job, f));
-  });
+  readonly filteredJobs = computed(() => this.allJobs());
 
   /** Offre pour laquelle quizSelections est valide (réinitialisé au changement d’offre). */
   private activeQuizJobId: string | null = null;
@@ -323,67 +307,15 @@ export class JobSearchComponent implements OnInit {
 
     if (f.keywords.trim()) params.keywords = f.keywords.trim();
     if (f.location.trim()) params.location = f.location.trim();
-    if (f.contracts.length === 1) params.contractType = f.contracts[0];
-    if (f.remotes.length === 1) params.remoteType = f.remotes[0];
+    if (f.company.trim()) params.company = f.company.trim();
+    if (f.industry.trim()) params.industry = f.industry.trim();
+    if (f.contracts.length) params.contracts = f.contracts;
+    if (f.remotes.length) params.remotes = f.remotes;
+    if (f.experience !== 'all') params.experience = f.experience;
+    if (f.quizOnly) params.quizOnly = true;
     if (f.minSalary != null && f.minSalary > 0) params.minSalary = f.minSalary;
 
-    if (this.useClientFilters()) {
-      params.limit = API_MAX_LIMIT;
-      params.page = 1;
-    }
-
     return params;
-  }
-
-  private matchesClientFilters(job: Job, f: JobSearchFilters): boolean {
-    if (f.contracts.length && !f.contracts.includes(job.contractType)) return false;
-    if (f.remotes.length && !f.remotes.includes(job.remoteType)) return false;
-
-    if (f.keywords.trim()) {
-      const k = f.keywords.toLowerCase();
-      const langs = (job.languages || []).join(' ');
-      const benefits = (job.benefits || []).join(' ');
-      const hay = `${job.title} ${job.company?.name || ''} ${stripHtml(job.description)} ${stripHtml(job.requirements || '')} ${job.location} ${job.salaryLabel || ''} ${langs} ${benefits}`.toLowerCase();
-      if (!hay.includes(k)) return false;
-    }
-
-    if (f.location.trim() && !(job.location || '').toLowerCase().includes(f.location.toLowerCase())) {
-      return false;
-    }
-
-    if (f.company.trim() && !(job.company?.name || '').toLowerCase().includes(f.company.toLowerCase())) {
-      return false;
-    }
-
-    if (
-      f.industry.trim() &&
-      !(job.company?.industry || '').toLowerCase().includes(f.industry.toLowerCase())
-    ) {
-      return false;
-    }
-
-    if (!this.matchesExperience(job, f.experience)) return false;
-    if (f.quizOnly && !job.quizEnabled) return false;
-
-    if (f.minSalary != null && f.minSalary > 0) {
-      const label = job.salaryLabel || '';
-      const nums = label.match(/\d[\d\s]*/g);
-      if (!nums?.length) return false;
-      const val = parseInt(nums[0].replace(/\s/g, ''), 10);
-      if (!Number.isNaN(val) && val < f.minSalary) return false;
-    }
-
-    return true;
-  }
-
-  private matchesExperience(job: Job, level: ExperienceFilter): boolean {
-    if (level === 'all') return true;
-    const years = job.experienceYears;
-    if (years == null) return level === 'junior';
-    if (level === 'junior') return years <= 2;
-    if (level === 'mid') return years >= 3 && years <= 5;
-    if (level === 'senior') return years >= 6;
-    return true;
   }
 
   setViewMode(mode: CandidateJobsViewMode): void {
@@ -777,6 +709,12 @@ export class JobSearchComponent implements OnInit {
   async saveJob(job: Job, event?: Event): Promise<void> {
     event?.stopPropagation();
     event?.preventDefault();
+    if (!this.isSaved(job.id) && this.savedJobIds().size >= 10) {
+      this.success.set(null);
+      this.error.set('Vous ne pouvez pas enregistrer plus de 10 offres. Retirez une offre pour en ajouter une autre.');
+      return;
+    }
+
     const ok = await this.confirmDialog.confirm({
       title: 'Enregistrer l\'offre',
       message: `Enregistrer « ${job.title} » dans vos offres sauvegardées ?`,
@@ -814,7 +752,8 @@ export class JobSearchComponent implements OnInit {
       .create({ searchFilters: searchFilters as Record<string, unknown> })
       .subscribe({
       next: () => this.success.set('Alerte emploi créée avec les critères renseignés.'),
-      error: () => this.error.set('Impossible de créer l\'alerte.'),
+      error: (err: HttpErrorResponse) =>
+        this.error.set(err.error?.message || 'Impossible de créer l\'alerte.'),
     });
   }
 

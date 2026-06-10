@@ -36,6 +36,7 @@ export class SettingsComponent implements OnInit {
   readonly emailSuccessMessage = signal<string | null>(null);
   readonly emailDevVerifyUrl = signal<string | null>(null);
   readonly emailErrorMessage = signal<string | null>(null);
+  readonly notifErrorMessage = signal<string | null>(null);
 
   readonly passwordForm = this.fb.group(
     {
@@ -103,12 +104,18 @@ export class SettingsComponent implements OnInit {
   }
 
   saveNotificationPrefs(): void {
+    this.notifErrorMessage.set(null);
     const payload: NotificationPreferences = this.notifPrefs.getRawValue();
     this.profileService.updateProfile({ notificationPreferences: payload }).subscribe({
       next: (res) => {
         if (res.data) this.candidateContext.setProfile(res.data);
         this.notifSaved.set(true);
         setTimeout(() => this.notifSaved.set(false), 3000);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.notifErrorMessage.set(
+          error.error?.message || 'Impossible d’enregistrer vos préférences de notification.'
+        );
       },
     });
   }

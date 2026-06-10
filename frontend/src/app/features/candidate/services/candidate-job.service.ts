@@ -10,12 +10,31 @@ import { PaginatedJobs } from '../../../core/models/candidate-profile.model';
 export interface JobSearchParams {
   keywords?: string;
   location?: string;
+  company?: string;
+  industry?: string;
   contractType?: string;
   remoteType?: string;
+  contracts?: string[];
+  remotes?: string[];
+  experience?: 'all' | 'junior' | 'mid' | 'senior';
+  quizOnly?: boolean;
   minSalary?: number;
   sortBy?: 'date' | 'salary' | 'experience';
   page?: number;
   limit?: number;
+}
+
+export interface CompanyDirectoryItem {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  industry: string | null;
+  city: string | null;
+  website: string | null;
+  description: string | null;
+  cities: string[];
+  jobs: Job[];
+  jobsCount: number;
 }
 
 function buildSearchQueryParams(params: JobSearchParams): Record<string, string | number> {
@@ -27,8 +46,18 @@ function buildSearchQueryParams(params: JobSearchParams): Record<string, string 
   const location = params.location?.trim();
   if (location) query['location'] = location;
 
+  const company = params.company?.trim();
+  if (company) query['company'] = company;
+
+  const industry = params.industry?.trim();
+  if (industry) query['industry'] = industry;
+
   if (params.contractType) query['contractType'] = params.contractType;
   if (params.remoteType) query['remoteType'] = params.remoteType;
+  if (params.contracts?.length) query['contracts'] = params.contracts.join(',');
+  if (params.remotes?.length) query['remotes'] = params.remotes.join(',');
+  if (params.experience && params.experience !== 'all') query['experience'] = params.experience;
+  if (params.quizOnly) query['quizOnly'] = 'true';
   if (params.minSalary != null && params.minSalary > 0) query['minSalary'] = params.minSalary;
   if (params.sortBy) query['sortBy'] = params.sortBy;
 
@@ -42,6 +71,7 @@ function buildSearchQueryParams(params: JobSearchParams): Record<string, string 
 export class CandidateJobService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/jobs`;
+  private readonly companiesUrl = `${environment.apiUrl}/companies`;
 
   search(
     params: JobSearchParams
@@ -58,6 +88,25 @@ export class CandidateJobService {
 
   getById(id: string): Observable<ApiResponse<Job>> {
     return this.http.get<ApiResponse<Job>>(`${this.apiUrl}/${id}`);
+  }
+
+  listCompanyDirectory(params: {
+    search?: string;
+    city?: string;
+    industry?: string;
+    page?: number;
+    limit?: number;
+  }): Observable<ApiResponse<CompanyDirectoryItem[]> & { pagination?: PaginatedJobs<CompanyDirectoryItem>['pagination'] }> {
+    const query: Record<string, string | number> = {};
+    if (params.search?.trim()) query['search'] = params.search.trim();
+    if (params.city?.trim()) query['city'] = params.city.trim();
+    if (params.industry?.trim()) query['industry'] = params.industry.trim();
+    if (params.page) query['page'] = params.page;
+    if (params.limit) query['limit'] = params.limit;
+    return this.http.get<ApiResponse<CompanyDirectoryItem[]> & { pagination?: PaginatedJobs<CompanyDirectoryItem>['pagination'] }>(
+      `${this.companiesUrl}/public-directory`,
+      { params: query }
+    );
   }
 
   apply(

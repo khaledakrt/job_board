@@ -98,12 +98,12 @@
         class="form-input apps-search"
         placeholder="Rechercher poste ou entreprise…"
         [value]="searchQ()"
-        (input)="searchQ.set($any($event.target).value); reloadApplications()"
+        (input)="setApplicationSearch($any($event.target).value)"
       />
       <select
         class="form-input apps-select"
         [value]="filterStatus()"
-        (change)="filterStatus.set($any($event.target).value); reloadApplications()"
+        (change)="setApplicationStatusFilter($any($event.target).value)"
       >
         <option value="">Tous les statuts</option>
         <option value="applied">Envoyée</option>
@@ -167,6 +167,30 @@
         </tbody>
       </table>
     </div>
+    @if (applicationsPagination(); as pagination) {
+      <div class="apps-pagination">
+        <p class="apps-pagination-count">{{ applicationRangeLabel() }}</p>
+        <div class="apps-pagination-actions">
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="loadingApps() || !pagination.hasPreviousPage"
+            (click)="goToApplicationsPage(pagination.page - 1)"
+          >
+            Précédent
+          </button>
+          <span class="pagination-current">Page {{ pagination.page }} / {{ pagination.totalPages }}</span>
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="loadingApps() || !pagination.hasNextPage"
+            (click)="goToApplicationsPage(pagination.page + 1)"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    }
   </section>
 
   <div class="tracking-columns">
@@ -179,7 +203,7 @@
         <p class="table-loading">Chargement…</p>
       } @else {
         <div class="saved-grid">
-          @for (item of savedJobs(); track item.id) {
+          @for (item of savedJobsPreview(); track item.id) {
             <article class="saved-card" (click)="openSavedJob(item)" tabindex="0" role="button">
               @if (resolveLogo(item.job?.company?.logoUrl); as logo) {
                 <img [src]="logo" alt="" class="saved-logo" />
@@ -218,13 +242,13 @@
     <section class="tracking-section panel-card">
       <div class="section-head">
         <h2 class="section-title">Alertes emploi</h2>
-        <a [routerLink]="routes.CANDIDATE.SAVED" class="section-link">Gérer les alertes</a>
+        <a [routerLink]="routes.CANDIDATE.SAVED" class="section-link">Voir tout</a>
       </div>
       @if (loadingAlerts()) {
         <p class="table-loading">Chargement…</p>
       } @else {
         <ul class="alerts-list">
-          @for (alert of alerts(); track alert.id) {
+          @for (alert of alertsPreview(); track alert.id) {
             <li class="alert-row">
               <div>
                 <p class="alert-filters">{{ formatAlertFilters(alert.searchFilters) }}</p>
@@ -261,19 +285,30 @@
         @if (selectedApplication(); as detail) {
         <header class="app-detail-header">
           <div>
+            <p class="app-detail-eyebrow">Détail de candidature</p>
             <h2 id="app-detail-title">{{ detail.job?.title || 'Candidature' }}</h2>
             <p class="app-detail-co">{{ companyName(detail) }}</p>
           </div>
-          <span class="status-pill status-pill-{{ detail.status }}">{{ statusLabels[detail.status] }}</span>
+          <span class="status-pill status-pill-lg status-pill-{{ detail.status }}">{{ statusLabels[detail.status] }}</span>
         </header>
 
-        <app-application-timeline [status]="detail.status" />
+        <section class="app-status-card">
+          <div class="app-status-summary">
+            <span class="status-dot status-dot-{{ detail.status }}"></span>
+            <div>
+              <p class="app-status-label">Statut actuel</p>
+              <h3>{{ statusLabels[detail.status] }}</h3>
+              <p>{{ statusDescription(detail.status) }}</p>
+            </div>
+          </div>
+          <app-application-timeline [status]="detail.status" />
+        </section>
 
         <div class="app-detail-meta">
-          <span>Postulé le {{ detail.createdAt | date: 'mediumDate' }}</span>
-          <span>Dernière mise à jour {{ detail.updatedAt | date: 'mediumDate' }}</span>
+          <span><strong>Envoyée</strong>{{ detail.createdAt | date: 'mediumDate' }}</span>
+          <span><strong>Mise à jour</strong>{{ detail.updatedAt | date: 'mediumDate' }}</span>
           @if (detail.rating != null) {
-            <span>Note recruteur : {{ detail.rating }}/5</span>
+            <span><strong>Note recruteur</strong>{{ detail.rating }}/5</span>
           }
         </div>
 

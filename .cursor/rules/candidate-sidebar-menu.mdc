@@ -1,0 +1,15 @@
+---
+description: Preserve candidate sidebar menu structure and visual style
+globs: frontend/src/app/features/candidate/layout/candidate-layout.component.*
+alwaysApply: false
+---
+
+# Candidate Sidebar Menu
+
+When working on the candidate layout/sidebar, preserve the current sidebar menu structure and visual presentation unless the user explicitly asks to change it.
+
+- Keep the candidate identity block at the top with avatar, "Espace candidat", candidate name, and profile completion.
+- Keep the main menu order: Suivi, Offres, Enregistrées, Profil, Paramètres.
+- Keep the Annuaire section title and order: Annuaire sociétés, Annuaire formations, Annuaire établissements.
+- Keep the bottom links: Accueil, Déconnexion.
+- Do not rename labels, reorder groups, move directory links elsewhere, or restyle the sidebar menu unless the user specifically requests that sidebar change.

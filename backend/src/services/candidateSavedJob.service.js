@@ -3,6 +3,7 @@
 const { SavedJob, Job, Company } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
+const { CANDIDATE_LIMITS } = require('../config/constants');
 
 function formatSavedJob(savedJob) {
   const job = savedJob.job;
@@ -61,6 +62,13 @@ async function saveJob({ candidateId, jobId }) {
 
   if (existing) {
     throw ApiError.conflict('Job already saved');
+  }
+
+  const savedCount = await SavedJob.count({ where: { candidate_id: candidateId } });
+  if (savedCount >= CANDIDATE_LIMITS.MAX_SAVED_JOBS) {
+    throw ApiError.conflict(
+      `Vous ne pouvez pas enregistrer plus de ${CANDIDATE_LIMITS.MAX_SAVED_JOBS} offres. Retirez une offre pour en ajouter une autre.`
+    );
   }
 
   const saved = await SavedJob.create({

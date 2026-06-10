@@ -13,7 +13,9 @@
     "db:seed:demo": "node scripts/seed-demo-data.js",
     "db:seed:directories": "node scripts/seed-directory-demo.js",
     "db:seed:formations": "node scripts/seed-training-formations.js",
-    "db:seed:institution-offerings": "node scripts/seed-institution-offerings.js"
+    "db:seed:institution-offerings": "node scripts/seed-institution-offerings.js",
+    "jobs:weekly-alerts": "node scripts/run-weekly-job-alerts.js",
+    "jobs:scheduled-alerts": "node scripts/run-weekly-job-alerts.js"
   },
   "engines": {
     "node": ">=18.0.0"

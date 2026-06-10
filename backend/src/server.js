@@ -4,9 +4,11 @@ require('./models');
 const app = require('./app');
 const { env } = require('./config');
 const { connectDatabase, disconnectDatabase } = require('./database/connection');
+const { startWeeklyJobAlertScheduler } = require('./services/weeklyJobAlert.service');
 const logger = require('./utils/logger');
 
 let server;
+let stopWeeklyJobAlerts;
 
 async function startServer() {
   await connectDatabase();
@@ -15,6 +17,8 @@ async function startServer() {
     logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
     logger.info(`API base: http://localhost:${env.PORT}${env.API_PREFIX}`);
   });
+
+  stopWeeklyJobAlerts = startWeeklyJobAlertScheduler();
 }
 
 async function shutdown(signal) {
@@ -24,6 +28,10 @@ async function shutdown(signal) {
     await new Promise((resolve) => {
       server.close(resolve);
     });
+  }
+
+  if (stopWeeklyJobAlerts) {
+    stopWeeklyJobAlerts();
   }
 
   await disconnectDatabase();

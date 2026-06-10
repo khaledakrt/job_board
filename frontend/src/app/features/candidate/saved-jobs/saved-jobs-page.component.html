@@ -97,8 +97,8 @@
               <input class="form-input" formControlName="label" placeholder="Ex. Dev Paris" />
               <label class="form-label">Fréquence</label>
               <select class="form-input" formControlName="frequency">
-                <option value="daily">Quotidienne</option>
-                <option value="weekly">Hebdomadaire</option>
+                <option value="weekly">Hebdomadaire - chaque dimanche</option>
+                <option value="monthly">Mensuelle - le 1er jour du mois</option>
               </select>
               <label class="form-check">
                 <input type="checkbox" formControlName="isActive" />
@@ -124,7 +124,7 @@
             </div>
 
             <div class="alert-card-meta">
-              <span>{{ alert.frequency === 'daily' ? 'Quotidienne' : 'Hebdomadaire' }}</span>
+              <span>{{ frequencyLabel(alert) }}</span>
               <span>Créée le {{ alert.createdAt | date: 'mediumDate' }}</span>
             </div>
 

@@ -17,7 +17,7 @@ import {
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { remoteLabel, salaryDisplayLabel } from '../../../core/utils/job-display.util';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
-import { CandidateJobService } from '../services/candidate-job.service';
+import { CandidateJobService, CompanyDirectoryItem } from '../services/candidate-job.service';
 import { CandidateApplicationsService } from '../services/candidate-applications.service';
 import { PublicCatalogService } from '../../public/services/public-catalog.service';
 import {
@@ -29,18 +29,7 @@ import {
 
 type DirectoryKind = 'companies' | 'training' | 'institutions';
 
-interface CompanyDirectoryCard {
-  id: string;
-  name: string;
-  logoUrl: string | null;
-  industry: string | null;
-  city: string | null;
-  website: string | null;
-  description: string | null;
-  cities: string[];
-  jobs: Job[];
-  jobsCount: number;
-}
+type CompanyDirectoryCard = CompanyDirectoryItem;
 
 type TrainingContent = TrainingFormationItem | TrainingEventItem;
 
@@ -186,21 +175,16 @@ export class CandidateDirectoryComponent implements OnInit {
       return;
     }
 
-    this.jobs.search({ limit: 50, sortBy: 'date' }).subscribe({
+    this.jobs.listCompanyDirectory({
+      search: this.search,
+      city: this.city,
+      industry: this.domain,
+      page: 1,
+      limit: 24,
+    }).subscribe({
       next: (res) => {
-        const cards = this.buildCompanyCards(res.data ?? []);
-        const query = this.search.trim().toLowerCase();
-        const city = this.city.trim().toLowerCase();
-        const domain = this.domain.trim().toLowerCase();
-        const filtered = cards.filter((c) => {
-          const searchable = `${c.name} ${c.industry || ''} ${c.cities.join(' ')}`.toLowerCase();
-          if (query && !searchable.includes(query)) return false;
-          if (city && !c.cities.some((item) => item.toLowerCase().includes(city))) return false;
-          if (domain && !(c.industry || '').toLowerCase().includes(domain)) return false;
-          return true;
-        });
-        this.companies.set(filtered);
-        this.total.set(filtered.length);
+        this.companies.set(res.data ?? []);
+        this.total.set(res.pagination?.totalItems ?? this.companies().length);
         this.loading.set(false);
       },
       error: () => this.fail('Impossible de charger l’annuaire des sociétés.'),
@@ -621,45 +605,6 @@ export class CandidateDirectoryComponent implements OnInit {
     return Array.from(
       new Set(company.jobs.flatMap((job) => job.tags ?? []).filter(Boolean))
     ).slice(0, 8);
-  }
-
-  private buildCompanyCards(jobs: Job[]): CompanyDirectoryCard[] {
-    const map = new Map<string, CompanyDirectoryCard>();
-    for (const job of jobs) {
-      const company = job.company;
-      if (!company?.id || !company.name) continue;
-      const existing = map.get(company.id);
-      if (existing) {
-        existing.jobsCount += 1;
-        existing.jobs.push(job);
-        const location = this.cleanLocation(job.location);
-        if (location && !existing.cities.includes(location)) {
-          existing.cities.push(location);
-        }
-      } else {
-        const companyCity = this.cleanLocation(company.city ?? null);
-        const location = this.cleanLocation(job.location);
-        const cities = [companyCity, location].filter((item): item is string => Boolean(item));
-        map.set(company.id, {
-          id: company.id,
-          name: company.name,
-          logoUrl: company.logoUrl,
-          industry: company.industry ?? null,
-          city: companyCity,
-          website: company.website ?? null,
-          description: company.description ?? null,
-          cities: Array.from(new Set(cities)),
-          jobs: [job],
-          jobsCount: 1,
-        });
-      }
-    }
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  private cleanLocation(location: string | null): string | null {
-    const value = location?.trim();
-    return value || null;
   }
 
   private clearSelection(keepDetailMode = false): void {
