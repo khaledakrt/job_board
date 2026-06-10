@@ -24,6 +24,8 @@ type DrawerTab = 'profile' | 'cv';
 type AtsViewMode = 'kanban' | 'list';
 
 const PAGE_SIZE = 12;
+const KANBAN_PAGE_SIZE = 50;
+const KANBAN_MAX_ITEMS = 200;
 const VIEW_MODE_STORAGE_KEY = 'recruiter-ats-view-mode';
 const DRAWER_WIDTH_STORAGE_KEY = 'recruiter-ats-drawer-width';
 const DRAWER_MIN_WIDTH_PX = 380;
@@ -71,6 +73,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
   private drawerResizeCleanup: (() => void) | null = null;
   private cvObjectUrl: string | null = null;
+  private applicationsLoadToken = 0;
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -80,6 +83,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
   readonly pageSize = PAGE_SIZE;
+  readonly kanbanLimitReached = signal(false);
 
   readonly pageSummary = computed(() => {
     const p = this.pagination();
@@ -149,12 +153,32 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   }
 
   loadJobs(): void {
-    this.jobService.list({ page: 1, limit: 100 }).subscribe({
-      next: (res) => this.jobs.set(res.data || []),
+    this.loadJobsPage(1, []);
+  }
+
+  private loadJobsPage(page: number, acc: Job[]): void {
+    this.jobService.list({ page, limit: 100 }).subscribe({
+      next: (res) => {
+        const items = [...acc, ...(res.data || [])];
+        if (res.pagination?.hasNextPage) {
+          this.loadJobsPage(page + 1, items);
+          return;
+        }
+        this.jobs.set(items);
+      },
+      error: () => this.errorMessage.set('Impossible de charger les offres.'),
     });
   }
 
   loadApplications(page = this.currentPage(), openApplicationId?: string): void {
+    const loadToken = ++this.applicationsLoadToken;
+    this.kanbanLimitReached.set(false);
+
+    if (this.viewMode() === 'kanban') {
+      this.loadKanbanApplications(openApplicationId, loadToken);
+      return;
+    }
+
     this.loading.set(true);
     this.currentPage.set(page);
     const jobId = this.selectedJobId() || undefined;
@@ -167,6 +191,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (res) => {
+          if (loadToken !== this.applicationsLoadToken) return;
           this.applications.set(res.data || []);
           this.pagination.set(res.pagination || null);
           this.loading.set(false);
@@ -175,6 +200,65 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
           }
         },
         error: () => {
+          if (loadToken !== this.applicationsLoadToken) return;
+          this.errorMessage.set('Impossible de charger les candidatures.');
+          this.loading.set(false);
+        },
+      });
+  }
+
+  private loadKanbanApplications(openApplicationId?: string, loadToken = this.applicationsLoadToken): void {
+    this.loading.set(true);
+    this.currentPage.set(1);
+    const jobId = this.selectedJobId() || undefined;
+
+    this.loadKanbanPage(1, [], jobId, openApplicationId, loadToken);
+  }
+
+  private loadKanbanPage(
+    page: number,
+    acc: Application[],
+    jobId?: string,
+    openApplicationId?: string,
+    loadToken = this.applicationsLoadToken
+  ): void {
+    this.applicationService
+      .list({
+        jobId,
+        page,
+        limit: KANBAN_PAGE_SIZE,
+      })
+      .subscribe({
+        next: (res) => {
+          if (loadToken !== this.applicationsLoadToken) return;
+          const items = [...acc, ...(res.data || [])];
+          const pagination = res.pagination;
+
+          if (pagination?.hasNextPage && items.length < KANBAN_MAX_ITEMS) {
+            this.loadKanbanPage(page + 1, items, jobId, openApplicationId, loadToken);
+            return;
+          }
+
+          const visibleItems = items.slice(0, KANBAN_MAX_ITEMS);
+          this.kanbanLimitReached.set(Boolean(pagination?.hasNextPage || items.length > KANBAN_MAX_ITEMS));
+
+          this.applications.set(visibleItems);
+          this.pagination.set({
+            page: 1,
+            limit: Math.max(visibleItems.length, 1),
+            totalItems: pagination?.totalItems ?? items.length,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          });
+          this.loading.set(false);
+
+          if (openApplicationId) {
+            this.openApplicationFromQuery(openApplicationId);
+          }
+        },
+        error: () => {
+          if (loadToken !== this.applicationsLoadToken) return;
           this.errorMessage.set('Impossible de charger les candidatures.');
           this.loading.set(false);
         },
@@ -501,16 +585,24 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   updateStatus(applicationId: string, status: ApplicationStatus, rating: number | null): void {
     this.saving.set(true);
     this.errorMessage.set(null);
+    const candidateMessage = this.noteForm.controls.evaluationText.value?.trim() || undefined;
 
     this.applicationService
       .updateStatus(applicationId, {
         status,
         rating: rating ?? undefined,
-        evaluationText: this.noteForm.controls.evaluationText.value || undefined,
+        evaluationText: candidateMessage,
       })
       .subscribe({
-        next: () => {
-          this.successMessage.set('Candidature mise à jour — le candidat a été notifié.');
+        next: (res) => {
+          this.successMessage.set(
+            candidateMessage
+              ? res.meta?.emailSent
+                ? 'Candidature mise à jour — message envoyé par e-mail au candidat.'
+                : 'Candidature mise à jour — message enregistré, e-mail non envoyé.'
+              : 'Candidature mise à jour.'
+          );
+          this.noteForm.controls.evaluationText.reset();
           this.saving.set(false);
           this.loadApplications(this.currentPage());
           if (this.selectedApplication()?.id === applicationId) {
@@ -535,7 +627,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
     const ok = await this.confirmDialog.confirm({
       title: 'Enregistrer la note',
-      message: `Enregistrer cette note pour ${this.candidateName(selected)} ? Le candidat pourra être notifié.`,
+      message: `Enregistrer cette note interne pour ${this.candidateName(selected)} ?`,
       confirmLabel: 'Enregistrer',
     });
     if (!ok) return;
@@ -545,7 +637,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       .addNote(selected.id, this.noteForm.controls.noteText.value)
       .subscribe({
         next: () => {
-          this.successMessage.set('Note enregistrée et notification envoyée.');
+          this.successMessage.set('Note interne enregistrée.');
           this.noteForm.controls.noteText.reset();
           this.saving.set(false);
           this.applicationService.getById(selected.id).subscribe({

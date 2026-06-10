@@ -34,6 +34,7 @@ const listApplicationsQuerySchema = z.object({
 
 router.get(
   '/',
+  checkPermission(RECRUITER_PERMISSIONS.CAN_DECIDE_APPLICATION),
   validateQuery(listApplicationsQuerySchema),
   applicationController.listApplications
 );
@@ -41,6 +42,7 @@ router.get(
 router.get(
   '/:id',
   validateParams(applicationIdParamSchema),
+  checkPermission(RECRUITER_PERMISSIONS.CAN_DECIDE_APPLICATION),
   applicationController.getApplication
 );
 

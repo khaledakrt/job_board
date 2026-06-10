@@ -22,9 +22,10 @@ const inviteMember = asyncHandler(async (req, res) => {
     success: true,
     message: 'Team member invited successfully',
     data: result.member,
-    meta: result.temporaryPassword
-      ? { temporaryPassword: result.temporaryPassword }
-      : undefined,
+    meta: {
+      emailSent: result.emailSent,
+      ...(result.temporaryPassword ? { temporaryPassword: result.temporaryPassword } : {}),
+    },
   });
 });
 

@@ -11,5 +11,6 @@ router.use(authenticate);
 router.use(requireRecruiterRole);
 
 router.get('/profile', recruiterProfileController.getProfile);
+router.get('/summary', recruiterProfileController.getSummary);
 
 module.exports = router;

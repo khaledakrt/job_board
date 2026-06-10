@@ -34,6 +34,7 @@ export class RecruiterNotificationBellComponent implements OnInit, OnDestroy {
   readonly notifications = this.notificationService.notifications;
   readonly unreadCount = this.notificationService.unreadCount;
   readonly loading = this.notificationService.loading;
+  readonly errorMessage = this.notificationService.errorMessage;
 
   private pollSub?: Subscription;
 
@@ -69,7 +70,7 @@ export class RecruiterNotificationBellComponent implements OnInit, OnDestroy {
     const next = !this.open();
     this.open.set(next);
     if (next) {
-      this.notificationService.refresh().subscribe();
+      this.notificationService.refresh().subscribe({ error: () => undefined });
     }
   }
 
@@ -87,7 +88,9 @@ export class RecruiterNotificationBellComponent implements OnInit, OnDestroy {
   openNotification(event: MouseEvent, notification: RecruiterNotification): void {
     event.stopPropagation();
     if (!notification.isRead) {
-      this.notificationService.markAsRead(notification.id).subscribe();
+      this.notificationService.markAsRead(notification.id).subscribe({
+        error: () => this.notificationService.errorMessage.set('Impossible de marquer cette notification comme lue.'),
+      });
     }
     this.selectedNotification.set(notification);
     this.detailOpen.set(true);
@@ -125,7 +128,9 @@ export class RecruiterNotificationBellComponent implements OnInit, OnDestroy {
       confirmLabel: 'Confirmer',
     });
     if (!ok) return;
-    this.notificationService.markAllAsRead().subscribe();
+    this.notificationService.markAllAsRead().subscribe({
+      error: () => this.notificationService.errorMessage.set('Impossible de marquer les notifications comme lues.'),
+    });
   }
 
   stopPropagation(event: MouseEvent): void {

@@ -203,6 +203,10 @@ async function deleteCompany({ companyId, recruiter }) {
 }
 
 async function updateCompanyLogo({ companyId, recruiter, file }) {
+  if (!file) {
+    throw ApiError.badRequest('Logo file is required');
+  }
+
   const company = await Company.findByPk(companyId);
 
   if (!company) {

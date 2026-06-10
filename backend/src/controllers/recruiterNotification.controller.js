@@ -9,7 +9,8 @@ const listNotifications = asyncHandler(async (req, res) => {
     throw ApiError.forbidden('Recruiter profile required');
   }
 
-  const limit = req.query.limit ? Number(req.query.limit) : undefined;
+  const rawLimit = req.query.limit ? Number(req.query.limit) : undefined;
+  const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? rawLimit : undefined;
   const result = await recruiterNotificationService.listForRecruiter({
     companyId: req.companyId,
     recruiterId: req.recruiter.id,

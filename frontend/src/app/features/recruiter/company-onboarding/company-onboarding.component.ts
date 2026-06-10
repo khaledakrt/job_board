@@ -106,6 +106,10 @@ export class CompanyOnboardingComponent implements OnInit {
         description: company.description || '',
       });
     }
+
+    if (this.context.hasCompany() && !this.context.canEditCompany()) {
+      this.form.disable();
+    }
   }
 
   onLogoSelected(file: File): void {
@@ -191,6 +195,11 @@ export class CompanyOnboardingComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
+    if (this.context.hasCompany() && !this.context.canEditCompany()) {
+      this.errorMessage.set('Vous n’avez pas le droit de modifier le profil entreprise.');
+      return;
+    }
+
     this.submitted.set(true);
     if (this.form.invalid) {
       this.form.markAllAsTouched();

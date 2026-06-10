@@ -9,8 +9,12 @@
   @if (job(); as j) {
     <div class="header-actions">
       <span class="badge" [class]="statusBadgeClass(j.status)">{{ statusLabels[j.status] }}</span>
-      <a [routerLink]="['/recruiter/jobs', j.id, 'edit']" class="btn-secondary !w-auto px-4">Modifier</a>
-      <a [routerLink]="routes.RECRUITER.ATS" [queryParams]="{ jobId: j.id }" class="btn-primary !w-auto px-4">Candidatures</a>
+      @if (context.canPostJob()) {
+        <a [routerLink]="['/recruiter/jobs', j.id, 'edit']" class="btn-secondary !w-auto px-4">Modifier</a>
+      }
+      @if (context.canDecideApplication()) {
+        <a [routerLink]="routes.RECRUITER.ATS" [queryParams]="{ jobId: j.id }" class="btn-primary !w-auto px-4">Candidatures</a>
+      }
     </div>
   }
 </div>

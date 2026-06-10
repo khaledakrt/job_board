@@ -8,6 +8,7 @@ const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
 const { hashPassword } = require('../utils/password');
 const tokenService = require('./token.service');
+const logger = require('../utils/logger');
 
 function formatTeamMember(profile) {
   return {
@@ -59,11 +60,15 @@ async function inviteTeamMember({ owner, payload }) {
   const passwordHash = await hashPassword(temporaryPassword);
 
   const transaction = await User.sequelize.transaction();
+  let created;
+  let userForInvite;
+  let isNewAccount = false;
 
   try {
     let user = existingUser;
 
     if (!user) {
+      isNewAccount = true;
       user = await User.create(
         {
           id: generateUuid(),
@@ -96,32 +101,40 @@ async function inviteTeamMember({ owner, payload }) {
       { transaction }
     );
 
-    await transaction.commit();
-
-    const created = await RecruiterProfile.findByPk(profile.id, {
+    created = await RecruiterProfile.findByPk(profile.id, {
       include: [{ model: User, as: 'user', attributes: ['id', 'email'] }],
+      transaction,
     });
+    userForInvite = user;
 
-    const company = await Company.findByPk(owner.company_id, { attributes: ['name'] });
-    const inviter = await User.findByPk(owner.user_id, { attributes: ['email'] });
-    const isNewAccount = !existingUser;
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 
+  const company = await Company.findByPk(owner.company_id, { attributes: ['name'] });
+  const inviter = await User.findByPk(owner.user_id, { attributes: ['email'] });
+  let emailSent = false;
+
+  try {
     await emailService.sendTeamInviteEmail({
-      to: user.email,
+      to: userForInvite.email,
       companyName: company?.name || 'votre entreprise',
       inviterEmail: inviter?.email || env.SMTP_FROM_EMAIL,
       temporaryPassword: isNewAccount && !payload.password ? temporaryPassword : undefined,
       isNewAccount,
     });
-
-    return {
-      member: formatTeamMember(created),
-      temporaryPassword: payload.password ? undefined : temporaryPassword,
-    };
+    emailSent = true;
   } catch (error) {
-    await transaction.rollback();
-    throw error;
+    logger.warn(`[RecruiterTeam] invite email failed for ${userForInvite.email}: ${error.message}`);
   }
+
+  return {
+    member: formatTeamMember(created),
+    temporaryPassword: payload.password ? undefined : temporaryPassword,
+    emailSent,
+  };
 }
 
 async function updateTeamMemberPermissions({ owner, memberId, payload }) {

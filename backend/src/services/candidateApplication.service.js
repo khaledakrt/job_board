@@ -1,6 +1,7 @@
 'use strict';
 
-const { Application, Job, Company, CandidateProfile, ApplicationNote } = require('../models');
+const { Application, Job, Company, CandidateProfile } = require('../models');
+const sequelize = require('../database/sequelize');
 const ApiError = require('../utils/ApiError');
 const { JOB_STATUS, APPLICATION_STATUS } = require('../config/constants');
 const { generateUuid } = require('../utils/uuid');
@@ -9,6 +10,7 @@ const { generateCoverLetter } = require('../utils/coverLetterGenerator');
 const { validateQuizAnswers, buildQuizReview } = require('../utils/jobQuiz');
 const recruiterNotificationService = require('./recruiterNotification.service');
 const { isArchivedApplication } = require('./candidateDashboard.service');
+const logger = require('../utils/logger');
 
 function formatApplication(application) {
   return {
@@ -158,26 +160,59 @@ async function applyToJob({ candidate, jobId, coverLetter, quizAnswers }) {
 
   const resumeSnapshotUrl = await copyResumeToSnapshot(candidate.resume_url);
 
-  const application = await Application.create({
-    id: generateUuid(),
-    job_id: jobId,
-    candidate_id: candidate.id,
-    status: APPLICATION_STATUS.APPLIED,
-    cover_letter: coverLetter || null,
-    quiz_answers: storedQuizAnswers,
-    resume_snapshot_url: resumeSnapshotUrl,
-    rating: null,
-    created_at: new Date(),
-    updated_at: new Date(),
-  });
+  let application;
 
-  await job.increment('applications_count', { by: 1 });
+  try {
+    application = await sequelize.transaction(async (transaction) => {
+      const duplicate = await Application.findOne({
+        where: {
+          job_id: jobId,
+          candidate_id: candidate.id,
+        },
+        transaction,
+        lock: true,
+      });
 
-  await recruiterNotificationService.notifyNewApplication({
-    application,
-    job,
-    candidate,
-  });
+      if (duplicate) {
+        throw ApiError.conflict('Vous avez déjà postulé à cette offre');
+      }
+
+      const created = await Application.create(
+        {
+          id: generateUuid(),
+          job_id: jobId,
+          candidate_id: candidate.id,
+          status: APPLICATION_STATUS.APPLIED,
+          cover_letter: coverLetter || null,
+          quiz_answers: storedQuizAnswers,
+          resume_snapshot_url: resumeSnapshotUrl,
+          rating: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        { transaction }
+      );
+
+      await job.increment('applications_count', { by: 1, transaction });
+
+      return created;
+    });
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      throw ApiError.conflict('Vous avez déjà postulé à cette offre');
+    }
+    throw error;
+  }
+
+  try {
+    await recruiterNotificationService.notifyNewApplication({
+      application,
+      job,
+      candidate,
+    });
+  } catch (error) {
+    logger.warn(`[CandidateApplication] recruiter notification failed: ${error.message}`);
+  }
 
   return {
     application: formatApplication(application),
@@ -207,12 +242,6 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
         ],
         include: [{ model: Company, as: 'company' }],
       },
-      {
-        model: ApplicationNote,
-        as: 'notes',
-        separate: true,
-        order: [['created_at', 'DESC']],
-      },
     ],
   });
 
@@ -230,12 +259,7 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
     ...formatted,
     quizAnswers: application.quiz_answers ?? null,
     quizReview,
-    notes: (application.notes || []).map((note) => ({
-      id: note.id,
-      authorId: note.author_id,
-      noteText: note.note_text,
-      createdAt: note.created_at,
-    })),
+    notes: [],
   };
 }
 

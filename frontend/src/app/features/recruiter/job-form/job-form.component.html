@@ -9,7 +9,11 @@
 @if (errorMessage()) {
   <div class="alert alert-error">{{ errorMessage() }}</div>
 }
+@if (loadingJob()) {
+  <p class="table-loading panel-card">Chargement de l’offre...</p>
+}
 
+@if (!loadingJob()) {
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="job-form panel" novalidate>
   <div class="form-grid">
     <div class="form-field form-field-inline span-2">
@@ -269,6 +273,7 @@
     </button>
   </div>
 </form>
+}
 
 @if (quizModalOpen()) {
   <app-job-quiz-modal

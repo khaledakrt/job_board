@@ -17,6 +17,7 @@ import {
   salaryDisplayLabel,
 } from '../../../core/utils/job-display.util';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
+import { RecruiterContextService } from '../services/recruiter-context.service';
 
 @Component({
   selector: 'app-job-preview',
@@ -28,6 +29,7 @@ import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-htm
 export class JobPreviewComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly jobService = inject(RecruiterJobService);
+  readonly context = inject(RecruiterContextService);
 
   readonly statusLabels = JOB_STATUS_LABELS;
   readonly statusHints = JOB_STATUS_HINTS;

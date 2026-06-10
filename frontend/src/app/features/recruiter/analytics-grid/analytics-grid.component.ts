@@ -18,8 +18,12 @@ export interface AnalyticsSummary {
 })
 export class AnalyticsGridComponent {
   readonly jobs = input<Job[]>([]);
+  readonly summaryInput = input<AnalyticsSummary | null>(null);
 
   readonly summary = computed<AnalyticsSummary>(() => {
+    const explicitSummary = this.summaryInput();
+    if (explicitSummary) return explicitSummary;
+
     const list = this.jobs();
     return {
       totalJobs: list.length,

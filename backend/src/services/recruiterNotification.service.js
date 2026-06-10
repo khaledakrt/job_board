@@ -1,17 +1,21 @@
 'use strict';
 
-const { Op } = require('sequelize');
+const { Op, QueryTypes } = require('sequelize');
 const {
   RecruiterNotification,
   RecruiterNotificationRead,
   RecruiterProfile,
   User,
 } = require('../models');
+const sequelize = require('../database/sequelize');
 const { env } = require('../config');
+const { COMPANY_ROLES } = require('../config/constants');
 const { generateUuid } = require('../utils/uuid');
 const emailService = require('./email.service');
+const logger = require('../utils/logger');
 
 const DEFAULT_LIMIT = 30;
+const MAX_LIMIT = 50;
 
 function formatCandidateDisplayName(candidate) {
   const name = [candidate.first_name, candidate.last_name]
@@ -60,13 +64,16 @@ async function notifyNewApplication({ application, job, candidate }) {
     created_at: new Date(),
   });
 
-  const dashboardUrl = `${env.CLIENT_URL}/recruiter/applications`;
+  const dashboardUrl = `${env.CLIENT_URL}/recruiter/ats?jobId=${job.id}&applicationId=${application.id}`;
   const recruiters = await RecruiterProfile.findAll({
-    where: { company_id: job.company_id },
+    where: {
+      company_id: job.company_id,
+      [Op.or]: [{ company_role: COMPANY_ROLES.OWNER }, { can_decide_application: true }],
+    },
     include: [{ model: User, as: 'user', attributes: ['email'] }],
   });
 
-  await Promise.all(
+  const emailResults = await Promise.allSettled(
     recruiters
       .map((r) => r.user?.email)
       .filter(Boolean)
@@ -79,19 +86,33 @@ async function notifyNewApplication({ application, job, candidate }) {
         })
       )
   );
+  const failedEmails = emailResults.filter((result) => result.status === 'rejected');
+  if (failedEmails.length) {
+    logger.warn(`[RecruiterNotification] ${failedEmails.length} recruiter email(s) failed`);
+  }
 
   return formatNotification(notification, []);
 }
 
+function normalizeLimit(limit) {
+  const n = Number(limit);
+  if (!Number.isInteger(n) || n < 1) return DEFAULT_LIMIT;
+  return Math.min(n, MAX_LIMIT);
+}
+
 async function listForRecruiter({ companyId, recruiterId, limit = DEFAULT_LIMIT }) {
-  const rows = await RecruiterNotification.findAll({
-    where: { company_id: companyId },
-    order: [['created_at', 'DESC']],
-    limit,
-  });
+  const safeLimit = normalizeLimit(limit);
+  const [rows, unreadCount] = await Promise.all([
+    RecruiterNotification.findAll({
+      where: { company_id: companyId },
+      order: [['created_at', 'DESC']],
+      limit: safeLimit,
+    }),
+    getUnreadCount({ companyId, recruiterId }),
+  ]);
 
   if (!rows.length) {
-    return { items: [], unreadCount: 0 };
+    return { items: [], unreadCount };
   }
 
   const ids = rows.map((r) => r.id);
@@ -105,28 +126,30 @@ async function listForRecruiter({ companyId, recruiterId, limit = DEFAULT_LIMIT 
 
   const readSet = new Set(reads.map((r) => r.notification_id));
   const items = rows.map((row) => formatNotification(row, readSet));
-  const unreadCount = items.filter((n) => !n.isRead).length;
 
   return { items, unreadCount };
 }
 
 async function getUnreadCount({ companyId, recruiterId }) {
-  const notifications = await RecruiterNotification.findAll({
-    where: { company_id: companyId },
-    attributes: ['id'],
-  });
-
-  if (!notifications.length) return 0;
-
-  const ids = notifications.map((n) => n.id);
-  const readCount = await RecruiterNotificationRead.count({
-    where: {
-      recruiter_id: recruiterId,
-      notification_id: { [Op.in]: ids },
+  const rows = await sequelize.query(
+    `
+      SELECT COUNT(*) AS unreadCount
+      FROM recruiter_notifications rn
+      WHERE rn.company_id = :companyId
+        AND NOT EXISTS (
+          SELECT 1
+          FROM recruiter_notification_reads rnr
+          WHERE rnr.notification_id = rn.id
+            AND rnr.recruiter_id = :recruiterId
+        )
+    `,
+    {
+      replacements: { companyId, recruiterId },
+      type: QueryTypes.SELECT,
     },
-  });
+  );
 
-  return Math.max(0, ids.length - readCount);
+  return Number(rows[0]?.unreadCount || 0);
 }
 
 async function markAsRead({ notificationId, companyId, recruiterId }) {

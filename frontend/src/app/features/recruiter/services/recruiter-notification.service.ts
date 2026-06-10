@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { RecruiterNotification } from '../../../core/models/recruiter-notification.model';
@@ -13,9 +13,11 @@ export class RecruiterNotificationService {
   readonly notifications = signal<RecruiterNotification[]>([]);
   readonly unreadCount = signal(0);
   readonly loading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   refresh(): Observable<ApiResponse<RecruiterNotification[]> & { meta?: { unreadCount: number } }> {
     this.loading.set(true);
+    this.errorMessage.set(null);
     return this.http
       .get<ApiResponse<RecruiterNotification[]> & { meta?: { unreadCount: number } }>(
         this.apiUrl
@@ -27,13 +29,10 @@ export class RecruiterNotificationService {
             this.unreadCount.set(res.meta?.unreadCount ?? 0);
             this.loading.set(false);
           },
-          error: () => this.loading.set(false),
-        }),
-        catchError(() => {
-          this.notifications.set([]);
-          this.unreadCount.set(0);
-          this.loading.set(false);
-          return of({ success: false, message: 'Notifications indisponibles.', data: [], meta: { unreadCount: 0 } });
+          error: () => {
+            this.errorMessage.set('Notifications recruteur indisponibles.');
+            this.loading.set(false);
+          },
         })
       );
   }

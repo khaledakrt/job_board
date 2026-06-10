@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { applicationPermissionGuard } from './guards/application-permission.guard';
 import { ownerGuard } from './guards/owner.guard';
 import { recruiterWorkspaceGuard } from './guards/recruiter-workspace.guard';
 
@@ -57,7 +58,7 @@ export const RECRUITER_ROUTES: Routes = [
       },
       {
         path: 'ats',
-        canActivate: [recruiterWorkspaceGuard],
+        canActivate: [recruiterWorkspaceGuard, applicationPermissionGuard],
         loadComponent: () =>
           import('./ats-panel/ats-panel.component').then((m) => m.AtsPanelComponent),
       },

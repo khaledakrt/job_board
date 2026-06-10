@@ -5,7 +5,8 @@ const { z } = require('zod');
 const currentYear = new Date().getFullYear();
 
 function emptyToNull(value) {
-  if (value === undefined || value === null) return null;
+  if (value === undefined) return undefined;
+  if (value === null) return null;
   if (typeof value === 'string' && value.trim() === '') return null;
   return value;
 }

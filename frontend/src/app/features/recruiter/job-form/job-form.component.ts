@@ -125,6 +125,8 @@ export class JobFormComponent implements OnInit {
 
   readonly isExpiredJob = signal(false);
 
+  readonly loadingJob = signal(false);
+
   readonly saving = signal(false);
 
   readonly errorMessage = signal<string | null>(null);
@@ -194,6 +196,7 @@ export class JobFormComponent implements OnInit {
 
 
   loadJob(id: string): void {
+    this.loadingJob.set(true);
 
     this.jobService.getById(id).subscribe({
 
@@ -250,9 +253,14 @@ export class JobFormComponent implements OnInit {
           this.quizConfigured.set(true);
         }
 
+        this.loadingJob.set(false);
+
       },
 
-      error: () => this.errorMessage.set('Impossible de charger l\'offre.'),
+      error: () => {
+        this.errorMessage.set('Impossible de charger l\'offre.');
+        this.loadingJob.set(false);
+      },
 
     });
 

@@ -8,6 +8,13 @@ import { Job, JobPayload } from '../../../core/models/job.model';
 import { GenerateQuizPayload, JobQuiz } from '../../../core/models/job-quiz.model';
 import { JobStatus } from '../../../core/constants/job.constant';
 
+export interface RecruiterAnalyticsSummary {
+  totalJobs: number;
+  totalViews: number;
+  totalApplicants: number;
+  activeJobs: number;
+}
+
 export interface RecruiterJobListParams {
   status?: JobStatus;
   page?: number;
@@ -20,6 +27,7 @@ export type RecruiterJobListResponse = ApiResponse<Job[]> & { pagination: Pagina
 export class RecruiterJobService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/recruiter/jobs`;
+  private readonly recruiterUrl = `${environment.apiUrl}/recruiter`;
 
   list(params?: RecruiterJobListParams): Observable<RecruiterJobListResponse> {
     const query: Record<string, string | number> = {};
@@ -27,6 +35,10 @@ export class RecruiterJobService {
     if (params?.page) query['page'] = params.page;
     if (params?.limit) query['limit'] = params.limit;
     return this.http.get<RecruiterJobListResponse>(this.apiUrl, { params: query });
+  }
+
+  summary(): Observable<ApiResponse<RecruiterAnalyticsSummary>> {
+    return this.http.get<ApiResponse<RecruiterAnalyticsSummary>>(`${this.recruiterUrl}/summary`);
   }
 
   getById(id: string): Observable<ApiResponse<Job>> {

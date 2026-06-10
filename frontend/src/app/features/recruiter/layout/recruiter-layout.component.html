@@ -41,14 +41,16 @@
       >
         Offres
       </a>
-      <a
-        [routerLink]="routes.RECRUITER.ATS"
-        routerLinkActive="nav-active"
-        [routerLinkActiveOptions]="{ exact: false }"
-        class="nav-link"
-      >
-        Candidatures (ATS)
-      </a>
+      @if (context.canDecideApplication()) {
+        <a
+          [routerLink]="routes.RECRUITER.ATS"
+          routerLinkActive="nav-active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="nav-link"
+        >
+          Candidatures (ATS)
+        </a>
+      }
       <a
         [routerLink]="routes.RECRUITER.SETTINGS"
         routerLinkActive="nav-active"

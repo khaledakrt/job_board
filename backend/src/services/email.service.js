@@ -262,7 +262,7 @@ async function sendRecruiterNewApplicationEmail({
   jobTitle,
   dashboardUrl,
 }) {
-  const url = dashboardUrl || `${env.CLIENT_URL}/recruiter/applications`;
+  const url = dashboardUrl || `${env.CLIENT_URL}/recruiter/ats`;
   const subject = `Nouvelle candidature — ${jobTitle}`;
   const text = `${candidateName} a postulé à votre offre « ${jobTitle} ».\n\nVoir les candidatures : ${url}`;
 

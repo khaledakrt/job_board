@@ -10,14 +10,19 @@
     pour débloquer tout l’espace recruteur.
   </div>
 }
+@if (errorMessage()) {
+  <div class="alert alert-error">{{ errorMessage() }}</div>
+}
 
-<app-analytics-grid [jobs]="jobs()" />
+<app-analytics-grid [summaryInput]="summary()" />
 
 <div class="quick-actions">
   @if (context.canPostJob()) {
     <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">+ Créer une offre</a>
   }
-  <a [routerLink]="routes.RECRUITER.ATS" class="quick-card">Voir les candidatures</a>
+  @if (context.canDecideApplication()) {
+    <a [routerLink]="routes.RECRUITER.ATS" class="quick-card">Voir les candidatures</a>
+  }
   @if (context.isOwner()) {
     <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">Gérer l’équipe</a>
   }

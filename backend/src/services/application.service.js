@@ -1,11 +1,21 @@
 'use strict';
 
 const { Application, Job, Company, CandidateProfile, ApplicationNote, User } = require('../models');
+const sequelize = require('../database/sequelize');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
 const notificationService = require('./notification.service');
 const { buildQuizReview } = require('../utils/jobQuiz');
 const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
+const logger = require('../utils/logger');
+
+const ALLOWED_STATUS_TRANSITIONS = {
+  applied: new Set(['applied', 'screening', 'interview', 'rejected']),
+  screening: new Set(['screening', 'interview', 'offer', 'rejected']),
+  interview: new Set(['interview', 'offer', 'rejected']),
+  offer: new Set(['offer', 'rejected']),
+  rejected: new Set(['rejected']),
+};
 
 function formatCandidate(candidate) {
   if (!candidate) return undefined;
@@ -115,6 +125,10 @@ async function updateApplicationStatus({
   const application = await getApplicationForCompany(applicationId, companyId);
   const previousStatus = application.status;
 
+  if (!ALLOWED_STATUS_TRANSITIONS[previousStatus]?.has(status)) {
+    throw ApiError.badRequest('Transition de statut non autorisée pour cette candidature');
+  }
+
   const updates = {
     status,
     rating: rating ?? application.rating,
@@ -127,13 +141,16 @@ async function updateApplicationStatus({
     updates.interview_at = new Date();
   }
 
-  await application.update(updates);
+  await sequelize.transaction(async (transaction) => {
+    await application.update(updates, { transaction });
 
-  await application.reload({
-    include: [
-      { model: Job, as: 'job', include: [{ model: Company, as: 'company' }] },
-      candidateInclude,
-    ],
+    await application.reload({
+      include: [
+        { model: Job, as: 'job', include: [{ model: Company, as: 'company' }] },
+        candidateInclude,
+      ],
+      transaction,
+    });
   });
 
   const shouldNotify =
@@ -142,13 +159,17 @@ async function updateApplicationStatus({
   let alertResult = null;
 
   if (shouldNotify) {
-    alertResult = await notificationService.notifyApplicationStatusChange({
-      application,
-      previousStatus,
-      newStatus: status,
-      evaluationText: evaluationText || null,
-      recruiterUser,
-    });
+    try {
+      alertResult = await notificationService.notifyApplicationStatusChange({
+        application,
+        previousStatus,
+        newStatus: status,
+        evaluationText: evaluationText || null,
+        recruiterUser,
+      });
+    } catch (error) {
+      logger.warn(`[Application] status notification failed: ${error.message}`);
+    }
   }
 
   return {
@@ -166,19 +187,18 @@ async function addApplicationNote({
 }) {
   const application = await getApplicationForCompany(applicationId, companyId);
 
-  const note = await ApplicationNote.create({
-    id: generateUuid(),
-    application_id: applicationId,
-    author_id: authorId,
-    note_text: noteText,
-    created_at: new Date(),
-  });
-
-  const alertResult = await notificationService.notifyApplicationNote({
-    application,
-    noteText,
-    recruiterUser,
-  });
+  const note = await sequelize.transaction((transaction) =>
+    ApplicationNote.create(
+      {
+        id: generateUuid(),
+        application_id: applicationId,
+        author_id: authorId,
+        note_text: noteText,
+        created_at: new Date(),
+      },
+      { transaction }
+    )
+  );
 
   return {
     note: {
@@ -188,7 +208,7 @@ async function addApplicationNote({
       noteText: note.note_text,
       createdAt: note.created_at,
     },
-    alert: alertResult,
+    alert: null,
   };
 }
 

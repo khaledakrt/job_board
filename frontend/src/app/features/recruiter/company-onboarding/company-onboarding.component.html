@@ -50,6 +50,11 @@
 @if (successMessage()) {
   <div class="alert alert-success">{{ successMessage() }}</div>
 }
+@if (context.hasCompany() && !context.canEditCompany()) {
+  <div class="alert alert-info">
+    Consultation seule : demandez au responsable RH de vous accorder le droit de modifier l’entreprise.
+  </div>
+}
 
 <div class="onboarding-layout">
   <aside class="panel panel-brand">
@@ -57,7 +62,7 @@
     <p class="section-hint">Logo affiché sur vos offres et votre page employeur.</p>
     <app-circular-logo-uploader
       [currentLogoUrl]="context.company()?.logoUrl ?? null"
-      [disabled]="saving()"
+      [disabled]="saving() || (context.hasCompany() && !context.canEditCompany())"
       (fileSelected)="onLogoSelected($event)"
     />
   </aside>
@@ -299,7 +304,11 @@
       }
 
       <div class="form-actions">
-        <button type="submit" class="btn-primary !w-auto px-8" [disabled]="saving()">
+        <button
+          type="submit"
+          class="btn-primary !w-auto px-8"
+          [disabled]="saving() || (context.hasCompany() && !context.canEditCompany())"
+        >
           @if (saving()) { Enregistrement… } @else { Enregistrer le profil entreprise }
         </button>
       </div>

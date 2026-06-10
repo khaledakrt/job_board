@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Job } from '../../../core/models/job.model';
-import { RecruiterJobService } from '../services/job.service';
+import { RecruiterAnalyticsSummary, RecruiterJobService } from '../services/job.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { AnalyticsGridComponent } from '../analytics-grid/analytics-grid.component';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
@@ -18,8 +17,9 @@ export class RecruiterDashboardComponent implements OnInit {
   readonly context = inject(RecruiterContextService);
   readonly routes = APP_ROUTES;
 
-  readonly jobs = signal<Job[]>([]);
+  readonly summary = signal<RecruiterAnalyticsSummary | null>(null);
   readonly loading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadJobs();
@@ -27,12 +27,17 @@ export class RecruiterDashboardComponent implements OnInit {
 
   loadJobs(): void {
     this.loading.set(true);
-    this.jobService.list({ page: 1, limit: 100 }).subscribe({
+    this.errorMessage.set(null);
+    this.jobService.summary().subscribe({
       next: (res) => {
-        this.jobs.set(res.data || []);
+        this.summary.set(res.data || null);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.summary.set(null);
+        this.errorMessage.set('Impossible de charger les indicateurs recruteur.');
+        this.loading.set(false);
+      },
     });
   }
 }

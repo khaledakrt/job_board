@@ -63,6 +63,11 @@
     <p class="ats-summary panel-card">{{ pageSummary() }}</p>
   }
 }
+@if (kanbanLimitReached()) {
+  <div class="alert alert-info">
+    Le Kanban affiche les {{ applications().length }} candidatures les plus récentes. Passez en vue liste ou filtrez par offre pour parcourir tout le pipeline.
+  </div>
+}
 
 @if (loading()) {
   <p class="table-loading panel-card">Chargement des candidatures...</p>
@@ -503,15 +508,16 @@
           class="form-input drawer-textarea"
           rows="2"
           formControlName="evaluationText"
-          placeholder="Texte optionnel envoyé par e-mail au candidat…"
+          placeholder="Message optionnel envoyé lors du prochain changement d’étape ou de note…"
         ></textarea>
+        <p class="field-hint">Ce message part uniquement quand vous changez l’étape ou la note étoilée.</p>
 
         <h3 class="drawer-card-title drawer-card-title-spaced">Nouvelle note interne</h3>
         <textarea
           class="form-input drawer-textarea"
           rows="3"
           formControlName="noteText"
-          placeholder="Note visible dans l’historique…"
+          placeholder="Note interne visible seulement par l’équipe recruteur…"
         ></textarea>
         <button
           type="submit"

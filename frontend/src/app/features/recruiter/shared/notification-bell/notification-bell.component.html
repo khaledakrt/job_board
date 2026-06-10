@@ -27,6 +27,9 @@
           </button>
         }
       </div>
+      @if (errorMessage()) {
+        <p class="notif-empty">{{ errorMessage() }}</p>
+      }
 
       @if (loading()) {
         <p class="notif-empty">Chargement…</p>
