@@ -475,6 +475,11 @@ export class JobFormComponent implements OnInit {
 
   async onSubmit(): Promise<void> {
 
+    if (!this.context.canPostJob()) {
+      this.errorMessage.set('Vous n’avez pas le droit de créer ou modifier une offre.');
+      return;
+    }
+
     if (this.form.invalid) {
 
       this.form.markAllAsTouched();

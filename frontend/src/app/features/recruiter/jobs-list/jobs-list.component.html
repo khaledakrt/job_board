@@ -45,12 +45,26 @@
       <article class="job-row panel-card">
         <div class="job-row-main">
           <div class="job-row-head">
-            <h2 class="job-row-title">
-              <a [routerLink]="['/recruiter/jobs', job.id]">{{ job.title }}</a>
-            </h2>
-            <span class="badge" [class]="statusBadgeClass(job.status)">
-              {{ statusLabels[job.status] }}
-            </span>
+            <div>
+              <h2 class="job-row-title">
+                <a [routerLink]="['/recruiter/jobs', job.id]">{{ job.title }}</a>
+              </h2>
+              <p class="job-row-meta">
+                {{ job.contractType }} · {{ job.location || 'Lieu flexible' }} · expire le {{ job.expiresAt | date: 'dd/MM/yyyy' }}
+              </p>
+            </div>
+            <div class="job-row-badges">
+              <span class="badge" [class]="statusBadgeClass(job.status)">
+                {{ statusLabels[job.status] }}
+              </span>
+              <span
+                class="vis-pill"
+                [class.vis-public]="isPublic(job)"
+                [class.vis-private]="!isPublic(job)"
+              >
+                {{ isPublic(job) ? 'Visible candidats' : 'Interne' }}
+              </span>
+            </div>
           </div>
 
           <div class="job-row-stats">
@@ -61,13 +75,6 @@
             <span class="stat-chip" title="Candidatures">
               <span class="stat-label">Candidats</span>
               <strong>{{ job.applicationsCount }}</strong>
-            </span>
-            <span
-              class="vis-pill"
-              [class.vis-public]="isPublic(job)"
-              [class.vis-private]="!isPublic(job)"
-            >
-              {{ isPublic(job) ? 'Visible candidats' : 'Interne' }}
             </span>
             <span class="stat-chip stat-chip-expiry" [class.stat-chip-expired]="job.status === 'expired'">
               <span class="stat-label">Expiration</span>
@@ -82,57 +89,71 @@
               <a [routerLink]="['/recruiter/jobs', job.id]" class="action-btn action-btn-view">Consulter</a>
               @if (context.canPostJob()) {
                 <a [routerLink]="['/recruiter/jobs', job.id, 'edit']" class="action-btn action-btn-edit">Modifier</a>
-                @if (canActivate(job)) {
-                  <button
-                    type="button"
-                    class="action-btn action-btn-active"
-                    [disabled]="statusUpdating() === job.id"
-                    (click)="setStatus(job, 'active')"
-                  >
-                    Afficher
-                  </button>
-                }
-                @if (canHide(job)) {
-                  <button
-                    type="button"
-                    class="action-btn action-btn-hide"
-                    [disabled]="statusUpdating() === job.id"
-                    (click)="setStatus(job, 'hidden')"
-                  >
-                    Cacher
-                  </button>
-                }
               }
-              <a
-                [routerLink]="routes.RECRUITER.ATS"
-                [queryParams]="{ jobId: job.id }"
-                class="action-btn action-btn-ats"
-              >
-                Candidatures
-                @if (job.applicationsCount > 0) {
-                  <span class="count-badge">{{ job.applicationsCount }}</span>
-                }
-              </a>
+              @if (context.canDecideApplication()) {
+                <a
+                  [routerLink]="routes.RECRUITER.ATS"
+                  [queryParams]="{ jobId: job.id }"
+                  class="action-btn action-btn-ats"
+                >
+                  Candidatures
+                  @if (job.applicationsCount > 0) {
+                    <span class="count-badge">{{ job.applicationsCount }}</span>
+                  }
+                </a>
+              }
             </div>
 
             @if (context.canPostJob()) {
-              @if (job.status !== 'expired') {
-                <p class="visibility-hint">Clôture le {{ job.expiresAt | date: 'dd/MM/yyyy' }}</p>
-              }
-              <button
-                type="button"
-                class="btn-text-danger btn-delete-inline"
-                [disabled]="statusUpdating() === job.id"
-                (click)="deleteJob(job)"
-              >
-                Supprimer
-              </button>
+              <details class="more-actions">
+                <summary>Plus</summary>
+                <div class="more-actions-menu">
+                  @if (job.status !== 'expired') {
+                    <p class="visibility-hint">Clôture le {{ job.expiresAt | date: 'dd/MM/yyyy' }}</p>
+                  }
+                  @if (canActivate(job)) {
+                    <button
+                      type="button"
+                      class="action-btn action-btn-active"
+                      [disabled]="statusUpdating() === job.id"
+                      (click)="setStatus(job, 'active')"
+                    >
+                      Afficher l’offre
+                    </button>
+                  }
+                  @if (canHide(job)) {
+                    <button
+                      type="button"
+                      class="action-btn action-btn-hide"
+                      [disabled]="statusUpdating() === job.id"
+                      (click)="setStatus(job, 'hidden')"
+                    >
+                      Cacher l’offre
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="btn-text-danger btn-delete-inline"
+                    [disabled]="statusUpdating() === job.id"
+                    (click)="deleteJob(job)"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </details>
             }
           </div>
         </div>
       </article>
     } @empty {
-      <p class="empty-cell panel-card">Aucune offre ne correspond à vos critères.</p>
+      <div class="jobs-empty panel-card">
+        <span>Aucune offre</span>
+        <strong>Aucune offre ne correspond à vos critères.</strong>
+        <p>Changez le filtre de statut ou créez une nouvelle annonce pour démarrer le recrutement.</p>
+        @if (context.canPostJob()) {
+          <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-5">Créer une offre</a>
+        }
+      </div>
     }
   </div>
 

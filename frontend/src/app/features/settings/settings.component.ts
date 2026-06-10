@@ -1,7 +1,9 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
+import { APP_ROUTES } from '../../core/constants/routes.constant';
 import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
 import {
   differentFromCurrentEmailValidator,
@@ -14,12 +16,13 @@ import {
 } from '../../shared/validators/password.validators';
 import { CandidateContextService } from '../candidate/services/candidate-context.service';
 import { CandidateProfileService } from '../candidate/services/candidate-profile.service';
+import { RecruiterContextService } from '../recruiter/services/recruiter-context.service';
 import { NotificationPreferences } from '../../core/models/candidate-profile.model';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })
@@ -29,6 +32,8 @@ export class SettingsComponent implements OnInit {
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly candidateContext = inject(CandidateContextService);
   private readonly profileService = inject(CandidateProfileService);
+  readonly recruiterContext = inject(RecruiterContextService);
+  readonly routes = APP_ROUTES;
 
   readonly passwordSubmitted = signal(false);
   readonly emailSubmitted = signal(false);
@@ -71,6 +76,7 @@ export class SettingsComponent implements OnInit {
 
   readonly userEmail = this.authService.user()?.email ?? '';
   readonly isCandidate = this.authService.isCandidate;
+  readonly isRecruiter = this.authService.isRecruiter;
 
   readonly notifPrefs = this.fb.nonNullable.group({
     emailEnabled: [true],
@@ -83,6 +89,9 @@ export class SettingsComponent implements OnInit {
   readonly notifSaved = signal(false);
 
   ngOnInit(): void {
+    if (this.isRecruiter() && !this.recruiterContext.checked()) {
+      this.recruiterContext.loadContext().subscribe({ error: () => undefined });
+    }
     if (!this.isCandidate()) return;
     if (this.candidateContext.profile()) {
       this.patchNotifPrefs();

@@ -10,8 +10,13 @@
     </p>
   </div>
   @if (canManageTeam()) {
-    <button type="button" class="btn-primary !w-auto px-4" (click)="openInviteModal()">
-      Inviter un recruteur
+    <button
+      type="button"
+      class="btn-primary !w-auto px-4"
+      [disabled]="members().length >= teamLimit"
+      (click)="openInviteModal()"
+    >
+      @if (members().length >= teamLimit) { Limite atteinte } @else { Inviter un recruteur }
     </button>
   }
 </div>
@@ -27,52 +32,58 @@
   @if (loading()) {
     <p class="table-loading">Chargement de l'équipe…</p>
   } @else {
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>E-mail</th>
-          <th>Rôle</th>
-          <th>Poste</th>
-          <th>Permissions</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (member of members(); track member.id) {
-          <tr>
-            <td>{{ member.email }}</td>
-            <td>
-              <span class="badge" [class.badge-owner]="member.companyRole === 'owner'">
-                {{ roleLabel(member.companyRole) }}
-              </span>
-            </td>
-            <td>{{ member.jobTitle || '—' }}</td>
-            <td>{{ permissionLabel(member) }}</td>
-            <td class="actions-cell">
-              @if (canEditMember(member)) {
-                <button type="button" class="btn-text-link" (click)="openEditModal(member)">
-                  Modifier
-                </button>
-                <button type="button" class="btn-text-danger" (click)="removeMember(member)">
-                  Retirer
-                </button>
+    <div class="members-grid">
+      @for (member of members(); track member.id) {
+        <article class="member-card">
+          <div class="member-avatar">{{ (member.email || '?').charAt(0).toUpperCase() }}</div>
+          <div class="member-main">
+            <div class="member-head">
+              <div>
+                <h2>{{ member.email }}</h2>
+                <p>{{ member.jobTitle || 'Poste non renseigné' }}</p>
+              </div>
+            </div>
+            <div class="permission-chips" aria-label="Permissions">
+              @for (perm of permissionOptions; track perm.key) {
+                @if (member[perm.key]) {
+                  <span class="permission-chip">{{ perm.label }}</span>
+                }
               }
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="5" class="empty-cell">Aucun membre pour le moment.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+              @if (!member.canPostJob && !member.canDecideApplication && !member.canEditCompany) {
+                <span class="permission-chip permission-chip-empty">Aucune permission</span>
+              }
+            </div>
+          </div>
+          <div class="member-side">
+            <span class="badge" [class.badge-owner]="member.companyRole === 'owner'">
+              {{ roleLabel(member.companyRole) }}
+            </span>
+            <div class="member-actions">
+            @if (canEditMember(member)) {
+              <button type="button" class="btn-text-link" (click)="openEditModal(member)">
+                Modifier
+              </button>
+              <button type="button" class="btn-text-danger" (click)="removeMember(member)">
+                Retirer
+              </button>
+            }
+            </div>
+          </div>
+        </article>
+      } @empty {
+        <p class="empty-cell">Aucun membre pour le moment.</p>
+      }
+    </div>
   }
 </div>
 
 @if (modalOpen()) {
   <div class="modal-backdrop" (click)="closeModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <h2 class="modal-title">Inviter un membre</h2>
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="invite-member-title">
+      <header class="modal-header">
+        <p>Équipe recruteur</p>
+        <h2 id="invite-member-title" class="modal-title">Inviter un membre</h2>
+      </header>
       <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" class="modal-form">
         <div class="form-field">
           <label class="form-label" for="email">E-mail</label>
@@ -110,8 +121,11 @@
 
 @if (editModalOpen() && editingMember(); as member) {
   <div class="modal-backdrop" (click)="closeEditModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <h2 class="modal-title">Modifier — {{ member.email }}</h2>
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="edit-member-title">
+      <header class="modal-header">
+        <p>Permissions membre</p>
+        <h2 id="edit-member-title" class="modal-title">Modifier — {{ member.email }}</h2>
+      </header>
       <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="modal-form">
         <div class="form-field">
           <label class="form-label" for="editJobTitle">Poste</label>

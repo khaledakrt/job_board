@@ -10,6 +10,8 @@ const { hashPassword } = require('../utils/password');
 const tokenService = require('./token.service');
 const logger = require('../utils/logger');
 
+const TEAM_MEMBER_LIMIT = 10;
+
 function formatTeamMember(profile) {
   return {
     id: profile.id,
@@ -36,6 +38,14 @@ async function listTeamMembers(companyId) {
 }
 
 async function inviteTeamMember({ owner, payload }) {
+  const currentMembersCount = await RecruiterProfile.count({
+    where: { company_id: owner.company_id },
+  });
+
+  if (currentMembersCount >= TEAM_MEMBER_LIMIT) {
+    throw ApiError.badRequest(`Team member limit reached (${TEAM_MEMBER_LIMIT} users maximum)`);
+  }
+
   const existingUser = await User.findOne({ where: { email: payload.email } });
 
   if (existingUser) {

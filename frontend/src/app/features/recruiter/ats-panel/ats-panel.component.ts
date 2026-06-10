@@ -131,8 +131,11 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    const prefersListOnMobile = window.matchMedia('(max-width: 900px)').matches;
     const stored = sessionStorage.getItem(VIEW_MODE_STORAGE_KEY);
-    if (stored === 'kanban' || stored === 'list') {
+    if (prefersListOnMobile) {
+      this.viewMode.set('list');
+    } else if (stored === 'kanban' || stored === 'list') {
       this.viewMode.set(stored);
     }
     this.restoreDrawerWidth();

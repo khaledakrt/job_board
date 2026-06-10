@@ -20,11 +20,11 @@
 
 .visibility-banner {
   margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
   font-size: 0.85rem;
   font-weight: 600;
-  background: #fff8ed;
+  background: linear-gradient(180deg, #ffffff 0%, #fff8ed 100%);
   color: #b36a00;
   border: 1px solid #ffdb9e;
 }
@@ -36,24 +36,31 @@
 }
 
 .preview-card {
-  padding: 1.35rem 1.5rem;
+  padding: 1.55rem;
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at top right, rgba(10, 102, 194, 0.08), transparent 16rem),
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%),
+    #fff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
 }
 
 .preview-header {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  padding-bottom: 1rem;
+  padding-bottom: 1.25rem;
   border-bottom: 1px solid #f1f5f9;
 }
 
 .preview-logo,
 .preview-logo-ph {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 0.65rem;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
   object-fit: cover;
   flex-shrink: 0;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
 }
 
 .preview-logo-ph {
@@ -66,8 +73,10 @@
 }
 
 .preview-header h2 {
-  font-size: 1.25rem;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
   font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
 }
 
 .preview-co {
@@ -86,11 +95,12 @@
 
 .preview-meta span {
   font-size: 0.72rem;
-  font-weight: 600;
-  padding: 0.25rem 0.6rem;
+  font-weight: 700;
+  padding: 0.32rem 0.68rem;
   border-radius: 999px;
-  background: #eef3f8;
-  color: #074484;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
 }
 
 .meta-salary {
@@ -132,10 +142,10 @@
 
 .section-title {
   margin-top: 1.25rem;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   color: #0f172a;
 }
 

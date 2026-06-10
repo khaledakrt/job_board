@@ -8,17 +8,17 @@
     (drop)="onDrop($event)"
     (dragover)="onDragOver($event)"
     (dragleave)="onDragLeave()"
-    aria-label="Upload company logo"
+    aria-label="Téléverser le logo de l'entreprise"
   >
     @if (displayUrl()) {
-      <img [src]="displayUrl()" alt="Company logo preview" class="logo-image" />
+      <img [src]="displayUrl()" alt="Aperçu du logo de l'entreprise" class="logo-image" />
     } @else {
       <div class="logo-placeholder">
         <span class="logo-placeholder-icon">+</span>
-        <span class="logo-placeholder-text">Upload logo</span>
+        <span class="logo-placeholder-text">Ajouter le logo</span>
       </div>
     }
-    <span class="logo-overlay">Change</span>
+    <span class="logo-overlay">Modifier</span>
   </button>
 
   <input
@@ -29,7 +29,7 @@
     (change)="onFileChange($event)"
   />
 
-  <p class="logo-hint">JPG, PNG or WEBP. Max {{ maxSizeMb() }}MB. Circular crop preview.</p>
+  <p class="logo-hint">JPG, PNG ou WEBP. Max {{ maxSizeMb() }} Mo. Aperçu au format rond.</p>
 
   @if (errorMessage()) {
     <p class="logo-error">{{ errorMessage() }}</p>

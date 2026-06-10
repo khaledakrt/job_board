@@ -5,6 +5,35 @@
   </header>
 
   <div class="settings-layout">
+    @if (isRecruiter()) {
+      <section class="settings-card panel-card recruiter-settings-card">
+        <h2 class="settings-section-title">Espace recruteur</h2>
+        <p class="settings-section-hint">Rôle, permissions et raccourcis utiles pour votre travail quotidien.</p>
+
+        <div class="recruiter-context-box">
+          <span>Entreprise</span>
+          <strong>{{ recruiterContext.company()?.name || 'Entreprise non chargée' }}</strong>
+          <small>{{ recruiterContext.profile()?.jobTitle || 'Recruteur' }}</small>
+        </div>
+
+        <div class="recruiter-permission-list">
+          <span [class.permission-on]="recruiterContext.canPostJob()">Publier des offres</span>
+          <span [class.permission-on]="recruiterContext.canDecideApplication()">Traiter les candidatures</span>
+          <span [class.permission-on]="recruiterContext.canEditCompany()">Modifier l’entreprise</span>
+        </div>
+
+        <div class="recruiter-settings-links">
+          <a [routerLink]="routes.RECRUITER.ONBOARDING" class="btn-secondary !w-auto px-4">Profil entreprise</a>
+          @if (recruiterContext.canDecideApplication()) {
+            <a [routerLink]="routes.RECRUITER.ATS" class="btn-secondary !w-auto px-4">Notifications candidatures</a>
+          }
+          @if (recruiterContext.isOwner()) {
+            <a [routerLink]="routes.RECRUITER.TEAM" class="btn-secondary !w-auto px-4">Droits équipe</a>
+          }
+        </div>
+      </section>
+    }
+
     @if (isCandidate()) {
     <section class="settings-card panel-card">
       <h2 class="settings-section-title">Notifications</h2>

@@ -1,23 +1,27 @@
 <div class="analytics-grid">
   <article class="metric-card">
+    <span class="metric-icon">O</span>
     <p class="metric-label">Offres totales</p>
     <p class="metric-value">{{ summary().totalJobs }}</p>
     <p class="metric-foot">{{ summary().activeJobs }} active(s)</p>
   </article>
 
   <article class="metric-card metric-card-accent">
+    <span class="metric-icon">V</span>
     <p class="metric-label">Vues totales</p>
     <p class="metric-value">{{ summary().totalViews | number }}</p>
     <p class="metric-foot">Toutes les offres</p>
   </article>
 
   <article class="metric-card metric-card-success">
+    <span class="metric-icon">C</span>
     <p class="metric-label">Candidatures</p>
     <p class="metric-value">{{ summary().totalApplicants | number }}</p>
     <p class="metric-foot">Volume pipeline</p>
   </article>
 
   <article class="metric-card metric-card-dark">
+    <span class="metric-icon">%</span>
     <p class="metric-label">Conversion</p>
     <p class="metric-value">
       @if (summary().totalViews > 0) {

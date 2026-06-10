@@ -8,6 +8,11 @@
 
 :host .page-header {
   margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 :host .page-title {
@@ -34,13 +39,32 @@
 }
 
 .job-form {
-  padding: 0.9rem 1rem;
+  padding: 1.15rem;
+  background:
+    radial-gradient(circle at top right, rgba(10, 102, 194, 0.06), transparent 20rem),
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.form-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-fieldset:disabled {
+  opacity: 0.72;
+}
+
+.form-fieldset:disabled .form-input,
+.form-fieldset:disabled app-rich-text-editor {
+  cursor: not-allowed;
 }
 
 .form-field-inline {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 0.2rem 0.45rem;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 0.22rem 0.65rem;
   align-items: center;
 }
 
@@ -54,12 +78,14 @@
 
 .job-form .form-label {
   margin: 0;
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 750;
   line-height: 1.1;
   text-align: right;
-  color: #334155;
+  color: #475569;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .form-field-body {
@@ -82,14 +108,15 @@
   padding: var(--job-input-py) var(--job-input-px);
   font-size: var(--job-input-fs);
   line-height: 1.35;
-  border-color: #94a3b8;
+  border-color: #d5dee9;
   border-width: 1.5px;
-  border-radius: 0.5rem;
+  border-radius: 0.62rem;
+  background: #fff;
 }
 
 .job-form .form-input:focus {
   border-color: #0a66c2;
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.12);
+  box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.1);
 }
 
 .job-form select.form-input {
@@ -142,8 +169,9 @@
   gap: 0.25rem;
   padding: 0.2rem 0.45rem;
   border-radius: 999px;
-  background: #eef3f8;
+  background: #f8fbff;
   color: #074484;
+  border: 1px solid #dbeafe;
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -193,22 +221,31 @@
 }
 
 .form-actions {
-  margin-top: 0.65rem;
+  position: sticky;
+  bottom: 0.85rem;
+  z-index: 2;
+  margin-top: 0.85rem;
   display: flex;
   justify-content: flex-end;
+  padding: 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(10px);
 }
 
 .panel {
   border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
+  border-radius: 1.25rem;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--job-grid-gap);
+  gap: 0.78rem;
 }
 
 .span-2 {
@@ -217,7 +254,9 @@
 
 .quiz-section {
   margin-top: 0.25rem;
-  padding: 0.75rem 0.85rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1.15rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
 .quiz-section-head {

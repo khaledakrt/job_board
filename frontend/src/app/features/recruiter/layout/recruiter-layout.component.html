@@ -1,20 +1,30 @@
 <div class="recruiter-shell">
   <aside class="recruiter-sidebar">
     <div class="sidebar-brand">
-      <div class="brand-mark">JB</div>
+      <div class="brand-mark">TJ</div>
       <div>
-        <p class="brand-title">Espace recruteur</p>
-        <p class="brand-sub">{{ context.company()?.name || 'Mon entreprise' }}</p>
+        <p class="brand-title">Tun Job</p>
+        <p class="brand-sub">Console recruteur</p>
       </div>
     </div>
 
+    @if (context.profile()) {
+      <div class="sidebar-company-card">
+        <span class="company-card-kicker">Entreprise</span>
+        <strong>{{ context.company()?.name || 'Entreprise' }}</strong>
+        <span>{{ context.profile()?.jobTitle || 'Recruteur' }}</span>
+      </div>
+    }
+
     <nav class="sidebar-nav">
+      <p class="nav-section-label">Pilotage</p>
       <a
         [routerLink]="routes.RECRUITER.DASHBOARD"
         routerLinkActive="nav-active"
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
+        <span class="nav-icon" aria-hidden="true">D</span>
         Tableau de bord
       </a>
       <a
@@ -22,6 +32,7 @@
         routerLinkActive="nav-active"
         class="nav-link"
       >
+        <span class="nav-icon" aria-hidden="true">E</span>
         Entreprise
       </a>
       @if (context.isOwner()) {
@@ -30,15 +41,18 @@
           routerLinkActive="nav-active"
           class="nav-link"
         >
+          <span class="nav-icon" aria-hidden="true">T</span>
           Équipe
         </a>
       }
+      <p class="nav-section-label">Recrutement</p>
       <a
         [routerLink]="routes.RECRUITER.JOBS"
         routerLinkActive="nav-active"
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
+        <span class="nav-icon" aria-hidden="true">O</span>
         Offres
       </a>
       @if (context.canDecideApplication()) {
@@ -48,40 +62,53 @@
           [routerLinkActiveOptions]="{ exact: false }"
           class="nav-link"
         >
+          <span class="nav-icon" aria-hidden="true">A</span>
           Candidatures (ATS)
         </a>
       }
+      <p class="nav-section-label">Compte</p>
       <a
         [routerLink]="routes.RECRUITER.SETTINGS"
         routerLinkActive="nav-active"
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
+        <span class="nav-icon" aria-hidden="true">P</span>
         Paramètres
       </a>
     </nav>
 
     <div class="sidebar-footer">
-      <a [routerLink]="routes.HOME" class="nav-link">Accueil</a>
+      <a [routerLink]="routes.HOME" class="nav-link nav-link-muted">Accueil</a>
       <button type="button" class="nav-link logout-btn" (click)="logout()">Déconnexion</button>
     </div>
   </aside>
 
   <main class="recruiter-main">
-    @if (context.profile()) {
-      <header class="recruiter-topbar">
-        <app-recruiter-notification-bell />
-      </header>
-    }
-    @if (context.loading()) {
-      <div class="loading-bar">Chargement...</div>
-    }
-    @if (context.profile()) {
-      <router-outlet />
-    } @else if (isOnboardingRoute()) {
-      <router-outlet />
-    } @else if (!context.loading()) {
-      <div class="loading-bar">Espace recruteur indisponible pour ce compte.</div>
-    }
+    <div class="recruiter-page-shell">
+      @if (context.profile()) {
+        <header class="recruiter-topbar">
+          <div>
+            <p class="topbar-kicker">Bienvenue</p>
+            <strong>{{ context.profile()?.jobTitle || 'Recruteur' }} · {{ context.company()?.name || 'Mon entreprise' }}</strong>
+          </div>
+          <div class="topbar-status">
+            <span class="topbar-status-dot"></span>
+            Espace actif
+          </div>
+          <app-recruiter-notification-bell />
+        </header>
+      }
+      @if (context.loading()) {
+        <div class="loading-bar">Chargement...</div>
+      }
+      @if (context.profile()) {
+        <router-outlet />
+      } @else if (isOnboardingRoute()) {
+        <router-outlet />
+      } @else if (!context.loading()) {
+        <div class="loading-bar">Espace recruteur indisponible pour ce compte.</div>
+      }
+    </div>
   </main>
 </div>

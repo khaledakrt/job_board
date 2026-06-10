@@ -8,6 +8,11 @@
 
 .page-header {
   margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 .page-header-row {
@@ -24,9 +29,9 @@
   max-width: 380px;
   padding: 0.75rem 0.9rem;
   border: 1px solid #e2e8f0;
-  border-radius: 0.85rem;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-radius: 1.15rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
 }
 
 .profile-progress-head {
@@ -104,8 +109,8 @@
 
 .onboarding-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 0.75rem;
+  grid-template-columns: 240px 1fr;
+  gap: 0.9rem;
   align-items: start;
 }
 
@@ -118,10 +123,12 @@
 
 .panel {
   border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  background: #fff;
-  padding: 0.9rem 1rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at top right, rgba(10, 102, 194, 0.05), transparent 16rem),
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  padding: 1rem 1.1rem;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
 }
 
 .panel-brand {
@@ -131,8 +138,8 @@
 
 .section-title {
   margin: 0 0 0.2rem;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 850;
   color: #0f172a;
 }
 
@@ -152,8 +159,11 @@
 .onboarding-form .form-label,
 .panel .form-label {
   margin-bottom: 0.2rem;
-  font-size: var(--onboarding-label-fs);
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 750;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .onboarding-form .form-input,
@@ -161,7 +171,15 @@
   padding: var(--onboarding-input-py) var(--onboarding-input-px);
   font-size: var(--onboarding-input-fs);
   line-height: 1.35;
-  border-radius: 0.5rem;
+  border-color: #d5dee9;
+  border-width: 1.5px;
+  border-radius: 0.62rem;
+}
+
+.onboarding-form .form-input:focus,
+.panel .form-input:focus {
+  border-color: #0a66c2;
+  box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.1);
 }
 
 .onboarding-form textarea.form-input {

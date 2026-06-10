@@ -14,6 +14,7 @@ const PERMISSION_META: {
   { key: 'canDecideApplication', label: 'Décider sur les candidatures' },
   { key: 'canEditCompany', label: 'Modifier l\'entreprise' },
 ];
+const TEAM_MEMBER_LIMIT = 10;
 
 @Component({
   selector: 'app-team-management',
@@ -29,6 +30,7 @@ export class TeamManagementComponent implements OnInit {
   readonly context = inject(RecruiterContextService);
 
   readonly permissionOptions = PERMISSION_META;
+  readonly teamLimit = TEAM_MEMBER_LIMIT;
 
   readonly members = signal<TeamMember[]>([]);
   readonly loading = signal(false);
@@ -83,6 +85,11 @@ export class TeamManagementComponent implements OnInit {
   }
 
   openInviteModal(): void {
+    if (this.members().length >= TEAM_MEMBER_LIMIT) {
+      this.errorMessage.set(`Limite atteinte : votre équipe ne peut pas dépasser ${TEAM_MEMBER_LIMIT} utilisateurs.`);
+      return;
+    }
+
     this.inviteForm.reset({
       email: '',
       jobTitle: '',
@@ -117,6 +124,11 @@ export class TeamManagementComponent implements OnInit {
   }
 
   async submitInvite(): Promise<void> {
+    if (this.members().length >= TEAM_MEMBER_LIMIT) {
+      this.errorMessage.set(`Limite atteinte : votre équipe ne peut pas dépasser ${TEAM_MEMBER_LIMIT} utilisateurs.`);
+      return;
+    }
+
     if (this.inviteForm.invalid) {
       this.inviteForm.markAllAsTouched();
       return;

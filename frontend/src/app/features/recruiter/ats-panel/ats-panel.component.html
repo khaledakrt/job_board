@@ -68,6 +68,11 @@
     Le Kanban affiche les {{ applications().length }} candidatures les plus récentes. Passez en vue liste ou filtrez par offre pour parcourir tout le pipeline.
   </div>
 }
+@if (viewMode() === 'list') {
+  <div class="alert alert-info ats-mobile-hint">
+    Vue liste recommandée sur mobile/tablette pour traiter les candidatures plus rapidement.
+  </div>
+}
 
 @if (loading()) {
   <p class="table-loading panel-card">Chargement des candidatures...</p>
@@ -76,6 +81,7 @@
     @for (column of columns(); track column.status) {
       <section
         class="kanban-column"
+        [class]="'kanban-column kanban-column-' + column.status"
         (dragover)="onDragOver($event)"
         (drop)="onDrop($event, column.status)"
       >
@@ -107,6 +113,10 @@
                 }
               </div>
               <p class="card-job">{{ app.job?.title || 'Offre' }}</p>
+              <div class="card-meta-line">
+                <span>{{ app.createdAt | date: 'dd/MM/yyyy' }}</span>
+                <span [class]="stageBadgeClass(app.status)">{{ stageLabel(app.status) }}</span>
+              </div>
               <div class="card-actions" (click)="$event.stopPropagation()">
                 <button type="button" class="card-btn" (click)="openPanel(app, 'profile')">Profil</button>
                 <button type="button" class="card-btn card-btn-cv" (click)="openPanel(app, 'cv')">CV</button>
@@ -503,22 +513,26 @@
       </section>
 
       <form [formGroup]="noteForm" (ngSubmit)="submitNote()" class="drawer-card">
-        <h3 class="drawer-card-title">Message au candidat</h3>
-        <textarea
-          class="form-input drawer-textarea"
-          rows="2"
-          formControlName="evaluationText"
-          placeholder="Message optionnel envoyé lors du prochain changement d’étape ou de note…"
-        ></textarea>
-        <p class="field-hint">Ce message part uniquement quand vous changez l’étape ou la note étoilée.</p>
+        <div class="followup-block followup-block-candidate">
+          <h3 class="drawer-card-title">Message au candidat</h3>
+          <textarea
+            class="form-input drawer-textarea"
+            rows="2"
+            formControlName="evaluationText"
+            placeholder="Message optionnel envoyé lors du prochain changement d’étape ou de note…"
+          ></textarea>
+          <p class="field-hint">Ce message part uniquement quand vous changez l’étape ou la note étoilée.</p>
+        </div>
 
-        <h3 class="drawer-card-title drawer-card-title-spaced">Nouvelle note interne</h3>
-        <textarea
-          class="form-input drawer-textarea"
-          rows="3"
-          formControlName="noteText"
-          placeholder="Note interne visible seulement par l’équipe recruteur…"
-        ></textarea>
+        <div class="followup-block followup-block-internal">
+          <h3 class="drawer-card-title">Nouvelle note interne</h3>
+          <textarea
+            class="form-input drawer-textarea"
+            rows="3"
+            formControlName="noteText"
+            placeholder="Note interne visible seulement par l’équipe recruteur…"
+          ></textarea>
+        </div>
         <button
           type="submit"
           class="btn-primary !w-full"

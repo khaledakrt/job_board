@@ -4,14 +4,135 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  padding: 1rem 1.15rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 .table-panel {
   border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  background: #fff;
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+}
+
+.members-grid {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.95rem;
+}
+
+.member-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) max-content;
+  gap: 0.95rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(90deg, rgba(10, 102, 194, 0.045), transparent 34%),
+    #fff;
+  transition: box-shadow 0.16s ease, transform 0.16s ease, border-color 0.16s ease;
+}
+
+.member-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  width: 0.25rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #0a66c2, #1d8fe8);
+}
+
+.member-card:hover {
+  border-color: #b3cce5;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+
+.member-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, #0a66c2, #1d8fe8);
+  color: #fff;
+  font-weight: 850;
+}
+
+.member-main {
+  min-width: 0;
+}
+
+.member-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.member-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.92rem;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.member-head p {
+  margin: 0.15rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.permission-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.permission-chip {
+  padding: 0.26rem 0.58rem;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #074484;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.permission-chip-empty {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.member-side {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+  align-self: stretch;
+  align-content: center;
+}
+
+.member-actions {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
 }
 
 .data-table {
@@ -48,18 +169,20 @@
 
 .badge {
   display: inline-block;
-  padding: 0.2rem 0.55rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 850;
   text-transform: capitalize;
   background: #e2e8f0;
   color: #334155;
+  white-space: nowrap;
 }
 
 .badge-owner {
-  background: #dbeafe;
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
   color: #074484;
+  border: 1px solid #bfdbfe;
 }
 
 .btn-text-danger {
@@ -87,17 +210,33 @@
 
 .modal-card {
   width: 100%;
-  max-width: 480px;
-  background: #fff;
-  border-radius: 1rem;
+  max-width: 540px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border-radius: 1.25rem;
   padding: 1.25rem;
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.modal-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header p {
+  margin: 0 0 0.2rem;
+  color: #0a66c2;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .modal-title {
   font-size: 1.125rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
 .modal-form {
@@ -108,8 +247,9 @@
 
 .permissions-fieldset {
   border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
+  border-radius: 0.95rem;
   padding: 0.75rem 1rem;
+  background: #f8fbff;
 }
 
 .checkbox-row {
@@ -119,6 +259,7 @@
   margin-top: 0.35rem;
   font-size: 0.875rem;
   color: #334155;
+  padding: 0.35rem 0;
 }
 
 .modal-actions {
@@ -145,4 +286,25 @@
 
 .btn-text-link:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .member-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .member-side {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    justify-items: start;
+    align-content: start;
+  }
+
+  .member-actions {
+    justify-content: flex-start;
+  }
+
+  .member-head {
+    flex-direction: column;
+  }
 }

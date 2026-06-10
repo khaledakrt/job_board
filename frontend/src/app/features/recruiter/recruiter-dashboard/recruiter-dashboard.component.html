@@ -1,7 +1,34 @@
-<div class="page-header">
-  <h1 class="page-title">Tableau de bord</h1>
-  <p class="page-subtitle">Vue d’ensemble de vos recrutements.</p>
-</div>
+<section class="dashboard-hero">
+  <div class="hero-copy">
+    <span class="hero-kicker">Tableau de bord recruteur</span>
+    <h1>{{ context.company()?.name || 'Votre espace recrutement' }}</h1>
+    <p>
+      Pilotez vos offres, suivez les candidatures et gardez votre profil entreprise prêt pour les candidats.
+    </p>
+    <div class="hero-actions">
+      @if (context.canPostJob()) {
+        <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-5">Créer une offre</a>
+      }
+      @if (context.canDecideApplication()) {
+        <a [routerLink]="routes.RECRUITER.ATS" class="btn-secondary !w-auto px-5">Traiter les candidatures</a>
+      }
+    </div>
+  </div>
+  <aside class="hero-status-card">
+    <span class="status-label">Profil entreprise</span>
+    <strong>{{ context.hasCompany() ? 'Actif' : 'À compléter' }}</strong>
+    <p>
+      @if (context.hasCompany()) {
+        Votre société est prête à publier et recevoir des candidatures.
+      } @else {
+        Complétez la fiche entreprise pour débloquer l’espace recruteur.
+      }
+    </p>
+    <a [routerLink]="routes.RECRUITER.ONBOARDING" class="link-primary">
+      {{ context.hasCompany() ? 'Voir le profil' : 'Compléter maintenant' }}
+    </a>
+  </aside>
+</section>
 
 @if (!context.hasCompany()) {
   <div class="alert alert-error">
@@ -18,15 +45,52 @@
 
 <div class="quick-actions">
   @if (context.canPostJob()) {
-    <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">+ Créer une offre</a>
+    <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">
+      <span>Publier</span>
+      <strong>Créer une offre</strong>
+      <small>Rédigez une annonce complète avec quiz optionnel.</small>
+    </a>
   }
   @if (context.canDecideApplication()) {
-    <a [routerLink]="routes.RECRUITER.ATS" class="quick-card">Voir les candidatures</a>
+    <a [routerLink]="routes.RECRUITER.ATS" class="quick-card quick-card-accent">
+      <span>Pipeline</span>
+      <strong>Voir les candidatures</strong>
+      <small>Suivez les profils par étape et par offre.</small>
+    </a>
   }
   @if (context.isOwner()) {
-    <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">Gérer l’équipe</a>
+    <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">
+      <span>Équipe</span>
+      <strong>Gérer l’équipe</strong>
+      <small>Invitez des recruteurs et ajustez leurs droits.</small>
+    </a>
   }
 </div>
+
+<section class="next-actions panel-card">
+  <div>
+    <p class="next-actions-kicker">Prochaines actions</p>
+    <h2>Priorités recommandées</h2>
+  </div>
+  <div class="next-actions-grid">
+    <a [routerLink]="routes.RECRUITER.ONBOARDING" class="next-action-item">
+      <strong>Profil société</strong>
+      <span>Gardez votre vitrine employeur complète.</span>
+    </a>
+    @if (context.canPostJob()) {
+      <a [routerLink]="routes.RECRUITER.JOBS" class="next-action-item">
+        <strong>Visibilité offres</strong>
+        <span>Vérifiez les annonces actives et expirées.</span>
+      </a>
+    }
+    @if (context.canDecideApplication()) {
+      <a [routerLink]="routes.RECRUITER.ATS" class="next-action-item">
+        <strong>Candidatures</strong>
+        <span>Avancez les profils en attente dans l’ATS.</span>
+      </a>
+    }
+  </div>
+</section>
 
 @if (loading()) {
   <p class="table-loading">Actualisation des indicateurs...</p>

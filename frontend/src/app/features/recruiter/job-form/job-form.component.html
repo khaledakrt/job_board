@@ -12,12 +12,18 @@
 @if (loadingJob()) {
   <p class="table-loading panel-card">Chargement de l’offre...</p>
 }
+@if (!context.canPostJob()) {
+  <div class="alert alert-info">
+    Consultation seule : vous pouvez lire cette offre, mais votre rôle ne permet pas de la créer ou de la modifier.
+  </div>
+}
 
 @if (!loadingJob()) {
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="job-form panel" novalidate>
+  <fieldset class="form-fieldset" [disabled]="saving() || !context.canPostJob()">
   <div class="form-grid">
     <div class="form-field form-field-inline span-2">
-      <label class="form-label" for="title" title="Titre du poste">Ti.</label>
+      <label class="form-label" for="title">Titre</label>
       <div class="form-field-body">
         <input
           id="title"
@@ -29,7 +35,7 @@
     </div>
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="contractType" title="Type de contrat">Ct.</label>
+      <label class="form-label" for="contractType">Contrat</label>
       <div class="form-field-body">
         <select id="contractType" class="form-input" formControlName="contractType">
           @for (type of contractTypes; track type) {
@@ -40,7 +46,7 @@
     </div>
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="remoteType" title="Télétravail">Tt.</label>
+      <label class="form-label" for="remoteType">Mode</label>
       <div class="form-field-body">
         <select id="remoteType" class="form-input" formControlName="remoteType">
           @for (type of remoteTypes; track type) {
@@ -51,7 +57,7 @@
     </div>
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="location" title="Lieu de travail">Li.</label>
+      <label class="form-label" for="location">Lieu</label>
       <div class="form-field-body">
         <input
           id="location"
@@ -64,14 +70,14 @@
 
     @if (isExpiredJob()) {
       <div class="form-field form-field-inline span-2">
-        <label class="form-label" title="Date d'expiration">Ex.</label>
+        <label class="form-label">Expiration</label>
         <div class="form-field-body">
           <p class="field-readonly">Offre expirée le {{ form.controls.expiresAt.value | date: 'dd/MM/yyyy' }}</p>
         </div>
       </div>
     } @else {
       <div class="form-field form-field-inline">
-        <label class="form-label" for="expiresAt" title="Date d'expiration">Ex.</label>
+        <label class="form-label" for="expiresAt">Expiration</label>
         <div class="form-field-body">
           <input id="expiresAt" type="date" class="form-input" formControlName="expiresAt" />
           <p class="field-hint">« Expirée » à 23h59 ce jour-là.</p>
@@ -79,7 +85,7 @@
       </div>
 
       <div class="form-field form-field-inline">
-        <label class="form-label" for="status" title="Statut de l'offre">St.</label>
+        <label class="form-label" for="status">Statut</label>
         <div class="form-field-body">
           <select id="status" class="form-input" formControlName="status">
             @for (status of jobStatuses; track status) {
@@ -92,7 +98,7 @@
     }
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="experienceYears" title="Expérience minimum">Xp.</label>
+      <label class="form-label" for="experienceYears">Exp.</label>
       <div class="form-field-body">
         <input
           id="experienceYears"
@@ -122,7 +128,7 @@
     </div>
 
     <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="languageInput" title="Langues">Lg.</label>
+      <label class="form-label" for="languageInput">Langues</label>
       <div class="form-field-body">
         <div class="tag-input-row">
           <input
@@ -154,7 +160,7 @@
     </div>
 
     <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="description" title="Description du poste">De.</label>
+      <label class="form-label" for="description">Description</label>
       <div class="form-field-body">
         <app-rich-text-editor
           editorId="description"
@@ -168,7 +174,7 @@
     </div>
 
     <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="requirements" title="Profil recherché">Pf.</label>
+      <label class="form-label" for="requirements">Profil</label>
       <div class="form-field-body">
         <app-rich-text-editor
           editorId="requirements"
@@ -179,7 +185,7 @@
     </div>
 
     <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="tagInput" title="Compétences techniques">Sk.</label>
+      <label class="form-label" for="tagInput">Skills</label>
       <div class="form-field-body">
         <div class="tag-input-row">
           <input
@@ -204,7 +210,7 @@
     </div>
 
     <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="benefitInput" title="Avantages">Av.</label>
+      <label class="form-label" for="benefitInput">Avantages</label>
       <div class="form-field-body">
         <div class="tag-input-row">
           <input
@@ -266,6 +272,7 @@
       }
     </section>
   </div>
+  </fieldset>
 
   <div class="form-actions">
     <button type="submit" class="btn-primary !w-auto" [disabled]="saving() || !context.canPostJob()">
