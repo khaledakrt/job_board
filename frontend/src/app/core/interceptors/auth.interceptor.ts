@@ -1,12 +1,14 @@
 import {
   HttpErrorResponse,
+  HttpRequest,
   HttpInterceptorFn,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, filter, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 let refreshRequestInFlight = false;
+const refreshedToken$ = new BehaviorSubject<string | null>(null);
 
 function isAuthBypassUrl(url: string): boolean {
   return (
@@ -20,20 +22,26 @@ function isAuthBypassUrl(url: string): boolean {
   );
 }
 
+function withAuthHeader(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
+  const baseReq = req.clone({ withCredentials: true });
+
+  if (!token) {
+    return baseReq;
+  }
+
+  return baseReq.clone({
+    setHeaders: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const accessToken = authService.accessToken();
   const skipAuthHeader = isAuthBypassUrl(req.url);
 
-  let authReq = req.clone({ withCredentials: true });
-
-  if (accessToken && !skipAuthHeader) {
-    authReq = authReq.clone({
-      setHeaders: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-  }
+  const authReq = withAuthHeader(req, !skipAuthHeader ? accessToken : null);
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -42,33 +50,34 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (refreshRequestInFlight) {
-        return throwError(() => error);
+        return refreshedToken$.pipe(
+          filter((token): token is string => Boolean(token)),
+          take(1),
+          switchMap((token) => next(withAuthHeader(req, token)))
+        );
       }
 
       refreshRequestInFlight = true;
+      refreshedToken$.next(null);
 
       return authService.refreshToken().pipe(
         switchMap((response) => {
           refreshRequestInFlight = false;
 
           if (!response.data?.accessToken) {
+            refreshedToken$.next(null);
             authService.logout();
             return throwError(() => error);
           }
 
           authService.setSession(response.data.accessToken, response.data.user);
+          refreshedToken$.next(response.data.accessToken);
 
-          const retryReq = req.clone({
-            withCredentials: true,
-            setHeaders: {
-              Authorization: `Bearer ${response.data.accessToken}`,
-            },
-          });
-
-          return next(retryReq);
+          return next(withAuthHeader(req, response.data.accessToken));
         }),
         catchError((refreshError) => {
           refreshRequestInFlight = false;
+          refreshedToken$.next(null);
           authService.logout();
           return throwError(() => refreshError);
         })
