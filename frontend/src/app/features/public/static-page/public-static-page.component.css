@@ -99,6 +99,38 @@
   color: #64748b;
 }
 
+.static-contact-direct {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.65rem;
+  align-items: center;
+  margin: 0 0 1.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+
+.static-contact-direct-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1d4ed8;
+}
+
+.static-contact-direct-link {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.static-contact-direct-link:hover {
+  color: #0a66c2;
+  text-decoration: underline;
+}
+
 .static-contact-form {
   display: flex;
   flex-direction: column;

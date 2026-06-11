@@ -88,6 +88,7 @@ export class PublicStaticPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly contactService = inject(PublicContactService);
 
+  readonly contactEmail = 'contact@tun-job-board.com';
   readonly pageId = this.route.snapshot.data['pageId'] as string;
   readonly content = STATIC_PAGES[this.pageId] ?? STATIC_PAGES['contact'];
   readonly isContactPage = this.pageId === 'contact';

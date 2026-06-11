@@ -12,6 +12,10 @@
           <p class="static-page-block-hint">
             Votre message sera envoyé à notre équipe. Nous vous répondons en général sous 48 h ouvrées.
           </p>
+          <div class="static-contact-direct">
+            <span class="static-contact-direct-label">Adresse directe</span>
+            <a [href]="'mailto:' + contactEmail" class="static-contact-direct-link">{{ contactEmail }}</a>
+          </div>
 
           @if (submitSuccess(); as successMsg) {
             <p class="static-form-alert static-form-alert-success" role="status">{{ successMsg }}</p>
