@@ -31,6 +31,13 @@ const DRAWER_WIDTH_STORAGE_KEY = 'recruiter-ats-drawer-width';
 const DRAWER_MIN_WIDTH_PX = 380;
 const DRAWER_MAX_WIDTH_PX = 920;
 const DRAWER_DEFAULT_WIDTH_PX = 520;
+const ALLOWED_STATUS_TRANSITIONS: Record<ApplicationStatus, ReadonlySet<ApplicationStatus>> = {
+  applied: new Set(['applied', 'screening', 'interview', 'rejected']),
+  screening: new Set(['screening', 'interview', 'offer', 'rejected']),
+  interview: new Set(['interview', 'offer', 'rejected']),
+  offer: new Set(['offer', 'rejected']),
+  rejected: new Set(['rejected']),
+};
 
 @Component({
   selector: 'app-ats-panel',
@@ -300,6 +307,11 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   async onListStatusChange(app: Application, event: Event): Promise<void> {
     const status = (event.target as HTMLSelectElement).value as ApplicationStatus;
     if (!this.context.canDecideApplication() || app.status === status) return;
+    if (!this.canMoveToStatus(app.status, status)) {
+      this.errorMessage.set('Transition de statut non autorisée pour cette candidature.');
+      (event.target as HTMLSelectElement).value = app.status;
+      return;
+    }
 
     const ok = await this.confirmDialog.confirm({
       title: 'Changer l\'étape',
@@ -377,6 +389,10 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
     const app = this.applications().find((a) => a.id === applicationId);
     if (!app || app.status === status) return;
+    if (!this.canMoveToStatus(app.status, status)) {
+      this.errorMessage.set('Transition de statut non autorisée pour cette candidature.');
+      return;
+    }
 
     const ok = await this.confirmDialog.confirm({
       title: 'Changer l\'étape',
@@ -570,6 +586,10 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   async moveToStatus(status: ApplicationStatus): Promise<void> {
     const selected = this.selectedApplication();
     if (!selected || selected.status === status) return;
+    if (!this.canMoveToStatus(selected.status, status)) {
+      this.errorMessage.set('Transition de statut non autorisée pour cette candidature.');
+      return;
+    }
 
     const ok = await this.confirmDialog.confirm({
       title: 'Changer l\'étape',
@@ -583,6 +603,14 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
   statusChangeMessage(app: Application, newStatus: ApplicationStatus): string {
     return `${this.candidateName(app)} : « ${this.statusLabels[app.status]} » → « ${this.statusLabels[newStatus]} » ?`;
+  }
+
+  canMoveToStatus(currentStatus: ApplicationStatus, targetStatus: ApplicationStatus): boolean {
+    return ALLOWED_STATUS_TRANSITIONS[currentStatus]?.has(targetStatus) ?? false;
+  }
+
+  stageColumnsFor(currentStatus: ApplicationStatus): { status: ApplicationStatus; label: string }[] {
+    return this.stageColumns.filter((column) => this.canMoveToStatus(currentStatus, column.status));
   }
 
   updateStatus(applicationId: string, status: ApplicationStatus, rating: number | null): void {

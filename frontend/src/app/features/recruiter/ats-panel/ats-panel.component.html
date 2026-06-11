@@ -170,7 +170,7 @@
                     (change)="onListStatusChange(app, $event)"
                     [attr.aria-label]="'Changer l\'étape de ' + candidateName(app)"
                   >
-                    @for (col of stageColumns; track col.status) {
+                    @for (col of stageColumnsFor(app.status); track col.status) {
                       <option [value]="col.status">{{ col.label }}</option>
                     }
                   </select>
@@ -503,7 +503,7 @@
               type="button"
               class="status-chip"
               [class.status-chip-active]="selected.status === status"
-              [disabled]="!context.canDecideApplication() || saving()"
+              [disabled]="!context.canDecideApplication() || saving() || !canMoveToStatus(selected.status, status)"
               (click)="moveToStatus(status)"
             >
               {{ statusLabels[status] }}
