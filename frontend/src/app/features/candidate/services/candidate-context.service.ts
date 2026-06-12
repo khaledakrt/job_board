@@ -5,7 +5,7 @@ import {
   computeProfileCompletion,
   profileNeedsAttention,
 } from '../../../core/utils/candidate-profile.util';
-import { tap } from 'rxjs';
+import { catchError, of, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class CandidateContextService {
@@ -27,11 +27,12 @@ export class CandidateContextService {
           this.hasProfile.set(!!res.data);
           this.loading.set(false);
         },
-        error: () => {
-          this.profile.set(null);
-          this.hasProfile.set(false);
-          this.loading.set(false);
-        },
+      }),
+      catchError(() => {
+        this.profile.set(null);
+        this.hasProfile.set(false);
+        this.loading.set(false);
+        return of({ success: true, data: null });
       })
     );
   }

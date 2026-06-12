@@ -21,7 +21,11 @@ export class CandidateOnboardingComponent {
 
   visible(): boolean {
     const p = this.context.profile();
-    return this.context.hasProfile() && !p?.onboardingCompletedAt;
+    return !this.context.loading() && (!this.context.hasProfile() || !p?.onboardingCompletedAt);
+  }
+
+  needsProfileCreation(): boolean {
+    return !this.context.hasProfile();
   }
 
   next(): void {
@@ -33,10 +37,12 @@ export class CandidateOnboardingComponent {
   }
 
   skip(): void {
+    if (this.needsProfileCreation()) return;
     this.complete();
   }
 
   complete(): void {
+    if (this.needsProfileCreation()) return;
     this.saving.set(true);
     this.profileService.updateProfile({ onboardingCompleted: true }).subscribe({
       next: (res) => {

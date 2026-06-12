@@ -32,6 +32,31 @@
   line-height: 1.5;
 }
 
+.onboarding-checklist {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-checklist li {
+  position: relative;
+  padding-left: 1.35rem;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.onboarding-checklist li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #ff9800;
+  font-weight: 800;
+}
+
 .onboarding-link {
   font-weight: 700;
   color: #0a66c2;
