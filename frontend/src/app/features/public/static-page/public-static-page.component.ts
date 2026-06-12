@@ -19,57 +19,117 @@ const STATIC_PAGES: Record<string, StaticPageContent> = {
   },
   terms: {
     title: 'Termes et conditions',
-    lead: 'Conditions générales d’utilisation de la plateforme JobBoard.',
+    lead: 'Conditions générales d’utilisation de Tun Job Board, plateforme dédiée à la mise en relation entre talents, recruteurs, centres de formation et établissements.',
     sections: [
       {
         heading: '1. Objet',
         paragraphs: [
-          'JobBoard met en relation candidats et recruteurs. L’inscription implique l’acceptation des présentes conditions.',
+          'Tun Job Board propose un espace numérique destiné à faciliter la recherche d’emploi, la publication d’offres, le suivi des candidatures, la découverte de formations et la mise en relation avec des acteurs professionnels.',
+          'L’accès à la plateforme, la création d’un compte ou l’utilisation de ses services impliquent l’acceptation pleine et entière des présentes conditions générales d’utilisation.',
         ],
       },
       {
-        heading: '2. Comptes utilisateurs',
+        heading: '2. Accès à la plateforme et comptes utilisateurs',
         paragraphs: [
-          'Chaque utilisateur est responsable de la confidentialité de ses identifiants et des informations publiées sur son profil.',
-          'JobBoard se réserve le droit de suspendre un compte en cas de non-respect des règles ou de comportement abusif.',
+          'Certains services sont accessibles librement, notamment la consultation de pages publiques. D’autres fonctionnalités nécessitent la création d’un compte candidat, recruteur, administrateur ou fournisseur de catalogue selon le profil de l’utilisateur.',
+          'Chaque utilisateur s’engage à fournir des informations exactes, complètes et à jour. Il demeure responsable de la confidentialité de ses identifiants, de l’activité réalisée depuis son compte et des informations publiées sur la plateforme.',
+          'Tun Job Board peut suspendre ou restreindre l’accès à un compte en cas d’utilisation abusive, de tentative de fraude, de publication de contenu trompeur ou de non-respect des présentes conditions.',
         ],
       },
       {
-        heading: '3. Données personnelles',
+        heading: '3. Obligations des candidats',
         paragraphs: [
-          'Les données sont traitées conformément à la réglementation en vigueur (RGPD). Vous pouvez exercer vos droits en nous contactant.',
+          'Les candidats s’engagent à publier un profil fidèle à leur parcours, leurs compétences et leurs expériences. Les CV, informations de contact, préférences et candidatures doivent être utilisés uniquement dans un cadre professionnel.',
+          'Toute candidature envoyée via la plateforme doit correspondre à une intention réelle de postuler. Les comportements automatisés, répétitifs ou visant à détourner le fonctionnement normal du service sont interdits.',
         ],
       },
       {
-        heading: '4. Évolution du service',
+        heading: '4. Obligations des recruteurs et organismes',
         paragraphs: [
-          'Les fonctionnalités peuvent évoluer. Les conditions peuvent être mises à jour ; la date de dernière révision sera indiquée sur cette page.',
+          'Les recruteurs, centres de formation et établissements privés s’engagent à publier des informations exactes, licites et suffisamment détaillées. Les offres, formations, événements ou annonces ne doivent pas contenir de contenu discriminatoire, mensonger, frauduleux ou contraire à la réglementation applicable.',
+          'Les informations obtenues via la plateforme, notamment les candidatures et coordonnées de candidats, doivent être utilisées uniquement pour les finalités professionnelles prévues et dans le respect de la confidentialité.',
+        ],
+      },
+      {
+        heading: '5. Données personnelles et confidentialité',
+        paragraphs: [
+          'Tun Job Board collecte et traite les données nécessaires au fonctionnement du service : gestion des comptes, profils, candidatures, communications, sécurité et amélioration de l’expérience utilisateur.',
+          'Les utilisateurs peuvent demander l’accès, la rectification ou la suppression de leurs données en contactant l’équipe à l’adresse contact@tun-job-board.com. Les données sensibles comme les CV et documents de candidature sont protégées par des accès authentifiés lorsque cela est nécessaire.',
+        ],
+      },
+      {
+        heading: '6. Disponibilité, sécurité et évolution du service',
+        paragraphs: [
+          'Tun Job Board met en œuvre des moyens raisonnables pour assurer la disponibilité, la sécurité et la performance de la plateforme. Des interruptions temporaires peuvent toutefois intervenir pour maintenance, mise à jour ou incident technique.',
+          'Les fonctionnalités, interfaces et règles de fonctionnement peuvent évoluer afin d’améliorer le service, renforcer la sécurité ou répondre aux besoins des utilisateurs.',
+        ],
+      },
+      {
+        heading: '7. Responsabilité',
+        paragraphs: [
+          'Tun Job Board agit comme plateforme de mise en relation et d’outillage. La décision de recruter, de postuler, de contacter un profil ou de conclure une collaboration relève exclusivement des utilisateurs concernés.',
+          'La plateforme ne garantit pas l’obtention d’un emploi, d’un recrutement, d’une inscription ou d’un partenariat. Chaque utilisateur reste responsable de ses échanges, décisions et engagements professionnels.',
+        ],
+      },
+      {
+        heading: '8. Contact et signalement',
+        paragraphs: [
+          'Pour toute question relative aux présentes conditions, une demande administrative ou le signalement d’un contenu problématique, les utilisateurs peuvent contacter l’équipe via la page Contact ou par e-mail à administration@tun-job-board.com.',
+          'Dernière mise à jour : juin 2026.',
         ],
       },
     ],
   },
   about: {
     title: 'Qui sommes-nous',
-    lead: 'JobBoard simplifie le recrutement pour les candidats comme pour les entreprises.',
+    lead: 'Tun Job Board est une plateforme tunisienne pensée pour rapprocher les talents, les recruteurs et les acteurs de la formation autour d’un parcours simple, fiable et professionnel.',
     sections: [
       {
         heading: 'Notre mission',
         paragraphs: [
-          'Nous voulons rendre la recherche d’emploi et le recrutement plus transparents, plus rapides et plus humains.',
-          'Candidats et recruteurs disposent d’un même espace : offres, candidatures, quiz de présélection et ATS intégré.',
+          'Notre mission est de rendre l’accès aux opportunités professionnelles plus clair, plus rapide et plus équitable. Nous voulons offrir aux candidats un espace structuré pour valoriser leurs compétences, suivre leurs candidatures et découvrir des opportunités pertinentes.',
+          'Nous accompagnons également les recruteurs avec des outils concrets pour publier des offres, organiser les candidatures, présélectionner les profils et piloter leur processus de recrutement avec plus d’efficacité.',
         ],
       },
       {
-        heading: 'Ce que nous proposons',
+        heading: 'Une plateforme pour l’écosystème tunisien',
         paragraphs: [
-          'Aux candidats : recherche d’offres, candidature guidée, alertes et suivi des dossiers.',
-          'Aux recruteurs : page employeur, publication d’offres enrichies, quiz technique et pipeline de recrutement.',
+          'Tun Job Board s’adresse aux candidats, aux entreprises, aux cabinets de recrutement, aux centres de formation et aux établissements privés. La plateforme centralise les offres d’emploi, les candidatures, les formations, les événements et les publications utiles à l’évolution professionnelle.',
+          'Notre objectif est de créer un point de rencontre fiable entre les besoins du marché, les compétences disponibles et les parcours de formation qui permettent de progresser.',
         ],
       },
       {
-        heading: 'Notre équipe',
+        heading: 'Ce que nous apportons aux candidats',
         paragraphs: [
-          'JobBoard est développé et maintenu par une équipe passionnée par l’emploi et la tech. Pour nous joindre, utilisez la page Contact.',
+          'Les candidats peuvent créer leur profil, ajouter leur CV, rechercher des offres, postuler, sauvegarder des opportunités et suivre l’évolution de leurs candidatures depuis un tableau de bord dédié.',
+          'La plateforme met l’accent sur la lisibilité du parcours candidat : informations claires, alertes, suivi des statuts et accès à des contenus de formation ou d’orientation utiles.',
+        ],
+      },
+      {
+        heading: 'Ce que nous apportons aux recruteurs',
+        paragraphs: [
+          'Les recruteurs disposent d’un espace professionnel pour présenter leur entreprise, publier des offres enrichies, gérer les candidatures, collaborer avec leur équipe et structurer leur pipeline de recrutement.',
+          'Des fonctionnalités comme les quiz de présélection, les notes internes, les statuts de candidature et les notifications permettent de gagner du temps tout en améliorant la qualité du suivi.',
+        ],
+      },
+      {
+        heading: 'Formation, établissements et orientation',
+        paragraphs: [
+          'Tun Job Board intègre aussi les centres de formation et établissements privés afin de donner plus de visibilité aux programmes, formations, événements, journées portes ouvertes et annonces importantes.',
+          'Cette dimension permet de relier l’emploi, la montée en compétences et l’orientation, trois éléments essentiels pour soutenir l’employabilité et la croissance professionnelle.',
+        ],
+      },
+      {
+        heading: 'Nos engagements',
+        paragraphs: [
+          'Nous privilégions une expérience simple, sécurisée et professionnelle. Les informations sensibles, comme les CV et les données de candidature, sont traitées avec attention et protégées par des règles d’accès adaptées.',
+          'Nous améliorons continuellement la plateforme pour offrir un service plus rapide, plus clair et plus utile aux utilisateurs, tout en gardant une approche humaine du recrutement.',
+        ],
+      },
+      {
+        heading: 'Nous contacter',
+        paragraphs: [
+          'Pour une question, une demande professionnelle, un partenariat ou une suggestion d’amélioration, vous pouvez nous écrire via la page Contact ou à l’adresse contact@tun-job-board.com.',
         ],
       },
     ],

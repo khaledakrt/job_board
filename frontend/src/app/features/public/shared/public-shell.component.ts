@@ -4,11 +4,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
 import {
-  PUBLIC_FOOTER_INFO,
-  PUBLIC_FOOTER_NAV,
   PUBLIC_MAIN_NAV_PRIMARY,
   PUBLIC_MAIN_NAV_SECONDARY,
-  PUBLIC_SOCIAL_LINKS,
 } from './public-nav.constant';
 
 @Component({
@@ -21,12 +18,8 @@ import {
 export class PublicShellComponent {
   readonly authService = inject(AuthService);
   readonly routes = APP_ROUTES;
-  readonly year = new Date().getFullYear();
   readonly mainNavPrimary = PUBLIC_MAIN_NAV_PRIMARY;
   readonly mainNavSecondary = PUBLIC_MAIN_NAV_SECONDARY;
-  readonly footerNav = PUBLIC_FOOTER_NAV;
-  readonly footerInfo = PUBLIC_FOOTER_INFO;
-  readonly socialLinks = PUBLIC_SOCIAL_LINKS;
 
   readonly workspaceLabel = computed(() => {
     const role = this.authService.user()?.role;

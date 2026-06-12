@@ -1,0 +1,57 @@
+<footer class="global-footer" aria-label="Pied de page global">
+  <div class="global-footer-inner">
+    <section class="global-footer-brand" aria-label="JobBoard">
+      <div class="global-footer-logo">
+        <span class="global-footer-logo-mark">JB</span>
+        <span class="global-footer-logo-text">JobBoard</span>
+      </div>
+      <p class="global-footer-tagline">
+        Recrutement simplifié pour candidats, recruteurs, centres de formation et établissements.
+      </p>
+      <div class="global-footer-socials" aria-label="Réseaux sociaux">
+        @for (social of socialLinks; track social.label) {
+          <a [href]="social.href" target="_blank" rel="noopener noreferrer" class="global-social-link">
+            <span class="global-social-icon" aria-hidden="true">{{ social.label[0] }}</span>
+            <span>{{ social.label }}</span>
+          </a>
+        }
+      </div>
+    </section>
+
+    <nav class="global-footer-col" aria-label="Navigation du site">
+      <h2 class="global-footer-title">Navigation</h2>
+      <ul class="global-footer-list">
+        @for (item of navigationLinks; track item.label) {
+          <li>
+            <a [routerLink]="item.route" [fragment]="item.fragment">{{ item.label }}</a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <nav class="global-footer-col" aria-label="Informations">
+      <h2 class="global-footer-title">Informations</h2>
+      <ul class="global-footer-list">
+        @for (item of infoLinks; track item.label) {
+          <li>
+            <a [routerLink]="item.route">{{ item.label }}</a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <section class="global-footer-col global-footer-contact" aria-label="Contacts">
+      <h2 class="global-footer-title">Contacts</h2>
+      <ul class="global-footer-contact-list">
+        @for (contact of contacts; track contact.email) {
+          <li>
+            <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
+            <span>{{ contact.role }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <p class="global-footer-copy">© {{ year }} JobBoard. Tous droits réservés.</p>
+  </div>
+</footer>

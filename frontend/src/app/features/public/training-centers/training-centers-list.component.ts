@@ -9,6 +9,7 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { TRAINING_DELIVERY_OPTIONS, deliveryModeLabel } from '../shared/catalog.constants';
 import { AuthService } from '../../../core/services/auth.service';
+import { toPlainText } from '../shared/plain-text.util';
 
 @Component({
   selector: 'app-training-centers-list',
@@ -79,6 +80,10 @@ export class TrainingCentersListComponent implements OnInit {
 
   logoUrl(url: string | null): string | null {
     return resolveUploadUrl(url);
+  }
+
+  plainDescription(value: string | null | undefined): string {
+    return toPlainText(value);
   }
 
   publicationCount(center: TrainingCenterCard): number {

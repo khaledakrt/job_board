@@ -9,5 +9,10 @@
     </div>
   </div>
 }
-<router-outlet />
+<div class="app-route-content">
+  <router-outlet />
+</div>
+@if (!authService.isAuthenticated()) {
+  <app-global-footer />
+}
 <app-confirm-dialog />

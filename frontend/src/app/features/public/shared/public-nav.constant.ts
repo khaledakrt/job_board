@@ -51,7 +51,6 @@ export const PUBLIC_STATIC_PAGES: PublicNavItem[] = [
 ];
 
 export const PUBLIC_SOCIAL_LINKS = [
-  { label: 'Twitter', href: 'https://twitter.com/', icon: 'twitter' },
-  { label: 'Facebook', href: 'https://facebook.com/', icon: 'facebook' },
-  { label: 'LinkedIn', href: 'https://linkedin.com/', icon: 'linkedin' },
+  { label: 'Facebook', href: 'https://www.facebook.com/tun.job.board', icon: 'facebook' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/tunisian-job-board/', icon: 'linkedin' },
 ] as const;

@@ -93,8 +93,8 @@
                     <span class="catalog-tag">{{ item.city }}</span>
                   }
                 </div>
-                @if (item.shortDescription) {
-                  <p class="catalog-card-desc">{{ item.shortDescription }}</p>
+                @if (plainDescription(item.shortDescription); as description) {
+                  <p class="catalog-card-desc">{{ description }}</p>
                 }
                 <span class="catalog-card-meta catalog-card-meta--strong">Fiche vérifiée après validation admin</span>
               </div>

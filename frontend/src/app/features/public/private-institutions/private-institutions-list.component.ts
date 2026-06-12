@@ -10,6 +10,7 @@ import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { INSTITUTION_TYPE_OPTIONS, institutionTypeLabel } from '../shared/catalog.constants';
 import { AuthService } from '../../../core/services/auth.service';
 import { PaginationMeta } from '../../../core/models/pagination.model';
+import { toPlainText } from '../shared/plain-text.util';
 
 @Component({
   selector: 'app-private-institutions-list',
@@ -82,5 +83,9 @@ export class PrivateInstitutionsListComponent implements OnInit {
 
   logoUrl(url: string | null): string | null {
     return resolveUploadUrl(url);
+  }
+
+  plainDescription(value: string | null | undefined): string {
+    return toPlainText(value);
   }
 }

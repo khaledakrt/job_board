@@ -92,8 +92,8 @@
                     <span class="catalog-tag">{{ deliveryModeLabel(c.deliveryMode) }}</span>
                   }
                 </div>
-                @if (c.shortDescription) {
-                  <p class="catalog-card-desc">{{ c.shortDescription }}</p>
+                @if (plainDescription(c.shortDescription); as description) {
+                  <p class="catalog-card-desc">{{ description }}</p>
                 }
                 <p class="catalog-card-stat">{{ publicationCount(c) }} publication(s)</p>
               </div>
