@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { APP_ROUTES } from '../../../../core/constants/routes.constant';
 import { CandidateContextService } from '../../services/candidate-context.service';
 import { CandidateProfileService } from '../../services/candidate-profile.service';
@@ -14,6 +14,7 @@ import { CandidateProfileService } from '../../services/candidate-profile.servic
 export class CandidateOnboardingComponent {
   private readonly context = inject(CandidateContextService);
   private readonly profileService = inject(CandidateProfileService);
+  private readonly router = inject(Router);
 
   readonly routes = APP_ROUTES;
   readonly step = signal(1);
@@ -21,11 +22,16 @@ export class CandidateOnboardingComponent {
 
   visible(): boolean {
     const p = this.context.profile();
+    if (this.needsProfileCreation() && this.isProfilePage()) return false;
     return !this.context.loading() && (!this.context.hasProfile() || !p?.onboardingCompletedAt);
   }
 
   needsProfileCreation(): boolean {
     return !this.context.hasProfile();
+  }
+
+  private isProfilePage(): boolean {
+    return this.router.url.split('?')[0] === APP_ROUTES.CANDIDATE.PROFILE;
   }
 
   next(): void {
