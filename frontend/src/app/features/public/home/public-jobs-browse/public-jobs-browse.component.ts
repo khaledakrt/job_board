@@ -527,6 +527,5 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
     this.catalogJobs.set([]);
     this.previewPagination.set(null);
     this.catalogPagination.set(null);
-    console.error(err);
   }
 }

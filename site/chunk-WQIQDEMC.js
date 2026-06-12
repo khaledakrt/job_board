@@ -1,1 +1,0 @@
-function i(){let t=new Date;return t.setDate(t.getDate()+60),a(t)}function a(t){let e=typeof t=="string"?new Date(t):t,n=e.getFullYear(),r=String(e.getMonth()+1).padStart(2,"0"),o=String(e.getDate()).padStart(2,"0");return`${n}-${r}-${o}`}function s(t,e=Date.now()){let n=new Date(t).getTime()-e;return Math.max(0,Math.ceil(n/(1e3*60*60*24)))}export{i as a,a as b,s as c};

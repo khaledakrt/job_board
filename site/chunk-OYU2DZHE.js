@@ -1,1 +1,0 @@
-import{g as r}from"./chunk-GHB6I4K2.js";function a(e){return e?r[e]??e:"\u2014"}function l(e){let n=e.experienceYears;return n==null?null:n===0?"D\xE9butant accept\xE9":n===1?"1 an d'exp\xE9rience minimum":`${n} ans d'exp\xE9rience minimum`}function u(e){return e.salaryLabel?.trim()||null}export{a,l as b,u as c};

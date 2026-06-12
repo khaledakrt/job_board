@@ -9,6 +9,7 @@ node_modules/
 
 # Build & cache
 dist/
+site/
 .angular/
 coverage/
 test-results/

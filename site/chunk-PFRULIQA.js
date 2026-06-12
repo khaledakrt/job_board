@@ -1,1 +1,0 @@
-var e=["applied","screening","interview","offer","rejected"],t={applied:"Candidature envoy\xE9e",screening:"Pr\xE9s\xE9lection",interview:"Entretien",offer:"Offre",rejected:"Refus\xE9e"};export{e as a,t as b};

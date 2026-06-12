@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://tun-job-board.com/sitemap.xml

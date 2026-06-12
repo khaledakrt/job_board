@@ -2,13 +2,13 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { USER_ROLES } from './core/constants/roles.constant';
-import { HomeComponent } from './features/public/home/home.component';
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    component: HomeComponent,
+    loadComponent: () =>
+      import('./features/public/home/home.component').then((m) => m.HomeComponent),
   },
   {
     path: 'contact',
