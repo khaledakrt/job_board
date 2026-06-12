@@ -4,8 +4,11 @@ const asyncHandler = require('../utils/asyncHandler');
 const service = require('../services/institutionOfferings.service');
 
 const listProviderOfferings = asyncHandler(async (req, res) => {
-  const data = await service.listProviderOfferings(req.user.id, req.validatedQuery);
-  res.json({ success: true, data });
+  const result = await service.listProviderOfferings(req.user.id, req.validatedQuery);
+  if (result?.pagination) {
+    return res.json({ success: true, data: result.items, pagination: result.pagination });
+  }
+  res.json({ success: true, data: result });
 });
 
 const getProviderOffering = asyncHandler(async (req, res) => {

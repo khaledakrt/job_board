@@ -39,6 +39,7 @@ const JOB_STATUS = Object.freeze({
 const JOB_PUBLIC_STATUSES = Object.freeze([JOB_STATUS.ACTIVE]);
 
 const CATALOG_PUBLISH_STATUS = Object.freeze({
+  DRAFT: 'draft',
   PENDING: 'pending',
   PUBLISHED: 'published',
   REJECTED: 'rejected',
@@ -112,7 +113,7 @@ const CATALOG_IMAGE_UPLOAD = Object.freeze({
   MAX_FILE_SIZE_BYTES: 2 * 1024 * 1024,
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
   SUBDIRECTORY: 'catalog-images',
-  MAX_GALLERY_FILES: 8,
+  MAX_GALLERY_FILES: 7,
 });
 
 const PARTICIPATION_TYPES = Object.freeze({

@@ -1,6 +1,7 @@
-<div class="provider-page provider-form-page">
-  <div class="page-header-row">
+<div class="provider-page provider-form-page provider-profile-page">
+  <div class="page-header-row provider-page-hero provider-page-hero--profile">
     <div>
+      <p class="provider-hero-kicker">Fiche publique</p>
       <h1 class="provider-page-title">
         {{ accountOnly ? 'Modifier infos personnelles' : 'Profil & documents' }}
       </h1>
@@ -10,8 +11,7 @@
         </p>
       } @else {
         <p class="provider-page-sub">
-          Logo, coordonnées, brochure et présentation publique de votre
-          {{ ctx.isTraining ? 'centre de formation' : 'établissement privé' }}.
+          Construisez une fiche claire et crédible avec vos coordonnées, vos documents et une présentation qui inspire confiance.
         </p>
       }
     </div>
@@ -24,9 +24,9 @@
       <aside class="provider-alert">
         <strong>Profil à compléter</strong>
         <ul class="provider-checklist">
-          <li [class.is-done]="!!mediaUrl(ctx.dashboard()!.organization.logoUrl)">Logo</li>
-          <li [class.is-done]="descriptionPlainLen() >= 20">Description (20 car. min.)</li>
-          <li [class.is-done]="!!city.trim()">Ville</li>
+          @for (item of profileChecklist(); track item.label) {
+            <li [class.is-done]="item.done">{{ item.label }}</li>
+          }
         </ul>
       </aside>
     }
@@ -39,11 +39,11 @@
     }
 
     @if (!accountOnly) {
-    <section class="provider-card">
+    <section class="provider-card provider-profile-card">
       <div class="provider-profile-layout">
         <div class="provider-profile-aside">
-          <div class="provider-upload-box">
-            <span class="provider-upload-label">Logo</span>
+          <div class="provider-upload-box provider-upload-box--logo">
+            <span class="provider-upload-label">Logo <span class="provider-label-note">JPG/PNG/WEBP, max. 2 Mo</span></span>
             <p class="provider-upload-hint">Ajoutez un logo carré ou horizontal, JPG/PNG/WEBP — 2 Mo max.</p>
             <label class="provider-file-btn">
               Importer le logo
@@ -53,8 +53,8 @@
               <img [src]="logo" alt="Logo" class="provider-logo-preview" />
             }
           </div>
-          <div class="provider-upload-box">
-            <span class="provider-upload-label">Brochure PDF</span>
+          <div class="provider-upload-box provider-upload-box--document">
+            <span class="provider-upload-label">Brochure PDF <span class="provider-label-note">PDF, max. 10 Mo</span></span>
             <p class="provider-upload-hint">Ajoutez une plaquette officielle téléchargeable depuis votre fiche publique.</p>
             <label class="provider-file-btn provider-file-btn--secondary">
               Importer une brochure
@@ -73,9 +73,23 @@
         </div>
 
         <div>
+          <div class="provider-section-intro">
+            <span>Présentation</span>
+            <strong>
+              {{ ctx.isTraining ? 'Présentez votre centre comme une marque de formation' : 'Présentez votre établissement avec une fiche claire et crédible' }}
+            </strong>
+            <p>
+              {{
+                ctx.isTraining
+                  ? 'Mettez en avant vos domaines, votre pédagogie, vos avantages et les raisons de vous choisir.'
+                  : 'Mettez en avant vos niveaux, votre cadre pédagogique, vos valeurs et les informations utiles aux familles.'
+              }}
+            </p>
+          </div>
           <div class="provider-field provider-field--rte provider-field--rte-block">
             <label for="prof-desc">
               Description de {{ ctx.isTraining ? 'votre centre' : 'votre établissement' }} *
+              <span class="provider-label-note">20 à 20 000 caractères</span>
             </label>
             <div class="provider-field-body">
               <app-rich-text-editor
@@ -87,13 +101,17 @@
               />
             </div>
             <p class="provider-field-hint">
-              Minimum 20 caractères. Vous pouvez utiliser les polices, le gras et ajouter des liens utiles.
+              Ajoutez les points forts, les domaines enseignés, la méthode pédagogique et les liens utiles.
             </p>
           </div>
 
           <div class="provider-fields">
+            <div class="provider-field-group-title">Coordonnées et identité</div>
             <div class="provider-field provider-field--title">
-              <label for="prof-name">Nom de {{ ctx.isTraining ? 'votre centre' : 'votre établissement' }} *</label>
+              <label for="prof-name">
+                Nom de {{ ctx.isTraining ? 'votre centre' : 'votre établissement' }} *
+                <span class="provider-label-note">max. 255 caractères</span>
+              </label>
               <input
                 id="prof-name"
                 class="provider-input"
@@ -104,7 +122,7 @@
             </div>
             @if (!ctx.isTraining) {
               <div class="provider-field provider-field--domain">
-                <label for="prof-institution-type">Type d’établissement *</label>
+                <label for="prof-institution-type">Type d’établissement * <span class="provider-label-note">liste prédéfinie</span></label>
                 <select
                   id="prof-institution-type"
                   class="provider-input"
@@ -118,11 +136,11 @@
               </div>
             }
             <div class="provider-field provider-field--city">
-              <label for="prof-city">Ville *</label>
+              <label for="prof-city">Ville * <span class="provider-label-note">max. 128 caractères</span></label>
               <input id="prof-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
             </div>
             <div class="provider-field provider-field--phone">
-              <label for="prof-phone">Téléphone</label>
+              <label for="prof-phone">Téléphone <span class="provider-label-note">max. 64 caractères</span></label>
               <input
                 id="prof-phone"
                 type="tel"
@@ -134,21 +152,21 @@
                 placeholder="+216 …"
               />
             </div>
-            <div class="provider-field provider-field--email">
-              <label for="prof-email">E-mail</label>
+            <div class="provider-field provider-field--email provider-field--credential">
+              <label for="prof-email">E-mail public <span class="provider-label-note">adresse valide</span></label>
               <input id="prof-email" type="email" class="provider-input" [(ngModel)]="email" name="email" autocomplete="email" />
             </div>
             <div class="provider-field provider-field--address">
-              <label for="prof-address">Adresse</label>
+              <label for="prof-address">Adresse <span class="provider-label-note">max. 512 caractères</span></label>
               <input id="prof-address" class="provider-input" [(ngModel)]="address" name="address" autocomplete="street-address" />
             </div>
             <div class="provider-field provider-field--url">
-              <label for="prof-web">Site web</label>
+              <label for="prof-web">Site web <span class="provider-label-note">https:// requis, max. 512 caractères</span></label>
               <input id="prof-web" type="url" class="provider-input" [(ngModel)]="website" name="website" placeholder="https://…" />
             </div>
             @if (ctx.isTraining) {
               <div class="provider-field provider-field--domain">
-                <label for="prof-domain">Domaine de formation</label>
+                <label for="prof-domain">Domaine de formation <span class="provider-label-note">max. 128 caractères</span></label>
                 <input id="prof-domain" class="provider-input" [(ngModel)]="trainingDomain" name="trainingDomain" />
               </div>
             }
@@ -156,7 +174,7 @@
         </div>
       </div>
 
-      <footer class="provider-card-foot provider-form-actions" style="border-top: none; padding-top: 0; margin-top: 0">
+      <footer class="provider-card-foot provider-form-actions">
         <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving" (click)="saveProfile()">
           {{ saving ? 'Enregistrement…' : 'Enregistrer le profil' }}
         </button>
@@ -180,7 +198,7 @@
       }
 
         <div class="provider-fields">
-          <div class="provider-field provider-field--email">
+          <div class="provider-field provider-field--email provider-field--credential">
             <label for="account-current-email">E-mail actuel</label>
             <input
               id="account-current-email"
@@ -189,7 +207,7 @@
               disabled
             />
           </div>
-          <div class="provider-field provider-field--email">
+          <div class="provider-field provider-field--email provider-field--credential">
             <label for="account-new-email">Nouvel e-mail</label>
             <input
               id="account-new-email"
@@ -200,7 +218,7 @@
               autocomplete="email"
             />
           </div>
-          <div class="provider-field provider-field--email">
+          <div class="provider-field provider-field--email provider-field--credential">
             <label for="account-confirm-email">Confirmer l’e-mail</label>
             <input
               id="account-confirm-email"
@@ -211,7 +229,7 @@
               autocomplete="email"
             />
           </div>
-          <div class="provider-field provider-field--email">
+          <div class="provider-field provider-field--email provider-field--credential">
             <label for="account-email-password">Mot de passe actuel</label>
             <input
               id="account-email-password"
@@ -225,7 +243,7 @@
         </div>
 
         <div class="provider-fields">
-          <div class="provider-field provider-field--email">
+          <div class="provider-field provider-field--email provider-field--credential">
             <label for="account-current-password">Mot de passe actuel</label>
             <input
               id="account-current-password"
@@ -236,7 +254,7 @@
               autocomplete="current-password"
             />
           </div>
-          <div class="provider-field provider-field--email">
+          <div class="provider-field provider-field--email provider-field--credential">
             <label for="account-new-password">Nouveau mot de passe</label>
             <input
               id="account-new-password"

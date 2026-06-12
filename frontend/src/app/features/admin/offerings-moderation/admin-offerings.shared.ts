@@ -1,5 +1,5 @@
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
-import { CatalogPublishStatus } from '../../../core/models/catalog.model';
+import { CatalogPublishStatus } from '../../../core/models/admin.model';
 
 export type OfferingKind = 'formations' | 'events';
 

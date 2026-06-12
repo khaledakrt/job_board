@@ -9,6 +9,7 @@ import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 import { institutionTypeLabel } from '../shared/catalog.constants';
 import { InstitutionOfferingItem } from '../../../core/models/catalog.model';
+import { PaginationMeta } from '../../../core/models/pagination.model';
 
 @Component({
   selector: 'app-private-institution-detail',
@@ -26,33 +27,18 @@ export class PrivateInstitutionDetailComponent implements OnInit {
 
   readonly item = signal<PrivateInstitutionDetail | null>(null);
   readonly loading = signal(true);
+  readonly publicationsLoading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly publications = signal<InstitutionOfferingItem[]>([]);
+  readonly publicationsPagination = signal<PaginationMeta | null>(null);
   readonly publicationSearch = signal('');
   readonly publicationTypeFilter = signal('');
   readonly publicationsPage = signal(1);
   readonly publicationsPageSize = 15;
 
-  readonly allPublications = computed(() => this.item()?.institutionOfferings ?? []);
-  readonly filteredPublications = computed(() => {
-    const q = this.publicationSearch().trim().toLowerCase();
-    const type = this.publicationTypeFilter();
-    return this.allPublications().filter((pub) => {
-      if (type && pub.offeringType !== type) return false;
-      if (q) {
-        const haystack = `${pub.title} ${pub.summary ?? ''} ${pub.category ?? ''} ${pub.city ?? ''}`.toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
-      return true;
-    });
-  });
-  readonly publicationsTotalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filteredPublications().length / this.publicationsPageSize))
-  );
-  readonly pagedPublications = computed(() => {
-    const page = Math.min(this.publicationsPage(), this.publicationsTotalPages());
-    const start = (page - 1) * this.publicationsPageSize;
-    return this.filteredPublications().slice(start, start + this.publicationsPageSize);
-  });
+  readonly publicationsTotal = computed(() => this.publicationsPagination()?.totalItems ?? this.publications().length);
+  readonly publicationsTotalPages = computed(() => this.publicationsPagination()?.totalPages ?? 1);
+  readonly pagedPublications = computed(() => this.publications());
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -65,6 +51,7 @@ export class PrivateInstitutionDetailComponent implements OnInit {
       next: (res) => {
         this.item.set(res.data ?? null);
         this.loading.set(false);
+        this.loadPublications();
       },
       error: () => {
         this.error.set('Établissement introuvable ou non publié.');
@@ -89,17 +76,44 @@ export class PrivateInstitutionDetailComponent implements OnInit {
       program: 'Programme',
       event: 'Événement',
       announcement: 'Annonce',
-      opportunity: item.opportunityType === 'job' ? 'Emploi' : 'Stage',
     };
     return labels[item.offeringType] ?? 'Publication';
   }
 
   onPublicationFilterChange(): void {
     this.publicationsPage.set(1);
+    this.loadPublications();
   }
 
   setPublicationsPage(page: number): void {
     const next = Math.min(Math.max(1, page), this.publicationsTotalPages());
+    if (next === this.publicationsPage() || this.publicationsLoading()) return;
     this.publicationsPage.set(next);
+    this.loadPublications();
+  }
+
+  private loadPublications(): void {
+    const id = this.item()?.id;
+    if (!id) return;
+    const params: Record<string, string | number> = {
+      page: this.publicationsPage(),
+      limit: this.publicationsPageSize,
+    };
+    if (this.publicationTypeFilter()) params['type'] = this.publicationTypeFilter();
+    if (this.publicationSearch().trim()) params['search'] = this.publicationSearch().trim();
+
+    this.publicationsLoading.set(true);
+    this.catalog.listPrivateInstitutionOfferings(id, params).subscribe({
+      next: (res) => {
+        this.publications.set(res.data ?? []);
+        this.publicationsPagination.set(res.pagination);
+        this.publicationsLoading.set(false);
+      },
+      error: () => {
+        this.publications.set([]);
+        this.publicationsPagination.set(null);
+        this.publicationsLoading.set(false);
+      },
+    });
   }
 }

@@ -26,5 +26,13 @@ export const guestGuard: CanActivateFn = () => {
     return router.createUrlTree([APP_ROUTES.ADMIN.DASHBOARD]);
   }
 
+  if (user?.role === USER_ROLES.TRAINING_PROVIDER) {
+    return router.createUrlTree([APP_ROUTES.PROVIDER.TRAINING]);
+  }
+
+  if (user?.role === USER_ROLES.INSTITUTION_PROVIDER) {
+    return router.createUrlTree([APP_ROUTES.PROVIDER.INSTITUTION]);
+  }
+
   return router.createUrlTree([APP_ROUTES.HOME]);
 };

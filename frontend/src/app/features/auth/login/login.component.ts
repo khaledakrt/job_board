@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
@@ -15,6 +15,7 @@ import { PublicShellComponent } from '../../public/shared/public-shell.component
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
   readonly authService = inject(AuthService);
 
   readonly routes = APP_ROUTES;
@@ -65,7 +66,9 @@ export class LoginComponent {
       return;
     }
 
-    this.authService.login(this.form.getRawValue()).subscribe({
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+
+    this.authService.login(this.form.getRawValue(), returnUrl).subscribe({
       error: (error: HttpErrorResponse) => {
         let message = error.error?.message || 'Échec de connexion. Vérifiez vos identifiants.';
         if (error.status === 429) {

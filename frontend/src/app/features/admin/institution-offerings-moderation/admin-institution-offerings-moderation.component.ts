@@ -42,11 +42,21 @@ export class AdminInstitutionOfferingsModerationComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly actionLoading = signal<string | null>(null);
+  readonly rejectTarget = signal<AdminInstitutionOffering | null>(null);
+  readonly pageSummary = computed(() => {
+    const rows = this.items();
+    return {
+      pending: rows.filter((row) => row.status === 'pending').length,
+      published: rows.filter((row) => row.status === 'published').length,
+      rejected: rows.filter((row) => row.status === 'rejected').length,
+    };
+  });
 
   search = '';
   institutionSearch = '';
   typeFilter = '';
   statusFilter = 'pending';
+  rejectNote = '';
 
   readonly toolbarSummary = computed(() => adminPageSummary(this.pagination(), 'publication'));
 
@@ -85,11 +95,32 @@ export class AdminInstitutionOfferingsModerationComponent implements OnInit {
   }
 
   setStatus(item: AdminInstitutionOffering, status: CatalogPublishStatus): void {
+    if (status === 'rejected') {
+      this.rejectTarget.set(item);
+      this.rejectNote = item.adminNote ?? '';
+      return;
+    }
+    this.updateStatus(item, status, null);
+  }
+
+  cancelReject(): void {
+    this.rejectTarget.set(null);
+    this.rejectNote = '';
+  }
+
+  confirmReject(): void {
+    const item = this.rejectTarget();
+    if (!item) return;
+    this.updateStatus(item, 'rejected', this.rejectNote.trim() || null);
+  }
+
+  private updateStatus(item: AdminInstitutionOffering, status: CatalogPublishStatus, adminNote: string | null): void {
     this.actionLoading.set(item.id);
     this.successMessage.set(null);
-    this.admin.setInstitutionOfferingStatus(item.id, status).subscribe({
+    this.admin.setInstitutionOfferingStatus(item.id, status, adminNote).subscribe({
       next: () => {
         this.actionLoading.set(null);
+        this.cancelReject();
         this.successMessage.set(
           status === 'published'
             ? 'Publication validée.'
@@ -111,7 +142,6 @@ export class AdminInstitutionOfferingsModerationComponent implements OnInit {
       program: 'Programme',
       event: 'Événement',
       announcement: 'Annonce',
-      opportunity: 'Offre / stage',
     };
     return labels[type];
   }

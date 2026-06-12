@@ -14,7 +14,15 @@
       />
 
       <section class="catalog-filters" aria-label="Filtres de recherche">
-        <p class="catalog-filters-title">Rechercher un établissement</p>
+        <div class="catalog-filters-head">
+          <div>
+            <p class="catalog-filters-title">Rechercher un établissement</p>
+            <p class="catalog-card-meta">Filtrez par nom, ville ou type d’établissement.</p>
+          </div>
+          @if (total()) {
+            <span class="catalog-result-pill">{{ total() }} résultat(s)</span>
+          }
+        </div>
         <div class="catalog-filters-grid catalog-filters-grid--institution">
           <div>
             <label class="catalog-label" for="pi-search">Mot-clé</label>
@@ -33,14 +41,13 @@
             </select>
           </div>
           <div class="catalog-filters-actions">
-            <button type="button" class="catalog-btn catalog-btn--primary" (click)="load()">Rechercher</button>
+            <button type="button" class="catalog-btn catalog-btn--primary" (click)="applyFilters()">Rechercher</button>
           </div>
         </div>
       </section>
 
       @if (loading()) {
         <div class="catalog-state">
-          <p class="catalog-state-icon">⏳</p>
           <p class="catalog-state-title">Chargement…</p>
         </div>
       } @else if (error()) {
@@ -49,9 +56,8 @@
         </div>
       } @else if (!items().length) {
         <div class="catalog-state">
-          <p class="catalog-state-icon">🏫</p>
           <p class="catalog-state-title">Aucun établissement publié</p>
-          <p>Revenez plus tard.</p>
+          <p>Aucun résultat ne correspond aux filtres actuels.</p>
           @if (!authService.isAuthenticated()) {
             <div class="catalog-state-actions">
               <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION_REGISTER" class="catalog-btn catalog-btn--primary">
@@ -63,6 +69,9 @@
       } @else {
         <div class="catalog-toolbar">
           <p class="catalog-toolbar-count"><strong>{{ total() }}</strong> établissement(s) trouvé(s)</p>
+          @if (totalPages() > 1) {
+            <p class="catalog-card-meta">Page {{ page() }} / {{ totalPages() }}</p>
+          }
         </div>
         <div class="catalog-grid">
           @for (item of items(); track item.id) {
@@ -87,6 +96,7 @@
                 @if (item.shortDescription) {
                   <p class="catalog-card-desc">{{ item.shortDescription }}</p>
                 }
+                <span class="catalog-card-meta catalog-card-meta--strong">Fiche vérifiée après validation admin</span>
               </div>
               <div class="catalog-card-footer">
                 <span class="catalog-btn catalog-btn--primary catalog-btn--block">
@@ -96,6 +106,27 @@
             </a>
           }
         </div>
+        @if (totalPages() > 1) {
+          <nav class="catalog-offerings-pagination" aria-label="Pagination établissements">
+            <button
+              type="button"
+              class="catalog-btn catalog-btn--outline"
+              [disabled]="page() <= 1 || loading()"
+              (click)="setPage(page() - 1)"
+            >
+              Précédent
+            </button>
+            <span>Page {{ page() }} / {{ totalPages() }}</span>
+            <button
+              type="button"
+              class="catalog-btn catalog-btn--outline"
+              [disabled]="page() >= totalPages() || loading()"
+              (click)="setPage(page() + 1)"
+            >
+              Suivant
+            </button>
+          </nav>
+        }
       }
     </div>
   </main>

@@ -14,6 +14,7 @@ const { env } = require('../config');
 const { getTrainingCenterForUser } = require('../utils/catalogProviderAccess.util');
 const ApiError = require('../utils/ApiError');
 const emailService = require('./email.service');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 
 const userInclude = {
   model: User,
@@ -349,6 +350,19 @@ async function listProviderParticipations(userId, query = {}) {
   }
 
   items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  if (query.page !== undefined || query.limit !== undefined) {
+    const { page, limit, offset } = parsePagination(query);
+    return {
+      ...buildPaginatedResponse({
+        rows: items.slice(offset, offset + limit),
+        count: items.length,
+        page,
+        limit,
+      }),
+      summary: summarizeItems(items),
+    };
+  }
 
   return {
     items,

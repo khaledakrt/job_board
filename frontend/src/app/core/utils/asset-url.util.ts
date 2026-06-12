@@ -24,3 +24,21 @@ export function resolveUploadUrl(url: string | null | undefined): string | null 
   const path = url.startsWith('/') ? url : `/${url}`;
   return API_ORIGIN ? `${API_ORIGIN}${path}` : path;
 }
+
+export function isSensitiveUploadUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.includes('/uploads/resumes/') || url.includes('/uploads/snapshots/');
+}
+
+export function resolveAuthenticatedUploadUrl(
+  url: string | null | undefined,
+  accessToken: string | null | undefined
+): string | null {
+  const resolved = resolveUploadUrl(url);
+  if (!resolved || !accessToken || !isSensitiveUploadUrl(resolved)) {
+    return resolved;
+  }
+
+  const separator = resolved.includes('?') ? '&' : '?';
+  return `${resolved}${separator}access_token=${encodeURIComponent(accessToken)}`;
+}

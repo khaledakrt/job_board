@@ -174,6 +174,8 @@ export class UserDetailComponent implements OnInit {
   roleLabel(role: string): string {
     if (role === USER_ROLES.ADMIN) return 'Administrateur';
     if (role === USER_ROLES.RECRUITER) return 'Recruteur';
+    if (role === USER_ROLES.TRAINING_PROVIDER) return 'Centre de formation';
+    if (role === USER_ROLES.INSTITUTION_PROVIDER) return 'Établissement privé';
     return 'Candidat';
   }
 

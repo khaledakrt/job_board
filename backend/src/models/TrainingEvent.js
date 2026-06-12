@@ -25,7 +25,7 @@ TrainingEvent.init(
     email: { type: DataTypes.STRING(255), allowNull: true },
     website: { type: DataTypes.STRING(512), allowNull: true },
     status: {
-      type: DataTypes.ENUM('pending', 'published', 'rejected'),
+      type: DataTypes.ENUM('draft', 'pending', 'published', 'rejected'),
       allowNull: false,
       defaultValue: 'pending',
     },

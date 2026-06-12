@@ -35,7 +35,6 @@ import {
   salaryDisplayLabel,
 } from '../../../../core/utils/job-display.util';
 import { SafeHtmlComponent } from '../../../../shared/components/safe-html/safe-html.component';
-import { stripHtml } from '../../../../shared/utils/rich-text.util';
 import {
   DEFAULT_JOB_SEARCH_FILTERS,
   ExperienceFilter,
@@ -58,7 +57,6 @@ const PAGE_SIZE_PREVIEW = 6;
 const PAGE_SIZE_ALL = 12;
 
 type JobsGridMode = 'landing' | 'catalog';
-const API_MAX_LIMIT = 50;
 
 const DEFAULT_FILTERS: PublicJobFilters = { ...DEFAULT_JOB_SEARCH_FILTERS };
 
@@ -106,23 +104,6 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
   readonly catalogPage = signal(1);
   readonly previewPagination = signal<PaginationMeta | null>(null);
   readonly catalogPagination = signal<PaginationMeta | null>(null);
-
-  readonly useClientPagination = computed(() => {
-    const f = this.appliedFilters();
-    return (
-      f.contracts.length > 1 ||
-      f.remotes.length > 1 ||
-      !!f.company.trim() ||
-      !!f.industry.trim() ||
-      f.experience !== 'all' ||
-      f.quizOnly
-    );
-  });
-
-  readonly clientFilteredJobs = computed(() => {
-    const f = this.appliedFilters();
-    return this.allJobsCache().filter((job) => this.matchesClientFilters(job, f));
-  });
 
   readonly displayedPreviewJobs = computed(() => this.displayedJobsFor('landing'));
   readonly displayedCatalogJobs = computed(() => this.displayedJobsFor('catalog'));
@@ -237,11 +218,7 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
     } else {
       this.previewPage.set(page);
     }
-    if (!this.useClientPagination()) {
-      this.fetchJobs(mode);
-    } else {
-      this.syncClientPaginationMeta();
-    }
+    this.fetchJobs(mode);
     if (mode === 'landing') {
       this.scrollJobsIntoView();
     }
@@ -422,68 +399,15 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
     document.getElementById('offres')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  private matchesClientFilters(job: Job, f: PublicJobFilters): boolean {
-    if (f.contracts.length && !f.contracts.includes(job.contractType)) return false;
-    if (f.remotes.length && !f.remotes.includes(job.remoteType)) return false;
-
-    if (f.keywords.trim()) {
-      const k = f.keywords.toLowerCase();
-      const langs = (job.languages || []).join(' ');
-      const benefits = (job.benefits || []).join(' ');
-      const hay = `${job.title} ${job.company?.name || ''} ${stripHtml(job.description)} ${stripHtml(job.requirements || '')} ${job.location} ${job.salaryLabel || ''} ${langs} ${benefits}`.toLowerCase();
-      if (!hay.includes(k)) return false;
-    }
-
-    if (f.location.trim() && !(job.location || '').toLowerCase().includes(f.location.toLowerCase())) {
-      return false;
-    }
-
-    if (f.company.trim() && !(job.company?.name || '').toLowerCase().includes(f.company.toLowerCase())) {
-      return false;
-    }
-
-    if (
-      f.industry.trim() &&
-      !(job.company?.industry || '').toLowerCase().includes(f.industry.toLowerCase())
-    ) {
-      return false;
-    }
-
-    if (!this.matchesExperience(job, f.experience)) return false;
-    if (f.quizOnly && !job.quizEnabled) return false;
-
-    return true;
-  }
-
-  private matchesExperience(job: Job, level: ExperienceFilter): boolean {
-    if (level === 'all') return true;
-    const years = job.experienceYears;
-    if (years == null) return level === 'junior';
-    if (level === 'junior') return years <= 2;
-    if (level === 'mid') return years >= 3 && years <= 5;
-    if (level === 'senior') return years >= 6;
-    return true;
-  }
-
   private pageSizeFor(mode: JobsGridMode): number {
     return mode === 'catalog' ? PAGE_SIZE_ALL : PAGE_SIZE_PREVIEW;
   }
 
   private displayedJobsFor(mode: JobsGridMode): Job[] {
-    if (this.useClientPagination()) {
-      const list = this.clientFilteredJobs();
-      const page = mode === 'catalog' ? this.catalogPage() : this.previewPage();
-      const size = this.pageSizeFor(mode);
-      const start = (page - 1) * size;
-      return list.slice(start, start + size);
-    }
     return mode === 'catalog' ? this.catalogJobs() : this.previewJobs();
   }
 
   private totalItemsFor(mode: JobsGridMode): number {
-    if (this.useClientPagination()) {
-      return this.clientFilteredJobs().length;
-    }
     const pagination =
       mode === 'catalog' ? this.catalogPagination() : this.previewPagination();
     const jobs = mode === 'catalog' ? this.catalogJobs() : this.previewJobs();
@@ -491,12 +415,6 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
   }
 
   private totalPagesFor(mode: JobsGridMode): number {
-    if (this.useClientPagination()) {
-      return Math.max(
-        1,
-        Math.ceil(this.clientFilteredJobs().length / this.pageSizeFor(mode))
-      );
-    }
     const pagination =
       mode === 'catalog' ? this.catalogPagination() : this.previewPagination();
     return pagination?.totalPages ?? 1;
@@ -518,43 +436,27 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
     const f = this.appliedFilters();
     const params: JobSearchParams = {
       page: mode === 'catalog' ? this.catalogPage() : this.previewPage(),
-      limit: this.useClientPagination() ? API_MAX_LIMIT : this.pageSizeFor(mode),
+      limit: this.pageSizeFor(mode),
     };
 
     if (f.keywords.trim()) params.keywords = f.keywords.trim();
     if (f.location.trim()) params.location = f.location.trim();
-    if (f.contracts.length === 1) params.contractType = f.contracts[0];
-    if (f.remotes.length === 1) params.remoteType = f.remotes[0];
+    if (f.company.trim()) params.company = f.company.trim();
+    if (f.industry.trim()) params.industry = f.industry.trim();
+    if (f.contracts.length === 1) {
+      params.contractType = f.contracts[0];
+    } else if (f.contracts.length > 1) {
+      params.contracts = f.contracts;
+    }
+    if (f.remotes.length === 1) {
+      params.remoteType = f.remotes[0];
+    } else if (f.remotes.length > 1) {
+      params.remotes = f.remotes;
+    }
+    if (f.experience !== 'all') params.experience = f.experience;
+    if (f.quizOnly) params.quizOnly = true;
 
     return params;
-  }
-
-  private syncClientPaginationMeta(): void {
-    const filtered = this.clientFilteredJobs();
-    const previewPage = this.previewPage();
-    const catalogPage = this.catalogPage();
-    const previewTotalPages = Math.max(
-      1,
-      Math.ceil(filtered.length / PAGE_SIZE_PREVIEW)
-    );
-    const catalogTotalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE_ALL));
-
-    this.previewPagination.set({
-      page: previewPage,
-      limit: PAGE_SIZE_PREVIEW,
-      totalItems: filtered.length,
-      totalPages: previewTotalPages,
-      hasNextPage: previewPage < previewTotalPages,
-      hasPreviousPage: previewPage > 1,
-    });
-    this.catalogPagination.set({
-      page: catalogPage,
-      limit: PAGE_SIZE_ALL,
-      totalItems: filtered.length,
-      totalPages: catalogTotalPages,
-      hasNextPage: catalogPage < catalogTotalPages,
-      hasPreviousPage: catalogPage > 1,
-    });
   }
 
   private applyServerResponse(mode: JobsGridMode, response: {
@@ -587,26 +489,6 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
   private fetchJobs(target: 'landing' | 'catalog' | 'both' = 'both'): void {
     this.loading.set(true);
     this.loadError.set(false);
-
-    if (this.useClientPagination()) {
-      this.jobService.search(this.buildApiParams('landing')).subscribe({
-        next: (response) => {
-          this.allJobsCache.set(response.data ?? []);
-          this.previewJobs.set([]);
-          this.catalogJobs.set([]);
-          this.syncClientPaginationMeta();
-        },
-        error: (err: HttpErrorResponse) => {
-          this.loadError.set(true);
-          this.allJobsCache.set([]);
-          this.previewPagination.set(null);
-          this.catalogPagination.set(null);
-          console.error(err);
-        },
-        complete: () => this.loading.set(false),
-      });
-      return;
-    }
 
     if (target === 'both') {
       forkJoin([

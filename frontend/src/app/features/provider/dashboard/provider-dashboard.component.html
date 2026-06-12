@@ -1,7 +1,4 @@
-<div class="provider-page">
-  <h1 class="provider-page-title">Tableau de bord</h1>
-  <p class="provider-page-sub">Vue d’ensemble de vos publications et de leur statut.</p>
-
+<div class="provider-page provider-dashboard-page">
   @if (ctx.loading()) {
     <p class="provider-muted">Chargement…</p>
   } @else if (ctx.error()) {
@@ -26,15 +23,30 @@
           <span class="provider-stat-label">Événements</span>
           <span class="provider-stat-sub">{{ stats.eventsPublished }} publié(s)</span>
         </div>
-        <div class="provider-stat-card provider-stat-card--accent">
-          <span class="provider-stat-value">{{ stats.pendingTotal }}</span>
-          <span class="provider-stat-label">En validation</span>
-          <span class="provider-stat-sub">Par l’administrateur</span>
-        </div>
+        @if (stats.draftTotal) {
+          <button type="button" class="provider-stat-card provider-stat-card--link provider-stat-card--accent" (click)="showDrafts()">
+            <span class="provider-stat-value">{{ stats.draftTotal }}</span>
+            <span class="provider-stat-label">Brouillon(s)</span>
+            <span class="provider-stat-sub">À compléter avant validation</span>
+          </button>
+        }
+        @if (stats.pendingTotal && ctx.dashboard()!.accountStatus === 'published' && ctx.dashboard()!.canPublishOfferings) {
+          <button type="button" class="provider-stat-card provider-stat-card--link" (click)="showPendingPublications()">
+            <span class="provider-stat-value">{{ stats.pendingTotal }}</span>
+            <span class="provider-stat-label">En validation</span>
+            <span class="provider-stat-sub">En attente administrateur</span>
+          </button>
+        } @else {
+          <div class="provider-stat-card">
+            <span class="provider-stat-value">{{ stats.pendingTotal }}</span>
+            <span class="provider-stat-label">En validation</span>
+            <span class="provider-stat-sub">Aucun contenu en attente</span>
+          </div>
+        }
         @if (ctx.dashboard()?.participationsSummary; as p) {
           <a [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS" class="provider-stat-card provider-stat-card--link">
             <span class="provider-stat-value">{{ p.total }}</span>
-            <span class="provider-stat-label">Participants</span>
+            <span class="provider-stat-label">Contacts candidats</span>
             <span class="provider-stat-sub">{{ p.interested }} intéressé(s) · {{ p.registered }} inscription(s)</span>
           </a>
         }
@@ -50,167 +62,251 @@
         <p class="provider-muted">Complétez le profil (logo, description, ville) pour débloquer la publication.</p>
       </div>
     } @else if (ctx.isTraining) {
-      <section class="provider-card">
+      <section id="provider-publications-panel" class="provider-card">
         <div class="provider-card-head">
-          <h2>Publications en ligne</h2>
-          <p>Formations et événements validés — visibles sur votre fiche publique.</p>
-        </div>
-
-        <div class="provider-list-block">
-          <div class="provider-list-head">
-            <h3>Formations publiées</h3>
-            <span class="provider-count">{{ ctx.publishedFormations().length }}</span>
+          <div>
+            <h2>Publications</h2>
+            <p>Choisissez le statut à consulter, puis le type de publication.</p>
           </div>
-          @if (!ctx.publishedFormations().length) {
-            <div class="provider-empty">
-              <p>Aucune formation publiée pour le moment.</p>
-            </div>
-          } @else {
-            <ul class="provider-offer-list">
-              @for (f of pagePublishedFormations(); track f.id) {
-                <li class="provider-offer-item">
-                  <div class="provider-offer-main">
-                    <strong>{{ f.title }}</strong>
-                    @if (f.category) {
-                      <span class="provider-offer-meta">{{ f.category }}</span>
-                    }
-                    <span class="provider-offer-meta">
-                      {{ f.participantsCount ?? 0 }} participant(s)
-                    </span>
-                  </div>
-                  <span [class]="offeringStatusClass(f.status)">{{ offeringStatusLabel(f.status) }}</span>
-                  <div class="provider-offer-actions">
-                    <a [routerLink]="routes.PUBLIC.FORMATION(f.id)" target="_blank" rel="noopener" class="provider-btn provider-btn--outline provider-btn--sm">
-                      Voir en ligne
-                    </a>
-                    <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(f.id)" class="provider-btn provider-btn--outline provider-btn--sm">
-                      Modifier
-                    </a>
-                    <a
-                      [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS"
-                      [queryParams]="{ formationId: f.id }"
-                      class="provider-btn provider-btn--outline provider-btn--sm"
-                    >
-                      Participants
-                    </a>
-                  </div>
-                </li>
-              }
-            </ul>
-            <app-provider-list-pagination
-              [total]="ctx.publishedFormations().length"
-              [page]="pubFormationsPage()"
-              [pageSize]="pageSize"
-              (pageChange)="pubFormationsPage.set($event)"
-            />
-          }
+          <select
+            class="provider-input provider-publication-kind"
+            aria-label="Type de publication"
+            [ngModel]="trainingPublicationKind()"
+            (ngModelChange)="setTrainingPublicationKind($event)"
+          >
+            <option value="formation">Formations</option>
+            <option value="event">Événements</option>
+          </select>
         </div>
-
-        <div class="provider-list-block" style="margin-top: 1.25rem">
-          <div class="provider-list-head">
-            <h3>Événements publiés</h3>
-            <span class="provider-count">{{ ctx.publishedEvents().length }}</span>
-          </div>
-          @if (!ctx.publishedEvents().length) {
-            <div class="provider-empty">
-              <p>Aucun événement publié pour le moment.</p>
-            </div>
-          } @else {
-            <ul class="provider-offer-list">
-              @for (ev of pagePublishedEvents(); track ev.id) {
-                <li class="provider-offer-item">
-                  <div class="provider-offer-main">
-                    <strong>{{ ev.title }}</strong>
-                    <span class="provider-offer-meta">{{ eventTypeLabel(ev.eventType) }}</span>
-                    <span class="provider-offer-meta">
-                      {{ ev.participantsCount ?? 0 }} inscrit(s)
-                    </span>
-                  </div>
-                  <span [class]="offeringStatusClass(ev.status)">{{ offeringStatusLabel(ev.status) }}</span>
-                  <div class="provider-offer-actions">
-                    <a [routerLink]="routes.PUBLIC.EVENT(ev.id)" target="_blank" rel="noopener" class="provider-btn provider-btn--outline provider-btn--sm">
-                      Voir en ligne
-                    </a>
-                    <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_EDIT(ev.id)" class="provider-btn provider-btn--outline provider-btn--sm">
-                      Modifier
-                    </a>
-                    <a
-                      [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS"
-                      [queryParams]="{ eventId: ev.id }"
-                      class="provider-btn provider-btn--outline provider-btn--sm"
-                    >
-                      Inscrits
-                    </a>
-                  </div>
-                </li>
-              }
-            </ul>
-            <app-provider-list-pagination
-              [total]="ctx.publishedEvents().length"
-              [page]="pubEventsPage()"
-              [pageSize]="pageSize"
-              (pageChange)="pubEventsPage.set($event)"
-            />
-          }
+        <div class="provider-publication-switch">
+          <button
+            type="button"
+            class="provider-btn provider-btn--sm"
+            [class.provider-btn--primary]="trainingPublicationView() === 'published'"
+            [class.provider-btn--outline]="trainingPublicationView() !== 'published'"
+            (click)="setTrainingPublicationView('published')"
+          >
+            Publications validées
+          </button>
+          <button
+            type="button"
+            class="provider-btn provider-btn--sm"
+            [class.provider-btn--primary]="trainingPublicationView() === 'pending'"
+            [class.provider-btn--outline]="trainingPublicationView() !== 'pending'"
+            (click)="setTrainingPublicationView('pending')"
+          >
+            Publications en attente
+          </button>
         </div>
       </section>
 
-      @if (ctx.pendingFormations().length || ctx.pendingEvents().length) {
-        <section class="provider-card">
+      @if (trainingPublicationView() === 'pending') {
+        <section id="provider-pending-review" class="provider-card">
           <div class="provider-card-head">
-            <h2>En attente de validation</h2>
-            <p>Ces contenus seront visibles après approbation par l’administrateur.</p>
+            <h2>Envoyés en validation</h2>
+            <p>Contenus transmis à l’administrateur, non visibles publiquement.</p>
           </div>
-          @if (ctx.pendingFormations().length) {
+          @if (trainingPublicationKind() === 'formation') {
             <div class="provider-list-head"><h3>Formations</h3></div>
-            <ul class="provider-offer-list">
-              @for (f of pagePendingFormations(); track f.id) {
-                <li class="provider-offer-item">
-                  <div class="provider-offer-main"><strong>{{ f.title }}</strong></div>
-                  <span [class]="offeringStatusClass(f.status)">{{ offeringStatusLabel(f.status) }}</span>
-                  <div class="provider-offer-actions">
-                    <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(f.id)" class="provider-btn provider-btn--outline provider-btn--sm">Modifier</a>
-                    <button type="button" class="provider-btn provider-btn--danger provider-btn--sm" (click)="deleteFormation(f.id)">Supprimer</button>
-                  </div>
-                </li>
-              }
-            </ul>
-            <app-provider-list-pagination
-              [total]="ctx.pendingFormations().length"
-              [page]="pendingFormationsPage()"
-              [pageSize]="pageSize"
-              (pageChange)="pendingFormationsPage.set($event)"
-            />
-          }
-          @if (ctx.pendingEvents().length) {
-            <div class="provider-list-head" style="margin-top: 1rem"><h3>Événements</h3></div>
-            <ul class="provider-offer-list">
-              @for (ev of pagePendingEvents(); track ev.id) {
-                <li class="provider-offer-item">
-                  <div class="provider-offer-main"><strong>{{ ev.title }}</strong></div>
-                  <span [class]="offeringStatusClass(ev.status)">{{ offeringStatusLabel(ev.status) }}</span>
-                  <div class="provider-offer-actions">
-                    <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_EDIT(ev.id)" class="provider-btn provider-btn--outline provider-btn--sm">Modifier</a>
-                    <button type="button" class="provider-btn provider-btn--danger provider-btn--sm" (click)="deleteEvent(ev.id)">Supprimer</button>
-                  </div>
-                </li>
-              }
-            </ul>
-            <app-provider-list-pagination
-              [total]="ctx.pendingEvents().length"
-              [page]="pendingEventsPage()"
-              [pageSize]="pageSize"
-              (pageChange)="pendingEventsPage.set($event)"
-            />
+            @if (!ctx.pendingFormations().length) {
+              <div class="provider-empty">
+                <p>Aucune formation en attente de validation.</p>
+              </div>
+            } @else {
+              <ul class="provider-offer-list">
+                @for (f of pagePendingFormations(); track f.id) {
+                  <li class="provider-offer-item">
+                    <div class="provider-offer-main"><strong>{{ f.title }}</strong></div>
+                    <span [class]="offeringStatusClass(f.status)">{{ offeringStatusLabel(f.status) }}</span>
+                    <div class="provider-offer-actions">
+                      <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(f.id)" class="provider-btn provider-btn--outline provider-btn--sm">Modifier</a>
+                      <button type="button" class="provider-btn provider-btn--danger provider-btn--sm" (click)="deleteFormation(f.id)">Supprimer</button>
+                    </div>
+                  </li>
+                }
+              </ul>
+              <app-provider-list-pagination
+                [total]="ctx.pendingFormations().length"
+                [page]="pendingFormationsPage()"
+                [pageSize]="pageSize"
+                (pageChange)="pendingFormationsPage.set($event)"
+              />
+            }
+          } @else {
+            <div class="provider-list-head"><h3>Événements</h3></div>
+            @if (!ctx.pendingEvents().length) {
+              <div class="provider-empty">
+                <p>Aucun événement en attente de validation.</p>
+              </div>
+            } @else {
+              <ul class="provider-offer-list">
+                @for (ev of pagePendingEvents(); track ev.id) {
+                  <li class="provider-offer-item">
+                    <div class="provider-offer-main"><strong>{{ ev.title }}</strong></div>
+                    <span [class]="offeringStatusClass(ev.status)">{{ offeringStatusLabel(ev.status) }}</span>
+                    <div class="provider-offer-actions">
+                      <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_EDIT(ev.id)" class="provider-btn provider-btn--outline provider-btn--sm">Modifier</a>
+                      <button type="button" class="provider-btn provider-btn--danger provider-btn--sm" (click)="deleteEvent(ev.id)">Supprimer</button>
+                    </div>
+                  </li>
+                }
+              </ul>
+              <app-provider-list-pagination
+                [total]="ctx.pendingEvents().length"
+                [page]="pendingEventsPage()"
+                [pageSize]="pageSize"
+                (pageChange)="pendingEventsPage.set($event)"
+              />
+            }
           }
         </section>
       }
 
-      @if (rejectedTotal()) {
-        <section class="provider-card">
+      @if (draftItems().length) {
+        <section id="provider-draft-offerings" class="provider-card">
           <div class="provider-card-head">
-            <h2>Refusées</h2>
-            <p>Modifiez et resoumettez pour une nouvelle validation.</p>
+            <h2>Brouillons à compléter</h2>
+            <p>Offres privées, non visibles publiquement. Complétez-les puis envoyez-les en validation.</p>
+          </div>
+          <ul class="provider-offer-list">
+            @for (row of pageDraftItems(); track row.kind + row.item.id) {
+              <li class="provider-offer-item">
+                <div class="provider-offer-main">
+                  <strong>{{ row.item.title }}</strong>
+                  <span class="provider-offer-meta">{{ row.kind === 'formation' ? 'Formation' : 'Événement' }}</span>
+                </div>
+                <span [class]="offeringStatusClass(row.item.status)">{{ offeringStatusLabel(row.item.status) }}</span>
+                @if (row.kind === 'formation') {
+                  <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(row.item.id)" class="provider-btn provider-btn--primary provider-btn--sm">Reprendre</a>
+                } @else {
+                  <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_EDIT(row.item.id)" class="provider-btn provider-btn--primary provider-btn--sm">Reprendre</a>
+                }
+              </li>
+            }
+          </ul>
+          <app-provider-list-pagination
+            [total]="draftItems().length"
+            [page]="draftPage()"
+            [pageSize]="pageSize"
+            (pageChange)="draftPage.set($event)"
+          />
+        </section>
+      }
+
+      @if (trainingPublicationView() === 'published') {
+        <section id="provider-published-offerings" class="provider-card">
+        <div class="provider-card-head">
+          <h2>Publications visibles</h2>
+          <p>Contenus validés par l’administrateur et visibles publiquement.</p>
+        </div>
+
+        @if (trainingPublicationKind() === 'formation') {
+          <div class="provider-list-block">
+            <div class="provider-list-head">
+              <h3>Formations validées</h3>
+              <span class="provider-count">{{ ctx.publishedFormations().length }}</span>
+            </div>
+            @if (!ctx.publishedFormations().length) {
+              <div class="provider-empty">
+                <p>Aucune formation validée pour le moment.</p>
+              </div>
+            } @else {
+              <ul class="provider-offer-list">
+                @for (f of pagePublishedFormations(); track f.id) {
+                  <li class="provider-offer-item">
+                    <div class="provider-offer-main">
+                      <strong>{{ f.title }}</strong>
+                      @if (f.category) {
+                        <span class="provider-offer-meta">{{ f.category }}</span>
+                      }
+                      <span class="provider-offer-meta">
+                        {{ f.participantsCount ?? 0 }} participant(s)
+                      </span>
+                    </div>
+                    <span [class]="offeringStatusClass(f.status)">{{ offeringStatusLabel(f.status) }}</span>
+                    <div class="provider-offer-actions">
+                      <a [routerLink]="routes.PUBLIC.FORMATION(f.id)" target="_blank" rel="noopener" class="provider-btn provider-btn--outline provider-btn--sm">
+                        Voir en ligne
+                      </a>
+                      <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(f.id)" class="provider-btn provider-btn--outline provider-btn--sm">
+                        Modifier
+                      </a>
+                      <a
+                        [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS"
+                        [queryParams]="{ formationId: f.id }"
+                        class="provider-btn provider-btn--outline provider-btn--sm"
+                      >
+                        Participants
+                      </a>
+                    </div>
+                  </li>
+                }
+              </ul>
+              <app-provider-list-pagination
+                [total]="ctx.publishedFormations().length"
+                [page]="pubFormationsPage()"
+                [pageSize]="pageSize"
+                (pageChange)="pubFormationsPage.set($event)"
+              />
+            }
+          </div>
+        } @else {
+          <div class="provider-list-block">
+            <div class="provider-list-head">
+              <h3>Événements validés</h3>
+              <span class="provider-count">{{ ctx.publishedEvents().length }}</span>
+            </div>
+            @if (!ctx.publishedEvents().length) {
+              <div class="provider-empty">
+                <p>Aucun événement validé pour le moment.</p>
+              </div>
+            } @else {
+              <ul class="provider-offer-list">
+                @for (ev of pagePublishedEvents(); track ev.id) {
+                  <li class="provider-offer-item">
+                    <div class="provider-offer-main">
+                      <strong>{{ ev.title }}</strong>
+                      <span class="provider-offer-meta">{{ eventTypeLabel(ev.eventType) }}</span>
+                      <span class="provider-offer-meta">
+                        {{ ev.participantsCount ?? 0 }} inscrit(s)
+                      </span>
+                    </div>
+                    <span [class]="offeringStatusClass(ev.status)">{{ offeringStatusLabel(ev.status) }}</span>
+                    <div class="provider-offer-actions">
+                      <a [routerLink]="routes.PUBLIC.EVENT(ev.id)" target="_blank" rel="noopener" class="provider-btn provider-btn--outline provider-btn--sm">
+                        Voir en ligne
+                      </a>
+                      <a [routerLink]="routes.PROVIDER.TRAINING_EVENT_EDIT(ev.id)" class="provider-btn provider-btn--outline provider-btn--sm">
+                        Modifier
+                      </a>
+                      <a
+                        [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS"
+                        [queryParams]="{ eventId: ev.id }"
+                        class="provider-btn provider-btn--outline provider-btn--sm"
+                      >
+                        Inscrits
+                      </a>
+                    </div>
+                  </li>
+                }
+              </ul>
+              <app-provider-list-pagination
+                [total]="ctx.publishedEvents().length"
+                [page]="pubEventsPage()"
+                [pageSize]="pageSize"
+                (pageChange)="pubEventsPage.set($event)"
+              />
+            }
+          </div>
+        }
+        </section>
+      }
+
+      @if (rejectedTotal()) {
+        <section id="provider-rejected-offerings" class="provider-card">
+          <div class="provider-card-head">
+            <h2>À corriger</h2>
+            <p>Contenus refusés. Corrigez-les puis renvoyez-les en validation.</p>
           </div>
           <ul class="provider-offer-list">
             @for (row of pageRejectedItems(); track row.kind + row.item.id) {
@@ -245,28 +341,34 @@
           <span class="provider-stat-label">Événements</span>
           <span class="provider-stat-sub">{{ ctx.dashboard()!.stats['pending'] || 0 }} en validation</span>
         </a>
-        <a [routerLink]="routes.PROVIDER.INSTITUTION_OPPORTUNITIES" class="provider-stat-card provider-stat-card--link provider-stat-card--accent">
-          <span class="provider-stat-value">{{ ctx.dashboard()!.stats['opportunities'] || 0 }}</span>
-          <span class="provider-stat-label">Offres & stages</span>
-          <span class="provider-stat-sub">{{ ctx.dashboard()!.stats['registrations'] || 0 }} inscription(s)</span>
+        <a [routerLink]="routes.PROVIDER.INSTITUTION_ANNOUNCEMENTS" class="provider-stat-card provider-stat-card--link provider-stat-card--accent">
+          <span class="provider-stat-value">{{ ctx.dashboard()!.stats['announcements'] || 0 }}</span>
+          <span class="provider-stat-label">Annonces</span>
+          <span class="provider-stat-sub">{{ ctx.dashboard()!.stats['registrations'] || 0 }} interaction(s)</span>
         </a>
       </div>
 
-      <section class="provider-card">
+      <section class="provider-card provider-publications-panel">
         <div class="provider-card-head">
-          <h2>Toutes vos publications</h2>
-          <p>Recherchez, filtrez et suivez le statut de vos programmes, événements, annonces et offres/stages.</p>
+          <div>
+            <h2>Toutes vos publications</h2>
+            <p>Recherchez, filtrez et suivez le statut de vos programmes, événements et annonces.</p>
+          </div>
+          <span class="provider-count">{{ institutionOfferingsTotal() }}</span>
         </div>
 
         <div class="institution-list-filters provider-dashboard-filters">
           <input
             class="provider-input"
+            type="search"
+            aria-label="Rechercher une publication"
             placeholder="Recherche titre, résumé, catégorie..."
             [ngModel]="institutionSearch()"
             (ngModelChange)="institutionSearch.set($event); onInstitutionFilterChange()"
           />
           <select
             class="provider-input"
+            aria-label="Filtrer par type de publication"
             [ngModel]="institutionTypeFilter()"
             (ngModelChange)="institutionTypeFilter.set($event); onInstitutionFilterChange()"
           >
@@ -274,10 +376,10 @@
             <option value="program">Programmes</option>
             <option value="event">Événements</option>
             <option value="announcement">Annonces</option>
-            <option value="opportunity">Offres & stages</option>
           </select>
           <select
             class="provider-input"
+            aria-label="Filtrer par statut"
             [ngModel]="institutionStatusFilter()"
             (ngModelChange)="institutionStatusFilter.set($event); onInstitutionFilterChange()"
           >
@@ -293,16 +395,21 @@
           <p class="provider-muted">Chargement...</p>
         } @else if (institutionOfferingsError()) {
           <p class="provider-muted">{{ institutionOfferingsError() }}</p>
-        } @else if (!filteredInstitutionOfferings().length) {
+        } @else if (!institutionOfferings().length) {
           <div class="provider-empty">
             <p>Aucune publication trouvée.</p>
           </div>
         } @else {
-          <ul class="provider-offer-list">
+          <ul class="provider-offer-list provider-offer-list--cards">
             @for (pub of pageInstitutionOfferings(); track pub.id) {
-              <li class="provider-offer-item">
+              <li class="provider-offer-item provider-offer-item--publication">
                 <div class="provider-offer-main">
-                  <strong>{{ pub.title }}</strong>
+                  <div class="provider-offer-title-row">
+                    <strong>{{ pub.title }}</strong>
+                    <span [class]="institutionStatusClass(pub.status)">
+                      {{ institutionStatusLabel(pub.status) }}
+                    </span>
+                  </div>
                   <span class="provider-offer-meta">
                     {{ institutionTypeLabel(pub.offeringType) }}
                     @if (pub.category) {
@@ -312,13 +419,11 @@
                   @if (pub.summary) {
                     <span class="provider-offer-meta">{{ pub.summary }}</span>
                   }
-                  <span class="provider-offer-meta">
-                    {{ pub.viewsCount }} vue(s) · {{ pub.clicksCount }} clic(s)
-                  </span>
+                  <div class="provider-publication-metrics">
+                    <span>{{ pub.viewsCount }} vue(s)</span>
+                    <span>{{ pub.clicksCount }} clic(s)</span>
+                  </div>
                 </div>
-                <span [class]="institutionStatusClass(pub.status)">
-                  {{ institutionStatusLabel(pub.status) }}
-                </span>
                 <div class="provider-offer-actions">
                   <a
                     [routerLink]="routes.PROVIDER.INSTITUTION_PUBLICATION_EDIT(pub.id)"
@@ -338,9 +443,9 @@
                     <button
                       type="button"
                       class="provider-btn provider-btn--danger provider-btn--sm"
-                      (click)="setInstitutionOfferingStatus(pub, 'draft')"
+                      (click)="setInstitutionOfferingStatus(pub, 'pending')"
                     >
-                      Cacher
+                      Demander dépublication
                     </button>
                   }
                   @if (pub.status === 'draft' || pub.status === 'rejected') {
@@ -357,10 +462,10 @@
             }
           </ul>
           <app-provider-list-pagination
-            [total]="filteredInstitutionOfferings().length"
+            [total]="institutionOfferingsTotal()"
             [page]="institutionOfferingsPage()"
             [pageSize]="pageSize"
-            (pageChange)="institutionOfferingsPage.set($event)"
+            (pageChange)="setInstitutionOfferingsPage($event)"
           />
         }
       </section>

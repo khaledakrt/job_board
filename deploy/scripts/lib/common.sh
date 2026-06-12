@@ -3,7 +3,7 @@
 
 APP_ROOT="${APP_ROOT:-/var/www/jobboard}"
 SITE_ROOT="${SITE_ROOT:-/var/www/jobboard/site}"
-PUBLIC_URL="${PUBLIC_URL:-http://127.0.0.1}"
+PUBLIC_URL="${PUBLIC_URL:-https://tun-job-board.com}"
 SERVER_NAME="${SERVER_NAME:-_}"
 DB_NAME="${DB_NAME:-job_board}"
 DB_USER="${DB_USER:-jobboard}"

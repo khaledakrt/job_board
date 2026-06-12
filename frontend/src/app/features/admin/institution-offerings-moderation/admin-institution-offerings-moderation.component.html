@@ -44,7 +44,6 @@
         <option value="program">Programme</option>
         <option value="event">Événement</option>
         <option value="announcement">Annonce</option>
-        <option value="opportunity">Offre / stage</option>
       </select>
     </div>
     <div class="admin-field">
@@ -80,6 +79,24 @@
     </div>
   }
 
+  <section class="admin-institution-summary-grid" aria-label="Résumé publications établissement">
+    <article>
+      <span>{{ pageSummary().pending }}</span>
+      <strong>En attente</strong>
+      <small>à vérifier sur cette page</small>
+    </article>
+    <article>
+      <span>{{ pageSummary().published }}</span>
+      <strong>Publiées</strong>
+      <small>visibles publiquement</small>
+    </article>
+    <article>
+      <span>{{ pageSummary().rejected }}</span>
+      <strong>Refusées</strong>
+      <small>avec correction demandée</small>
+    </article>
+  </section>
+
   <div class="admin-table-wrap" [class.admin-table-wrap--loading]="loading()">
     @if (loading()) {
       <div class="admin-table-loading">Chargement…</div>
@@ -109,6 +126,11 @@
                 <p class="admin-muted admin-publication-summary">
                   {{ row.summary || 'Aucun résumé renseigné.' }}
                 </p>
+                @if (row.status === 'rejected' && row.adminNote) {
+                  <p class="admin-muted admin-publication-note">
+                    Motif : {{ row.adminNote }}
+                  </p>
+                }
               </td>
               <td>
                 @if (row.institution) {
@@ -195,4 +217,33 @@
     itemLabel="publication"
     (pageChange)="load($event)"
   />
+
+  @if (rejectTarget(); as target) {
+    <div class="admin-modal-backdrop" role="presentation">
+      <section class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="rejectInstitutionOfferingTitle">
+        <h2 id="rejectInstitutionOfferingTitle">Refuser la publication</h2>
+        <p class="admin-muted">
+          Ajoutez un motif clair pour que l’établissement comprenne quoi corriger.
+        </p>
+        <label class="admin-field admin-field--full">
+          <span>Motif de refus</span>
+          <textarea
+            class="form-input"
+            rows="4"
+            [(ngModel)]="rejectNote"
+            name="rejectNote"
+            placeholder="Ex. Résumé incomplet, informations de contact manquantes..."
+          ></textarea>
+        </label>
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-btn-ghost" [disabled]="actionLoading() === target.id" (click)="cancelReject()">
+            Annuler
+          </button>
+          <button type="button" class="admin-action-chip admin-action-chip--reject" [disabled]="actionLoading() === target.id" (click)="confirmReject()">
+            Confirmer le refus
+          </button>
+        </div>
+      </section>
+    </div>
+  }
 </div>

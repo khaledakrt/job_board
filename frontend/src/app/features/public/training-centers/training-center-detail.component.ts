@@ -12,6 +12,9 @@ import {
   eventTypeLabel,
 } from '../shared/catalog-offerings.constants';
 import { TrainingFormationItem, TrainingEventItem } from '../../../core/models/catalog.model';
+import { PaginationMeta } from '../../../core/models/pagination.model';
+
+type OfferingKindFilter = 'formation' | 'event';
 
 @Component({
   selector: 'app-training-center-detail',
@@ -30,17 +33,32 @@ export class TrainingCenterDetailComponent implements OnInit {
 
   readonly center = signal<TrainingCenterDetail | null>(null);
   readonly loading = signal(true);
+  readonly offeringsLoading = signal(false);
   readonly error = signal<string | null>(null);
-  readonly offeringKindFilter = signal<'all' | 'formation' | 'event'>('all');
+  readonly offeringKindFilter = signal<OfferingKindFilter>('formation');
   readonly offeringSearch = signal('');
   readonly offeringsPage = signal(1);
   readonly offeringsPageSize = 15;
+  readonly offeringsPagination = signal<PaginationMeta | null>(null);
 
-  readonly offeringCards = computed(() => {
-    const center = this.center();
-    if (!center) return [];
+  readonly offeringCards = signal<Array<{
+    kind: OfferingKindFilter;
+    id: string;
+    title: string;
+    imageUrl: string | null;
+    placeholder: string;
+    primaryTag: string | null;
+    secondaryTag: string | null;
+    description: string | null;
+    price: number | null | undefined;
+    participantsCount: number | null | undefined;
+    meta: string;
+    route: string;
+    cta: string;
+  }>>([]);
 
-    const formations = (center.formations ?? []).map((f) => ({
+  private formationCards(items: TrainingFormationItem[]) {
+    return items.map((f) => ({
       kind: 'formation' as const,
       id: f.id,
       title: f.title,
@@ -55,8 +73,10 @@ export class TrainingCenterDetailComponent implements OnInit {
       route: this.routes.PUBLIC.FORMATION(f.id),
       cta: 'Voir la formation →',
     }));
+  }
 
-    const events = (center.events ?? []).map((ev) => ({
+  private eventCards(items: TrainingEventItem[]) {
+    return items.map((ev) => ({
       kind: 'event' as const,
       id: ev.id,
       title: ev.title,
@@ -71,28 +91,17 @@ export class TrainingCenterDetailComponent implements OnInit {
       route: this.routes.PUBLIC.EVENT(ev.id),
       cta: "Voir l'événement →",
     }));
-
-    return [...formations, ...events];
-  });
-
-  readonly filteredOfferingCards = computed(() => {
-    const kind = this.offeringKindFilter();
-    const q = this.offeringSearch().trim().toLowerCase();
-    return this.offeringCards().filter((item) => {
-      if (kind !== 'all' && item.kind !== kind) return false;
-      if (q && !item.title.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  });
+  }
 
   readonly pagedOfferingCards = computed(() => {
-    const start = (this.offeringsPage() - 1) * this.offeringsPageSize;
-    return this.filteredOfferingCards().slice(start, start + this.offeringsPageSize);
+    return this.offeringCards();
   });
 
   readonly offeringsTotalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filteredOfferingCards().length / this.offeringsPageSize))
+    this.offeringsPagination()?.totalPages ?? 1
   );
+
+  readonly offeringsTotal = computed(() => this.offeringsPagination()?.totalItems ?? this.offeringCards().length);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -105,6 +114,7 @@ export class TrainingCenterDetailComponent implements OnInit {
       next: (res) => {
         this.center.set(res.data ?? null);
         this.loading.set(false);
+        this.loadOfferings(1);
       },
       error: () => {
         this.error.set('Centre introuvable ou non publié.');
@@ -118,12 +128,59 @@ export class TrainingCenterDetailComponent implements OnInit {
   }
 
   onOfferingsFilterChange(): void {
-    this.offeringsPage.set(1);
+    this.loadOfferings(1);
   }
 
   setOfferingsPage(page: number): void {
     const next = Math.min(Math.max(page, 1), this.offeringsTotalPages());
-    this.offeringsPage.set(next);
+    this.loadOfferings(next);
+  }
+
+  setOfferingKindFilter(kind: string): void {
+    if (kind !== 'formation' && kind !== 'event') return;
+    this.offeringKindFilter.set(kind);
+    this.loadOfferings(1);
+  }
+
+  private loadOfferings(page: number): void {
+    const centerId = this.center()?.id;
+    if (!centerId) return;
+    this.offeringsLoading.set(true);
+    this.offeringsPage.set(page);
+    const params: Record<string, string | number> = {
+      page,
+      limit: this.offeringsPageSize,
+    };
+    if (this.offeringSearch().trim()) {
+      params['search'] = this.offeringSearch().trim();
+    }
+
+    if (this.offeringKindFilter() === 'formation') {
+      this.catalog.listCenterFormations(centerId, params).subscribe({
+        next: (res) => {
+          this.offeringCards.set(this.formationCards(res.data ?? []));
+          this.offeringsPagination.set(res.pagination ?? null);
+          this.offeringsLoading.set(false);
+        },
+        error: () => this.handleOfferingsLoadError(),
+      });
+      return;
+    }
+
+    this.catalog.listCenterEvents(centerId, params).subscribe({
+      next: (res) => {
+        this.offeringCards.set(this.eventCards(res.data ?? []));
+        this.offeringsPagination.set(res.pagination ?? null);
+        this.offeringsLoading.set(false);
+      },
+      error: () => this.handleOfferingsLoadError(),
+    });
+  }
+
+  private handleOfferingsLoadError(): void {
+    this.offeringCards.set([]);
+    this.offeringsPagination.set(null);
+    this.offeringsLoading.set(false);
   }
 
   formatPrice(price: number | null | undefined): string | null {

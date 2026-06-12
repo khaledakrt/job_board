@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { AdminService, AdminOfferingItem } from '../services/admin.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
-import { CatalogPublishStatus } from '../../../core/models/catalog.model';
+import { CatalogPublishStatus } from '../../../core/models/admin.model';
 import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { adminPageSummary } from '../shared/admin-pagination.util';
 import { PaginationMeta } from '../../../core/models/pagination.model';
@@ -51,6 +51,7 @@ export class AdminOfferingsModerationComponent implements OnInit {
   readonly actionLoading = signal<string | null>(null);
 
   readonly filters = this.fb.nonNullable.group({
+    search: [''],
     status: [''],
   });
 
@@ -97,6 +98,7 @@ export class AdminOfferingsModerationComponent implements OnInit {
     const f = this.filters.getRawValue();
     const params: Record<string, string | number> = { page, limit: PAGE_SIZE };
     if (f.status) params['status'] = f.status;
+    if (f.search.trim()) params['search'] = f.search.trim();
 
     const req =
       this.kind() === 'formations'
@@ -121,7 +123,7 @@ export class AdminOfferingsModerationComponent implements OnInit {
   }
 
   resetFilters(): void {
-    this.filters.reset({ status: 'pending' });
+    this.filters.reset({ search: '', status: 'pending' });
     this.load(1);
   }
 

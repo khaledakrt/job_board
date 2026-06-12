@@ -338,6 +338,12 @@ async function refreshSession(refreshToken) {
     );
   }
 
+  if (!user.is_verified && user.role !== USER_ROLES.ADMIN) {
+    throw ApiError.forbidden(
+      'Adresse e-mail non confirmée. Ouvrez le lien reçu par e-mail ou demandez un nouvel envoi.'
+    );
+  }
+
   const accessToken = tokenService.signAccessToken(user);
   const newRefreshToken = tokenService.signRefreshToken(user);
 

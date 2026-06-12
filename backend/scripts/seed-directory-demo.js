@@ -327,18 +327,6 @@ const INSTITUTIONS = [
         city: 'Ariana',
         status: 'published',
       },
-      {
-        offering_type: 'opportunity',
-        title: 'Stage assistant marketing campus',
-        summary: 'Stage étudiant en communication digitale et organisation d’événements campus.',
-        description:
-          '<p>Missions : animation réseaux sociaux, support événements, création de contenus et reporting.</p>',
-        category: 'Marketing',
-        opportunity_type: 'internship',
-        city: 'Ariana',
-        seats: 2,
-        status: 'published',
-      },
     ],
   },
 ];

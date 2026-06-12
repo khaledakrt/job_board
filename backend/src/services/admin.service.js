@@ -272,69 +272,85 @@ async function createUser(payload) {
   const passwordHash = await hashPassword(payload.password);
   const isVerified = payload.isVerified !== false;
 
-  const user = await User.create({
-    id: generateUuid(),
-    email,
-    password_hash: passwordHash,
-    role: payload.role,
-    is_verified: isVerified,
-    verification_token: isVerified ? null : generateUuid().replace(/-/g, ''),
-    is_banned: false,
-    ban_reason: null,
-    banned_at: null,
-    last_login_ip: null,
-    reset_token: null,
-    reset_expires: null,
-    created_at: new Date(),
+  const userId = await User.sequelize.transaction(async (transaction) => {
+    const user = await User.create(
+      {
+        id: generateUuid(),
+        email,
+        password_hash: passwordHash,
+        role: payload.role,
+        is_verified: isVerified,
+        verification_token: isVerified ? null : generateUuid().replace(/-/g, ''),
+        is_banned: false,
+        ban_reason: null,
+        banned_at: null,
+        last_login_ip: null,
+        reset_token: null,
+        reset_expires: null,
+        created_at: new Date(),
+      },
+      { transaction }
+    );
+
+    if (payload.role === USER_ROLES.CANDIDATE) {
+      await CandidateProfile.create(
+        {
+          id: generateUuid(),
+          user_id: user.id,
+          first_name: payload.firstName || 'Prénom',
+          last_name: payload.lastName || 'Nom',
+          professional_title: payload.professionalTitle || null,
+          phone: payload.phone || null,
+          skills: [],
+          updated_at: new Date(),
+        },
+        { transaction }
+      );
+    }
+
+    if (payload.role === USER_ROLES.RECRUITER) {
+      let companyId = payload.companyId;
+      if (!companyId && payload.companyName) {
+        const company = await Company.create(
+          {
+            id: generateUuid(),
+            name: payload.companyName.trim(),
+            industry: payload.companyIndustry || null,
+            website: null,
+            description: 'Créée par administrateur',
+            created_at: new Date(),
+          },
+          { transaction }
+        );
+        companyId = company.id;
+      }
+      if (!companyId) {
+        throw ApiError.badRequest('companyId or companyName required for recruiter');
+      }
+      const company = await Company.findByPk(companyId, { transaction });
+      if (!company) {
+        throw ApiError.notFound('Company not found');
+      }
+      await RecruiterProfile.create(
+        {
+          id: generateUuid(),
+          user_id: user.id,
+          company_id: companyId,
+          job_title: payload.jobTitle || 'Recruteur',
+          company_role: 'owner',
+          can_post_job: true,
+          can_decide_application: true,
+          can_edit_company: true,
+          updated_at: new Date(),
+        },
+        { transaction }
+      );
+    }
+
+    return user.id;
   });
 
-  if (payload.role === USER_ROLES.CANDIDATE) {
-    await CandidateProfile.create({
-      id: generateUuid(),
-      user_id: user.id,
-      first_name: payload.firstName || 'Prénom',
-      last_name: payload.lastName || 'Nom',
-      professional_title: payload.professionalTitle || null,
-      phone: payload.phone || null,
-      skills: [],
-      updated_at: new Date(),
-    });
-  }
-
-  if (payload.role === USER_ROLES.RECRUITER) {
-    let companyId = payload.companyId;
-    if (!companyId && payload.companyName) {
-      const company = await Company.create({
-        id: generateUuid(),
-        name: payload.companyName.trim(),
-        industry: payload.companyIndustry || null,
-        website: null,
-        description: 'Créée par administrateur',
-        created_at: new Date(),
-      });
-      companyId = company.id;
-    }
-    if (!companyId) {
-      throw ApiError.badRequest('companyId or companyName required for recruiter');
-    }
-    const company = await Company.findByPk(companyId);
-    if (!company) {
-      throw ApiError.notFound('Company not found');
-    }
-    await RecruiterProfile.create({
-      id: generateUuid(),
-      user_id: user.id,
-      company_id: companyId,
-      job_title: payload.jobTitle || 'Recruteur',
-      company_role: 'owner',
-      can_post_job: true,
-      can_decide_application: true,
-      can_edit_company: true,
-      updated_at: new Date(),
-    });
-  }
-
-  return getUserById(user.id);
+  return getUserById(userId);
 }
 
 async function updateUser(userId, payload, actingAdminId) {

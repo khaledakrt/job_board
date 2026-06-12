@@ -59,6 +59,9 @@ export class CandidateDirectoryComponent implements OnInit {
   readonly trainingCenters = signal<TrainingCenterCard[]>([]);
   readonly institutions = signal<PrivateInstitutionCard[]>([]);
   readonly total = signal(0);
+  readonly page = signal(1);
+  readonly totalPages = signal(1);
+  readonly pageSize = 24;
   readonly detailLoading = signal(false);
   readonly selectedCompany = signal<CompanyDirectoryCard | null>(null);
   readonly selectedJob = signal<Job | null>(null);
@@ -97,7 +100,7 @@ export class CandidateDirectoryComponent implements OnInit {
   readonly title = computed(() => {
     switch (this.kind()) {
       case 'training':
-        return 'Annuaire formations';
+        return 'Formations professionnelles';
       case 'institutions':
         return 'Annuaire établissements';
       default:
@@ -108,7 +111,7 @@ export class CandidateDirectoryComponent implements OnInit {
   readonly subtitle = computed(() => {
     switch (this.kind()) {
       case 'training':
-        return 'Consultez les centres de formation validés et leurs domaines.';
+        return 'Découvrez des centres validés, comparez leurs formations et inscrivez-vous en quelques clics.';
       case 'institutions':
         return 'Explorez les établissements privés référencés.';
       default:
@@ -128,20 +131,24 @@ export class CandidateDirectoryComponent implements OnInit {
     this.route.data.subscribe((data) => {
       this.kind.set((data['directory'] as DirectoryKind) || 'companies');
       this.resetFilters(false);
-      this.load();
+      this.load(1);
     });
     this.applications.listAppliedJobIds().subscribe({
       next: (res) => this.appliedJobIds.set(new Set(res.data ?? [])),
     });
   }
 
-  load(): void {
+  load(page = this.page()): void {
     this.loading.set(true);
     this.error.set(null);
+    this.page.set(page);
     this.clearSelection();
 
     if (this.kind() === 'training') {
-      const params: Record<string, string> = { page: '1', limit: '24' };
+      const params: Record<string, string> = {
+        page: String(page),
+        limit: String(this.pageSize),
+      };
       if (this.search.trim()) params['search'] = this.search.trim();
       if (this.city.trim()) params['city'] = this.city.trim();
       if (this.domain.trim()) params['domain'] = this.domain.trim();
@@ -151,6 +158,7 @@ export class CandidateDirectoryComponent implements OnInit {
         next: (res) => {
           this.trainingCenters.set(res.data ?? []);
           this.total.set(res.pagination?.totalItems ?? this.trainingCenters().length);
+          this.totalPages.set(res.pagination?.totalPages ?? 1);
           this.loading.set(false);
         },
         error: () => this.fail('Impossible de charger l’annuaire des formations.'),
@@ -159,7 +167,10 @@ export class CandidateDirectoryComponent implements OnInit {
     }
 
     if (this.kind() === 'institutions') {
-      const params: Record<string, string> = { page: '1', limit: '24' };
+      const params: Record<string, string> = {
+        page: String(page),
+        limit: String(this.pageSize),
+      };
       if (this.search.trim()) params['search'] = this.search.trim();
       if (this.city.trim()) params['city'] = this.city.trim();
       if (this.institutionType) params['type'] = this.institutionType;
@@ -168,6 +179,7 @@ export class CandidateDirectoryComponent implements OnInit {
         next: (res) => {
           this.institutions.set(res.data ?? []);
           this.total.set(res.pagination?.totalItems ?? this.institutions().length);
+          this.totalPages.set(res.pagination?.totalPages ?? 1);
           this.loading.set(false);
         },
         error: () => this.fail('Impossible de charger l’annuaire des établissements.'),
@@ -179,12 +191,13 @@ export class CandidateDirectoryComponent implements OnInit {
       search: this.search,
       city: this.city,
       industry: this.domain,
-      page: 1,
-      limit: 24,
+      page,
+      limit: this.pageSize,
     }).subscribe({
       next: (res) => {
         this.companies.set(res.data ?? []);
         this.total.set(res.pagination?.totalItems ?? this.companies().length);
+        this.totalPages.set(res.pagination?.totalPages ?? 1);
         this.loading.set(false);
       },
       error: () => this.fail('Impossible de charger l’annuaire des sociétés.'),
@@ -197,7 +210,14 @@ export class CandidateDirectoryComponent implements OnInit {
     this.domain = '';
     this.deliveryMode = '';
     this.institutionType = '';
-    if (reload) this.load();
+    if (reload) this.load(1);
+  }
+
+  setPage(page: number): void {
+    const next = Math.min(Math.max(page, 1), this.totalPages());
+    if (next !== this.page()) {
+      this.load(next);
+    }
   }
 
   logoUrl(url: string | null): string | null {
@@ -442,7 +462,8 @@ export class CandidateDirectoryComponent implements OnInit {
 
     this.institutionActionLoading.set(true);
     this.institutionActionMsg.set(null);
-    this.catalog.participateInstitutionOffering(offering.id).subscribe({
+    const participationType = offering.offeringType === 'announcement' ? 'interested' : 'registered';
+    this.catalog.participateInstitutionOffering(offering.id, participationType).subscribe({
       next: () => {
         this.institutionActionLoading.set(false);
         this.institutionActionMsg.set(this.institutionSuccessLabel(offering));
@@ -474,7 +495,6 @@ export class CandidateDirectoryComponent implements OnInit {
       ...(institution.publishedPrograms ?? []),
       ...(institution.publishedEvents ?? []),
       ...(institution.publishedAnnouncements ?? []),
-      ...(institution.publishedOpportunities ?? []),
       ...(institution.institutionOfferings ?? []),
     ].filter((item, index, items) => items.findIndex((other) => other.id === item.id) === index);
   }
@@ -530,31 +550,26 @@ export class CandidateDirectoryComponent implements OnInit {
       program: 'Programme',
       event: 'Événement',
       announcement: 'Annonce',
-      opportunity: 'Opportunité',
     };
     return labels[offering.offeringType] ?? offering.offeringType;
   }
 
   institutionActionLabel(offering: InstitutionOfferingItem): string {
-    if (offering.offeringType === 'opportunity') return 'Candidater';
     if (offering.offeringType === 'announcement') return 'Je suis intéressé';
     return "S'inscrire";
   }
 
   institutionActionTitle(offering: InstitutionOfferingItem): string {
-    if (offering.offeringType === 'opportunity') return 'Confirmer la candidature';
     if (offering.offeringType === 'announcement') return 'Confirmer votre intérêt';
     return 'Confirmer l’inscription';
   }
 
   institutionSuccessLabel(offering: InstitutionOfferingItem): string {
-    if (offering.offeringType === 'opportunity') return 'Candidature enregistrée.';
     if (offering.offeringType === 'announcement') return 'Intérêt enregistré.';
     return 'Inscription enregistrée.';
   }
 
   institutionDoneLabel(offering: InstitutionOfferingItem): string {
-    if (offering.offeringType === 'opportunity') return 'Candidature envoyée';
     if (offering.offeringType === 'announcement') return 'Déjà intéressé';
     return 'Déjà inscrit';
   }
@@ -669,7 +684,6 @@ export class CandidateDirectoryComponent implements OnInit {
         publishedPrograms: mapList(institution.publishedPrograms),
         publishedEvents: mapList(institution.publishedEvents),
         publishedAnnouncements: mapList(institution.publishedAnnouncements),
-        publishedOpportunities: mapList(institution.publishedOpportunities),
       };
     });
   }

@@ -26,6 +26,16 @@
   overflow: hidden;
 }
 
+.admin-publication-note {
+  max-width: 520px;
+  margin-top: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  white-space: pre-line;
+}
+
 .admin-institution-cell {
   display: flex;
   flex-direction: column;
@@ -47,6 +57,82 @@
   white-space: nowrap;
 }
 
+.admin-institution-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+
+.admin-institution-summary-grid article {
+  padding: 1rem;
+  border: 1px solid #e9d5ff;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.1), transparent 10rem),
+    #fff;
+}
+
+.admin-institution-summary-grid span {
+  display: block;
+  color: #6d28d9;
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.admin-institution-summary-grid strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.admin-institution-summary-grid small {
+  display: block;
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.admin-modal {
+  width: min(520px, 100%);
+  padding: 1.25rem;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.admin-modal h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.admin-modal textarea {
+  resize: vertical;
+  margin-top: 0.4rem;
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
 @media (max-width: 1200px) {
   .admin-institution-offerings-filters {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -59,7 +145,8 @@
 
 @media (max-width: 720px) {
   .admin-institution-offerings-filters,
-  .admin-institution-offerings-toolbar {
+  .admin-institution-offerings-toolbar,
+  .admin-institution-summary-grid {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;

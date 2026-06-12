@@ -33,10 +33,17 @@ export class PublicCatalogService {
     );
   }
 
-  submitTrainingCenter(body: unknown) {
-    return this.http.post<ApiResponse<CatalogSubmitResult>>(
-      `${this.base}/training-centers`,
-      body
+  listCenterFormations(centerId: string, params: Record<string, string | number>) {
+    return this.http.get<ApiResponse<TrainingFormationItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/training-centers/${centerId}/formations`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
+    );
+  }
+
+  listCenterEvents(centerId: string, params: Record<string, string | number>) {
+    return this.http.get<ApiResponse<TrainingEventItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/training-centers/${centerId}/events`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
     );
   }
 
@@ -50,6 +57,13 @@ export class PublicCatalogService {
   getPrivateInstitution(id: string) {
     return this.http.get<ApiResponse<PrivateInstitutionDetail>>(
       `${this.base}/private-institutions/${id}`
+    );
+  }
+
+  listPrivateInstitutionOfferings(institutionId: string, params: Record<string, string | number>) {
+    return this.http.get<ApiResponse<InstitutionOfferingItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/private-institutions/${institutionId}/offerings`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
     );
   }
 
@@ -88,10 +102,10 @@ export class PublicCatalogService {
     );
   }
 
-  participateInstitutionOffering(id: string) {
+  participateInstitutionOffering(id: string, participationType: ParticipationType = 'registered') {
     return this.http.post<ApiResponse<{ participationType: ParticipationType }>>(
       `${this.base}/private-institutions/publications/${id}/participate`,
-      { participationType: 'registered' }
+      { participationType }
     );
   }
 }

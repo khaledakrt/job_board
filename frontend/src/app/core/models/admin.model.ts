@@ -131,5 +131,4 @@ export interface AdminCatalogDetail {
   publishedPrograms?: InstitutionOfferingItem[];
   publishedEvents?: InstitutionOfferingItem[];
   publishedAnnouncements?: InstitutionOfferingItem[];
-  publishedOpportunities?: InstitutionOfferingItem[];
 }

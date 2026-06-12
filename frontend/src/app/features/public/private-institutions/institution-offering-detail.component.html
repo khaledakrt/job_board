@@ -43,9 +43,6 @@
               @if (item()!.category) {
                 <span class="catalog-tag">{{ item()!.category }}</span>
               }
-              @if (item()!.opportunityType) {
-                <span class="catalog-tag">{{ opportunityLabel(item()!.opportunityType) }}</span>
-              }
             </div>
             <h1>{{ item()!.title }}</h1>
             @if (item()!.institution) {
@@ -62,7 +59,7 @@
             }
 
             @if (item()!.website) {
-              <p style="margin-top: 1.25rem">
+              <p class="catalog-detail-action">
                 <a [href]="item()!.website" target="_blank" rel="noopener noreferrer" class="catalog-btn catalog-btn--primary">
                   Ouvrir le lien officiel
                 </a>
@@ -86,6 +83,30 @@
             }
             @if (item()!.seats !== null && item()!.seats !== undefined) {
               <p><strong>Places</strong><br />{{ item()!.seats }}</p>
+            }
+            <p class="catalog-side-participants">
+              <strong>Inscrits</strong><br />
+              <span class="catalog-offering-participants catalog-offering-participants--side">{{
+                item()!.registrationsCount || 0
+              }}</span>
+            </p>
+            @if (item()!.offeringType !== 'announcement') {
+              <div class="catalog-participate">
+                @if (actionMsg()) {
+                  <p class="catalog-participate-msg">{{ actionMsg() }}</p>
+                }
+                @if (hasParticipated()) {
+                  <p class="catalog-participate-msg">Vous êtes inscrit(e).</p>
+                }
+                <button
+                  type="button"
+                  class="catalog-btn catalog-btn--primary catalog-btn--block"
+                  [disabled]="participateButtonsDisabled()"
+                  (click)="participate()"
+                >
+                  S'inscrire
+                </button>
+              </div>
             }
             @if (item()!.phone) {
               <p><strong>Téléphone</strong><br />{{ item()!.phone }}</p>

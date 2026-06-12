@@ -47,8 +47,8 @@
 
     @if (item()!.status === 'pending') {
       <p class="admin-hint-banner">
-        Ce centre n’apparaît pas sur
-        <strong>/centres-formation</strong>
+        {{ kind() === 'training-centers' ? 'Ce centre' : 'Cet établissement' }} n’apparaît pas sur
+        <strong>{{ kind() === 'training-centers' ? '/centres-formation' : '/etablissements-prives' }}</strong>
         tant que vous n’avez pas cliqué sur « Confirmer l'inscription » (statut Publié).
       </p>
     }
@@ -231,6 +231,10 @@
         <h2>Modifier la fiche</h2>
         <form [formGroup]="form" (ngSubmit)="save()">
           <div class="admin-form-grid">
+            <div class="admin-form-section">
+              <h3>Identité</h3>
+              <p>Nom, type et statut de publication.</p>
+            </div>
             <div class="admin-field admin-field--full">
               <label for="editName">Nom</label>
               <input id="editName" class="form-input" formControlName="name" />
@@ -253,6 +257,10 @@
                 <option value="rejected">Refusé</option>
               </select>
             </div>
+            <div class="admin-form-section">
+              <h3>Coordonnées</h3>
+              <p>Adresse, contact et liens publics.</p>
+            </div>
             <div class="admin-field">
               <label for="editCity">Ville</label>
               <input id="editCity" class="form-input" formControlName="city" />
@@ -272,6 +280,10 @@
             <div class="admin-field admin-field--full">
               <label for="editWebsite">Site web</label>
               <input id="editWebsite" class="form-input" formControlName="website" />
+            </div>
+            <div class="admin-form-section">
+              <h3>{{ kind() === 'training-centers' ? 'Formation' : 'Informations établissement' }}</h3>
+              <p>{{ kind() === 'training-centers' ? 'Domaine et modalité proposés.' : 'Localisation et fiche publique.' }}</p>
             </div>
             @if (kind() === 'training-centers') {
               <div class="admin-field">
@@ -293,6 +305,10 @@
                 <input id="editMap" class="form-input" formControlName="mapUrl" />
               </div>
             }
+            <div class="admin-form-section">
+              <h3>Présentation</h3>
+              <p>Description principale affichée sur la page publique.</p>
+            </div>
             <div class="admin-field admin-field--full">
               <label for="editDesc">Description</label>
               <textarea id="editDesc" class="form-input" rows="4" formControlName="description"></textarea>

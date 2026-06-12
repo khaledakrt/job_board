@@ -11,30 +11,33 @@
 
     <section class="directory-filters panel-card">
       <div class="directory-field directory-field-search">
-        <label>Recherche</label>
+        <label for="directory-search">Recherche</label>
         <input
+          id="directory-search"
+          type="search"
           [(ngModel)]="search"
-          (keydown.enter)="load()"
+          (keydown.enter)="load(1)"
           placeholder="Nom, domaine, secteur..."
+          autocomplete="off"
         />
       </div>
 
       <div class="directory-field">
-        <label>Ville</label>
-        <input [(ngModel)]="city" (keydown.enter)="load()" placeholder="Ville..." />
+        <label for="directory-city">Ville</label>
+        <input id="directory-city" [(ngModel)]="city" (keydown.enter)="load(1)" placeholder="Ville..." autocomplete="address-level2" />
       </div>
 
       @if (kind() === 'companies' || kind() === 'training') {
         <div class="directory-field">
-          <label>Domaine</label>
-          <input [(ngModel)]="domain" (keydown.enter)="load()" placeholder="Ex. informatique, commerce" />
+          <label for="directory-domain">Domaine</label>
+          <input id="directory-domain" [(ngModel)]="domain" (keydown.enter)="load(1)" placeholder="Ex. informatique, commerce" autocomplete="off" />
         </div>
       }
 
       @if (kind() === 'training') {
         <div class="directory-field">
-          <label>Mode</label>
-          <select [(ngModel)]="deliveryMode">
+          <label for="directory-mode">Mode</label>
+          <select id="directory-mode" [(ngModel)]="deliveryMode">
             @for (option of deliveryOptions; track option.value) {
               <option [value]="option.value">{{ option.label }}</option>
             }
@@ -54,7 +57,7 @@
       }
 
       <div class="directory-actions">
-        <button type="button" class="directory-btn directory-btn-primary" (click)="load()">
+        <button type="button" class="directory-btn directory-btn-primary" (click)="load(1)">
           Rechercher
         </button>
         <button type="button" class="directory-btn directory-btn-ghost" (click)="resetFilters()">
@@ -267,7 +270,7 @@
         <div class="section-heading">
           <div>
             <h3>Publications</h3>
-            <p>Programmes, événements, annonces et opportunités publiés par l’établissement.</p>
+            <p>Programmes, événements et annonces publiés par l’établissement.</p>
           </div>
         </div>
 
@@ -343,6 +346,7 @@
               @if (center.shortDescription) {
                 <p class="directory-description">{{ center.shortDescription }}</p>
               }
+              <small>{{ center.publishedOfferingsCount ?? center.courseCount }} publication(s)</small>
             </div>
           </article>
         } @empty {
@@ -377,6 +381,27 @@
         }
       }
       </div>
+      @if (totalPages() > 1) {
+        <nav class="directory-pagination panel-card" aria-label="Pagination de l’annuaire">
+          <button
+            type="button"
+            class="directory-btn directory-btn-ghost"
+            [disabled]="page() <= 1"
+            (click)="setPage(page() - 1)"
+          >
+            Précédent
+          </button>
+          <span>Page {{ page() }} / {{ totalPages() }}</span>
+          <button
+            type="button"
+            class="directory-btn directory-btn-ghost"
+            [disabled]="page() >= totalPages()"
+            (click)="setPage(page() + 1)"
+          >
+            Suivant
+          </button>
+        </nav>
+      }
     }
   }
 </section>

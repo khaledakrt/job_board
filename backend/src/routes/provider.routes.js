@@ -29,6 +29,7 @@ const {
   formationIdParamsSchema,
   eventIdParamsSchema,
   listParticipationsQuerySchema,
+  providerListOfferingsQuerySchema,
 } = require('../validators/catalogOfferings.validator');
 const {
   offeringTypeParamsSchema,
@@ -117,6 +118,7 @@ router.get(
 router.get(
   '/training/formations',
   requireTrainingProviderRole,
+  validateQuery(providerListOfferingsQuerySchema),
   catalogOfferingsController.listProviderFormations
 );
 router.get(
@@ -147,6 +149,7 @@ router.delete(
 router.get(
   '/training/events',
   requireTrainingProviderRole,
+  validateQuery(providerListOfferingsQuerySchema),
   catalogOfferingsController.listProviderEvents
 );
 router.get(

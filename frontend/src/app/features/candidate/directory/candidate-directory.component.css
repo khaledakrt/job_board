@@ -204,6 +204,7 @@
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  white-space: pre-line;
 }
 
 .directory-state {
@@ -216,6 +217,18 @@
 
 .directory-state-error {
   color: #b91c1c;
+}
+
+.directory-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .directory-detail {
@@ -354,6 +367,7 @@
   color: #475569;
   font-size: 0.88rem;
   line-height: 1.55;
+  white-space: pre-line;
 }
 
 .company-tags {
@@ -960,4 +974,650 @@
   .job-popup-form-actions .directory-btn {
     width: 100%;
   }
+}
+
+/* Training directory designer polish */
+.directory-page {
+  --dir-primary: #0a66c2;
+  --dir-primary-2: #2563eb;
+  --dir-sky: #38bdf8;
+  --dir-ink: #0f172a;
+  --dir-muted: #64748b;
+}
+
+.directory-hero {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(148, 163, 184, 0.28);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(56, 189, 248, 0.2), transparent 16rem),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 58%, #eef6ff 100%);
+  box-shadow: 0 22px 46px -32px rgba(15, 23, 42, 0.45);
+}
+
+.directory-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.32rem;
+  background: linear-gradient(180deg, var(--dir-primary), var(--dir-sky));
+}
+
+.directory-hero h1 {
+  letter-spacing: -0.035em;
+}
+
+.directory-hero strong {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.08);
+}
+
+.directory-filters {
+  border-color: rgba(148, 163, 184, 0.28);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 42px -34px rgba(15, 23, 42, 0.45);
+}
+
+.directory-field label {
+  color: #334155;
+}
+
+.directory-field input,
+.directory-field select {
+  min-height: 2.55rem;
+  border-color: #d7e1ee;
+  border-radius: 0.78rem;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.directory-field input:hover,
+.directory-field select:hover {
+  border-color: #a9bdd4;
+  background: #fbfdff;
+}
+
+.directory-field input:focus,
+.directory-field select:focus {
+  outline: none;
+  border-color: var(--dir-primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.14);
+}
+
+.directory-btn {
+  min-height: 2.55rem;
+  border-radius: 0.8rem;
+  font-weight: 900;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.directory-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.directory-btn-primary {
+  background: linear-gradient(135deg, var(--dir-primary), var(--dir-primary-2));
+  border-color: transparent;
+  box-shadow: 0 16px 28px -20px rgba(37, 99, 235, 0.85);
+}
+
+.directory-btn-ghost {
+  border-color: #d7e1ee;
+  background: #ffffff;
+}
+
+.directory-grid {
+  gap: 1rem;
+}
+
+.directory-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 10rem;
+  border-color: rgba(148, 163, 184, 0.3);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 40px -34px rgba(15, 23, 42, 0.46);
+}
+
+.directory-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.25rem;
+  background: linear-gradient(90deg, var(--dir-primary), var(--dir-sky));
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.directory-card-clickable:hover,
+.directory-card-clickable:focus-visible,
+.directory-card-active {
+  border-color: rgba(10, 102, 194, 0.42);
+  box-shadow: 0 24px 54px -34px rgba(10, 102, 194, 0.55);
+}
+
+.directory-card-clickable:hover::before,
+.directory-card-clickable:focus-visible::before,
+.directory-card-active::before {
+  opacity: 1;
+}
+
+.directory-logo,
+.training-profile-logo,
+.company-profile-logo {
+  border-radius: 1rem;
+  box-shadow: 0 12px 28px -20px rgba(15, 23, 42, 0.5);
+}
+
+.directory-logo-placeholder,
+.training-profile-logo-placeholder,
+.company-profile-logo-placeholder {
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), transparent 38%),
+    linear-gradient(135deg, #dbeafe, #f8fafc);
+}
+
+.directory-card h2,
+.training-profile-header h2,
+.institution-profile-header h2,
+.company-profile-header h2 {
+  letter-spacing: -0.03em;
+}
+
+.directory-card span,
+.company-meta {
+  color: var(--dir-primary);
+}
+
+.directory-card small {
+  width: fit-content;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.directory-pagination {
+  border-color: rgba(148, 163, 184, 0.28);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 16px 34px -30px rgba(15, 23, 42, 0.4);
+}
+
+.directory-detail {
+  border-color: rgba(148, 163, 184, 0.28);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, rgba(10, 102, 194, 0.28), rgba(56, 189, 248, 0.14)) border-box;
+  box-shadow: 0 24px 58px -38px rgba(15, 23, 42, 0.48);
+}
+
+.training-profile-header,
+.institution-profile-header,
+.company-profile-header {
+  padding: 0.35rem;
+}
+
+.company-side-info {
+  border-color: #dbeafe;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #f8fbff, #ffffff);
+}
+
+.company-side-info strong {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+}
+
+.section-heading {
+  margin-top: 1.3rem;
+  border-top-color: #edf2f7;
+}
+
+.linked-content-grid {
+  gap: 0.85rem;
+}
+
+.linked-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 7.4rem;
+  border-color: #dbe4ee;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  box-shadow: 0 14px 30px -28px rgba(15, 23, 42, 0.38);
+}
+
+.linked-card::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 0.2rem;
+  background: linear-gradient(90deg, var(--dir-primary), var(--dir-sky));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.18s ease;
+}
+
+.linked-card:hover,
+.linked-card:focus-visible,
+.linked-card-active {
+  transform: translateY(-1px);
+  border-color: rgba(10, 102, 194, 0.36);
+  box-shadow: 0 22px 42px -30px rgba(10, 102, 194, 0.45);
+}
+
+.linked-card:hover::after,
+.linked-card:focus-visible::after,
+.linked-card-active::after {
+  transform: scaleX(1);
+}
+
+.linked-card span,
+.content-detail span,
+.directory-kicker {
+  color: #f97316;
+}
+
+.linked-card em {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.training-popup-card,
+.job-popup-card {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.35rem;
+  box-shadow: 0 34px 100px rgba(15, 23, 42, 0.34);
+}
+
+.training-popup-card::before {
+  content: '';
+  display: block;
+  height: 0.3rem;
+  margin: -1.15rem -1.15rem 1rem;
+  background: linear-gradient(90deg, var(--dir-primary), var(--dir-sky));
+}
+
+.training-popup-header h2 {
+  letter-spacing: -0.03em;
+}
+
+.training-popup-image {
+  max-height: 320px;
+  border-radius: 1.1rem;
+  box-shadow: 0 22px 46px -32px rgba(15, 23, 42, 0.48);
+}
+
+.job-popup-meta span,
+.training-popup-contact span,
+.training-popup-contact a {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: #f8fafc;
+}
+
+.job-popup-section-title {
+  padding-top: 0.25rem;
+  letter-spacing: -0.015em;
+}
+
+@media (max-width: 760px) {
+  .directory-hero {
+    align-items: flex-start;
+  }
+
+  .directory-card {
+    min-height: auto;
+  }
+}
+
+/* Production typography and data clarity */
+.directory-page {
+  color: #0f172a;
+  text-rendering: optimizeLegibility;
+}
+
+.directory-hero h1 {
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  line-height: 1.12;
+}
+
+.directory-hero p {
+  max-width: 48rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.directory-field label {
+  letter-spacing: -0.01em;
+}
+
+.directory-field input::placeholder {
+  color: #94a3b8;
+}
+
+.directory-card h2,
+.linked-card h3,
+.training-popup-header h2 {
+  line-height: 1.25;
+}
+
+.directory-card p,
+.linked-card p,
+.company-description,
+.job-popup-rich {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.directory-card span {
+  line-height: 1.35;
+}
+
+.linked-card small,
+.directory-card small {
+  line-height: 1.25;
+}
+
+.training-popup-header p:not(.directory-kicker),
+.job-popup-meta span,
+.training-popup-contact span,
+.training-popup-contact a {
+  line-height: 1.35;
+}
+
+.job-popup-message {
+  line-height: 1.45;
+}
+
+/* Training directory forms: clearer filters and application input states */
+.directory-filters {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(0.95rem, 1.8vw, 1.2rem);
+  border-radius: 1.2rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.1), transparent 13rem),
+    linear-gradient(180deg, #ffffff, #fffaf5);
+  border-color: rgba(251, 146, 60, 0.18);
+  box-shadow: 0 18px 42px -32px rgba(15, 23, 42, 0.35);
+}
+
+.directory-filters::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.22rem;
+  background: linear-gradient(90deg, #f97316, #38bdf8);
+}
+
+.directory-field {
+  gap: 0.35rem;
+}
+
+.directory-field label {
+  color: #1e293b;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.directory-field input,
+.directory-field select {
+  min-height: 2.75rem;
+  border-color: #d7e1ee;
+  border-radius: 0.85rem;
+  background: #fbfdff;
+  color: #0f172a;
+  font-size: 0.88rem;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.directory-field input:hover,
+.directory-field select:hover {
+  border-color: #fdba74;
+  background: #ffffff;
+}
+
+.directory-field input:focus,
+.directory-field select:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+}
+
+.directory-actions {
+  align-items: end;
+}
+
+.directory-btn {
+  min-height: 2.75rem;
+  border-radius: 0.85rem;
+  padding-inline: 1rem;
+}
+
+.directory-btn-primary {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border-color: transparent;
+  box-shadow: 0 14px 26px -20px rgba(249, 115, 22, 0.9);
+}
+
+.directory-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ea580c, #c2410c);
+}
+
+.directory-btn-ghost {
+  background: #ffffff;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.job-popup-textarea {
+  border-radius: 0.95rem;
+  border-color: #d7e1ee;
+  line-height: 1.6;
+}
+
+.job-popup-textarea:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+}
+
+@media (max-width: 760px) {
+  .directory-actions {
+    width: 100%;
+  }
+
+  .directory-actions .directory-btn {
+    flex: 1;
+  }
+}
+
+/* Strong visible redesign for candidate training filters */
+.directory-page {
+  padding: clamp(0.4rem, 1vw, 0.8rem);
+  border-radius: 1.4rem;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.14), transparent 20rem),
+    radial-gradient(circle at 100% 8%, rgba(56, 189, 248, 0.12), transparent 24rem),
+    linear-gradient(180deg, #fffaf5, #f8fbff);
+}
+
+.directory-hero {
+  border-radius: 1.45rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.22), transparent 10rem),
+    linear-gradient(135deg, #7c2d12, #ea580c 58%, #38bdf8);
+  color: #ffffff;
+  box-shadow: 0 26px 72px -46px rgba(249, 115, 22, 0.85);
+}
+
+.directory-hero h1,
+.directory-hero p,
+.directory-kicker {
+  color: #ffffff;
+}
+
+.directory-hero strong {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.directory-filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.4fr) repeat(3, minmax(160px, 1fr)) auto;
+  gap: 0.8rem;
+  border-radius: 1.45rem;
+  box-shadow: 0 30px 78px -56px rgba(124, 45, 18, 0.65);
+}
+
+.directory-field {
+  padding: 0.8rem;
+  border: 1px solid rgba(254, 215, 170, 0.9);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 16px 34px -30px rgba(15, 23, 42, 0.36);
+}
+
+.directory-actions {
+  align-self: stretch;
+  padding: 0.8rem;
+  border: 1px solid rgba(254, 215, 170, 0.9);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+@media (max-width: 980px) {
+  .directory-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .directory-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .directory-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Final calm candidate directory forms */
+.directory-page {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.directory-hero {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 28px -24px rgba(15, 23, 42, 0.35);
+}
+
+.directory-hero h1,
+.directory-hero p,
+.directory-kicker {
+  color: inherit;
+}
+
+.directory-hero p {
+  color: #475569;
+}
+
+.directory-kicker {
+  color: #2563eb;
+}
+
+.directory-hero strong {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.directory-filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(150px, 220px) minmax(170px, 240px) minmax(150px, 210px) auto;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 10px 28px -24px rgba(15, 23, 42, 0.35);
+}
+
+.directory-filters::before {
+  display: none;
+}
+
+.directory-field,
+.directory-actions {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.directory-field label {
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.directory-field input,
+.directory-field select {
+  min-height: 2.55rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  font-size: 0.86rem;
+}
+
+.directory-field-search input {
+  max-width: 520px;
+}
+
+.directory-field:not(.directory-field-search) input,
+.directory-field:not(.directory-field-search) select {
+  max-width: 240px;
+}
+
+.directory-field input:hover,
+.directory-field select:hover {
+  border-color: #94a3b8;
+}
+
+.directory-field input:focus,
+.directory-field select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.directory-btn {
+  min-height: 2.55rem;
+  border-radius: 0.65rem;
+}
+
+.directory-btn-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: none;
+}
+
+.directory-btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.directory-btn-ghost {
+  border-color: #cbd5e1;
+  color: #475569;
 }

@@ -2,7 +2,7 @@
 
 const { z } = require('zod');
 
-const OFFERING_TYPES = ['program', 'event', 'announcement', 'opportunity'];
+const OFFERING_TYPES = ['program', 'event', 'announcement'];
 const OFFERING_STATUSES = ['draft', 'pending', 'published', 'rejected'];
 const EVENT_TYPES = [
   'open_day',
@@ -14,11 +14,53 @@ const EVENT_TYPES = [
   'other',
 ];
 
+function emptyToNull(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  return value;
+}
+
 const nullableString = (max) =>
   z.preprocess(
-    (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+    emptyToNull,
     z.string().trim().max(max).nullable().optional()
   );
+
+const optionalUrl = z.preprocess(
+  emptyToNull,
+  z
+    .string()
+    .trim()
+    .max(512)
+    .nullable()
+    .optional()
+    .refine((value) => value === null || /^https?:\/\/.+/i.test(value), 'URL invalide (https://)')
+);
+
+const optionalEmail = z.preprocess(
+  emptyToNull,
+  z.string().trim().email('E-mail invalide').max(255).nullable().optional()
+);
+
+const optionalDate = z.preprocess(
+  emptyToNull,
+  z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide')
+    .nullable()
+    .optional()
+);
+
+const optionalTime = z.preprocess(
+  emptyToNull,
+  z
+    .string()
+    .trim()
+    .regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Heure invalide')
+    .nullable()
+    .optional()
+);
 
 const offeringTypeParamsSchema = z.object({
   offeringType: z.enum(OFFERING_TYPES),
@@ -29,6 +71,8 @@ const offeringIdParamsSchema = z.object({
 });
 
 const listInstitutionOfferingsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
   type: z.enum(OFFERING_TYPES).optional(),
   status: z.enum(OFFERING_STATUSES).optional(),
   search: z.string().trim().max(120).optional(),
@@ -41,19 +85,19 @@ const institutionOfferingBodySchema = z.object({
   category: nullableString(128),
   eventType: z.enum(EVENT_TYPES).nullable().optional(),
   opportunityType: z.enum(['job', 'internship']).nullable().optional(),
-  startDate: nullableString(20),
-  endDate: nullableString(20),
-  startTime: nullableString(20),
-  endTime: nullableString(20),
+  startDate: optionalDate,
+  endDate: optionalDate,
+  startTime: optionalTime,
+  endTime: optionalTime,
   city: nullableString(128),
   address: nullableString(512),
   price: z.coerce.number().min(0).nullable().optional(),
   seats: z.coerce.number().int().min(0).nullable().optional(),
-  mainImageUrl: nullableString(512),
-  gallery: z.array(z.string().trim().max(512)).max(8).optional(),
+  mainImageUrl: optionalUrl,
+  gallery: z.array(z.string().trim().url('URL galerie invalide').max(512)).max(7).optional(),
   phone: nullableString(64),
-  email: nullableString(255),
-  website: nullableString(512),
+  email: optionalEmail,
+  website: optionalUrl,
   status: z.enum(['draft', 'pending']).optional(),
 });
 

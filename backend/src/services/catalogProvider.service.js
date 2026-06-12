@@ -43,45 +43,56 @@ async function registerProvider({ providerType, email, password, organizationNam
   const userId = generateUuid();
   const passwordHash = await hashPassword(password);
 
-  await User.create({
-    id: userId,
-    email,
-    password_hash: passwordHash,
-    role,
-    is_verified: false,
-    verification_token: null,
-    reset_token: null,
-    reset_expires: null,
-    created_at: new Date(),
-  });
+  await User.sequelize.transaction(async (transaction) => {
+    await User.create(
+      {
+        id: userId,
+        email,
+        password_hash: passwordHash,
+        role,
+        is_verified: false,
+        verification_token: null,
+        reset_token: null,
+        reset_expires: null,
+        created_at: new Date(),
+      },
+      { transaction }
+    );
 
-  if (providerType === 'training_center') {
-    await TrainingCenter.create({
-      id: generateUuid(),
-      user_id: userId,
-      name: organizationName,
-      city: city ?? null,
-      phone: phone ?? null,
-      email,
-      description: 'Profil en cours de complétion.',
-      short_description: shortText('Profil en cours de complétion.', 200),
-      status: CATALOG_PUBLISH_STATUS.PENDING,
-    });
-  } else {
-    await PrivateInstitution.create({
-      id: generateUuid(),
-      user_id: userId,
-      name: organizationName,
-      institution_type: 'high_school',
-      city: city ?? null,
-      phone: phone ?? null,
-      email,
-      description: 'Profil en cours de complétion.',
-      short_description: shortText('Profil en cours de complétion.', 200),
-      programs_json: [],
-      status: CATALOG_PUBLISH_STATUS.PENDING,
-    });
-  }
+    if (providerType === 'training_center') {
+      await TrainingCenter.create(
+        {
+          id: generateUuid(),
+          user_id: userId,
+          name: organizationName,
+          city: city ?? null,
+          phone: phone ?? null,
+          email,
+          description: 'Profil en cours de complétion.',
+          short_description: shortText('Profil en cours de complétion.', 200),
+          status: CATALOG_PUBLISH_STATUS.PENDING,
+        },
+        { transaction }
+      );
+    } else {
+      await PrivateInstitution.create(
+        {
+          id: generateUuid(),
+          user_id: userId,
+          name: organizationName,
+          institution_type: 'high_school',
+          city: city ?? null,
+          phone: phone ?? null,
+          email,
+          description: 'Profil en cours de complétion.',
+          short_description: shortText('Profil en cours de complétion.', 200),
+          programs_json: [],
+          status: CATALOG_PUBLISH_STATUS.PENDING,
+        },
+        { transaction }
+      );
+    }
+  });
 
   return {
     email,
@@ -118,11 +129,13 @@ async function getTrainingProviderDashboard(user) {
     participationsSummary,
     formationsSummary: {
       total: formations.length,
+      draft: formations.filter((f) => f.status === CATALOG_PUBLISH_STATUS.DRAFT).length,
       pending: formations.filter((f) => f.status === CATALOG_PUBLISH_STATUS.PENDING).length,
       published: formations.filter((f) => f.status === CATALOG_PUBLISH_STATUS.PUBLISHED).length,
     },
     eventsSummary: {
       total: events.length,
+      draft: events.filter((e) => e.status === CATALOG_PUBLISH_STATUS.DRAFT).length,
       pending: events.filter((e) => e.status === CATALOG_PUBLISH_STATUS.PENDING).length,
       published: events.filter((e) => e.status === CATALOG_PUBLISH_STATUS.PUBLISHED).length,
     },

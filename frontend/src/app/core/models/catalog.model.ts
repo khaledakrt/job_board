@@ -30,9 +30,10 @@ export interface TrainingCenterCard {
   deliveryMode: TrainingDeliveryMode | null;
   shortDescription: string | null;
   courseCount: number;
+  publishedOfferingsCount?: number;
 }
 
-export type CatalogPublishStatus = 'pending' | 'published' | 'rejected';
+export type CatalogPublishStatus = 'draft' | 'pending' | 'published' | 'rejected';
 
 export type TrainingEventType =
   | 'workshop'
@@ -120,6 +121,7 @@ export interface TrainingCenterDetail extends TrainingCenterCard {
 
 export interface OfferingsSummary {
   total: number;
+  draft?: number;
   pending: number;
   published: number;
 }
@@ -182,7 +184,7 @@ export interface ProgramItem {
   description?: string | null;
 }
 
-export type InstitutionOfferingType = 'program' | 'event' | 'announcement' | 'opportunity';
+export type InstitutionOfferingType = 'program' | 'event' | 'announcement';
 export type InstitutionOfferingStatus = 'draft' | 'pending' | 'published' | 'rejected';
 export type InstitutionEventType =
   | 'open_day'
@@ -202,7 +204,6 @@ export interface InstitutionOfferingItem {
   description?: string | null;
   category?: string | null;
   eventType?: InstitutionEventType | null;
-  opportunityType?: 'job' | 'internship' | null;
   startDate?: string | null;
   endDate?: string | null;
   startTime?: string | null;
@@ -241,7 +242,6 @@ export interface PrivateInstitutionDetail extends PrivateInstitutionCard {
   publishedPrograms?: InstitutionOfferingItem[];
   publishedEvents?: InstitutionOfferingItem[];
   publishedAnnouncements?: InstitutionOfferingItem[];
-  publishedOpportunities?: InstitutionOfferingItem[];
 }
 
 export interface CatalogSubmitResult {

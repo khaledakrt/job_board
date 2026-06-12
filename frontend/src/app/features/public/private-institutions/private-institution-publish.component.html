@@ -1,21 +1,25 @@
 <app-public-shell>
   <main class="catalog-page-main">
     <div class="catalog-page-inner">
-      <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS" class="landing-btn landing-btn-ghost">← Retour</a>
-      <div class="catalog-form-panel" style="margin-top: 1rem">
-        <h1 style="margin-top: 0">Présenter votre établissement privé</h1>
+      <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS" class="catalog-btn catalog-btn--ghost">← Retour</a>
+      <div class="catalog-form-panel catalog-form-panel--institution">
+        <h1>Présenter votre établissement privé</h1>
         <p class="catalog-card-meta">
           Remplissez une fiche professionnelle. La publication sera visible après validation administrateur.
         </p>
 
         @if (success()) {
-          <div class="catalog-success" style="margin: 1rem 0">{{ success() }}</div>
+          <div class="catalog-success">{{ success() }}</div>
         }
         @if (error()) {
-          <p style="color: #b91c1c">{{ error() }}</p>
+          <p class="catalog-form-error">{{ error() }}</p>
         }
 
         <form (ngSubmit)="submit()">
+          <div class="catalog-form-section">
+            <h2>Identité</h2>
+            <p>Informations principales visibles en haut de votre fiche.</p>
+          </div>
           <div class="catalog-form-row">
             <label>Nom officiel de l’établissement *</label>
             <input class="catalog-input" [(ngModel)]="name" name="name" required placeholder="Ex. Institut privé Horizon" />
@@ -32,7 +36,7 @@
             <label>Lien du logo</label>
             <input class="catalog-input" [(ngModel)]="logoUrl" name="logoUrl" placeholder="https://..." />
           </div>
-          <div class="catalog-form-row">
+          <div class="catalog-form-row catalog-form-row--wide">
             <label>Présentation de l’établissement *</label>
             <textarea
               class="catalog-input"
@@ -42,6 +46,10 @@
               required
               placeholder="Présentez vos niveaux, valeurs, points forts, conditions d’admission et services proposés."
             ></textarea>
+          </div>
+          <div class="catalog-form-section">
+            <h2>Localisation et contact</h2>
+            <p>Coordonnées utilisées par les candidats et parents.</p>
           </div>
           <div class="catalog-form-row">
             <label>Adresse complète</label>
@@ -67,18 +75,25 @@
             <label>Lien Google Maps</label>
             <input class="catalog-input" [(ngModel)]="mapUrl" name="mapUrl" placeholder="https://maps.google.com/…" />
           </div>
-          <div class="catalog-form-row">
+          <div class="catalog-form-section">
+            <h2>Médias et présence en ligne</h2>
+            <p>Ajoutez seulement les liens utiles et vérifiés.</p>
+          </div>
+          <div class="catalog-form-row catalog-form-row--wide">
             <label>Photos de l’établissement (un lien par ligne)</label>
             <textarea class="catalog-input" rows="3" [(ngModel)]="photoUrlsText" name="photoUrlsText" placeholder="https://..."></textarea>
           </div>
-          <div class="catalog-form-row">
+          <div class="catalog-form-row catalog-form-row--wide">
             <label>Réseaux sociaux (un lien par ligne)</label>
             <textarea class="catalog-input" rows="2" [(ngModel)]="socialLinksText" name="socialLinksText" placeholder="Facebook, LinkedIn, Instagram..."></textarea>
           </div>
 
-          <h2>Programmes et filières *</h2>
+          <div class="catalog-form-section">
+            <h2>Programmes et filières *</h2>
+            <p>Listez les cursus principaux proposés par l’établissement.</p>
+          </div>
           @for (prog of programs; track $index) {
-            <div class="catalog-repeat-block">
+            <div class="catalog-repeat-block catalog-repeat-block--form">
               <div class="catalog-form-row">
                 <label>Nom du programme / filière</label>
                 <input class="catalog-input" [(ngModel)]="prog.title" [name]="'pt' + $index" required placeholder="Ex. Baccalauréat sciences, BTS informatique..." />
@@ -88,17 +103,17 @@
                 <textarea class="catalog-input" rows="2" [(ngModel)]="prog.description" [name]="'pd' + $index" placeholder="Durée, objectifs, conditions d’accès..."></textarea>
               </div>
               @if (programs.length > 1) {
-                <button type="button" class="landing-btn landing-btn-ghost" (click)="removeProgram($index)">Retirer</button>
+                <button type="button" class="catalog-btn catalog-btn--ghost" (click)="removeProgram($index)">Retirer</button>
               }
             </div>
           }
-          <button type="button" class="landing-btn landing-btn-ghost" (click)="addProgram()">+ Programme</button>
+          <button type="button" class="catalog-btn catalog-btn--ghost" (click)="addProgram()">+ Programme</button>
 
-          <p style="margin-top: 1.25rem">
-            <button type="submit" class="landing-btn landing-btn-primary" [disabled]="submitting()">
+          <div class="catalog-form-actions">
+            <button type="submit" class="catalog-btn catalog-btn--primary" [disabled]="submitting()">
               {{ submitting() ? 'Envoi…' : 'Envoyer pour validation' }}
             </button>
-          </p>
+          </div>
         </form>
 
         @if (confirmOpen()) {

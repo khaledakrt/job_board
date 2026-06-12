@@ -117,14 +117,19 @@
           </div>
 
           <div class="provider-form-grid">
+            <div class="provider-field-group-title provider-field--full">
+              Présentation publique
+            </div>
             <div class="provider-field provider-field--full">
-              <label for="provider-desc">Description</label>
+              <label for="provider-desc">
+                Description de {{ isTraining ? 'votre centre' : 'votre établissement' }}
+              </label>
               <textarea
                 id="provider-desc"
                 class="provider-input"
                 rows="4"
                 [(ngModel)]="description"
-                placeholder="Présentez votre centre, vos spécialités…"
+                [placeholder]="isTraining ? 'Présentez votre centre, vos spécialités…' : 'Présentez votre établissement, ses niveaux et ses points forts…'"
               ></textarea>
             </div>
             <div class="provider-field">

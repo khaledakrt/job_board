@@ -69,6 +69,29 @@ export class EventDetailComponent implements OnInit {
     return resolveUploadUrl(url ?? null);
   }
 
+  formatDate(value: string | null | undefined): string {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(date);
+  }
+
+  formatTime(value: string | null | undefined): string {
+    return value ? value.slice(0, 5) : '';
+  }
+
+  formatPrice(price: number | null | undefined): string | null {
+    if (price == null || Number.isNaN(Number(price))) return null;
+    return `${Number(price).toLocaleString('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })} TND`;
+  }
+
   get isLoggedInCandidate(): boolean {
     return this.authService.user()?.role === USER_ROLES.CANDIDATE;
   }

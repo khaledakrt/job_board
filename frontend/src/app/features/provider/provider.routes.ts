@@ -232,27 +232,16 @@ export const PROVIDER_ROUTES: Routes = [
 
       },
 
-      {
-
-        path: 'offres-stages',
-
-        loadComponent: () =>
-
-          import('./institution-offerings/institution-offerings.component').then(
-
-            (m) => m.InstitutionOfferingsComponent
-
-          ),
-
-        data: { offeringType: 'opportunity' },
-
-      },
-
     ],
 
   },
 
-  { path: '', pathMatch: 'full', redirectTo: 'centre' },
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () =>
+      import('./provider-redirect.component').then((m) => m.ProviderRedirectComponent),
+  },
 
 ];
 

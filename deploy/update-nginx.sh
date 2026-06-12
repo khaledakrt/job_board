@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Recharge la config Nginx (aaPanel) après changement du template dans le dépôt.
+# Recharge la config Nginx après changement du template dans le dépôt.
 # Ne remplace pas update.sh — à lancer en complément si vous avez modifié
-# deploy/nginx-aapanel.conf.template ou deploy/nginx-jobboard.conf.
+# deploy/nginx-jobboard.conf ou deploy/nginx-aapanel.conf.template.
 #
 #   export SERVER_NAME=5.189.190.131
 #   cd /var/www/jobboard
@@ -21,7 +21,7 @@ fi
 
 [[ -n "${SERVER_NAME:-}" ]] || jb_die "Définissez SERVER_NAME (ex: export SERVER_NAME=5.189.190.131)"
 
-if [[ -d "${AAPANEL_NGINX_DIR:-/www/server/panel/vhost/nginx}" ]]; then
+if [[ "${USE_AAPANEL:-no}" == "yes" ]] && [[ -d "${AAPANEL_NGINX_DIR:-/www/server/panel/vhost/nginx}" ]]; then
   jb_log "Nginx aaPanel"
   sudo -E bash "$APP_ROOT/deploy/scripts/08-nginx-aapanel.sh"
 else

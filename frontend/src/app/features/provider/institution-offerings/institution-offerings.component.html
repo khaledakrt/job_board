@@ -1,6 +1,15 @@
-<div class="provider-page">
-  <h1 class="provider-page-title">{{ labels().plural }}</h1>
-  <p class="provider-page-sub">{{ labels().subtitle }}</p>
+<div class="provider-page institution-offerings-page">
+  <header class="provider-page-hero institution-page-hero">
+    <div>
+      <p class="provider-hero-kicker">Espace établissement</p>
+      <h1 class="provider-page-title">{{ labels().plural }}</h1>
+      <p class="provider-page-sub">{{ labels().subtitle }}</p>
+    </div>
+    <div class="institution-page-hero-summary">
+      <span>{{ totalItems() }}</span>
+      <small>publication(s)</small>
+    </div>
+  </header>
 
   @if (error()) {
     <p class="provider-message provider-message--error">{{ error() }}</p>
@@ -11,11 +20,18 @@
 
   <section class="provider-card institution-form-card">
     <div class="provider-card-head">
-      <h2>{{ formTitle() }}</h2>
-      <p>Soignez le titre, le résumé et la description. Les liens, le gras et les polices sont disponibles dans l’éditeur.</p>
+      <div>
+        <h2>{{ formTitle() }}</h2>
+        <p>Créez une publication claire, relue et prête pour validation administrateur.</p>
+      </div>
+      <span class="provider-pill">{{ status === 'pending' ? 'Validation' : 'Brouillon' }}</span>
     </div>
 
     <div class="institution-form-grid">
+      <div class="institution-form-section-title institution-form-wide">
+        <h3>Contenu public</h3>
+        <p>Ce bloc construit la carte visible par les candidats.</p>
+      </div>
       <label>
         <span>{{ labels().titleLabel }} *</span>
         <input class="provider-input" [(ngModel)]="title" [placeholder]="labels().titlePlaceholder" />
@@ -23,9 +39,14 @@
       <label>
         <span>Action</span>
         <select class="provider-input" [(ngModel)]="status">
-          <option value="draft">Enregistrer en brouillon</option>
+          <option value="draft" [disabled]="editingOriginalStatus() === 'published' || editingOriginalStatus() === 'rejected'">
+            Enregistrer en brouillon
+          </option>
           <option value="pending">Soumettre à validation</option>
         </select>
+        @if (editingOriginalStatus() === 'published' || editingOriginalStatus() === 'rejected') {
+          <small>Toute modification sera renvoyée en validation administrateur.</small>
+        }
       </label>
       <label>
         <span>{{ labels().categoryLabel }}</span>
@@ -45,16 +66,7 @@
           </select>
         </label>
       }
-      @if (type() === 'opportunity') {
-        <label>
-          <span>Type</span>
-          <select class="provider-input" [(ngModel)]="opportunityType">
-            <option value="internship">Stage</option>
-            <option value="job">Emploi</option>
-          </select>
-        </label>
-      }
-      <label class="institution-form-wide">
+      <label class="institution-form-wide institution-form-summary">
         <span>{{ labels().summaryLabel }} *</span>
         <textarea
           class="provider-input institution-summary"
@@ -65,7 +77,7 @@
         ></textarea>
         <small>Texte court visible dans les cartes et listes publiques. Maximum 500 caractères.</small>
       </label>
-      <div class="institution-form-wide provider-field provider-field--rte-block">
+      <div class="institution-form-wide institution-form-description provider-field provider-field--rte-block">
         <label>{{ labels().descriptionLabel }}</label>
         <app-rich-text-editor
           [editorId]="'institution-offering-description-' + type()"
@@ -75,6 +87,10 @@
           [placeholder]="labels().descriptionPlaceholder"
         />
         <p class="provider-field-hint">Sélectionnez un texte pour appliquer une police, le mettre en gras ou ajouter un lien.</p>
+      </div>
+      <div class="institution-form-section-title institution-form-wide">
+        <h3>Informations pratiques</h3>
+        <p>Dates, lieu et capacité. Laissez vide si ce n’est pas applicable.</p>
       </div>
       <label>
         <span>{{ labels().dateStartLabel }}</span>
@@ -92,10 +108,14 @@
         <span>{{ labels().seatsLabel }}</span>
         <input type="number" min="0" class="provider-input" [(ngModel)]="seats" />
       </label>
-      <label class="institution-form-wide">
+      <label class="institution-form-address">
         <span>Adresse</span>
         <input class="provider-input" [(ngModel)]="address" placeholder="Adresse complète ou lieu de l’événement" />
       </label>
+      <div class="institution-form-section-title institution-form-wide">
+        <h3>Contact</h3>
+        <p>Coordonnées utilisées pour orienter le visiteur vers votre établissement.</p>
+      </div>
       <label>
         <span>Téléphone</span>
         <input type="tel" class="provider-input" [(ngModel)]="phone" placeholder="+216 ..." />
@@ -104,7 +124,7 @@
         <span>E-mail de contact</span>
         <input type="email" class="provider-input" [(ngModel)]="email" placeholder="contact@etablissement.tn" />
       </label>
-      <label class="institution-form-wide">
+      <label class="institution-form-link">
         <span>Lien externe</span>
         <input class="provider-input" [(ngModel)]="website" placeholder="https://..." />
       </label>
@@ -118,6 +138,93 @@
         <button type="button" class="provider-btn provider-btn--outline" (click)="resetForm()">Annuler</button>
       }
     </div>
+  </section>
+
+  <section class="provider-card institution-list-card">
+    <div class="provider-card-head institution-list-head">
+      <div>
+        <h2>Publications existantes</h2>
+        <p>Retrouvez les contenus déjà créés, leur statut et les actions disponibles.</p>
+      </div>
+      <form class="institution-list-filters" (ngSubmit)="onFilterChange()">
+        <input
+          class="provider-input"
+          name="institutionOfferingSearch"
+          [(ngModel)]="search"
+          placeholder="Rechercher par titre, résumé, catégorie..."
+        />
+        <select class="provider-input" name="institutionOfferingStatus" [(ngModel)]="statusFilter">
+          <option value="">Tous les statuts</option>
+          <option value="draft">Brouillons</option>
+          <option value="pending">En attente</option>
+          <option value="published">Publiés</option>
+          <option value="rejected">Refusés</option>
+        </select>
+        <button type="submit" class="provider-btn provider-btn--outline" [disabled]="loading()">Filtrer</button>
+      </form>
+    </div>
+
+    @if (loading()) {
+      <p class="provider-muted">Chargement des publications...</p>
+    } @else {
+      <div class="institution-publication-list">
+        @for (item of pageItems(); track item.id) {
+          <article class="institution-publication-card">
+            <div>
+              <div class="institution-publication-title-row">
+                <h3>{{ item.title }}</h3>
+                <span [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+              </div>
+              <p class="institution-publication-summary">{{ item.summary || 'Aucun résumé renseigné.' }}</p>
+              <div class="institution-publication-meta">
+                @if (item.category) {
+                  <span>{{ item.category }}</span>
+                }
+                @if (item.city) {
+                  <span>{{ item.city }}</span>
+                }
+                @if (item.registrationsCount) {
+                  <span>{{ item.registrationsCount }} inscription(s)</span>
+                }
+              </div>
+              @if (item.status === 'rejected' && item.adminNote) {
+                <p class="provider-message provider-message--error institution-admin-note">
+                  Motif admin : {{ item.adminNote }}
+                </p>
+              }
+            </div>
+            <div class="institution-publication-actions">
+              <button type="button" class="provider-btn provider-btn--outline" (click)="edit(item)">Modifier</button>
+              <button type="button" class="provider-btn provider-btn--danger-solid" (click)="remove(item)">Supprimer</button>
+            </div>
+          </article>
+        } @empty {
+          <p class="provider-muted">Aucune publication pour ce filtre.</p>
+        }
+      </div>
+
+      @if (totalPages() > 1) {
+        <nav class="provider-pagination" aria-label="Pagination publications">
+          <button
+            type="button"
+            class="provider-btn provider-btn--outline"
+            [disabled]="page() === 1 || loading()"
+            (click)="setPage(page() - 1)"
+          >
+            Précédent
+          </button>
+          <span>Page {{ page() }} / {{ totalPages() }}</span>
+          <button
+            type="button"
+            class="provider-btn provider-btn--outline"
+            [disabled]="page() === totalPages() || loading()"
+            (click)="setPage(page() + 1)"
+          >
+            Suivant
+          </button>
+        </nav>
+      }
+    }
   </section>
 
   @if (confirmOpen()) {

@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PublicShellComponent } from '../shared/public-shell.component';
 import { PublicCatalogService } from '../services/public-catalog.service';
 import {
@@ -7,6 +7,8 @@ import {
   PrivateInstitutionCard,
 } from '../../../core/models/catalog.model';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
+import { USER_ROLES } from '../../../core/constants/roles.constant';
+import { AuthService } from '../../../core/services/auth.service';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 
 type OfferingDetail = InstitutionOfferingItem & { institution?: PrivateInstitutionCard };
@@ -20,12 +22,20 @@ type OfferingDetail = InstitutionOfferingItem & { institution?: PrivateInstituti
 })
 export class InstitutionOfferingDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly catalog = inject(PublicCatalogService);
+  readonly authService = inject(AuthService);
 
   readonly routes = APP_ROUTES;
   readonly item = signal<OfferingDetail | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly actionMsg = signal<string | null>(null);
+  readonly actionLoading = signal(false);
+  readonly hasParticipated = computed(() => Boolean(this.item()?.participationType));
+  readonly participateButtonsDisabled = computed(
+    () => this.actionLoading() || this.hasParticipated()
+  );
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -51,15 +61,8 @@ export class InstitutionOfferingDetailComponent implements OnInit {
       program: 'Programme',
       event: 'Événement',
       announcement: 'Actualité / annonce',
-      opportunity: 'Offre / stage',
     };
     return labels[type ?? ''] ?? 'Publication';
-  }
-
-  opportunityLabel(type: string | null | undefined): string {
-    if (type === 'job') return 'Emploi';
-    if (type === 'internship') return 'Stage';
-    return '';
   }
 
   dateLabel(item: InstitutionOfferingItem): string {
@@ -67,5 +70,46 @@ export class InstitutionOfferingDetailComponent implements OnInit {
     const end = item.endDate ? new Date(item.endDate).toLocaleDateString('fr-FR') : '';
     if (start && end && start !== end) return `${start} - ${end}`;
     return start || end || '';
+  }
+
+  get isLoggedInCandidate(): boolean {
+    return this.authService.user()?.role === USER_ROLES.CANDIDATE;
+  }
+
+  participate(): void {
+    const id = this.item()?.id;
+    if (!id) return;
+
+    if (!this.authService.user()) {
+      void this.router.navigate([this.routes.AUTH.LOGIN], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    if (!this.isLoggedInCandidate) {
+      this.actionMsg.set('Seuls les comptes candidats peuvent s’inscrire.');
+      return;
+    }
+
+    if (this.hasParticipated()) {
+      return;
+    }
+
+    this.actionLoading.set(true);
+    this.actionMsg.set(null);
+    this.catalog.participateInstitutionOffering(id).subscribe({
+      next: () => {
+        this.actionLoading.set(false);
+        this.actionMsg.set('Inscription enregistrée.');
+        this.catalog.getInstitutionOffering(id).subscribe((res) => {
+          this.item.set(res.data ?? null);
+        });
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.actionMsg.set(err.error?.message ?? 'Action impossible.');
+      },
+    });
   }
 }

@@ -47,7 +47,9 @@ export class PublishEventComponent implements OnInit {
   readonly participants = signal<ProviderParticipationItem[]>([]);
   readonly registeredCount = signal(0);
   readonly confirmOpen = signal(false);
+  readonly maxGalleryImages = 7;
   private pendingBody: Partial<TrainingEventItem> | null = null;
+  private pendingAction: 'draft' | 'review' = 'review';
 
   title = '';
   eventType: TrainingEventType = 'workshop';
@@ -143,18 +145,56 @@ export class PublishEventComponent implements OnInit {
   }
 
   onGallery(event: Event): void {
-    const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    const input = event.target as HTMLInputElement;
+    const remaining = this.maxGalleryImages - this.gallery.length;
+    if (remaining <= 0) {
+      this.error.set(`La galerie est limitée à ${this.maxGalleryImages} photos.`);
+      input.value = '';
+      return;
+    }
+    const files = Array.from(input.files ?? []).slice(0, remaining);
     if (!files.length) return;
     this.provider.uploadCatalogGallery(files).subscribe({
       next: (res) => {
         const urls = res.data?.urls ?? [];
-        this.gallery = [...this.gallery, ...urls].slice(0, 8);
+        this.gallery = [...this.gallery, ...urls].slice(0, this.maxGalleryImages);
+        input.value = '';
       },
     });
   }
 
   removeGallery(url: string): void {
     this.gallery = this.gallery.filter((u) => u !== url);
+  }
+
+  eventTypeLabel(): string {
+    return this.eventTypes.find((type) => type.value === this.eventType)?.label ?? this.eventType;
+  }
+
+  timeSummary(): string {
+    if (this.startTime && this.endTime) return `${this.startTime} - ${this.endTime}`;
+    return this.startTime || this.endTime || 'À préciser';
+  }
+
+  checklistItems(): Array<{ label: string; done: boolean }> {
+    return [
+      { label: 'Titre clair de l’événement', done: Boolean(this.title.trim()) },
+      { label: 'Type d’événement renseigné', done: Boolean(this.eventType) },
+      { label: 'Présentation détaillée ajoutée', done: Boolean(sanitizeRichHtml(this.description).trim()) },
+      { label: 'Date ou horaire indiqué', done: Boolean(this.eventDate || this.startTime) },
+      { label: 'Ville ou adresse indiquée', done: Boolean(this.city.trim() || this.address.trim()) },
+      { label: 'Capacité ou prix renseigné', done: this.seats != null || this.price != null },
+      { label: 'Contact candidat disponible', done: Boolean(this.phone.trim() || this.email.trim()) },
+      { label: 'Affiche ou image ajoutée', done: Boolean(this.posterImageUrl.trim()) },
+    ];
+  }
+
+  checklistDoneCount(): number {
+    return this.checklistItems().filter((item) => item.done).length;
+  }
+
+  checklistTotal(): number {
+    return this.checklistItems().length;
   }
 
   private applyParticipants(e: {
@@ -179,15 +219,22 @@ export class PublishEventComponent implements OnInit {
   }
 
   confirmTitle(): string {
-    return this.eventId() ? 'Confirmer les modifications' : 'Soumettre l’événement ?';
+    if (this.pendingAction === 'draft') return 'Enregistrer le brouillon ?';
+    return this.eventId() ? 'Envoyer les modifications en validation ?' : 'Soumettre l’événement ?';
   }
 
   confirmMessage(): string {
+    if (this.pendingAction === 'draft') {
+      return 'Le brouillon restera privé dans votre espace centre. Vous pourrez le compléter et l’envoyer plus tard.';
+    }
     if (!this.eventId()) {
       return 'L’événement sera envoyé à l’administrateur. Il sera visible après validation.';
     }
     if (this.status() === 'rejected') {
       return 'Les modifications seront enregistrées et l’événement repassera en attente de validation administrateur.';
+    }
+    if (this.status() === 'published') {
+      return 'Les modifications seront enregistrées et l’événement repassera en attente de validation administrateur avant réapparition publique.';
     }
     return 'Les modifications seront enregistrées pour cet événement.';
   }
@@ -200,11 +247,17 @@ export class PublishEventComponent implements OnInit {
 
   private successMessage(isEdit: boolean, previousStatus: string | null, apiMessage?: string): string {
     if (apiMessage) return apiMessage;
+    if (this.pendingAction === 'draft') {
+      return 'Brouillon enregistré. Vous pouvez reprendre cet événement depuis le dashboard.';
+    }
     if (!isEdit) {
       return 'Événement envoyé. Il sera visible après validation par un administrateur.';
     }
     if (previousStatus === 'rejected') {
       return 'Modifications enregistrées. L’événement est à nouveau en attente de validation par l’administrateur.';
+    }
+    if (previousStatus === 'published') {
+      return 'Modifications enregistrées. L’événement repasse en attente de validation par l’administrateur.';
     }
     if (previousStatus === 'pending') {
       return 'Modifications enregistrées. L’événement reste en attente de validation par l’administrateur.';
@@ -212,15 +265,25 @@ export class PublishEventComponent implements OnInit {
     return 'Modifications enregistrées.';
   }
 
-  submit(): void {
-    if (!this.title.trim()) {
-      this.error.set('Le titre est obligatoire.');
-      return;
-    }
-    this.error.set(null);
-    this.success.set(null);
+  private extractErrorMessage(err: unknown): string {
+    const error = err as {
+      error?: {
+        message?: string;
+        errors?: Array<{ field?: string; message?: string }>;
+      };
+    };
+    const details = error.error?.errors
+      ?.map((e) => {
+        const field = e.field ? `${e.field} : ` : '';
+        return `${field}${e.message ?? ''}`.trim();
+      })
+      .filter(Boolean);
+    if (details?.length) return details.join(' | ');
+    return error.error?.message ?? 'Enregistrement impossible.';
+  }
 
-    this.pendingBody = {
+  private buildBody(status: 'draft' | 'pending'): Partial<TrainingEventItem> {
+    return {
       title: this.title.trim(),
       eventType: this.eventType,
       description: sanitizeRichHtml(this.description.trim()) || null,
@@ -236,7 +299,31 @@ export class PublishEventComponent implements OnInit {
       phone: this.phone.trim() || null,
       email: this.email.trim() || null,
       website: this.website.trim() || null,
+      status,
     };
+  }
+
+  prepareSaveDraft(): void {
+    if (!this.title.trim()) {
+      this.error.set('Ajoutez au minimum un titre pour enregistrer le brouillon.');
+      return;
+    }
+    this.error.set(null);
+    this.success.set(null);
+    this.pendingAction = 'draft';
+    this.pendingBody = this.buildBody('draft');
+    this.confirmOpen.set(true);
+  }
+
+  prepareSubmitForReview(): void {
+    if (!this.title.trim()) {
+      this.error.set('Le titre est obligatoire avant l’envoi en validation.');
+      return;
+    }
+    this.error.set(null);
+    this.success.set(null);
+    this.pendingAction = 'review';
+    this.pendingBody = this.buildBody('pending');
     this.confirmOpen.set(true);
   }
 
@@ -246,7 +333,10 @@ export class PublishEventComponent implements OnInit {
     const id = this.eventId();
     const previousStatus = this.status();
     const body = this.pendingBody;
-    const req = id ? this.provider.updateEvent(id, body) : this.provider.createEvent(body);
+    const req =
+      this.pendingAction === 'draft'
+        ? this.provider.saveEventDraft(id, body)
+        : this.provider.submitEventForReview(id, body);
 
     this.saving.set(true);
     req.subscribe({
@@ -268,7 +358,7 @@ export class PublishEventComponent implements OnInit {
       error: (err) => {
         this.saving.set(false);
         this.confirmOpen.set(false);
-        this.error.set(err.error?.message ?? 'Enregistrement impossible.');
+        this.error.set(this.extractErrorMessage(err));
       },
     });
   }

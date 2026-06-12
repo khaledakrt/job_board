@@ -29,6 +29,9 @@ export class TrainingCentersListComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly total = signal(0);
+  readonly page = signal(1);
+  readonly totalPages = signal(1);
+  readonly pageSize = 24;
 
   search = '';
   city = '';
@@ -36,13 +39,17 @@ export class TrainingCentersListComponent implements OnInit {
   deliveryMode = '';
 
   ngOnInit(): void {
-    this.load();
+    this.load(1);
   }
 
-  load(): void {
+  load(page = this.page()): void {
     this.loading.set(true);
     this.error.set(null);
-    const params: Record<string, string> = { page: '1', limit: '24' };
+    this.page.set(page);
+    const params: Record<string, string> = {
+      page: String(page),
+      limit: String(this.pageSize),
+    };
     if (this.search.trim()) params['search'] = this.search.trim();
     if (this.city.trim()) params['city'] = this.city.trim();
     if (this.domain.trim()) params['domain'] = this.domain.trim();
@@ -52,6 +59,7 @@ export class TrainingCentersListComponent implements OnInit {
       next: (res) => {
         this.items.set(res.data ?? []);
         this.total.set(res.pagination?.totalItems ?? this.items().length);
+        this.totalPages.set(res.pagination?.totalPages ?? 1);
         this.loading.set(false);
       },
       error: () => {
@@ -61,7 +69,26 @@ export class TrainingCentersListComponent implements OnInit {
     });
   }
 
+  resetFilters(): void {
+    this.search = '';
+    this.city = '';
+    this.domain = '';
+    this.deliveryMode = '';
+    this.load(1);
+  }
+
   logoUrl(url: string | null): string | null {
     return resolveUploadUrl(url);
+  }
+
+  publicationCount(center: TrainingCenterCard): number {
+    return center.publishedOfferingsCount ?? center.courseCount ?? 0;
+  }
+
+  setPage(page: number): void {
+    const next = Math.min(Math.max(page, 1), this.totalPages());
+    if (next !== this.page()) {
+      this.load(next);
+    }
   }
 }

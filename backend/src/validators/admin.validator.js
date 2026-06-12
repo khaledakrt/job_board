@@ -30,7 +30,7 @@ const jobIdParamsSchema = z.object({
 const createUserBodySchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(8).max(128),
-  role: z.enum([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER, USER_ROLES.ADMIN]),
+  role: z.enum(Object.values(USER_ROLES)),
   isVerified: z.boolean().optional(),
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
@@ -45,7 +45,7 @@ const createUserBodySchema = z.object({
 const updateUserBodySchema = z
   .object({
     email: z.string().email().max(255).optional(),
-    role: z.enum([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER, USER_ROLES.ADMIN]).optional(),
+    role: z.enum(Object.values(USER_ROLES)).optional(),
     isVerified: z.boolean().optional(),
     firstName: z.string().max(100).optional(),
     lastName: z.string().max(100).optional(),
@@ -65,17 +65,17 @@ const updateJobStatusBodySchema = z.object({
 });
 
 const listCatalogQuerySchema = z.object({
-  page: z.coerce.number().optional(),
-  limit: z.coerce.number().optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
   status: z.enum(['pending', 'published', 'rejected']).optional(),
   search: z.string().max(255).optional(),
 });
 
 const listInstitutionOfferingsQuerySchema = z.object({
-  page: z.coerce.number().optional(),
-  limit: z.coerce.number().optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
   status: z.enum(['draft', 'pending', 'published', 'rejected']).optional(),
-  type: z.enum(['program', 'event', 'announcement', 'opportunity']).optional(),
+  type: z.enum(['program', 'event', 'announcement']).optional(),
   search: z.string().max(255).optional(),
   institutionSearch: z.string().max(255).optional(),
 });

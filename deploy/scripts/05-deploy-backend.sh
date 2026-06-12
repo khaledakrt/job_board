@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Étape 5 — npm backend + migrations + seed
+# Étape 5 — npm backend + migrations
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
@@ -14,10 +14,12 @@ npm ci --omit=dev
 log "Base de données"
 npm run db:setup
 npm run db:migrate 2>/dev/null || true
-npm run db:seed
+if [[ "${RUN_SEED:-0}" == "1" ]]; then
+  log "Seed de démonstration explicitement demandé"
+  npm run db:seed
+fi
 
 mkdir -p "$APP_ROOT/backend/uploads"
 chmod 755 "$APP_ROOT/backend/uploads"
 
 echo "OK — Étape 5 terminée"
-echo "Comptes test : candidate@test.com / recruiter@test.com — mot de passe Test1234!"

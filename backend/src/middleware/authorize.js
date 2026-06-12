@@ -17,7 +17,7 @@ function authorizeRoles(...allowedRoles) {
   };
 }
 
-const requireRecruiterRole = authorizeRoles(USER_ROLES.RECRUITER, USER_ROLES.ADMIN);
+const requireRecruiterRole = authorizeRoles(USER_ROLES.RECRUITER);
 const requireCandidateRole = authorizeRoles(USER_ROLES.CANDIDATE);
 const requireTrainingProviderRole = authorizeRoles(
   USER_ROLES.TRAINING_PROVIDER,

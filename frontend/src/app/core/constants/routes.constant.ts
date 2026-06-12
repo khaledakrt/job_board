@@ -31,7 +31,6 @@ export const APP_ROUTES = {
     INSTITUTION_PROGRAMS: '/provider/etablissement/programmes',
     INSTITUTION_EVENTS: '/provider/etablissement/evenements',
     INSTITUTION_ANNOUNCEMENTS: '/provider/etablissement/annonces',
-    INSTITUTION_OPPORTUNITIES: '/provider/etablissement/offres-stages',
     INSTITUTION_PUBLICATION_EDIT: (id: string) => `/provider/etablissement/publications/${id}`,
   },
   AUTH: {

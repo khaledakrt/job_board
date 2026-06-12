@@ -3,8 +3,9 @@
     <div class="provider-sidebar-brand">
       <a routerLink="/" class="provider-sidebar-logo">
         <span class="provider-sidebar-mark">JB</span>
-        <span>JobBoard</span>
+        <span class="provider-sidebar-brand-text">JobBoard</span>
       </a>
+      <span class="provider-sidebar-type">{{ isTraining ? 'Centre de formation' : 'Établissement privé' }}</span>
       <p class="provider-sidebar-org">{{ ctx.dashboard()?.organization?.name || 'Mon organisme' }}</p>
       @if (ctx.dashboard()?.organization?.city) {
         <p class="provider-sidebar-city">{{ ctx.dashboard()!.organization!.city }}</p>
@@ -18,14 +19,16 @@
         routerLinkActive="provider-nav-active"
         class="provider-sidebar-link"
       >
-        Tableau de bord
+        <span class="provider-sidebar-icon">⌁</span>
+        <span>Tableau de bord</span>
       </a>
       <a
         [routerLink]="[basePath, 'profil']"
         routerLinkActive="provider-nav-active"
         class="provider-sidebar-link"
       >
-        Profil & documents
+        <span class="provider-sidebar-icon">◌</span>
+        <span>Profil & documents</span>
       </a>
       @if (isTraining) {
         <a
@@ -33,23 +36,36 @@
           routerLinkActive="provider-nav-active"
           class="provider-sidebar-link"
         >
-          Participants
+          <span class="provider-sidebar-icon">◎</span>
+          <span>Participants</span>
         </a>
         <p class="provider-sidebar-label">Publier</p>
-        <a
-          [routerLink]="routes.PROVIDER.TRAINING_FORMATION_NEW"
-          routerLinkActive="provider-nav-active"
-          class="provider-sidebar-link provider-sidebar-link--action"
-        >
-          Publier une formation
-        </a>
-        <a
-          [routerLink]="routes.PROVIDER.TRAINING_EVENT_NEW"
-          routerLinkActive="provider-nav-active"
-          class="provider-sidebar-link provider-sidebar-link--action"
-        >
-          Publier un événement
-        </a>
+        @if (ctx.dashboard()?.canPublishOfferings) {
+          <a
+            [routerLink]="routes.PROVIDER.TRAINING_FORMATION_NEW"
+            routerLinkActive="provider-nav-active"
+            class="provider-sidebar-link provider-sidebar-link--action"
+          >
+            <span class="provider-sidebar-icon">＋</span>
+            <span>Publier une formation</span>
+          </a>
+          <a
+            [routerLink]="routes.PROVIDER.TRAINING_EVENT_NEW"
+            routerLinkActive="provider-nav-active"
+            class="provider-sidebar-link provider-sidebar-link--action"
+          >
+            <span class="provider-sidebar-icon">◆</span>
+            <span>Publier un événement</span>
+          </a>
+        } @else {
+          <a
+            [routerLink]="routes.PROVIDER.TRAINING_PROFILE"
+            class="provider-sidebar-link provider-sidebar-link--action"
+          >
+            <span class="provider-sidebar-icon">!</span>
+            <span>Compléter le profil</span>
+          </a>
+        }
       } @else {
         <p class="provider-sidebar-label">Gérer</p>
         <a
@@ -57,35 +73,32 @@
           routerLinkActive="provider-nav-active"
           class="provider-sidebar-link"
         >
-          Programmes
+          <span class="provider-sidebar-icon">◌</span>
+          <span>Programmes</span>
         </a>
         <a
           [routerLink]="routes.PROVIDER.INSTITUTION_EVENTS"
           routerLinkActive="provider-nav-active"
           class="provider-sidebar-link"
         >
-          Événements
+          <span class="provider-sidebar-icon">◆</span>
+          <span>Événements</span>
         </a>
         <a
           [routerLink]="routes.PROVIDER.INSTITUTION_ANNOUNCEMENTS"
           routerLinkActive="provider-nav-active"
           class="provider-sidebar-link"
         >
-          Actualités & annonces
-        </a>
-        <a
-          [routerLink]="routes.PROVIDER.INSTITUTION_OPPORTUNITIES"
-          routerLinkActive="provider-nav-active"
-          class="provider-sidebar-link"
-        >
-          Offres & stages
+          <span class="provider-sidebar-icon">✦</span>
+          <span>Actualités & annonces</span>
         </a>
         <a
           [routerLink]="[basePath, 'infos-personnelles']"
           routerLinkActive="provider-nav-active"
           class="provider-sidebar-link"
         >
-          Modifier infos personnelles
+          <span class="provider-sidebar-icon">◍</span>
+          <span>Modifier infos personnelles</span>
         </a>
       }
     </nav>
@@ -93,21 +106,29 @@
     <div class="provider-sidebar-foot">
       @if (ctx.dashboard()?.accountStatus === 'published') {
         <a [routerLink]="publicPageLink()" target="_blank" rel="noopener" class="provider-sidebar-link">
-          Ma page publique ↗
+          <span class="provider-sidebar-icon">↗</span>
+          <span>Ma page publique</span>
         </a>
       }
-      <a routerLink="/" class="provider-sidebar-link">Accueil site</a>
+      <a routerLink="/" class="provider-sidebar-link">
+        <span class="provider-sidebar-icon">⌂</span>
+        <span>Accueil site</span>
+      </a>
       <button type="button" class="provider-sidebar-link provider-sidebar-logout" (click)="logout()">
-        Déconnexion
+        <span class="provider-sidebar-icon">×</span>
+        <span>Déconnexion</span>
       </button>
     </div>
   </aside>
 
   <div class="provider-layout-main">
     <header class="provider-topbar">
-      <span class="provider-topbar-role">
-        {{ isTraining ? 'Centre de formation' : 'Établissement privé' }}
-      </span>
+      <div class="provider-topbar-title">
+        <span class="provider-topbar-role">
+          {{ isTraining ? 'Centre de formation' : 'Établissement privé' }}
+        </span>
+        <strong>{{ ctx.dashboard()?.organization?.name || 'Espace prestataire' }}</strong>
+      </div>
       @if (ctx.dashboard()) {
         <span
           class="provider-pill provider-topbar-pill"
@@ -121,6 +142,8 @@
             En attente
           } @else if (ctx.dashboard()!.accountStatus === 'rejected') {
             Refusé
+          } @else {
+            Profil incomplet
           }
         </span>
       }

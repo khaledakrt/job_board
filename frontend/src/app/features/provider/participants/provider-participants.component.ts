@@ -85,6 +85,19 @@ export class ProviderParticipantsComponent implements OnInit {
 
   readonly canPrint = computed(() => this.filteredItems().length > 0);
 
+  readonly contactSelectedHref = computed(() => {
+    const emails = [
+      ...new Set(
+        this.filteredItems()
+          .map((row) => row.candidate.email.trim())
+          .filter(Boolean)
+      ),
+    ];
+    if (!emails.length) return null;
+    const subject = encodeURIComponent(this.printTitle());
+    return `mailto:${emails.join(',')}?subject=${subject}`;
+  });
+
   readonly pageItems = computed(() =>
     paginateSlice(this.filteredItems(), this.page(), this.pageSize)
   );

@@ -1,16 +1,7 @@
-<div class="provider-page provider-form-page">
-  <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline provider-btn--sm">
-    ← Tableau de bord
-  </a>
-  <h1 class="provider-page-title">{{ formationId() ? 'Modifier la formation' : 'Publier une formation' }}</h1>
-  <p class="provider-page-sub">Remplissez les sections ci-dessous. La description détaillée accepte mise en forme (polices, gras, liens).</p>
-
+<div class="provider-page provider-form-page provider-publish-page">
   @if (loading()) {
     <p class="provider-muted">Chargement…</p>
   } @else {
-    @if (status()) {
-      <p class="provider-muted">Statut : {{ statusLabel(status()!) }}</p>
-    }
     @if (error()) {
       <p class="publish-error">{{ error() }}</p>
     }
@@ -58,22 +49,30 @@
             }
           </ul>
         }
-        <p class="provider-muted" style="margin-top: 0.75rem">
+        <p class="provider-muted provider-participants-link">
           <a [routerLink]="routes.PROVIDER.TRAINING_PARTICIPANTS">Voir tous les participants</a>
         </p>
       </section>
     }
 
-    <form class="provider-form" (ngSubmit)="submit()">
-      <section class="provider-card">
+    <form class="provider-card provider-form provider-publish-card" (ngSubmit)="prepareSubmitForReview()">
+      <div class="provider-publish-card-head">
+        <h1>{{ formationId() ? 'Modifier la formation' : 'Publier une formation' }}</h1>
+        @if (status()) {
+          <span class="provider-pill">{{ statusLabel(status()!) }}</span>
+        }
+      </div>
+
+      <section class="provider-form-section provider-form-section--identity">
         <h2>Informations générales</h2>
         <div class="provider-fields">
           <div class="provider-field provider-field--title">
-            <label for="pf-title">Titre *</label>
-            <input id="pf-title" class="provider-input" [(ngModel)]="title" name="title" required />
+            <label for="pf-title">Titre de la formation * <span class="provider-label-note">max. 255 caractères</span></label>
+            <input id="pf-title" class="provider-input" [(ngModel)]="title" name="title" required placeholder="Ex. Développement web full-stack" />
+            <p class="provider-field-hint">Nom visible dans le catalogue et sur la fiche publique.</p>
           </div>
           <div class="provider-field provider-field--category">
-            <label for="pf-cat">Catégorie</label>
+            <label for="pf-cat">Catégorie <span class="provider-label-note">liste prédéfinie</span></label>
             <select id="pf-cat" class="provider-input" [(ngModel)]="category" name="category">
               <option value="">— Choisir —</option>
               @for (c of categories; track c) {
@@ -82,7 +81,7 @@
             </select>
           </div>
           <div class="provider-field provider-field--duration">
-            <label for="pf-dur">Durée</label>
+            <label for="pf-dur">Durée estimée <span class="provider-label-note">max. 120 caractères</span></label>
             <input
               id="pf-dur"
               class="provider-input"
@@ -90,9 +89,10 @@
               name="durationLabel"
               placeholder="Ex. 40 h"
             />
+            <p class="provider-field-hint">Exemples : 40 h, 3 mois, 6 semaines.</p>
           </div>
           <div class="provider-field provider-field--short">
-            <label for="pf-short">Description courte</label>
+            <label for="pf-short">Résumé commercial <span class="provider-label-note">max. 500 caractères</span></label>
             <textarea
               id="pf-short"
               class="provider-input"
@@ -100,46 +100,46 @@
               maxlength="500"
               [(ngModel)]="shortDescription"
               name="shortDescription"
-              placeholder="Résumé pour les listes (texte simple)"
+              placeholder="Expliquez en une phrase le bénéfice concret de cette formation."
             ></textarea>
-            <p class="provider-field-hint">Max. 500 caractères — affiché sur les cartes du catalogue.</p>
+            <p class="provider-field-hint">Texte court visible sur les cartes du catalogue. Expliquez le résultat obtenu par l’apprenant.</p>
           </div>
         </div>
       </section>
 
-      <section class="provider-card provider-card--desc">
+      <section class="provider-form-section provider-form-section--program">
         <h2>Description détaillée</h2>
-        <div class="provider-field provider-field--rte">
-          <label for="pf-desc">Programme & contenu</label>
+        <div class="provider-field provider-field--rte provider-field--rte-compact">
+          <label for="pf-desc">Programme & contenu <span class="provider-label-note">max. 20 000 caractères</span></label>
           <div class="provider-field-body">
             <app-rich-text-editor
               editorId="formation-description"
               editorSize="large"
               [(ngModel)]="description"
               name="description"
-              placeholder="Programme, prérequis, débouchés…"
+              placeholder="Programme, objectifs pédagogiques, prérequis, public cible, débouchés…"
             />
           </div>
         </div>
       </section>
 
-      <section class="provider-card">
-        <h2>Dates & lieu</h2>
+      <section class="provider-form-section provider-form-section--schedule">
+        <h2>Dates, lieu, places & tarif</h2>
         <div class="provider-fields">
           <div class="provider-field provider-field--date">
-            <label for="pf-start">Début</label>
+            <label for="pf-start">Date de début <span class="provider-label-note">format date</span></label>
             <input type="date" id="pf-start" class="provider-input" [(ngModel)]="startDate" name="startDate" />
           </div>
           <div class="provider-field provider-field--date">
-            <label for="pf-end">Fin</label>
+            <label for="pf-end">Date de fin <span class="provider-label-note">optionnel</span></label>
             <input type="date" id="pf-end" class="provider-input" [(ngModel)]="endDate" name="endDate" />
           </div>
           <div class="provider-field provider-field--city">
-            <label for="pf-city">Ville</label>
+            <label for="pf-city">Ville <span class="provider-label-note">max. 120 caractères</span></label>
             <input id="pf-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
           </div>
           <div class="provider-field provider-field--mode">
-            <label for="pf-mode">Modalité</label>
+            <label for="pf-mode">Modalité <span class="provider-label-note">en ligne / présentiel / hybride</span></label>
             <select id="pf-mode" class="provider-input" [(ngModel)]="deliveryMode" name="deliveryMode">
               <option value="">—</option>
               @for (o of deliveryOptions; track o.value) {
@@ -148,54 +148,44 @@
             </select>
           </div>
           <div class="provider-field provider-field--address">
-            <label for="pf-addr">Adresse</label>
+            <label for="pf-addr">Adresse complète <span class="provider-label-note">max. 255 caractères</span></label>
             <input id="pf-addr" class="provider-input" [(ngModel)]="address" name="address" autocomplete="street-address" />
           </div>
-        </div>
-      </section>
-
-      <section class="provider-card">
-        <h2>Tarif, places & contact</h2>
-        <div class="provider-fields">
           <div class="provider-field provider-field--price">
-            <label for="pf-price">Prix (TND)</label>
+            <label for="pf-price">Prix en TND <span class="provider-label-note">nombre positif</span></label>
             <input type="number" id="pf-price" min="0" step="0.01" class="provider-input" [(ngModel)]="price" name="price" />
           </div>
           <div class="provider-field provider-field--seats">
-            <label for="pf-seats">Places</label>
+            <label for="pf-seats">Nombre de places <span class="provider-label-note">0 à 9999</span></label>
             <input type="number" id="pf-seats" min="0" max="9999" class="provider-input" [(ngModel)]="seats" name="seats" />
           </div>
+        </div>
+      </section>
+
+      <section class="provider-form-section provider-form-section--business">
+        <h2>Contact & médias</h2>
+        <div class="provider-fields">
           <div class="provider-field provider-field--phone">
-            <label for="pf-phone">Téléphone</label>
+            <label for="pf-phone">Téléphone contact <span class="provider-label-note">max. 50 caractères</span></label>
             <input id="pf-phone" type="tel" class="provider-input" [(ngModel)]="phone" name="phone" inputmode="tel" autocomplete="tel" />
           </div>
           <div class="provider-field provider-field--email">
-            <label for="pf-email">E-mail</label>
+            <label for="pf-email">E-mail contact <span class="provider-label-note">adresse valide</span></label>
             <input type="email" id="pf-email" class="provider-input" [(ngModel)]="email" name="email" autocomplete="email" />
           </div>
           <div class="provider-field provider-field--url">
-            <label for="pf-web">Site web</label>
+            <label for="pf-web">Lien web <span class="provider-label-note">https:// requis, max. 512 caractères</span></label>
             <input id="pf-web" type="url" class="provider-input" [(ngModel)]="website" name="website" placeholder="https://…" />
           </div>
-        </div>
-        <label class="publish-check">
-          <input type="checkbox" [(ngModel)]="certificateDelivered" name="certificateDelivered" />
-          Certificat délivré à l’issue de la formation
-        </label>
-      </section>
-
-      <section class="provider-card">
-        <h2>Médias</h2>
-        <div class="provider-fields">
           <div class="provider-field provider-field--file">
-            <label>Image principale</label>
+            <label>Image principale <span class="provider-label-note">JPG/PNG/WEBP, max. 2 Mo</span></label>
             <input type="file" accept="image/*" (change)="onMainImage($event)" />
             @if (mediaUrl(mainImageUrl); as img) {
               <img [src]="img" alt="" class="publish-preview-img" />
             }
           </div>
           <div class="provider-field provider-field--file">
-            <label>Galerie (max. 8)</label>
+            <label>Galerie <span class="provider-label-note">max. 7 images, 2 Mo/image</span></label>
             <input type="file" accept="image/*" multiple (change)="onGallery($event)" />
             <div class="publish-gallery">
               @for (g of gallery; track g) {
@@ -209,11 +199,18 @@
             </div>
           </div>
         </div>
+        <label class="publish-check">
+          <input type="checkbox" [(ngModel)]="certificateDelivered" name="certificateDelivered" />
+          Certificat délivré à l’issue de la formation
+        </label>
       </section>
 
       <div class="provider-form-actions">
+        <button type="button" class="provider-btn provider-btn--outline" [disabled]="saving()" (click)="prepareSaveDraft()">
+          Enregistrer le brouillon
+        </button>
         <button type="submit" class="provider-btn provider-btn--primary" [disabled]="saving()">
-          {{ formationId() ? 'Enregistrer les modifications' : 'Soumettre pour validation' }}
+          Envoyer en validation
         </button>
         <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline">Annuler</a>
       </div>

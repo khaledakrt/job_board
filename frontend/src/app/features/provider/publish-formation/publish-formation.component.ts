@@ -49,7 +49,9 @@ export class PublishFormationComponent implements OnInit {
   readonly participants = signal<ProviderParticipationItem[]>([]);
   readonly registeredCount = signal(0);
   readonly confirmOpen = signal(false);
+  readonly maxGalleryImages = 7;
   private pendingBody: Partial<TrainingFormationItem> | null = null;
+  private pendingAction: 'draft' | 'review' = 'review';
 
   title = '';
   category = '';
@@ -154,18 +156,47 @@ export class PublishFormationComponent implements OnInit {
   }
 
   onGallery(event: Event): void {
-    const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    const input = event.target as HTMLInputElement;
+    const remaining = this.maxGalleryImages - this.gallery.length;
+    if (remaining <= 0) {
+      this.error.set(`La galerie est limitée à ${this.maxGalleryImages} photos.`);
+      input.value = '';
+      return;
+    }
+    const files = Array.from(input.files ?? []).slice(0, remaining);
     if (!files.length) return;
     this.provider.uploadCatalogGallery(files).subscribe({
       next: (res) => {
         const urls = res.data?.urls ?? [];
-        this.gallery = [...this.gallery, ...urls].slice(0, 8);
+        this.gallery = [...this.gallery, ...urls].slice(0, this.maxGalleryImages);
+        input.value = '';
       },
     });
   }
 
   removeGallery(url: string): void {
     this.gallery = this.gallery.filter((u) => u !== url);
+  }
+
+  checklistItems(): Array<{ label: string; done: boolean }> {
+    return [
+      { label: 'Titre clair de la formation', done: Boolean(this.title.trim()) },
+      { label: 'Catégorie renseignée', done: Boolean(this.category.trim()) },
+      { label: 'Résumé visible dans le catalogue', done: Boolean(this.shortDescription.trim()) },
+      { label: 'Programme détaillé ajouté', done: Boolean(sanitizeRichHtml(this.description).trim()) },
+      { label: 'Date ou durée indiquée', done: Boolean(this.startDate || this.durationLabel.trim()) },
+      { label: 'Ville ou modalité renseignée', done: Boolean(this.city.trim() || this.deliveryMode) },
+      { label: 'Contact candidat disponible', done: Boolean(this.phone.trim() || this.email.trim()) },
+      { label: 'Image principale ajoutée', done: Boolean(this.mainImageUrl.trim()) },
+    ];
+  }
+
+  checklistDoneCount(): number {
+    return this.checklistItems().filter((item) => item.done).length;
+  }
+
+  checklistTotal(): number {
+    return this.checklistItems().length;
   }
 
   private applyParticipants(f: {
@@ -190,15 +221,22 @@ export class PublishFormationComponent implements OnInit {
   }
 
   confirmTitle(): string {
-    return this.formationId() ? 'Confirmer les modifications' : 'Soumettre la formation ?';
+    if (this.pendingAction === 'draft') return 'Enregistrer le brouillon ?';
+    return this.formationId() ? 'Envoyer les modifications en validation ?' : 'Soumettre la formation ?';
   }
 
   confirmMessage(): string {
+    if (this.pendingAction === 'draft') {
+      return 'Le brouillon restera privé dans votre espace centre. Vous pourrez le compléter et l’envoyer plus tard.';
+    }
     if (!this.formationId()) {
       return 'La formation sera envoyée à l’administrateur. Elle sera visible après validation.';
     }
     if (this.status() === 'rejected') {
       return 'Les modifications seront enregistrées et la formation repassera en attente de validation administrateur.';
+    }
+    if (this.status() === 'published') {
+      return 'Les modifications seront enregistrées et la formation repassera en attente de validation administrateur avant réapparition publique.';
     }
     return 'Les modifications seront enregistrées pour cette formation.';
   }
@@ -211,11 +249,17 @@ export class PublishFormationComponent implements OnInit {
 
   private successMessage(isEdit: boolean, previousStatus: string | null, apiMessage?: string): string {
     if (apiMessage) return apiMessage;
+    if (this.pendingAction === 'draft') {
+      return 'Brouillon enregistré. Vous pouvez reprendre cette formation depuis le dashboard.';
+    }
     if (!isEdit) {
       return 'Formation envoyée. Elle sera visible après validation par un administrateur.';
     }
     if (previousStatus === 'rejected') {
       return 'Modifications enregistrées. La formation est à nouveau en attente de validation par l’administrateur.';
+    }
+    if (previousStatus === 'published') {
+      return 'Modifications enregistrées. La formation repasse en attente de validation par l’administrateur.';
     }
     if (previousStatus === 'pending') {
       return 'Modifications enregistrées. La formation reste en attente de validation par l’administrateur.';
@@ -223,15 +267,25 @@ export class PublishFormationComponent implements OnInit {
     return 'Modifications enregistrées.';
   }
 
-  submit(): void {
-    if (!this.title.trim()) {
-      this.error.set('Le titre est obligatoire.');
-      return;
-    }
-    this.error.set(null);
-    this.success.set(null);
+  private extractErrorMessage(err: unknown): string {
+    const error = err as {
+      error?: {
+        message?: string;
+        errors?: Array<{ field?: string; message?: string }>;
+      };
+    };
+    const details = error.error?.errors
+      ?.map((e) => {
+        const field = e.field ? `${e.field} : ` : '';
+        return `${field}${e.message ?? ''}`.trim();
+      })
+      .filter(Boolean);
+    if (details?.length) return details.join(' | ');
+    return error.error?.message ?? 'Enregistrement impossible.';
+  }
 
-    this.pendingBody = {
+  private buildBody(status: 'draft' | 'pending'): Partial<TrainingFormationItem> {
+    return {
       title: this.title.trim(),
       category: this.category.trim() || null,
       shortDescription: this.shortDescription.trim() || null,
@@ -250,7 +304,31 @@ export class PublishFormationComponent implements OnInit {
       phone: this.phone.trim() || null,
       email: this.email.trim() || null,
       website: this.website.trim() || null,
+      status,
     };
+  }
+
+  prepareSaveDraft(): void {
+    if (!this.title.trim()) {
+      this.error.set('Ajoutez au minimum un titre pour enregistrer le brouillon.');
+      return;
+    }
+    this.error.set(null);
+    this.success.set(null);
+    this.pendingAction = 'draft';
+    this.pendingBody = this.buildBody('draft');
+    this.confirmOpen.set(true);
+  }
+
+  prepareSubmitForReview(): void {
+    if (!this.title.trim()) {
+      this.error.set('Le titre est obligatoire avant l’envoi en validation.');
+      return;
+    }
+    this.error.set(null);
+    this.success.set(null);
+    this.pendingAction = 'review';
+    this.pendingBody = this.buildBody('pending');
     this.confirmOpen.set(true);
   }
 
@@ -260,9 +338,10 @@ export class PublishFormationComponent implements OnInit {
     const id = this.formationId();
     const previousStatus = this.status();
     const body = this.pendingBody;
-    const req = id
-      ? this.provider.updateFormation(id, body)
-      : this.provider.createFormation(body);
+    const req =
+      this.pendingAction === 'draft'
+        ? this.provider.saveFormationDraft(id, body)
+        : this.provider.submitFormationForReview(id, body);
 
     this.saving.set(true);
     req.subscribe({
@@ -270,7 +349,9 @@ export class PublishFormationComponent implements OnInit {
         this.saving.set(false);
         this.confirmOpen.set(false);
         this.pendingBody = null;
-        this.success.set(this.successMessage(Boolean(id), previousStatus, (res as { message?: string }).message));
+        this.success.set(
+          this.successMessage(Boolean(id), previousStatus, (res as { message?: string }).message)
+        );
         this.ctx.refreshOfferings();
         if (!id && res.data?.id) {
           void this.router.navigateByUrl(APP_ROUTES.PROVIDER.TRAINING_FORMATION_EDIT(res.data.id));
@@ -284,7 +365,7 @@ export class PublishFormationComponent implements OnInit {
       error: (err) => {
         this.saving.set(false);
         this.confirmOpen.set(false);
-        this.error.set(err.error?.message ?? 'Enregistrement impossible.');
+        this.error.set(this.extractErrorMessage(err));
       },
     });
   }

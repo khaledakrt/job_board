@@ -5,8 +5,14 @@ const catalogOfferingsService = require('../services/catalogOfferings.service');
 const catalogParticipationsService = require('../services/catalogParticipations.service');
 
 const listProviderFormations = asyncHandler(async (req, res) => {
-  const data = await catalogOfferingsService.listProviderFormations(req.user.id);
-  res.json({ success: true, data });
+  const result = await catalogOfferingsService.listProviderFormations(
+    req.user.id,
+    req.validatedQuery ?? {}
+  );
+  if (result?.pagination) {
+    return res.json({ success: true, data: result.items, pagination: result.pagination });
+  }
+  res.json({ success: true, data: result });
 });
 
 const getProviderFormation = asyncHandler(async (req, res) => {
@@ -22,11 +28,13 @@ const createProviderFormation = asyncHandler(async (req, res) => {
     req.user.id,
     req.validatedBody
   );
+  const isDraft = data.status === 'draft';
   res.status(201).json({
     success: true,
     data,
-    message:
-      'Formation envoyée. Elle sera visible après validation par un administrateur.',
+    message: isDraft
+      ? 'Brouillon de formation enregistré.'
+      : 'Formation envoyée. Elle sera visible après validation par un administrateur.',
   });
 });
 
@@ -36,7 +44,13 @@ const updateProviderFormation = asyncHandler(async (req, res) => {
     req.validatedParams.formationId,
     req.validatedBody
   );
-  res.json({ success: true, data });
+  res.json({
+    success: true,
+    data,
+    message: data.status === 'draft'
+      ? 'Brouillon de formation enregistré.'
+      : 'Formation enregistrée.',
+  });
 });
 
 const deleteProviderFormation = asyncHandler(async (req, res) => {
@@ -48,8 +62,14 @@ const deleteProviderFormation = asyncHandler(async (req, res) => {
 });
 
 const listProviderEvents = asyncHandler(async (req, res) => {
-  const data = await catalogOfferingsService.listProviderEvents(req.user.id);
-  res.json({ success: true, data });
+  const result = await catalogOfferingsService.listProviderEvents(
+    req.user.id,
+    req.validatedQuery ?? {}
+  );
+  if (result?.pagination) {
+    return res.json({ success: true, data: result.items, pagination: result.pagination });
+  }
+  res.json({ success: true, data: result });
 });
 
 const getProviderEvent = asyncHandler(async (req, res) => {
@@ -65,11 +85,13 @@ const createProviderEvent = asyncHandler(async (req, res) => {
     req.user.id,
     req.validatedBody
   );
+  const isDraft = data.status === 'draft';
   res.status(201).json({
     success: true,
     data,
-    message:
-      'Événement envoyé. Il sera visible après validation par un administrateur.',
+    message: isDraft
+      ? 'Brouillon d’événement enregistré.'
+      : 'Événement envoyé. Il sera visible après validation par un administrateur.',
   });
 });
 
@@ -79,7 +101,13 @@ const updateProviderEvent = asyncHandler(async (req, res) => {
     req.validatedParams.eventId,
     req.validatedBody
   );
-  res.json({ success: true, data });
+  res.json({
+    success: true,
+    data,
+    message: data.status === 'draft'
+      ? 'Brouillon d’événement enregistré.'
+      : 'Événement enregistré.',
+  });
 });
 
 const deleteProviderEvent = asyncHandler(async (req, res) => {
@@ -113,17 +141,25 @@ const getEvent = asyncHandler(async (req, res) => {
 });
 
 const listCenterFormations = asyncHandler(async (req, res) => {
-  const data = await catalogOfferingsService.listPublishedFormationsForCenter(
-    req.validatedParams.centerId
+  const result = await catalogOfferingsService.listPublishedFormationsForCenter(
+    req.validatedParams.centerId,
+    req.validatedQuery ?? {}
   );
-  res.json({ success: true, data });
+  if (result?.pagination) {
+    return res.json({ success: true, data: result.items, pagination: result.pagination });
+  }
+  res.json({ success: true, data: result });
 });
 
 const listCenterEvents = asyncHandler(async (req, res) => {
-  const data = await catalogOfferingsService.listPublishedEventsForCenter(
-    req.validatedParams.centerId
+  const result = await catalogOfferingsService.listPublishedEventsForCenter(
+    req.validatedParams.centerId,
+    req.validatedQuery ?? {}
   );
-  res.json({ success: true, data });
+  if (result?.pagination) {
+    return res.json({ success: true, data: result.items, pagination: result.pagination });
+  }
+  res.json({ success: true, data: result });
 });
 
 const participateFormation = asyncHandler(async (req, res) => {
@@ -181,11 +217,14 @@ const adminSetEventStatus = asyncHandler(async (req, res) => {
 });
 
 const listProviderParticipations = asyncHandler(async (req, res) => {
-  const data = await catalogParticipationsService.listProviderParticipations(
+  const result = await catalogParticipationsService.listProviderParticipations(
     req.user.id,
     req.validatedQuery
   );
-  res.json({ success: true, data });
+  if (result?.pagination) {
+    return res.json({ success: true, data: result, pagination: result.pagination });
+  }
+  res.json({ success: true, data: result });
 });
 
 module.exports = {

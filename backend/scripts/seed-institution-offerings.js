@@ -115,37 +115,6 @@ const OFFERINGS = [
     city: 'Tunis',
     status: 'draft',
   },
-  {
-    offering_type: 'opportunity',
-    title: `${TITLE_PREFIX}Stage PFE développeur web`,
-    summary: 'Stage de 4 à 6 mois sur une application Angular / Node.js avec mentorat technique.',
-    description:
-      '<p>Missions : développement front-end, intégration API, tests et documentation. Profil : Angular, JavaScript, Git.</p>',
-    category: 'Informatique',
-    opportunity_type: 'internship',
-    start_date: nextDate(2),
-    end_date: nextDate(4),
-    city: 'Tunis',
-    seats: 3,
-    email: 'career@horizon-demo.tn',
-    website: 'https://example.com/careers/stage-web',
-    status: 'published',
-  },
-  {
-    offering_type: 'opportunity',
-    title: `${TITLE_PREFIX}Assistant administratif étudiant`,
-    summary: 'Mission à temps partiel pour accompagner le bureau d’accueil et les admissions.',
-    description:
-      '<p>Accueil, gestion des rendez-vous, assistance dossiers candidats et communication avec les familles.</p>',
-    category: 'Administration',
-    opportunity_type: 'job',
-    start_date: nextDate(1),
-    end_date: nextDate(2),
-    city: 'Tunis',
-    seats: 2,
-    email: 'rh@horizon-demo.tn',
-    status: 'pending',
-  },
 ];
 
 function today() {
@@ -191,7 +160,7 @@ async function ensureInstitution(user) {
       status: CATALOG_PUBLISH_STATUS.PUBLISHED,
       description:
         institution.description ||
-        '<p>Établissement privé de démonstration avec programmes, événements, annonces et opportunités.</p>',
+        '<p>Établissement privé de démonstration avec programmes, événements et annonces.</p>',
       short_description:
         institution.short_description ||
         'Établissement privé de démonstration pour tester les pages fournisseur.',
@@ -210,7 +179,7 @@ async function ensureInstitution(user) {
     institution_type: 'higher_institute',
     logo_url: null,
     description:
-      '<p><strong>Institut Privé Horizon Demo</strong> est un établissement de démonstration pour valider les pages programmes, événements, annonces et offres/stages.</p>',
+      '<p><strong>Institut Privé Horizon Demo</strong> est un établissement de démonstration pour valider les pages programmes, événements et annonces.</p>',
     short_description:
       'Établissement privé de démonstration pour tester les contenus publiés.',
     city: 'Tunis',
@@ -281,7 +250,7 @@ async function main() {
   console.log(`Password: ${TEST_PASSWORD}`);
   console.log(`Institution: ${institution.name} (${institution.id})`);
   console.log(`Offerings inserted: ${inserted}, updated: ${updated}`);
-  console.log('Pages: /provider/etablissement/programmes, /evenements, /annonces, /offres-stages\n');
+  console.log('Pages: /provider/etablissement/programmes, /evenements, /annonces\n');
 
   await disconnectDatabase();
 }

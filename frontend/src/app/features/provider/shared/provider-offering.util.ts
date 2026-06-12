@@ -1,6 +1,7 @@
 export function offeringStatusClass(status: string | undefined): string {
   if (status === 'published') return 'provider-badge provider-badge--published';
   if (status === 'rejected') return 'provider-badge provider-badge--rejected';
+  if (status === 'draft') return 'provider-badge';
   return 'provider-badge provider-badge--pending';
 }
 

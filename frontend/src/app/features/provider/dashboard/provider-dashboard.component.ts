@@ -20,6 +20,10 @@ import {
   InstitutionOfferingStatus,
   InstitutionOfferingType,
 } from '../../../core/models/catalog.model';
+import { PaginationMeta } from '../../../core/models/pagination.model';
+
+type TrainingPublicationView = 'published' | 'pending';
+type TrainingPublicationKind = 'formation' | 'event';
 
 @Component({
   selector: 'app-provider-dashboard',
@@ -40,14 +44,18 @@ export class ProviderDashboardComponent implements OnInit {
 
   readonly pubFormationsPage = signal(1);
   readonly pubEventsPage = signal(1);
+  readonly draftPage = signal(1);
   readonly pendingFormationsPage = signal(1);
   readonly pendingEventsPage = signal(1);
   readonly rejectedPage = signal(1);
   readonly programsPage = signal(1);
+  readonly trainingPublicationView = signal<TrainingPublicationView>('published');
+  readonly trainingPublicationKind = signal<TrainingPublicationKind>('formation');
   readonly institutionOfferings = signal<InstitutionOfferingItem[]>([]);
   readonly institutionOfferingsLoading = signal(false);
   readonly institutionOfferingsError = signal<string | null>(null);
   readonly institutionOfferingsPage = signal(1);
+  readonly institutionOfferingsPagination = signal<PaginationMeta | null>(null);
   readonly institutionSearch = signal('');
   readonly institutionTypeFilter = signal('');
   readonly institutionStatusFilter = signal('');
@@ -71,27 +79,25 @@ export class ProviderDashboardComponent implements OnInit {
     ];
     return paginateSlice(combined, this.rejectedPage(), this.pageSize);
   });
+  readonly draftItems = computed(() => [
+    ...this.ctx.draftFormations().map((f) => ({ kind: 'formation' as const, item: f })),
+    ...this.ctx.draftEvents().map((e) => ({ kind: 'event' as const, item: e })),
+  ]);
+  readonly pageDraftItems = computed(() =>
+    paginateSlice(this.draftItems(), this.draftPage(), this.pageSize)
+  );
+  readonly pendingTotal = computed(
+    () => this.ctx.pendingFormations().length + this.ctx.pendingEvents().length
+  );
   readonly rejectedTotal = computed(
     () => this.ctx.rejectedFormations().length + this.ctx.rejectedEvents().length
   );
   readonly pagePrograms = computed(() =>
     paginateSlice(this.ctx.programs(), this.programsPage(), this.pageSize)
   );
-  readonly filteredInstitutionOfferings = computed(() => {
-    const q = this.institutionSearch().trim().toLowerCase();
-    const type = this.institutionTypeFilter();
-    const status = this.institutionStatusFilter();
-    return this.institutionOfferings().filter((item) => {
-      if (q && !`${item.title} ${item.summary ?? ''} ${item.category ?? ''}`.toLowerCase().includes(q)) {
-        return false;
-      }
-      if (type && item.offeringType !== type) return false;
-      if (status && item.status !== status) return false;
-      return true;
-    });
-  });
-  readonly pageInstitutionOfferings = computed(() =>
-    paginateSlice(this.filteredInstitutionOfferings(), this.institutionOfferingsPage(), this.pageSize)
+  readonly pageInstitutionOfferings = computed(() => this.institutionOfferings());
+  readonly institutionOfferingsTotal = computed(
+    () => this.institutionOfferingsPagination()?.totalItems ?? this.institutionOfferings().length
   );
 
   ngOnInit(): void {
@@ -104,24 +110,64 @@ export class ProviderDashboardComponent implements OnInit {
     return resolveUploadUrl(url ?? null);
   }
 
-  loadInstitutionOfferings(): void {
+  loadInstitutionOfferings(page = this.institutionOfferingsPage()): void {
     this.institutionOfferingsLoading.set(true);
     this.institutionOfferingsError.set(null);
-    this.providerService.listInstitutionOfferings().subscribe({
+    this.institutionOfferingsPage.set(page);
+    this.providerService.listInstitutionOfferings({
+      page,
+      limit: this.pageSize,
+      type: this.institutionTypeFilter() ? this.institutionTypeFilter() as InstitutionOfferingType : undefined,
+      status: this.institutionStatusFilter() || undefined,
+      search: this.institutionSearch().trim() || undefined,
+    }).subscribe({
       next: (res) => {
         this.institutionOfferings.set(res.data ?? []);
+        this.institutionOfferingsPagination.set(res.pagination ?? null);
         this.institutionOfferingsLoading.set(false);
-        this.institutionOfferingsPage.set(1);
       },
       error: () => {
         this.institutionOfferingsError.set('Impossible de charger les publications.');
+        this.institutionOfferingsPagination.set(null);
         this.institutionOfferingsLoading.set(false);
       },
     });
   }
 
   onInstitutionFilterChange(): void {
-    this.institutionOfferingsPage.set(1);
+    this.loadInstitutionOfferings(1);
+  }
+
+  setInstitutionOfferingsPage(page: number): void {
+    const totalPages = this.institutionOfferingsPagination()?.totalPages ?? 1;
+    const next = Math.min(Math.max(page, 1), totalPages);
+    if (next === this.institutionOfferingsPage() || this.institutionOfferingsLoading()) return;
+    this.loadInstitutionOfferings(next);
+  }
+
+  setTrainingPublicationView(view: TrainingPublicationView): void {
+    this.trainingPublicationView.set(view);
+  }
+
+  showPendingPublications(): void {
+    this.trainingPublicationView.set('pending');
+    this.trainingPublicationKind.set(
+      this.ctx.pendingFormations().length ? 'formation' : 'event'
+    );
+    this.scrollToPublications();
+  }
+
+  showDrafts(): void {
+    this.scrollToElement('provider-draft-offerings');
+  }
+
+  setTrainingPublicationKind(kind: string): void {
+    if (kind !== 'formation' && kind !== 'event') return;
+    this.trainingPublicationKind.set(kind);
+    this.pubFormationsPage.set(1);
+    this.pubEventsPage.set(1);
+    this.pendingFormationsPage.set(1);
+    this.pendingEventsPage.set(1);
   }
 
   institutionTypeLabel(type: InstitutionOfferingType): string {
@@ -129,7 +175,6 @@ export class ProviderDashboardComponent implements OnInit {
       program: 'Programme',
       event: 'Événement',
       announcement: 'Annonce',
-      opportunity: 'Offre / stage',
     };
     return labels[type];
   }
@@ -161,9 +206,12 @@ export class ProviderDashboardComponent implements OnInit {
   deleteFormation(id: string): void {
     this.providerService.deleteFormation(id).subscribe({
       next: () => {
-        this.ctx.refreshOfferings();
-        this.clampPage(this.pubFormationsPage, this.ctx.publishedFormations().length);
-        this.clampPage(this.pendingFormationsPage, this.ctx.pendingFormations().length);
+        this.ctx.refreshOfferings(() => {
+          this.clampPage(this.pubFormationsPage, this.ctx.publishedFormations().length);
+          this.clampPage(this.pendingFormationsPage, this.ctx.pendingFormations().length);
+          this.clampPage(this.draftPage, this.draftItems().length);
+          this.clampPage(this.rejectedPage, this.rejectedTotal());
+        });
       },
     });
   }
@@ -171,9 +219,12 @@ export class ProviderDashboardComponent implements OnInit {
   deleteEvent(id: string): void {
     this.providerService.deleteEvent(id).subscribe({
       next: () => {
-        this.ctx.refreshOfferings();
-        this.clampPage(this.pubEventsPage, this.ctx.publishedEvents().length);
-        this.clampPage(this.pendingEventsPage, this.ctx.pendingEvents().length);
+        this.ctx.refreshOfferings(() => {
+          this.clampPage(this.pubEventsPage, this.ctx.publishedEvents().length);
+          this.clampPage(this.pendingEventsPage, this.ctx.pendingEvents().length);
+          this.clampPage(this.draftPage, this.draftItems().length);
+          this.clampPage(this.rejectedPage, this.rejectedTotal());
+        });
       },
     });
   }
@@ -196,5 +247,15 @@ export class ProviderDashboardComponent implements OnInit {
     if (page() > maxPage) {
       page.set(maxPage);
     }
+  }
+
+  private scrollToPublications(): void {
+    this.scrollToElement('provider-publications-panel');
+  }
+
+  private scrollToElement(id: string): void {
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 }

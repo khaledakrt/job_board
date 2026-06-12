@@ -12,14 +12,16 @@ const catalogOfferingsController = require('../controllers/catalogOfferings.cont
 const {
   listTrainingCentersQuerySchema,
   listInstitutionsQuerySchema,
+  listInstitutionOfferingsQuerySchema,
   idParamsSchema,
-  submitTrainingCenterSchema,
+  institutionIdParamsSchema,
   submitPrivateInstitutionSchema,
 } = require('../validators/publicCatalog.validator');
 const {
   offeringIdParamsSchema,
   centerIdParamsSchema,
   participateBodySchema,
+  publicListCenterOfferingsQuerySchema,
 } = require('../validators/catalogOfferings.validator');
 
 const router = express.Router();
@@ -32,15 +34,9 @@ router.get(
 router.get(
   '/training-centers/:id',
   validateParams(idParamsSchema),
+  optionalAuthenticate,
   publicCatalogController.getTrainingCenter
 );
-router.post(
-  '/training-centers',
-  contactFormRateLimiter,
-  validateBody(submitTrainingCenterSchema),
-  publicCatalogController.submitTrainingCenter
-);
-
 router.get(
   '/private-institutions',
   validateQuery(listInstitutionsQuerySchema),
@@ -57,6 +53,13 @@ router.get(
   validateParams(idParamsSchema),
   optionalAuthenticate,
   publicCatalogController.getPrivateInstitution
+);
+router.get(
+  '/private-institutions/:institutionId/offerings',
+  validateParams(institutionIdParamsSchema),
+  validateQuery(listInstitutionOfferingsQuerySchema),
+  optionalAuthenticate,
+  publicCatalogController.listPrivateInstitutionOfferings
 );
 router.post(
   '/private-institutions/publications/:id/participate',
@@ -75,11 +78,13 @@ router.post(
 router.get(
   '/training-centers/:centerId/formations',
   validateParams(centerIdParamsSchema),
+  validateQuery(publicListCenterOfferingsQuerySchema),
   catalogOfferingsController.listCenterFormations
 );
 router.get(
   '/training-centers/:centerId/events',
   validateParams(centerIdParamsSchema),
+  validateQuery(publicListCenterOfferingsQuerySchema),
   catalogOfferingsController.listCenterEvents
 );
 router.get(

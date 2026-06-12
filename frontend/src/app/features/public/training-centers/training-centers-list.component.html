@@ -4,7 +4,7 @@
       <app-catalog-page-header
         theme="training"
         title="Centres de formation"
-        subtitle="Parcourez les centres publiés, leurs formations et documents."
+        subtitle="Trouvez des organismes validés, comparez leurs domaines et consultez leurs formations publiées."
         breadcrumbLabel="Centres de formation"
         [listRoute]="routes.PUBLIC.TRAINING_CENTERS"
         [registerRoute]="routes.PUBLIC.TRAINING_CENTER_REGISTER"
@@ -18,15 +18,15 @@
         <div class="catalog-filters-grid catalog-filters-grid--training">
           <div>
             <label class="catalog-label" for="tc-search">Mot-clé</label>
-            <input id="tc-search" class="catalog-input" [(ngModel)]="search" placeholder="Nom, domaine…" />
+            <input id="tc-search" type="search" class="catalog-input" [(ngModel)]="search" (keydown.enter)="load(1)" placeholder="Nom, domaine…" autocomplete="off" />
           </div>
           <div>
             <label class="catalog-label" for="tc-city">Ville</label>
-            <input id="tc-city" class="catalog-input" [(ngModel)]="city" placeholder="Ex. Tunis" />
+            <input id="tc-city" class="catalog-input" [(ngModel)]="city" (keydown.enter)="load(1)" placeholder="Ex. Tunis" autocomplete="address-level2" />
           </div>
           <div>
             <label class="catalog-label" for="tc-domain">Domaine</label>
-            <input id="tc-domain" class="catalog-input" [(ngModel)]="domain" placeholder="Ex. Informatique" />
+            <input id="tc-domain" class="catalog-input" [(ngModel)]="domain" (keydown.enter)="load(1)" placeholder="Ex. Informatique" />
           </div>
           <div>
             <label class="catalog-label" for="tc-mode">Mode</label>
@@ -37,14 +37,15 @@
             </select>
           </div>
           <div class="catalog-filters-actions">
-            <button type="button" class="catalog-btn catalog-btn--primary" (click)="load()">Rechercher</button>
+            <button type="button" class="catalog-btn catalog-btn--outline" (click)="resetFilters()">Réinitialiser</button>
+            <button type="button" class="catalog-btn catalog-btn--primary" (click)="load(1)">Rechercher</button>
           </div>
         </div>
       </section>
 
       @if (loading()) {
         <div class="catalog-state">
-          <p class="catalog-state-icon">⏳</p>
+          <p class="catalog-state-icon" aria-hidden="true">CF</p>
           <p class="catalog-state-title">Chargement…</p>
         </div>
       } @else if (error()) {
@@ -53,7 +54,7 @@
         </div>
       } @else if (!items().length) {
         <div class="catalog-state">
-          <p class="catalog-state-icon">📚</p>
+          <p class="catalog-state-icon" aria-hidden="true">0</p>
           <p class="catalog-state-title">Aucun centre publié</p>
           <p>Revenez plus tard ou inscrivez votre centre.</p>
           <div class="catalog-state-actions">
@@ -94,7 +95,7 @@
                 @if (c.shortDescription) {
                   <p class="catalog-card-desc">{{ c.shortDescription }}</p>
                 }
-                <p class="catalog-card-stat">{{ c.courseCount }} formation(s)</p>
+                <p class="catalog-card-stat">{{ publicationCount(c) }} publication(s)</p>
               </div>
               <div class="catalog-card-footer">
                 <span class="catalog-card-cta">Voir la fiche</span>
@@ -102,6 +103,27 @@
             </a>
           }
         </div>
+        @if (totalPages() > 1) {
+          <nav class="catalog-offerings-pagination" aria-label="Pagination des centres">
+            <button
+              type="button"
+              class="catalog-btn catalog-btn--outline"
+              [disabled]="page() <= 1"
+              (click)="setPage(page() - 1)"
+            >
+              Précédent
+            </button>
+            <span>Page {{ page() }} / {{ totalPages() }}</span>
+            <button
+              type="button"
+              class="catalog-btn catalog-btn--outline"
+              [disabled]="page() >= totalPages()"
+              (click)="setPage(page() + 1)"
+            >
+              Suivant
+            </button>
+          </nav>
+        }
       }
     </div>
   </main>

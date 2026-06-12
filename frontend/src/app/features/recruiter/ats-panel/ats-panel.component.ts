@@ -12,8 +12,12 @@ import {
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { Application, ApplicationDetail } from '../../../core/models/application.model';
 import { Job } from '../../../core/models/job.model';
-import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
+import {
+  resolveAuthenticatedUploadUrl,
+  resolveUploadUrl,
+} from '../../../core/utils/asset-url.util';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { RecruiterApplicationService } from '../services/application.service';
 import { RecruiterJobService } from '../services/job.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
@@ -53,6 +57,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly applicationService = inject(RecruiterApplicationService);
   private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly authService = inject(AuthService);
   private readonly jobService = inject(RecruiterJobService);
   readonly context = inject(RecruiterContextService);
   readonly routes = APP_ROUTES;
@@ -550,9 +555,10 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   }
 
   resumeUrl(application: Application | ApplicationDetail): string | null {
-    const snapshot = resolveUploadUrl(application.resumeSnapshotUrl);
+    const token = this.authService.accessToken();
+    const snapshot = resolveAuthenticatedUploadUrl(application.resumeSnapshotUrl, token);
     if (snapshot) return snapshot;
-    const current = resolveUploadUrl(application.candidate?.resumeUrl ?? null);
+    const current = resolveAuthenticatedUploadUrl(application.candidate?.resumeUrl ?? null, token);
     return current;
   }
 

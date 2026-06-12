@@ -28,11 +28,17 @@ export class ProviderContextService {
   readonly pendingFormations = computed(() =>
     this.formations().filter((f) => f.status === 'pending')
   );
+  readonly draftFormations = computed(() =>
+    this.formations().filter((f) => f.status === 'draft')
+  );
   readonly publishedEvents = computed(() =>
     this.events().filter((e) => e.status === 'published')
   );
   readonly pendingEvents = computed(() =>
     this.events().filter((e) => e.status === 'pending')
+  );
+  readonly draftEvents = computed(() =>
+    this.events().filter((e) => e.status === 'draft')
   );
   readonly rejectedFormations = computed(() =>
     this.formations().filter((f) => f.status === 'rejected')
@@ -54,6 +60,7 @@ export class ProviderContextService {
       eventsTotal: d.eventsSummary.total,
       eventsPublished: d.eventsSummary.published,
       pendingTotal: d.formationsSummary.pending + d.eventsSummary.pending,
+      draftTotal: (d.formationsSummary.draft ?? 0) + (d.eventsSummary.draft ?? 0),
     };
   }
 
@@ -69,7 +76,7 @@ export class ProviderContextService {
         const d = res.data ?? null;
         this.dashboard.set(d);
         this.loading.set(false);
-        if (this.isTraining && d?.canPublishOfferings) {
+        if (this.isTraining) {
           this.refreshOfferings();
         }
         if (!this.isTraining && d?.canPublishOfferings) {
@@ -85,13 +92,22 @@ export class ProviderContextService {
     });
   }
 
-  refreshOfferings(): void {
+  refreshOfferings(afterLoad?: () => void): void {
     if (!this.isTraining) return;
+    let pending = 2;
+    const done = () => {
+      pending -= 1;
+      if (pending === 0) afterLoad?.();
+    };
     this.providerService.listFormations().subscribe({
       next: (res) => this.formations.set(res.data ?? []),
+      complete: done,
+      error: done,
     });
     this.providerService.listEvents().subscribe({
       next: (res) => this.events.set(res.data ?? []),
+      complete: done,
+      error: done,
     });
   }
 

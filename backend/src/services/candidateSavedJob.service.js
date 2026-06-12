@@ -1,9 +1,10 @@
 'use strict';
 
+const { Op } = require('sequelize');
 const { SavedJob, Job, Company } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
-const { CANDIDATE_LIMITS } = require('../config/constants');
+const { CANDIDATE_LIMITS, JOB_PUBLIC_STATUSES } = require('../config/constants');
 
 function formatSavedJob(savedJob) {
   const job = savedJob.job;
@@ -51,7 +52,12 @@ async function listSavedJobs(candidateId) {
 }
 
 async function saveJob({ candidateId, jobId }) {
-  const job = await Job.findByPk(jobId);
+  const job = await Job.findOne({
+    where: {
+      id: jobId,
+      status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
+    },
+  });
   if (!job) {
     throw ApiError.notFound('Job not found');
   }

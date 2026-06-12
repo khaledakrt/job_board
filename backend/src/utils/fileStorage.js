@@ -50,12 +50,16 @@ function buildPublicUrl(subdirectory, filename) {
   return `${env.API_PUBLIC_URL}/uploads/${subdirectory}/${filename}`;
 }
 
+function buildProtectedUploadUrl(subdirectory, filename) {
+  return `${env.API_PUBLIC_URL}/uploads/${subdirectory}/${filename}`;
+}
+
 function buildLogoPublicUrl(filename) {
   return buildPublicUrl(LOGO_UPLOAD.SUBDIRECTORY, filename);
 }
 
 function buildResumePublicUrl(filename) {
-  return buildPublicUrl(RESUME_UPLOAD.SUBDIRECTORY, filename);
+  return buildProtectedUploadUrl(RESUME_UPLOAD.SUBDIRECTORY, filename);
 }
 
 function buildAvatarPublicUrl(filename) {
@@ -63,7 +67,7 @@ function buildAvatarPublicUrl(filename) {
 }
 
 function buildSnapshotPublicUrl(filename) {
-  return buildPublicUrl(CV_SNAPSHOT_UPLOAD.SUBDIRECTORY, filename);
+  return buildProtectedUploadUrl(CV_SNAPSHOT_UPLOAD.SUBDIRECTORY, filename);
 }
 
 function buildBrochurePublicUrl(filename) {

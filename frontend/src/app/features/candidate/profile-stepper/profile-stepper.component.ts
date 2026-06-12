@@ -24,7 +24,8 @@ import {
   EducationBlock,
   ResumeParseResult,
 } from '../../../core/models/candidate-profile.model';
-import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
+import { resolveAuthenticatedUploadUrl } from '../../../core/utils/asset-url.util';
+import { AuthService } from '../../../core/services/auth.service';
 import { CvParsePreviewComponent } from './cv-parse-preview/cv-parse-preview.component';
 
 @Component({
@@ -45,6 +46,7 @@ export class ProfileStepperComponent implements OnInit {
   private readonly dashboardService = inject(CandidateDashboardService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly injector = inject(Injector);
+  private readonly authService = inject(AuthService);
   readonly context = inject(CandidateContextService);
 
   private readonly cvPreview = viewChild(CvParsePreviewComponent);
@@ -428,7 +430,10 @@ export class ProfileStepperComponent implements OnInit {
   }
 
   resumeUrl(): string | null {
-    return resolveUploadUrl(this.context.profile()?.resumeUrl ?? null);
+    return resolveAuthenticatedUploadUrl(
+      this.context.profile()?.resumeUrl ?? null,
+      this.authService.accessToken()
+    );
   }
 
   generateResumePdf(): void {

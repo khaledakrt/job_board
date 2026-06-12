@@ -176,11 +176,6 @@ export class AdminCatalogDetailComponent implements OnInit {
         title: 'Actualités & annonces',
         items: items.filter((i) => i.offeringType === 'announcement'),
       },
-      {
-        type: 'opportunity' as const,
-        title: 'Offres & stages',
-        items: items.filter((i) => i.offeringType === 'opportunity'),
-      },
     ].filter((group) => group.items.length);
   }
 

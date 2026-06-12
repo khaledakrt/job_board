@@ -55,10 +55,10 @@
           <aside class="catalog-detail-side">
             <h3>Informations</h3>
             @if (formation()!.startDate) {
-              <p><strong>Début</strong><br />{{ formation()!.startDate }}</p>
+              <p><strong>Début</strong><br />{{ formatDate(formation()!.startDate) }}</p>
             }
             @if (formation()!.endDate) {
-              <p><strong>Fin</strong><br />{{ formation()!.endDate }}</p>
+              <p><strong>Fin</strong><br />{{ formatDate(formation()!.endDate) }}</p>
             }
             @if (formation()!.durationLabel) {
               <p><strong>Durée</strong><br />{{ formation()!.durationLabel }}</p>
@@ -72,8 +72,8 @@
             @if (formation()!.address) {
               <p><strong>Adresse</strong><br />{{ formation()!.address }}</p>
             }
-            @if (formation()!.price != null) {
-              <p><strong>Prix</strong><br />{{ formation()!.price }} TND</p>
+            @if (formatPrice(formation()!.price); as price) {
+              <p><strong>Prix</strong><br />{{ price }}</p>
             }
             @if (formation()!.seats != null) {
               <p><strong>Places</strong><br />{{ formation()!.seats }}</p>

@@ -87,7 +87,7 @@
               <div class="catalog-offerings-header">
                 <h2 class="catalog-section-title">Formations & événements</h2>
                 <span class="catalog-offerings-count">
-                  {{ filteredOfferingCards().length }} résultat(s)
+                  {{ offeringsTotal() }} résultat(s)
                 </span>
               </div>
 
@@ -97,9 +97,8 @@
                   <select
                     class="catalog-input"
                     [ngModel]="offeringKindFilter()"
-                    (ngModelChange)="offeringKindFilter.set($event); onOfferingsFilterChange()"
+                    (ngModelChange)="setOfferingKindFilter($event)"
                   >
-                    <option value="all">Tout</option>
                     <option value="formation">Formations</option>
                     <option value="event">Événements</option>
                   </select>
@@ -116,7 +115,9 @@
                 </label>
               </div>
 
-              @if (pagedOfferingCards().length) {
+              @if (offeringsLoading()) {
+                <p class="catalog-empty-hint">Chargement des publications...</p>
+              } @else if (pagedOfferingCards().length) {
                 <div class="catalog-offerings-grid">
                   @for (item of pagedOfferingCards(); track item.kind + ':' + item.id) {
                     <a [routerLink]="item.route" class="catalog-offering-card catalog-offering-card--tile">
@@ -163,7 +164,7 @@
                   }
                 </div>
 
-                @if (filteredOfferingCards().length > offeringsPageSize) {
+                @if (offeringsTotal() > offeringsPageSize) {
                   <nav class="catalog-offerings-pagination" aria-label="Pagination des publications">
                     <button
                       type="button"

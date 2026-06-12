@@ -14,15 +14,14 @@
       <section
         class="catalog-hero catalog-form-hero"
         [class.catalog-hero--institution]="providerType() === 'private_institution'"
-        style="margin-bottom: 1.25rem"
       >
-        <div class="catalog-hero-text" style="align-items: center">
+        <div class="catalog-hero-text">
           <span class="catalog-hero-badge" aria-hidden="true">
             {{ providerType() === 'training_center' ? '📚' : '🏫' }}
           </span>
           <div>
-            <h1 style="margin: 0">{{ title() }}</h1>
-            <p style="margin: 0.35rem 0 0">
+            <h1>{{ title() }}</h1>
+            <p>
               Créez votre compte. Un administrateur validera votre demande avant publication.
             </p>
           </div>
@@ -40,32 +39,83 @@
             </div>
           </div>
         } @else {
-          <a [routerLink]="routes.AUTH.LOGIN" class="catalog-btn catalog-btn--ghost" style="margin-bottom: 1rem">
+          <a [routerLink]="routes.AUTH.LOGIN" class="catalog-btn catalog-btn--ghost catalog-form-login-link">
             Déjà inscrit ? Connexion
           </a>
           @if (error()) {
-            <p class="catalog-state-error" style="padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem">{{ error() }}</p>
+            <p class="catalog-form-error">{{ error() }}</p>
           }
           <form (ngSubmit)="submit()">
-            <div class="catalog-form-row">
+            <div class="catalog-form-section">
+              <h2>Identité du compte</h2>
+              <p>Ces informations créent votre accès à l’espace professionnel.</p>
+            </div>
+            <div class="catalog-form-row catalog-form-row--wide">
               <label for="orgName">Nom du {{ providerType() === 'training_center' ? 'centre' : 'établissement' }} *</label>
-              <input id="orgName" class="catalog-input" [(ngModel)]="organizationName" name="organizationName" required />
+              <input
+                id="orgName"
+                class="catalog-input"
+                [(ngModel)]="organizationName"
+                name="organizationName"
+                required
+                autocomplete="organization"
+                [placeholder]="providerType() === 'training_center' ? 'Ex. Centre Excellence Digital' : 'Ex. École privée Horizon'"
+              />
             </div>
             <div class="catalog-form-row">
               <label for="regEmail">E-mail (connexion) *</label>
-              <input id="regEmail" class="catalog-input" type="email" [(ngModel)]="email" name="email" required />
+              <input
+                id="regEmail"
+                class="catalog-input"
+                type="email"
+                [(ngModel)]="email"
+                name="email"
+                required
+                autocomplete="email"
+                [placeholder]="providerType() === 'training_center' ? 'contact@centre.tn' : 'contact@etablissement.tn'"
+              />
             </div>
             <div class="catalog-form-row">
               <label for="regPass">Mot de passe *</label>
-              <input id="regPass" class="catalog-input" type="password" [(ngModel)]="password" name="password" required minlength="8" />
+              <input
+                id="regPass"
+                class="catalog-input"
+                type="password"
+                [(ngModel)]="password"
+                name="password"
+                required
+                minlength="8"
+                autocomplete="new-password"
+                placeholder="8 caractères minimum"
+              />
+            </div>
+            <div class="catalog-form-section">
+              <h2>Coordonnées rapides</h2>
+              <p>Ces données préremplissent votre fiche et pourront être complétées après validation.</p>
             </div>
             <div class="catalog-form-row">
               <label for="regCity">Ville</label>
-              <input id="regCity" class="catalog-input" [(ngModel)]="city" name="city" />
+              <input
+                id="regCity"
+                class="catalog-input"
+                [(ngModel)]="city"
+                name="city"
+                autocomplete="address-level2"
+                placeholder="Ex. Tunis"
+              />
             </div>
             <div class="catalog-form-row">
               <label for="regPhone">Téléphone</label>
-              <input id="regPhone" class="catalog-input" [(ngModel)]="phone" name="phone" />
+              <input
+                id="regPhone"
+                class="catalog-input"
+                type="tel"
+                [(ngModel)]="phone"
+                name="phone"
+                inputmode="tel"
+                autocomplete="tel"
+                placeholder="+216 ..."
+              />
             </div>
             <div class="catalog-form-actions">
               <a [routerLink]="backLink()" class="catalog-btn catalog-btn--outline">Annuler</a>

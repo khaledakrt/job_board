@@ -64,6 +64,17 @@ const listInstitutionsQuerySchema = z.object({
   type: z.enum(INSTITUTION_TYPES).optional(),
 });
 
+const listInstitutionOfferingsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  type: z.enum(['program', 'event', 'announcement']).optional(),
+  search: z.preprocess(emptyToNull, z.string().trim().max(200).nullable().optional()),
+});
+
+const institutionIdParamsSchema = z.object({
+  institutionId: z.string().uuid('Identifiant invalide'),
+});
+
 const idParamsSchema = z.object({
   id: z.string().uuid('Identifiant invalide'),
 });
@@ -111,7 +122,9 @@ const updateCatalogStatusSchema = z.object({
 module.exports = {
   listTrainingCentersQuerySchema,
   listInstitutionsQuerySchema,
+  listInstitutionOfferingsQuerySchema,
   idParamsSchema,
+  institutionIdParamsSchema,
   submitTrainingCenterSchema,
   submitPrivateInstitutionSchema,
   updateCatalogStatusSchema,

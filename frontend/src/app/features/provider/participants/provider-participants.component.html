@@ -1,10 +1,27 @@
 <div class="provider-page provider-participants-page">
   <div class="provider-participants-screen no-print">
-    <h1 class="provider-page-title">Participants</h1>
-    <p class="provider-page-sub">
-      Liste des candidats inscrits à vos formations et événements.
-      Filtrez par formation ou événement, puis imprimez la liste.
-    </p>
+    <header class="provider-page-hero provider-page-hero--participants">
+      <div>
+        <p class="provider-hero-kicker">Gestion des inscrits</p>
+        <h1 class="provider-page-title">Participants</h1>
+        <p class="provider-page-sub">
+          Visualisez les inscrits, préparez vos sessions et exportez une liste claire pour l’accueil ou l’émargement.
+        </p>
+      </div>
+      <div class="provider-hero-actions">
+        @if (contactSelectedHref(); as href) {
+          <a [href]="href" class="provider-btn provider-btn--outline">Contacter la liste</a>
+        }
+        <button
+          type="button"
+          class="provider-btn provider-btn--primary"
+          [disabled]="!canPrint()"
+          (click)="printList()"
+        >
+          Imprimer la liste
+        </button>
+      </div>
+    </header>
 
     @if (loading()) {
       <p class="provider-muted">Chargement…</p>
@@ -22,7 +39,11 @@
         </div>
       </div>
 
-      <section class="provider-card">
+      <section class="provider-card provider-participants-card">
+        <div class="provider-card-head">
+          <h2>Liste des inscrits</h2>
+          <p>Filtrez par formation ou événement, contactez les candidats et imprimez une liste d’accueil.</p>
+        </div>
         <div class="provider-participants-filters">
           <label>
             <span class="provider-filter-label">Type de publication</span>
@@ -52,14 +73,7 @@
             </select>
           </label>
           <div class="provider-participants-actions">
-            <button
-              type="button"
-              class="provider-btn provider-btn--primary"
-              [disabled]="!canPrint()"
-              (click)="printList()"
-            >
-              Imprimer la liste
-            </button>
+            <span class="provider-participants-result">{{ filteredItems().length }} inscrit(s) affiché(s)</span>
           </div>
         </div>
 

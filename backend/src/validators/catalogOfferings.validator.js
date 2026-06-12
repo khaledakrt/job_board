@@ -13,12 +13,25 @@ const optionalUrl = z.preprocess(
   z.string().trim().max(512).nullable().optional()
 );
 
+const optionalWebsiteUrl = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z
+    .string()
+    .trim()
+    .max(512)
+    .nullable()
+    .optional()
+    .refine((val) => val === null || val === undefined || /^https?:\/\/.+/i.test(val), {
+      message: 'URL invalide (https://)',
+    })
+);
+
 const optionalEmail = z.preprocess(
   (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
   z.string().trim().email().max(255).nullable().optional()
 );
 
-const gallerySchema = z.array(z.string().trim().max(512)).max(8).optional();
+const gallerySchema = z.array(z.string().trim().max(512)).max(7).optional();
 
 const formationBodySchema = z.object({
   title: z.string().trim().min(2).max(255),
@@ -65,7 +78,13 @@ const formationBodySchema = z.object({
     z.string().trim().max(50).nullable().optional()
   ),
   email: optionalEmail,
-  website: optionalUrl,
+  website: optionalWebsiteUrl,
+  status: z
+    .enum([
+      CATALOG_PUBLISH_STATUS.DRAFT,
+      CATALOG_PUBLISH_STATUS.PENDING,
+    ])
+    .optional(),
 });
 
 const eventBodySchema = z.object({
@@ -104,7 +123,13 @@ const eventBodySchema = z.object({
     z.string().trim().max(50).nullable().optional()
   ),
   email: optionalEmail,
-  website: optionalUrl,
+  website: optionalWebsiteUrl,
+  status: z
+    .enum([
+      CATALOG_PUBLISH_STATUS.DRAFT,
+      CATALOG_PUBLISH_STATUS.PENDING,
+    ])
+    .optional(),
 });
 
 const offeringIdParamsSchema = z.object({
@@ -124,7 +149,9 @@ const centerIdParamsSchema = z.object({
 });
 
 const participateBodySchema = z.object({
-  participationType: z.literal(PARTICIPATION_TYPES.REGISTERED).default(PARTICIPATION_TYPES.REGISTERED),
+  participationType: z
+    .enum([PARTICIPATION_TYPES.REGISTERED, PARTICIPATION_TYPES.INTERESTED])
+    .default(PARTICIPATION_TYPES.REGISTERED),
 });
 
 const adminOfferingStatusSchema = z.object({
@@ -146,11 +173,34 @@ const listParticipationsQuerySchema = z.object({
     PARTICIPATION_TYPES.INTERESTED,
     PARTICIPATION_TYPES.REGISTERED,
   ]).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+
+const providerListOfferingsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  status: z
+    .enum([
+      CATALOG_PUBLISH_STATUS.DRAFT,
+      CATALOG_PUBLISH_STATUS.PENDING,
+      CATALOG_PUBLISH_STATUS.PUBLISHED,
+      CATALOG_PUBLISH_STATUS.REJECTED,
+    ])
+    .optional(),
+  search: z.string().trim().max(120).optional(),
+});
+
+const publicListCenterOfferingsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  search: z.string().trim().max(120).optional(),
 });
 
 const adminListOfferingsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
+  search: z.string().trim().max(120).optional(),
   status: z
     .enum([
       CATALOG_PUBLISH_STATUS.PENDING,
@@ -169,6 +219,8 @@ module.exports = {
   centerIdParamsSchema,
   participateBodySchema,
   listParticipationsQuerySchema,
+  providerListOfferingsQuerySchema,
+  publicListCenterOfferingsQuerySchema,
   adminOfferingStatusSchema,
   adminListOfferingsQuerySchema,
 };

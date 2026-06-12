@@ -9,7 +9,7 @@ import {
   InstitutionOfferingStatus,
   InstitutionOfferingType,
 } from '../../../core/models/catalog.model';
-import { paginateSlice } from '../shared/provider-pagination.util';
+import { PaginationMeta } from '../../../core/models/pagination.model';
 
 const LABELS: Record<
   InstitutionOfferingType,
@@ -74,21 +74,6 @@ const LABELS: Record<
     dateEndLabel: 'Date d’expiration',
     seatsLabel: 'Places concernées',
   },
-  opportunity: {
-    plural: 'Offres & stages',
-    singular: 'offre / stage',
-    subtitle: 'Publiez les opportunités internes ou partenaires destinées aux étudiants.',
-    titleLabel: 'Intitulé de l’opportunité',
-    titlePlaceholder: 'Ex. Stage PFE développeur web',
-    categoryLabel: 'Domaine',
-    summaryLabel: 'Résumé de l’opportunité',
-    summaryPlaceholder: 'Ex. Stage de 4 à 6 mois dans une équipe produit.',
-    descriptionLabel: 'Mission, profil recherché et candidature',
-    descriptionPlaceholder: 'Ajoutez missions, compétences, durée, modalités et lien de candidature.',
-    dateStartLabel: 'Date de début',
-    dateEndLabel: 'Date limite de candidature',
-    seatsLabel: 'Postes disponibles',
-  },
 };
 
 @Component({
@@ -108,11 +93,13 @@ export class InstitutionOfferingsComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
   readonly editingId = signal<string | null>(null);
+  readonly editingOriginalStatus = signal<InstitutionOfferingStatus | null>(null);
   readonly saving = signal(false);
   readonly confirmOpen = signal(false);
   readonly confirmMode = signal<'save' | 'delete'>('save');
   readonly pendingDelete = signal<InstitutionOfferingItem | null>(null);
   readonly page = signal(1);
+  readonly pagination = signal<PaginationMeta | null>(null);
   readonly pageSize = 10;
 
   search = '';
@@ -123,7 +110,6 @@ export class InstitutionOfferingsComponent implements OnInit {
   description = '';
   category = '';
   eventType = 'open_day';
-  opportunityType: 'job' | 'internship' = 'internship';
   startDate = '';
   endDate = '';
   city = '';
@@ -138,16 +124,9 @@ export class InstitutionOfferingsComponent implements OnInit {
   readonly formTitle = computed(() =>
     this.editingId() ? `Modifier ce ${this.labels().singular}` : `Ajouter un ${this.labels().singular}`
   );
-  readonly filteredItems = computed(() => {
-    const q = this.search.trim().toLowerCase();
-    const status = this.statusFilter;
-    return this.items().filter((item) => {
-      if (q && !item.title.toLowerCase().includes(q)) return false;
-      if (status && item.status !== status) return false;
-      return true;
-    });
-  });
-  readonly pageItems = computed(() => paginateSlice(this.filteredItems(), this.page(), this.pageSize));
+  readonly pageItems = computed(() => this.items());
+  readonly totalItems = computed(() => this.pagination()?.totalItems ?? this.items().length);
+  readonly totalPages = computed(() => this.pagination()?.totalPages ?? 1);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -186,14 +165,38 @@ export class InstitutionOfferingsComponent implements OnInit {
   }
 
   load(): void {
-    this.loading.set(false);
+    this.loading.set(true);
     this.error.set(null);
-    this.items.set([]);
-    this.page.set(1);
+    this.providerService.listInstitutionOfferings({
+      type: this.type(),
+      status: this.statusFilter || undefined,
+      search: this.search.trim() || undefined,
+      page: this.page(),
+      limit: this.pageSize,
+    }).subscribe({
+      next: (res) => {
+        this.items.set(res.data ?? []);
+        this.pagination.set(res.pagination ?? null);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.items.set([]);
+        this.pagination.set(null);
+        this.error.set('Impossible de charger vos publications.');
+        this.loading.set(false);
+      },
+    });
   }
 
   onFilterChange(): void {
     this.page.set(1);
+    this.load();
+  }
+
+  setPage(page: number): void {
+    if (page < 1 || page > this.totalPages() || page === this.page() || this.loading()) return;
+    this.page.set(page);
+    this.load();
   }
 
   statusLabel(status: InstitutionOfferingStatus): string {
@@ -215,12 +218,12 @@ export class InstitutionOfferingsComponent implements OnInit {
 
   edit(item: InstitutionOfferingItem): void {
     this.editingId.set(item.id);
+    this.editingOriginalStatus.set(item.status);
     this.title = item.title;
     this.summary = item.summary ?? '';
     this.description = item.description ?? '';
     this.category = item.category ?? '';
     this.eventType = item.eventType ?? 'open_day';
-    this.opportunityType = item.opportunityType ?? 'internship';
     this.startDate = item.startDate ? String(item.startDate).slice(0, 10) : '';
     this.endDate = item.endDate ? String(item.endDate).slice(0, 10) : '';
     this.city = item.city ?? '';
@@ -235,12 +238,12 @@ export class InstitutionOfferingsComponent implements OnInit {
 
   resetForm(): void {
     this.editingId.set(null);
+    this.editingOriginalStatus.set(null);
     this.title = '';
     this.summary = '';
     this.description = '';
     this.category = '';
     this.eventType = 'open_day';
-    this.opportunityType = 'internship';
     this.startDate = '';
     this.endDate = '';
     this.city = '';
@@ -306,7 +309,6 @@ export class InstitutionOfferingsComponent implements OnInit {
       description: sanitizeRichHtml(this.description).trim() || null,
       category: this.category.trim() || null,
       eventType: this.type() === 'event' ? (this.eventType as InstitutionOfferingItem['eventType']) : null,
-      opportunityType: this.type() === 'opportunity' ? this.opportunityType : null,
       startDate: this.startDate || null,
       endDate: this.endDate || null,
       city: this.city.trim() || null,
@@ -332,6 +334,7 @@ export class InstitutionOfferingsComponent implements OnInit {
         this.confirmOpen.set(false);
         this.saving.set(false);
         this.resetForm();
+        this.page.set(1);
         this.load();
         setTimeout(() => this.success.set(null), 3500);
       },
@@ -359,6 +362,9 @@ export class InstitutionOfferingsComponent implements OnInit {
         this.saving.set(false);
         this.confirmOpen.set(false);
         this.pendingDelete.set(null);
+        if (this.pageItems().length <= 1 && this.page() > 1) {
+          this.page.set(this.page() - 1);
+        }
         this.load();
         setTimeout(() => this.success.set(null), 2500);
       },

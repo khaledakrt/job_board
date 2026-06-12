@@ -1,6 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
+const sequelize = require('../database/sequelize');
 const {
   TrainingCenter,
   TrainingFormation,
@@ -40,6 +41,19 @@ async function assertCanPublishOfferings(userId) {
     throw ApiError.forbidden('Complétez votre profil (logo, description, ville) avant de publier.');
   }
   return center;
+}
+
+async function getCenterForOfferingStatus(userId, status) {
+  if (status === CATALOG_PUBLISH_STATUS.PENDING) {
+    return assertCanPublishOfferings(userId);
+  }
+  return getTrainingCenterForUser(userId);
+}
+
+function requestedProviderStatus(payload, fallback = CATALOG_PUBLISH_STATUS.PENDING) {
+  return payload.status === CATALOG_PUBLISH_STATUS.DRAFT
+    ? CATALOG_PUBLISH_STATUS.DRAFT
+    : fallback;
 }
 
 function mapFormationPayload(payload) {
@@ -91,12 +105,55 @@ function uploadImageUrl(file) {
 
 // ——— Provider ———
 
-async function listProviderFormations(userId) {
+function hasPaginationQuery(query = {}) {
+  return query.page !== undefined || query.limit !== undefined;
+}
+
+function offeringSearchWhere(search, fields) {
+  const q = typeof search === 'string' ? search.trim() : '';
+  if (!q) return {};
+  return {
+    [Op.or]: fields.map((field) => ({
+      [field]: { [Op.like]: `%${q}%` },
+    })),
+  };
+}
+
+async function listProviderFormations(userId, query = {}) {
   const center = await getTrainingCenterForUser(userId);
-  const rows = await TrainingFormation.findAll({
-    where: { center_id: center.id },
+  const where = {
+    center_id: center.id,
+    ...offeringSearchWhere(query.search, ['title', 'category', 'city']),
+  };
+  if (query.status) where.status = query.status;
+
+  const options = {
+    where,
     order: [['created_at', 'DESC']],
-  });
+  };
+  if (hasPaginationQuery(query)) {
+    const { page, limit, offset } = parsePagination(query);
+    const { rows, count } = await TrainingFormation.findAndCountAll({
+      ...options,
+      limit,
+      offset,
+    });
+    const countMap = await catalogParticipationsService.countRegisteredByFormationIds(
+      rows.map((r) => r.id)
+    );
+    return buildPaginatedResponse({
+      rows: rows.map((r) =>
+        formatFormation(r, {
+          participantsCount: countMap.get(r.id) ?? 0,
+        })
+      ),
+      count,
+      page,
+      limit,
+    });
+  }
+
+  const rows = await TrainingFormation.findAll(options);
   const countMap = await catalogParticipationsService.countRegisteredByFormationIds(
     rows.map((r) => r.id)
   );
@@ -131,12 +188,13 @@ async function getProviderFormation(userId, formationId) {
 }
 
 async function createProviderFormation(userId, payload) {
-  const center = await assertCanPublishOfferings(userId);
+  const status = requestedProviderStatus(payload);
+  const center = await getCenterForOfferingStatus(userId, status);
   const row = await TrainingFormation.create({
     id: generateUuid(),
     center_id: center.id,
     ...mapFormationPayload(payload),
-    status: CATALOG_PUBLISH_STATUS.PENDING,
+    status,
     created_at: new Date(),
     updated_at: new Date(),
   });
@@ -150,10 +208,21 @@ async function updateProviderFormation(userId, formationId, payload) {
   });
   if (!row) throw ApiError.notFound('Formation introuvable');
 
+  const nextStatus = requestedProviderStatus(payload, row.status);
+  if (nextStatus === CATALOG_PUBLISH_STATUS.PENDING) {
+    await assertCanPublishOfferings(userId);
+  }
   const mapped = mapFormationPayload({ ...formatFormation(row), ...payload });
   Object.assign(row, mapped);
-  if (row.status === CATALOG_PUBLISH_STATUS.REJECTED) {
+  if (payload.status !== undefined) {
+    row.status = nextStatus;
+  } else if (
+    row.status === CATALOG_PUBLISH_STATUS.REJECTED ||
+    row.status === CATALOG_PUBLISH_STATUS.PUBLISHED
+  ) {
     row.status = CATALOG_PUBLISH_STATUS.PENDING;
+  }
+  if (row.status === CATALOG_PUBLISH_STATUS.PENDING) {
     row.admin_note = null;
   }
   await row.save();
@@ -169,12 +238,41 @@ async function deleteProviderFormation(userId, formationId) {
   return { success: true };
 }
 
-async function listProviderEvents(userId) {
+async function listProviderEvents(userId, query = {}) {
   const center = await getTrainingCenterForUser(userId);
-  const rows = await TrainingEvent.findAll({
-    where: { center_id: center.id },
+  const where = {
+    center_id: center.id,
+    ...offeringSearchWhere(query.search, ['title', 'city', 'event_type']),
+  };
+  if (query.status) where.status = query.status;
+
+  const options = {
+    where,
     order: [['created_at', 'DESC']],
-  });
+  };
+  if (hasPaginationQuery(query)) {
+    const { page, limit, offset } = parsePagination(query);
+    const { rows, count } = await TrainingEvent.findAndCountAll({
+      ...options,
+      limit,
+      offset,
+    });
+    const countMap = await catalogParticipationsService.countRegisteredByEventIds(
+      rows.map((r) => r.id)
+    );
+    return buildPaginatedResponse({
+      rows: rows.map((r) =>
+        formatEvent(r, {
+          participantsCount: countMap.get(r.id) ?? 0,
+        })
+      ),
+      count,
+      page,
+      limit,
+    });
+  }
+
+  const rows = await TrainingEvent.findAll(options);
   const countMap = await catalogParticipationsService.countRegisteredByEventIds(
     rows.map((r) => r.id)
   );
@@ -208,12 +306,13 @@ async function getProviderEvent(userId, eventId) {
 }
 
 async function createProviderEvent(userId, payload) {
-  const center = await assertCanPublishOfferings(userId);
+  const status = requestedProviderStatus(payload);
+  const center = await getCenterForOfferingStatus(userId, status);
   const row = await TrainingEvent.create({
     id: generateUuid(),
     center_id: center.id,
     ...mapEventPayload(payload),
-    status: CATALOG_PUBLISH_STATUS.PENDING,
+    status,
     created_at: new Date(),
     updated_at: new Date(),
   });
@@ -227,10 +326,21 @@ async function updateProviderEvent(userId, eventId, payload) {
   });
   if (!row) throw ApiError.notFound('Événement introuvable');
 
+  const nextStatus = requestedProviderStatus(payload, row.status);
+  if (nextStatus === CATALOG_PUBLISH_STATUS.PENDING) {
+    await assertCanPublishOfferings(userId);
+  }
   const mapped = mapEventPayload({ ...formatEvent(row), ...payload });
   Object.assign(row, mapped);
-  if (row.status === CATALOG_PUBLISH_STATUS.REJECTED) {
+  if (payload.status !== undefined) {
+    row.status = nextStatus;
+  } else if (
+    row.status === CATALOG_PUBLISH_STATUS.REJECTED ||
+    row.status === CATALOG_PUBLISH_STATUS.PUBLISHED
+  ) {
     row.status = CATALOG_PUBLISH_STATUS.PENDING;
+  }
+  if (row.status === CATALOG_PUBLISH_STATUS.PENDING) {
     row.admin_note = null;
   }
   await row.save();
@@ -318,16 +428,50 @@ async function getPublishedEventById(id, userId = null) {
   });
 }
 
-async function listPublishedFormationsForCenter(centerId) {
+async function listPublishedFormationsForCenter(centerId, query = {}) {
   const center = await TrainingCenter.findOne({
     where: { id: centerId, status: { [Op.in]: [...CATALOG_PUBLIC_STATUSES] } },
   });
   if (!center) throw ApiError.notFound('Centre introuvable');
 
-  const rows = await TrainingFormation.findAll({
-    where: { center_id: centerId, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
+  const where = {
+    center_id: centerId,
+    status: CATALOG_PUBLISH_STATUS.PUBLISHED,
+    ...offeringSearchWhere(query.search, ['title', 'category', 'city']),
+  };
+  const options = {
+    where,
     order: [['start_date', 'ASC'], ['created_at', 'DESC']],
-  });
+  };
+
+  if (hasPaginationQuery(query)) {
+    const { page, limit, offset } = parsePagination(query);
+    const { rows, count } = await TrainingFormation.findAndCountAll({
+      ...options,
+      limit,
+      offset,
+    });
+    const countMap = await catalogParticipationsService.countRegisteredByFormationIds(
+      rows.map((r) => r.id)
+    );
+    return buildPaginatedResponse({
+      rows: rows.map((r) => {
+        const registered = countMap.get(r.id) ?? 0;
+        return formatFormation(r, {
+          centerName: center.name,
+          participantsCount: catalogParticipationsService.publicParticipantsCount(
+            registered,
+            r.seats
+          ),
+        });
+      }),
+      count,
+      page,
+      limit,
+    });
+  }
+
+  const rows = await TrainingFormation.findAll(options);
   const countMap = await catalogParticipationsService.countRegisteredByFormationIds(
     rows.map((r) => r.id)
   );
@@ -343,16 +487,50 @@ async function listPublishedFormationsForCenter(centerId) {
   });
 }
 
-async function listPublishedEventsForCenter(centerId) {
+async function listPublishedEventsForCenter(centerId, query = {}) {
   const center = await TrainingCenter.findOne({
     where: { id: centerId, status: { [Op.in]: [...CATALOG_PUBLIC_STATUSES] } },
   });
   if (!center) throw ApiError.notFound('Centre introuvable');
 
-  const rows = await TrainingEvent.findAll({
-    where: { center_id: centerId, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
+  const where = {
+    center_id: centerId,
+    status: CATALOG_PUBLISH_STATUS.PUBLISHED,
+    ...offeringSearchWhere(query.search, ['title', 'event_type', 'city']),
+  };
+  const options = {
+    where,
     order: [['event_date', 'ASC'], ['created_at', 'DESC']],
-  });
+  };
+
+  if (hasPaginationQuery(query)) {
+    const { page, limit, offset } = parsePagination(query);
+    const { rows, count } = await TrainingEvent.findAndCountAll({
+      ...options,
+      limit,
+      offset,
+    });
+    const countMap = await catalogParticipationsService.countRegisteredByEventIds(
+      rows.map((r) => r.id)
+    );
+    return buildPaginatedResponse({
+      rows: rows.map((r) => {
+        const registered = countMap.get(r.id) ?? 0;
+        return formatEvent(r, {
+          centerName: center.name,
+          participantsCount: catalogParticipationsService.publicParticipantsCount(
+            registered,
+            r.seats
+          ),
+        });
+      }),
+      count,
+      page,
+      limit,
+    });
+  }
+
+  const rows = await TrainingEvent.findAll(options);
   const countMap = await catalogParticipationsService.countRegisteredByEventIds(
     rows.map((r) => r.id)
   );
@@ -377,32 +555,60 @@ function assertCandidateUser(user) {
 
 async function participateFormation(formationId, user, participationType) {
   assertCandidateUser(user);
-  await getPublishedFormationById(formationId);
 
-  if (participationType === PARTICIPATION_TYPES.REGISTERED) {
-    await catalogParticipationsService.assertFormationRegistrationAllowed(
-      formationId,
-      user.id
+  await sequelize.transaction(async (transaction) => {
+    const formation = await TrainingFormation.findOne({
+      where: { id: formationId, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
+      include: [
+        {
+          model: TrainingCenter,
+          as: 'center',
+          attributes: ['id', 'status'],
+        },
+      ],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!formation || formation.center?.status !== CATALOG_PUBLISH_STATUS.PUBLISHED) {
+      throw ApiError.notFound('Formation introuvable');
+    }
+
+    const existing = await FormationParticipation.findOne({
+      where: { formation_id: formationId, user_id: user.id },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (existing) {
+      throw ApiError.conflict(
+        'Vous êtes déjà inscrit(e) à cette formation. Une seule inscription est autorisée.'
+      );
+    }
+
+    if (participationType === PARTICIPATION_TYPES.REGISTERED && formation.seats > 0) {
+      const registeredCount = await FormationParticipation.count({
+        where: {
+          formation_id: formationId,
+          participation_type: PARTICIPATION_TYPES.REGISTERED,
+        },
+        transaction,
+      });
+      if (registeredCount >= formation.seats) {
+        throw ApiError.conflict('Plus de places disponibles pour cette formation.');
+      }
+    }
+
+    await FormationParticipation.create(
+      {
+        id: generateUuid(),
+        formation_id: formationId,
+        user_id: user.id,
+        participation_type: participationType,
+        created_at: new Date(),
+      },
+      { transaction }
     );
-  }
-
-  const existing = await FormationParticipation.findOne({
-    where: { formation_id: formationId, user_id: user.id },
   });
 
-  if (existing) {
-    throw ApiError.conflict(
-      'Vous êtes déjà inscrit(e) à cette formation. Une seule inscription est autorisée.'
-    );
-  }
-
-  await FormationParticipation.create({
-    id: generateUuid(),
-    formation_id: formationId,
-    user_id: user.id,
-    participation_type: participationType,
-    created_at: new Date(),
-  });
   catalogParticipationsService
     .notifyFormationParticipation(formationId, user, participationType)
     .catch((err) => logger.error('[Participation] Notification formation', err));
@@ -411,29 +617,60 @@ async function participateFormation(formationId, user, participationType) {
 
 async function participateEvent(eventId, user, participationType) {
   assertCandidateUser(user);
-  await getPublishedEventById(eventId);
 
-  if (participationType === PARTICIPATION_TYPES.REGISTERED) {
-    await catalogParticipationsService.assertEventRegistrationAllowed(eventId, user.id);
-  }
+  await sequelize.transaction(async (transaction) => {
+    const event = await TrainingEvent.findOne({
+      where: { id: eventId, status: CATALOG_PUBLISH_STATUS.PUBLISHED },
+      include: [
+        {
+          model: TrainingCenter,
+          as: 'center',
+          attributes: ['id', 'status'],
+        },
+      ],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!event || event.center?.status !== CATALOG_PUBLISH_STATUS.PUBLISHED) {
+      throw ApiError.notFound('Événement introuvable');
+    }
 
-  const existing = await EventParticipation.findOne({
-    where: { event_id: eventId, user_id: user.id },
-  });
+    const existing = await EventParticipation.findOne({
+      where: { event_id: eventId, user_id: user.id },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (existing) {
+      throw ApiError.conflict(
+        'Vous êtes déjà inscrit(e) à cet événement. Une seule inscription est autorisée.'
+      );
+    }
 
-  if (existing) {
-    throw ApiError.conflict(
-      'Vous êtes déjà inscrit(e) à cet événement. Une seule inscription est autorisée.'
+    if (participationType === PARTICIPATION_TYPES.REGISTERED && event.seats > 0) {
+      const registeredCount = await EventParticipation.count({
+        where: {
+          event_id: eventId,
+          participation_type: PARTICIPATION_TYPES.REGISTERED,
+        },
+        transaction,
+      });
+      if (registeredCount >= event.seats) {
+        throw ApiError.conflict('Plus de places disponibles pour cet événement.');
+      }
+    }
+
+    await EventParticipation.create(
+      {
+        id: generateUuid(),
+        event_id: eventId,
+        user_id: user.id,
+        participation_type: participationType,
+        created_at: new Date(),
+      },
+      { transaction }
     );
-  }
-
-  await EventParticipation.create({
-    id: generateUuid(),
-    event_id: eventId,
-    user_id: user.id,
-    participation_type: participationType,
-    created_at: new Date(),
   });
+
   catalogParticipationsService
     .notifyEventParticipation(eventId, user, participationType)
     .catch((err) => logger.error('[Participation] Notification événement', err));
@@ -444,7 +681,7 @@ async function participateEvent(eventId, user, participationType) {
 
 async function adminListFormations(query) {
   const { page, limit, offset } = parsePagination(query);
-  const where = {};
+  const where = offeringSearchWhere(query.search, ['title', 'category', 'city', '$center.name$']);
   if (query.status) where.status = query.status;
 
   const { rows, count } = await TrainingFormation.findAndCountAll({
@@ -456,6 +693,8 @@ async function adminListFormations(query) {
         attributes: ['id', 'name', 'city'],
       },
     ],
+    subQuery: false,
+    distinct: true,
     order: [['created_at', 'DESC']],
     limit,
     offset,
@@ -467,7 +706,7 @@ async function adminListFormations(query) {
 
 async function adminListEvents(query) {
   const { page, limit, offset } = parsePagination(query);
-  const where = {};
+  const where = offeringSearchWhere(query.search, ['title', 'event_type', 'city', '$center.name$']);
   if (query.status) where.status = query.status;
 
   const { rows, count } = await TrainingEvent.findAndCountAll({
@@ -479,6 +718,8 @@ async function adminListEvents(query) {
         attributes: ['id', 'name', 'city'],
       },
     ],
+    subQuery: false,
+    distinct: true,
     order: [['created_at', 'DESC']],
     limit,
     offset,

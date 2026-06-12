@@ -73,6 +73,7 @@
             }
 
             <h2 class="catalog-section-title">Publications</h2>
+            <p class="catalog-card-meta">{{ publicationsTotal() }} publication(s) publiée(s).</p>
             <div class="catalog-offerings-tools" aria-label="Filtres des publications">
               <label>
                 <span>Type</span>
@@ -85,7 +86,6 @@
                   <option value="program">Programmes</option>
                   <option value="event">Événements</option>
                   <option value="announcement">Actualités & annonces</option>
-                  <option value="opportunity">Offres & stages</option>
                 </select>
               </label>
               <label class="catalog-offerings-search">
@@ -99,15 +99,15 @@
               </label>
             </div>
 
-            @if (!filteredPublications().length) {
+            @if (publicationsLoading()) {
+              <p class="catalog-card-meta">Chargement des publications...</p>
+            } @else if (!pagedPublications().length) {
               <p class="catalog-card-meta">Aucune publication trouvée.</p>
             } @else {
               <div class="catalog-publications-grid">
                 @for (prog of pagedPublications(); track prog.id) {
                 <a
-                  [href]="routes.PUBLIC.PRIVATE_INSTITUTION_PUBLICATION(prog.id)"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION_PUBLICATION(prog.id)"
                   class="catalog-repeat-block catalog-publication-card"
                 >
                   <strong>{{ prog.title }}</strong>
@@ -124,7 +124,7 @@
                     }
                   </p>
                   @if (prog.summary) {
-                    <p class="catalog-card-desc" style="-webkit-line-clamp: unset">{{ prog.summary }}</p>
+                    <p class="catalog-card-desc catalog-card-desc--full">{{ prog.summary }}</p>
                   }
                   <span class="catalog-publication-cta">Voir le détail →</span>
                 </a>
@@ -135,7 +135,7 @@
                   <button
                     type="button"
                     class="catalog-btn catalog-btn--outline"
-                    [disabled]="publicationsPage() <= 1"
+                    [disabled]="publicationsPage() <= 1 || publicationsLoading()"
                     (click)="setPublicationsPage(publicationsPage() - 1)"
                   >
                     Précédent
@@ -144,7 +144,7 @@
                   <button
                     type="button"
                     class="catalog-btn catalog-btn--outline"
-                    [disabled]="publicationsPage() >= publicationsTotalPages()"
+                    [disabled]="publicationsPage() >= publicationsTotalPages() || publicationsLoading()"
                     (click)="setPublicationsPage(publicationsPage() + 1)"
                   >
                     Suivant
@@ -154,7 +154,7 @@
             }
 
             @if (item()!.mapUrl) {
-              <p style="margin-top: 1.25rem">
+              <p class="catalog-detail-action">
                 <a [href]="item()!.mapUrl" target="_blank" rel="noopener noreferrer" class="catalog-btn catalog-btn--primary">
                   Voir sur Google Maps
                 </a>

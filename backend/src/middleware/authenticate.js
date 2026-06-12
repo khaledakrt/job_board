@@ -3,6 +3,7 @@
 const ApiError = require('../utils/ApiError');
 const { User } = require('../models');
 const tokenService = require('../services/token.service');
+const { USER_ROLES } = require('../config/constants');
 
 async function authenticate(req, res, next) {
   try {
@@ -26,6 +27,12 @@ async function authenticate(req, res, next) {
     if (user.is_banned) {
       throw ApiError.forbidden(
         user.ban_reason || 'Votre compte a été suspendu. Contactez le support.'
+      );
+    }
+
+    if (!user.is_verified && user.role !== USER_ROLES.ADMIN) {
+      throw ApiError.forbidden(
+        'Adresse e-mail non confirmée. Ouvrez le lien reçu par e-mail ou demandez un nouvel envoi.'
       );
     }
 

@@ -14,7 +14,14 @@
 }
 
 .admin-offerings-filters {
-  max-width: 28rem;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(160px, 220px) auto;
+  max-width: 760px;
+  align-items: end;
+}
+
+.admin-offerings-filters .admin-field--search {
+  max-width: 420px;
 }
 
 .admin-offering-title {

@@ -50,13 +50,13 @@
           <aside class="catalog-detail-side">
             <h3>Informations</h3>
             @if (event()!.eventDate) {
-              <p><strong>Date</strong><br />{{ event()!.eventDate }}</p>
+              <p><strong>Date</strong><br />{{ formatDate(event()!.eventDate) }}</p>
             }
             @if (event()!.startTime) {
-              <p><strong>Début</strong><br />{{ event()!.startTime }}</p>
+              <p><strong>Début</strong><br />{{ formatTime(event()!.startTime) }}</p>
             }
             @if (event()!.endTime) {
-              <p><strong>Fin</strong><br />{{ event()!.endTime }}</p>
+              <p><strong>Fin</strong><br />{{ formatTime(event()!.endTime) }}</p>
             }
             @if (event()!.city) {
               <p><strong>Ville</strong><br />{{ event()!.city }}</p>
@@ -64,8 +64,8 @@
             @if (event()!.address) {
               <p><strong>Adresse</strong><br />{{ event()!.address }}</p>
             }
-            @if (event()!.price != null) {
-              <p><strong>Prix</strong><br />{{ event()!.price }} TND</p>
+            @if (formatPrice(event()!.price); as price) {
+              <p><strong>Prix</strong><br />{{ price }}</p>
             }
             @if (event()!.seats != null) {
               <p><strong>Places</strong><br />{{ event()!.seats }}</p>

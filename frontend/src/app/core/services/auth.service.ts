@@ -75,7 +75,10 @@ export class AuthService {
     this.errorMessage.set(null);
   }
 
-  login(payload: LoginRequest): Observable<ApiResponse<AuthResponseData>> {
+  login(
+    payload: LoginRequest,
+    returnUrl: string | null = null
+  ): Observable<ApiResponse<AuthResponseData>> {
     this.loading.set(true);
     this.clearError();
 
@@ -87,6 +90,10 @@ export class AuthService {
         tap((response) => {
           if (response.data) {
             this.setSession(response.data.accessToken, response.data.user);
+            if (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+              void this.router.navigateByUrl(returnUrl);
+              return;
+            }
             this.navigateByRole(response.data.user.role);
           }
         }),

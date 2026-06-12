@@ -75,6 +75,16 @@ export class ProviderProfileComponent implements OnInit {
     return plainTextLength(this.description);
   }
 
+  profileChecklist(): Array<{ label: string; done: boolean }> {
+    const org = this.ctx.dashboard()?.organization;
+    return [
+      { label: 'Logo public', done: Boolean(this.mediaUrl(org?.logoUrl)) },
+      { label: 'Ville renseignée', done: Boolean(this.city.trim()) },
+      { label: 'Description claire', done: this.descriptionPlainLen() >= 20 },
+      { label: 'Contact public', done: Boolean(this.phone.trim() || this.email.trim()) },
+    ];
+  }
+
   constructor() {
     effect(() => {
       this.syncFromDashboard();
@@ -113,6 +123,23 @@ export class ProviderProfileComponent implements OnInit {
     } else {
       this.institutionType = (org as PrivateInstitutionDetail).institutionType ?? 'high_school';
     }
+  }
+
+  private extractErrorMessage(err: unknown, fallback: string): string {
+    const error = err as {
+      error?: {
+        message?: string;
+        errors?: Array<{ field?: string; message?: string }>;
+      };
+    };
+    const details = error.error?.errors
+      ?.map((e) => {
+        const field = e.field ? `${e.field} : ` : '';
+        return `${field}${e.message ?? ''}`.trim();
+      })
+      .filter(Boolean);
+    if (details?.length) return details.join(' | ');
+    return error.error?.message ?? fallback;
   }
 
   mediaUrl(url: string | null | undefined): string | null {
@@ -188,7 +215,7 @@ export class ProviderProfileComponent implements OnInit {
       error: (err) => {
         this.saving = false;
         this.confirmOpen = false;
-        this.saveError = err.error?.message ?? 'Enregistrement impossible.';
+        this.saveError = this.extractErrorMessage(err, 'Enregistrement impossible.');
       },
     });
   }
@@ -306,7 +333,10 @@ export class ProviderProfileComponent implements OnInit {
         error: (err) => {
           this.accountSaving = false;
           this.accountConfirmOpen = false;
-          this.accountError = err.error?.message ?? 'Modification de l’e-mail impossible.';
+          this.accountError = this.extractErrorMessage(
+            err,
+            'Modification de l’e-mail impossible.'
+          );
         },
       });
   }
@@ -340,7 +370,10 @@ export class ProviderProfileComponent implements OnInit {
         error: (err) => {
           this.accountSaving = false;
           this.accountConfirmOpen = false;
-          this.accountError = err.error?.message ?? 'Modification du mot de passe impossible.';
+          this.accountError = this.extractErrorMessage(
+            err,
+            'Modification du mot de passe impossible.'
+          );
         },
       });
   }

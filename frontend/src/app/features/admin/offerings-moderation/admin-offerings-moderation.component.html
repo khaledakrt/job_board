@@ -53,6 +53,16 @@
   </div>
 
   <form class="admin-filters admin-offerings-filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <div class="admin-field admin-field--search">
+      <label for="offSearch">Recherche</label>
+      <input
+        id="offSearch"
+        type="search"
+        formControlName="search"
+        class="form-input"
+        placeholder="Titre, centre, ville..."
+      />
+    </div>
     <div class="admin-field">
       <label for="offStatus">Statut</label>
       <select id="offStatus" formControlName="status" class="form-input">

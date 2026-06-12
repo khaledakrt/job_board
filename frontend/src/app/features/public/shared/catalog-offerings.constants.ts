@@ -32,6 +32,7 @@ export function eventTypeLabel(type: TrainingEventType): string {
 }
 
 export function catalogStatusLabel(status: string | undefined): string {
+  if (status === 'draft') return 'Brouillon';
   if (status === 'published') return 'Publié';
   if (status === 'pending') return 'En attente de validation';
   if (status === 'rejected') return 'Refusé';
