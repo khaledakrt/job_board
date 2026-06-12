@@ -1,0 +1,151 @@
+<div class="admin-page admin-company-detail-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / </span>
+        <a [routerLink]="routes.ADMIN.COMPANIES">Entreprises</a>
+        <span> / Détail</span>
+      </p>
+      <h1>{{ company()?.name || 'Entreprise' }}</h1>
+      <p class="admin-page-subtitle">
+        Informations légales, contact, recruteurs, offres et volume de candidatures.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="admin-table-loading">Chargement…</div>
+  } @else if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  } @else {
+    @if (company(); as c) {
+      <section class="metric-grid">
+        <article>
+          <strong>{{ c.jobsCount }}</strong>
+          <span>Offres</span>
+        </article>
+        <article>
+          <strong>{{ c.activeJobsCount }}</strong>
+          <span>Actives</span>
+        </article>
+        <article>
+          <strong>{{ c.applicationsCount }}</strong>
+          <span>Candidatures</span>
+        </article>
+        <article>
+          <strong>{{ c.recruitersCount }}</strong>
+          <span>Recruteurs</span>
+        </article>
+      </section>
+
+      <section class="admin-detail-grid">
+        <article class="admin-card">
+          <h2 class="admin-card-title">Identité</h2>
+          <dl class="detail-list">
+            <div><dt>Nom</dt><dd>{{ c.name }}</dd></div>
+            <div><dt>Raison sociale</dt><dd>{{ c.legalName || '—' }}</dd></div>
+            <div><dt>Forme juridique</dt><dd>{{ c.legalForm || '—' }}</dd></div>
+            <div><dt>SIRET</dt><dd>{{ c.siret || '—' }}</dd></div>
+            <div><dt>TVA</dt><dd>{{ c.vatNumber || '—' }}</dd></div>
+            <div><dt>Secteur</dt><dd>{{ c.industry || '—' }}</dd></div>
+            <div><dt>Taille</dt><dd>{{ c.scaleSize || '—' }}</dd></div>
+            <div><dt>Fondée</dt><dd>{{ c.foundedYear || '—' }}</dd></div>
+          </dl>
+        </article>
+
+        <article class="admin-card">
+          <h2 class="admin-card-title">Contact & présence</h2>
+          <dl class="detail-list">
+            <div><dt>Adresse</dt><dd>{{ c.streetAddress || '—' }}</dd></div>
+            <div><dt>Ville</dt><dd>{{ c.postalCode || '' }} {{ c.city || '—' }}</dd></div>
+            <div><dt>Pays</dt><dd>{{ c.country || '—' }}</dd></div>
+            <div><dt>E-mail</dt><dd>{{ c.contactEmail || '—' }}</dd></div>
+            <div><dt>Téléphone</dt><dd>{{ c.contactPhone || '—' }}</dd></div>
+            <div><dt>Site web</dt><dd>{{ c.website || '—' }}</dd></div>
+            <div><dt>LinkedIn</dt><dd>{{ c.linkedinUrl || '—' }}</dd></div>
+          </dl>
+        </article>
+      </section>
+
+      @if (c.description) {
+        <section class="admin-card">
+          <h2 class="admin-card-title">Description</h2>
+          <p class="text-block">{{ c.description }}</p>
+        </section>
+      }
+
+      <section class="admin-card">
+        <h2 class="admin-card-title">Recruteurs liés</h2>
+        <div class="table-panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>E-mail</th>
+                <th>Poste</th>
+                <th>Rôle</th>
+                <th>Droits</th>
+                <th>Compte</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (recruiter of c.recruiters; track recruiter.id) {
+                <tr>
+                  <td>{{ recruiter.email || '—' }}</td>
+                  <td>{{ recruiter.jobTitle || '—' }}</td>
+                  <td>{{ recruiter.companyRole || '—' }}</td>
+                  <td>
+                    <span class="rights-line">
+                      {{ recruiter.canPostJob ? 'Publier' : '—' }}
+                      · {{ recruiter.canDecideApplication ? 'Décider' : '—' }}
+                      · {{ recruiter.canEditCompany ? 'Modifier' : '—' }}
+                    </span>
+                  </td>
+                  <td>
+                    <a [routerLink]="routes.ADMIN.USER_DETAIL(recruiter.userId)" class="admin-link">
+                      Voir utilisateur
+                    </a>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5"><div class="admin-empty-state">Aucun recruteur lié.</div></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-card">
+        <h2 class="admin-card-title">Dernières offres</h2>
+        <div class="table-panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Offre</th>
+                <th>Statut</th>
+                <th>Candidatures</th>
+                <th>Créée le</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (job of c.recentJobs; track job.id) {
+                <tr>
+                  <td><a [routerLink]="routes.ADMIN.JOB_DETAIL(job.id)" class="admin-link">{{ job.title }}</a></td>
+                  <td>{{ jobStatusLabel(job.status) }}</td>
+                  <td>{{ job.applicationsCount }}</td>
+                  <td>{{ job.createdAt | date: 'dd/MM/yyyy' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4"><div class="admin-empty-state">Aucune offre récente.</div></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  }
+</div>

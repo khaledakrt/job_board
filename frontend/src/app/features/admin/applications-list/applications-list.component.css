@@ -1,0 +1,25 @@
+.admin-applications-filters {
+  grid-template-columns: minmax(260px, 1fr) minmax(170px, 220px) auto;
+  max-width: 820px;
+}
+
+.admin-applications-filters .admin-field--search {
+  max-width: 460px;
+}
+
+.col-title .admin-muted {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.application-flags {
+  color: #475569;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .admin-applications-filters {
+    grid-template-columns: 1fr;
+  }
+}

@@ -43,6 +43,15 @@ export class JobsListComponent implements OnInit {
   });
 
   readonly toolbarSummary = computed(() => adminPageSummary(this.pagination(), 'offre'));
+  readonly pageSummary = computed(() => {
+    const jobs = this.jobs();
+    return {
+      total: jobs.length,
+      active: jobs.filter((j) => j.status === 'active').length,
+      hidden: jobs.filter((j) => j.status === 'hidden').length,
+      applications: jobs.reduce((sum, j) => sum + (j.applicationsCount || 0), 0),
+    };
+  });
 
   ngOnInit(): void {
     this.load(1);
@@ -131,16 +140,16 @@ export class JobsListComponent implements OnInit {
 
   async deleteJob(job: AdminJobListItem): Promise<void> {
     const ok = await this.confirmDialog.confirm({
-      title: 'Supprimer cette offre ?',
-      message: job.title,
-      confirmLabel: 'Supprimer',
+      title: 'Masquer cette offre ?',
+      message: `L’offre « ${job.title} » passera au statut masqué sans supprimer ses candidatures.`,
+      confirmLabel: 'Masquer',
       confirmDanger: true,
     });
     if (!ok) return;
     this.adminService.deleteJob(job.id).subscribe({
       next: () => this.load(this.pagination()?.page || 1),
       error: (err: HttpErrorResponse) =>
-        this.errorMessage.set(err.error?.message || 'Suppression impossible'),
+        this.errorMessage.set(err.error?.message || 'Masquage impossible'),
     });
   }
 }

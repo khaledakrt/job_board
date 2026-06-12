@@ -6,9 +6,11 @@ const {
   Job,
   Company,
   Application,
+  ApplicationNote,
   CandidateProfile,
   RecruiterProfile,
   UserLoginEvent,
+  AdminAuditLog,
   TrainingCenter,
   PrivateInstitution,
 } = require('../models');
@@ -20,6 +22,23 @@ const { hashPassword } = require('../utils/password');
 const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { formatStoredIpAddress, normalizeIpAddress } = require('../utils/clientIp');
 const { expireDueJobs } = require('../utils/jobExpiration');
+
+async function logAdminAction({ actorId, action, targetType, targetId = null, metadata = null }) {
+  try {
+    await AdminAuditLog.create({
+      id: generateUuid(),
+      actor_id: actorId || null,
+      action,
+      target_type: targetType,
+      target_id: targetId,
+      metadata,
+      created_at: new Date(),
+    });
+  } catch (err) {
+    // Audit logging must not block moderation actions if a migration is pending.
+    console.warn('Admin audit log failed:', err.message);
+  }
+}
 
 function formatUserListItem(user) {
   return {
@@ -86,6 +105,65 @@ function formatJobAdmin(job) {
     applicationsCount: job.applications_count,
     createdAt: job.created_at,
     expiresAt: job.expires_at,
+  };
+}
+
+function formatApplicationAdmin(application) {
+  const candidate = application.candidate;
+  const candidateName = candidate
+    ? `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim()
+    : null;
+  return {
+    id: application.id,
+    status: application.status,
+    rating: application.rating,
+    interviewAt: application.interview_at ?? null,
+    hasResume: Boolean(application.resume_snapshot_url),
+    hasCoverLetter: Boolean(application.cover_letter),
+    hasQuizAnswers: Boolean(application.quiz_answers),
+    createdAt: application.created_at,
+    updatedAt: application.updated_at,
+    job: application.job
+      ? {
+          id: application.job.id,
+          title: application.job.title,
+          status: application.job.status,
+          companyId: application.job.company_id,
+          companyName: application.job.company?.name ?? null,
+        }
+      : null,
+    candidate: candidate
+      ? {
+          id: candidate.id,
+          userId: candidate.user_id,
+          name: candidateName || null,
+          email: candidate.user?.email ?? null,
+          professionalTitle: candidate.professional_title ?? null,
+        }
+      : null,
+  };
+}
+
+function formatCompanyAdmin(company, counts = {}) {
+  return {
+    id: company.id,
+    name: company.name,
+    legalName: company.legal_name,
+    legalForm: company.legal_form,
+    industry: company.industry,
+    city: company.city,
+    country: company.country,
+    contactEmail: company.contact_email,
+    contactPhone: company.contact_phone,
+    website: company.website,
+    logoUrl: company.logo_url,
+    scaleSize: company.scale_size,
+    foundedYear: company.founded_year,
+    jobsCount: counts.jobsCount ?? 0,
+    activeJobsCount: counts.activeJobsCount ?? 0,
+    recruitersCount: counts.recruitersCount ?? 0,
+    applicationsCount: counts.applicationsCount ?? 0,
+    createdAt: company.created_at,
   };
 }
 
@@ -435,7 +513,7 @@ async function setUserPassword(userId, newPassword) {
   return { message: 'Password updated' };
 }
 
-async function banUser(userId, { reason }) {
+async function banUser(userId, { reason }, actingAdminId) {
   const user = await User.findByPk(userId);
   if (!user) {
     throw ApiError.notFound('User not found');
@@ -448,10 +526,17 @@ async function banUser(userId, { reason }) {
     ban_reason: reason ? String(reason).slice(0, 500) : 'Banned by administrator',
     banned_at: new Date(),
   });
+  await logAdminAction({
+    actorId: actingAdminId,
+    action: 'user.ban',
+    targetType: 'user',
+    targetId: user.id,
+    metadata: { reason: reason ? String(reason).slice(0, 500) : null },
+  });
   return getUserById(user.id);
 }
 
-async function unbanUser(userId) {
+async function unbanUser(userId, actingAdminId) {
   const user = await User.findByPk(userId);
   if (!user) {
     throw ApiError.notFound('User not found');
@@ -461,22 +546,41 @@ async function unbanUser(userId) {
     ban_reason: null,
     banned_at: null,
   });
+  await logAdminAction({
+    actorId: actingAdminId,
+    action: 'user.unban',
+    targetType: 'user',
+    targetId: user.id,
+  });
   return getUserById(user.id);
 }
 
 async function deleteUser(userId, actingAdminId) {
   if (userId === actingAdminId) {
-    throw ApiError.badRequest('Cannot delete your own account');
+    throw ApiError.badRequest('Cannot disable your own account');
   }
   const user = await User.findByPk(userId);
   if (!user) {
     throw ApiError.notFound('User not found');
   }
   if (user.role === USER_ROLES.ADMIN) {
-    throw ApiError.badRequest('Cannot delete an admin account');
+    throw ApiError.badRequest('Cannot disable an admin account');
   }
-  await user.destroy();
-  return { message: 'User deleted' };
+  await user.update({
+    is_banned: true,
+    ban_reason: 'Compte désactivé par un administrateur',
+    banned_at: new Date(),
+    reset_token: null,
+    reset_expires: null,
+  });
+  await logAdminAction({
+    actorId: actingAdminId,
+    action: 'user.disable',
+    targetType: 'user',
+    targetId: user.id,
+    metadata: { role: user.role },
+  });
+  return { message: 'User disabled' };
 }
 
 async function listJobs(query = {}) {
@@ -507,7 +611,70 @@ async function listJobs(query = {}) {
   };
 }
 
-async function updateJobStatus(jobId, status) {
+async function getJobById(jobId) {
+  const job = await Job.findByPk(jobId, {
+    include: [
+      { model: Company, as: 'company', attributes: ['id', 'name', 'industry', 'website'] },
+      {
+        model: RecruiterProfile,
+        as: 'recruiter',
+        attributes: ['id', 'user_id', 'job_title'],
+        include: [{ model: User, as: 'user', attributes: ['id', 'email'] }],
+      },
+      {
+        model: Application,
+        as: 'applications',
+        separate: true,
+        limit: 10,
+        order: [['created_at', 'DESC']],
+        attributes: ['id', 'status', 'rating', 'created_at'],
+        include: [
+          {
+            model: CandidateProfile,
+            as: 'candidate',
+            attributes: ['id', 'user_id', 'first_name', 'last_name', 'professional_title'],
+            include: [{ model: User, as: 'user', attributes: ['id', 'email'] }],
+          },
+        ],
+      },
+    ],
+  });
+  if (!job) {
+    throw ApiError.notFound('Job not found');
+  }
+
+  return {
+    ...formatJobAdmin(job),
+    description: job.description,
+    requirements: job.requirements,
+    tags: job.tags ?? [],
+    languages: job.languages ?? [],
+    benefits: job.benefits ?? [],
+    remoteType: job.remote_type,
+    salaryLabel: job.salary_label,
+    experienceYears: job.experience_years,
+    quizEnabled: Boolean(job.quiz_enabled),
+    company: job.company
+      ? {
+          id: job.company.id,
+          name: job.company.name,
+          industry: job.company.industry,
+          website: job.company.website,
+        }
+      : null,
+    recruiter: job.recruiter
+      ? {
+          id: job.recruiter.id,
+          userId: job.recruiter.user_id,
+          email: job.recruiter.user?.email ?? null,
+          jobTitle: job.recruiter.job_title,
+        }
+      : null,
+    recentApplications: (job.applications ?? []).map(formatApplicationAdmin),
+  };
+}
+
+async function updateJobStatus(jobId, status, actingAdminId) {
   const job = await Job.findByPk(jobId);
   if (!job) {
     throw ApiError.notFound('Job not found');
@@ -515,20 +682,158 @@ async function updateJobStatus(jobId, status) {
   if (!Object.values(JOB_STATUS).includes(status)) {
     throw ApiError.badRequest('Invalid job status');
   }
+  const previousStatus = job.status;
   await job.update({ status });
+  await logAdminAction({
+    actorId: actingAdminId,
+    action: 'job.status.update',
+    targetType: 'job',
+    targetId: job.id,
+    metadata: { previousStatus, status },
+  });
   const refreshed = await Job.findByPk(jobId, {
     include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
   });
   return formatJobAdmin(refreshed);
 }
 
-async function deleteJob(jobId) {
+async function deleteJob(jobId, actingAdminId) {
   const job = await Job.findByPk(jobId);
   if (!job) {
     throw ApiError.notFound('Job not found');
   }
-  await job.destroy();
-  return { message: 'Job deleted' };
+  const previousStatus = job.status;
+  await job.update({ status: JOB_STATUS.HIDDEN });
+  await logAdminAction({
+    actorId: actingAdminId,
+    action: 'job.hide',
+    targetType: 'job',
+    targetId: job.id,
+    metadata: { previousStatus },
+  });
+  return { message: 'Job hidden' };
+}
+
+async function listApplications(query = {}) {
+  const whereClause = {};
+  if (query.status) {
+    whereClause.status = query.status;
+  }
+  if (query.search) {
+    const term = `%${query.search.trim()}%`;
+    whereClause[Op.or] = [
+      { '$job.title$': { [Op.like]: term } },
+      { '$job.company.name$': { [Op.like]: term } },
+      { '$candidate.first_name$': { [Op.like]: term } },
+      { '$candidate.last_name$': { [Op.like]: term } },
+      { '$candidate.user.email$': { [Op.like]: term } },
+    ];
+  }
+
+  const { page, limit, offset } = parsePagination(query);
+  const { rows, count } = await Application.findAndCountAll({
+    where: whereClause,
+    include: [
+      {
+        model: Job,
+        as: 'job',
+        attributes: ['id', 'title', 'status', 'company_id'],
+        include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
+      },
+      {
+        model: CandidateProfile,
+        as: 'candidate',
+        attributes: ['id', 'user_id', 'first_name', 'last_name', 'professional_title'],
+        include: [{ model: User, as: 'user', attributes: ['id', 'email'] }],
+      },
+    ],
+    order: [['created_at', 'DESC']],
+    limit,
+    offset,
+    subQuery: false,
+    distinct: true,
+  });
+
+  const paginated = buildPaginatedResponse({ rows, count, page, limit });
+  return {
+    items: paginated.items.map(formatApplicationAdmin),
+    pagination: paginated.pagination,
+  };
+}
+
+async function getApplicationById(applicationId) {
+  const application = await Application.findByPk(applicationId, {
+    include: [
+      {
+        model: Job,
+        as: 'job',
+        include: [
+          { model: Company, as: 'company', attributes: ['id', 'name', 'industry', 'website'] },
+          {
+            model: RecruiterProfile,
+            as: 'recruiter',
+            attributes: ['id', 'user_id', 'job_title'],
+            include: [{ model: User, as: 'user', attributes: ['id', 'email'] }],
+          },
+        ],
+      },
+      {
+        model: CandidateProfile,
+        as: 'candidate',
+        include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_verified', 'is_banned'] }],
+      },
+      {
+        model: ApplicationNote,
+        as: 'notes',
+        separate: true,
+        order: [['created_at', 'DESC']],
+        include: [{ model: User, as: 'author', attributes: ['id', 'email'] }],
+      },
+    ],
+  });
+  if (!application) {
+    throw ApiError.notFound('Application not found');
+  }
+
+  return {
+    ...formatApplicationAdmin(application),
+    coverLetter: application.cover_letter,
+    resumeSnapshotUrl: application.resume_snapshot_url,
+    quizAnswers: application.quiz_answers ?? null,
+    interviewAt: application.interview_at,
+    job: application.job
+      ? {
+          id: application.job.id,
+          title: application.job.title,
+          status: application.job.status,
+          companyId: application.job.company_id,
+          companyName: application.job.company?.name ?? null,
+          location: application.job.location,
+          contractType: application.job.contract_type,
+          remoteType: application.job.remote_type,
+          expiresAt: application.job.expires_at,
+          recruiterEmail: application.job.recruiter?.user?.email ?? null,
+        }
+      : null,
+    candidate: application.candidate
+      ? {
+          id: application.candidate.id,
+          userId: application.candidate.user_id,
+          name: `${application.candidate.first_name || ''} ${application.candidate.last_name || ''}`.trim() || null,
+          email: application.candidate.user?.email ?? null,
+          professionalTitle: application.candidate.professional_title,
+          phone: application.candidate.phone,
+          isVerified: Boolean(application.candidate.user?.is_verified),
+          isBanned: Boolean(application.candidate.user?.is_banned),
+        }
+      : null,
+    notes: (application.notes ?? []).map((note) => ({
+      id: note.id,
+      text: note.note_text,
+      authorEmail: note.author?.email ?? null,
+      createdAt: note.created_at,
+    })),
+  };
 }
 
 async function listCompanies(query = {}) {
@@ -546,15 +851,89 @@ async function listCompanies(query = {}) {
     offset,
   });
 
+  const companyIds = rows.map((c) => c.id);
+  const countsByCompany = Object.fromEntries(
+    companyIds.map((id) => [id, { jobsCount: 0, activeJobsCount: 0, recruitersCount: 0, applicationsCount: 0 }])
+  );
+  await Promise.all(
+    companyIds.map(async (id) => {
+      const [jobsCount, activeJobsCount, recruitersCount, applicationsCount] = await Promise.all([
+        Job.count({ where: { company_id: id } }),
+        Job.count({ where: { company_id: id, status: JOB_STATUS.ACTIVE } }),
+        RecruiterProfile.count({ where: { company_id: id } }),
+        Application.count({
+          include: [{ model: Job, as: 'job', where: { company_id: id }, attributes: [] }],
+        }),
+      ]);
+      countsByCompany[id] = { jobsCount, activeJobsCount, recruitersCount, applicationsCount };
+    })
+  );
+
   const paginated = buildPaginatedResponse({ rows, count, page, limit });
   return {
-    items: paginated.items.map((c) => ({
-      id: c.id,
-      name: c.name,
-      industry: c.industry,
-      createdAt: c.created_at,
-    })),
+    items: paginated.items.map((c) => formatCompanyAdmin(c, countsByCompany[c.id])),
     pagination: paginated.pagination,
+  };
+}
+
+async function getCompanyById(companyId) {
+  const company = await Company.findByPk(companyId, {
+    include: [
+      {
+        model: RecruiterProfile,
+        as: 'recruiters',
+        separate: true,
+        limit: 20,
+        order: [['updated_at', 'DESC']],
+        include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_verified', 'is_banned'] }],
+      },
+      {
+        model: Job,
+        as: 'jobs',
+        separate: true,
+        limit: 10,
+        order: [['created_at', 'DESC']],
+      },
+    ],
+  });
+  if (!company) {
+    throw ApiError.notFound('Company not found');
+  }
+
+  const [jobsCount, activeJobsCount, recruitersCount, applicationsCount] = await Promise.all([
+    Job.count({ where: { company_id: company.id } }),
+    Job.count({ where: { company_id: company.id, status: JOB_STATUS.ACTIVE } }),
+    RecruiterProfile.count({ where: { company_id: company.id } }),
+    Application.count({
+      include: [{ model: Job, as: 'job', where: { company_id: company.id }, attributes: [] }],
+    }),
+  ]);
+
+  return {
+    ...formatCompanyAdmin(company, { jobsCount, activeJobsCount, recruitersCount, applicationsCount }),
+    legalName: company.legal_name,
+    legalForm: company.legal_form,
+    siret: company.siret,
+    vatNumber: company.vat_number,
+    streetAddress: company.street_address,
+    postalCode: company.postal_code,
+    contactEmailPublic: Boolean(company.contact_email_public),
+    contactPhonePublic: Boolean(company.contact_phone_public),
+    linkedinUrl: company.linkedin_url,
+    description: company.description,
+    recruiters: (company.recruiters ?? []).map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      email: r.user?.email ?? null,
+      jobTitle: r.job_title,
+      companyRole: r.company_role,
+      canPostJob: Boolean(r.can_post_job),
+      canDecideApplication: Boolean(r.can_decide_application),
+      canEditCompany: Boolean(r.can_edit_company),
+      isVerified: Boolean(r.user?.is_verified),
+      isBanned: Boolean(r.user?.is_banned),
+    })),
+    recentJobs: (company.jobs ?? []).map(formatJobAdmin),
   };
 }
 
@@ -570,7 +949,11 @@ module.exports = {
   unbanUser,
   deleteUser,
   listJobs,
+  getJobById,
   updateJobStatus,
   deleteJob,
+  listApplications,
+  getApplicationById,
   listCompanies,
+  getCompanyById,
 };

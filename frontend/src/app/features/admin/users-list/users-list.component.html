@@ -49,6 +49,29 @@
     </div>
   </form>
 
+  <section class="admin-page-insights" aria-label="Résumé utilisateurs de la page">
+    <article class="admin-insight-card">
+      <span>Page actuelle</span>
+      <strong>{{ pageSummary().total }}</strong>
+      <small>utilisateurs chargés</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Comptes bannis</span>
+      <strong>{{ pageSummary().banned }}</strong>
+      <small>à surveiller</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Non vérifiés</span>
+      <strong>{{ pageSummary().unverified }}</strong>
+      <small>validation e-mail</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Recruteurs</span>
+      <strong>{{ pageSummary().recruiters }}</strong>
+      <small>avec société liée</small>
+    </article>
+  </section>
+
   @if (errorMessage()) {
     <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
   }
@@ -71,9 +94,11 @@
           <tr>
             <th class="col-title">E-mail</th>
             <th>Rôle</th>
+            <th>Profil / société</th>
             <th>Vérifié</th>
             <th class="col-status">Statut</th>
             <th>Dernière IP (IPv4)</th>
+            <th>Créé le</th>
             <th class="col-actions">Actions</th>
           </tr>
         </thead>
@@ -81,12 +106,23 @@
           @for (u of users(); track u.id) {
             <tr>
               <td class="col-title">
-                <span class="user-email-cell">{{ u.email }}</span>
+                <a [routerLink]="routes.ADMIN.USER_DETAIL(u.id)" class="user-email-cell admin-link">{{ u.email }}</a>
               </td>
               <td>
                 <span class="admin-badge admin-badge--role admin-badge--table">{{
                   roleLabel(u.role)
                 }}</span>
+              </td>
+              <td>
+                @if (u.candidateProfile) {
+                  <span class="admin-muted">
+                    {{ u.candidateProfile.firstName }} {{ u.candidateProfile.lastName }}
+                  </span>
+                } @else if (u.recruiterProfile?.companyName) {
+                  <span class="admin-muted">{{ u.recruiterProfile?.companyName }}</span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
               </td>
               <td>
                 @if (u.isVerified) {
@@ -115,13 +151,14 @@
                   <span class="text-muted">—</span>
                 }
               </td>
+              <td>{{ u.createdAt | date: 'dd/MM/yyyy' }}</td>
               <td class="actions-cell">
-                <a [routerLink]="routes.ADMIN.USER_DETAIL(u.id)" class="link-action">Gérer →</a>
+                <a [routerLink]="routes.ADMIN.USER_DETAIL(u.id)" class="link-action">Détail →</a>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="6">
+              <td colspan="8">
                 <div class="admin-empty-state">
                   Aucun utilisateur ne correspond à vos critères.
                 </div>

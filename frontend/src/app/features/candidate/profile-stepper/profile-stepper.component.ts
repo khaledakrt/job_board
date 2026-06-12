@@ -15,10 +15,7 @@ import { CircularAvatarUploaderComponent } from '../../../shared/components/circ
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { CandidateProfileService } from '../services/candidate-profile.service';
 import { CandidateContextService } from '../services/candidate-context.service';
-import {
-  CandidateDashboardService,
-  RecruiterPreview,
-} from '../services/candidate-dashboard.service';
+import { RecruiterPreview } from '../services/candidate-dashboard.service';
 import {
   ExperienceBlock,
   EducationBlock,
@@ -43,7 +40,6 @@ import { CvParsePreviewComponent } from './cv-parse-preview/cv-parse-preview.com
 export class ProfileStepperComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly profileService = inject(CandidateProfileService);
-  private readonly dashboardService = inject(CandidateDashboardService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly injector = inject(Injector);
   private readonly authService = inject(AuthService);
@@ -349,9 +345,7 @@ export class ProfileStepperComponent implements OnInit {
   }
 
   loadRecruiterPreview(): void {
-    this.dashboardService.getRecruiterPreview().subscribe({
-      next: (res) => this.recruiterPreview.set(res.data || null),
-    });
+    this.recruiterPreview.set(this.buildLocalRecruiterPreview());
   }
 
   prevStep(): void {
@@ -359,6 +353,13 @@ export class ProfileStepperComponent implements OnInit {
   }
 
   async saveProfile(): Promise<void> {
+    if (this.identityForm.invalid) {
+      this.currentStep.set(1);
+      this.identityForm.markAllAsTouched();
+      this.error.set('Complétez le prénom, le nom et le titre professionnel avant d’enregistrer.');
+      return;
+    }
+
     const ok = await this.confirmDialog.confirm({
       title: this.context.hasProfile() ? 'Mettre à jour le profil' : 'Créer le profil',
       message: this.context.hasProfile()
@@ -372,19 +373,19 @@ export class ProfileStepperComponent implements OnInit {
     this.error.set(null);
     const identity = this.identityForm.getRawValue();
     const payload = {
-      firstName: identity.firstName,
-      lastName: identity.lastName,
-      phone: identity.phone || null,
-      professionalTitle: identity.professionalTitle,
-      bio: identity.bio || null,
+      firstName: this.cleanOptionalString(identity.firstName),
+      lastName: this.cleanOptionalString(identity.lastName),
+      phone: this.cleanOptionalString(identity.phone),
+      professionalTitle: this.cleanOptionalString(identity.professionalTitle),
+      bio: this.cleanOptionalString(identity.bio),
       minSalary: identity.minSalary ? Number(identity.minSalary) : null,
       skills: this.skills(),
       languages: this.languages(),
       certifications: this.certifications(),
-      linkedinUrl: identity.linkedinUrl || null,
-      portfolioUrl: identity.portfolioUrl || null,
+      linkedinUrl: this.normalizeOptionalUrl(identity.linkedinUrl),
+      portfolioUrl: this.normalizeOptionalUrl(identity.portfolioUrl),
       jobPreferences: {
-        mobility: identity.mobility || undefined,
+        mobility: this.cleanOptionalString(identity.mobility) || undefined,
         preferredLocations: identity.preferredLocations
           ? identity.preferredLocations.split(',').map((s) => s.trim()).filter(Boolean)
           : [],
@@ -423,7 +424,7 @@ export class ProfileStepperComponent implements OnInit {
         }
       },
       error: (err: HttpErrorResponse) => {
-        this.error.set(err.error?.message || 'Impossible d\'enregistrer le profil.');
+        this.error.set(this.formatHttpError(err, 'Impossible d\'enregistrer le profil.'));
         this.saving.set(false);
       },
     });
@@ -460,15 +461,87 @@ export class ProfileStepperComponent implements OnInit {
     return (this.experiences.getRawValue() as ExperienceBlock[])
       .filter((e) => e.title?.trim() || e.company?.trim())
       .map((e) => ({
-        ...e,
-        endDate: e.current ? '' : e.endDate,
+        company: this.cleanOptionalString(e.company) || '',
+        title: this.cleanOptionalString(e.title) || '',
+        city: this.cleanOptionalString(e.city) || '',
+        startDate: this.cleanOptionalString(e.startDate) || '',
+        endDate: e.current ? '' : this.cleanOptionalString(e.endDate) || '',
+        current: Boolean(e.current),
+        description: this.cleanOptionalString(e.description) || '',
       }));
   }
 
   private buildEducationPayload(): EducationBlock[] {
-    return (this.education.getRawValue() as EducationBlock[]).filter(
-      (e) => e.institution?.trim() || e.degree?.trim()
-    );
+    return (this.education.getRawValue() as EducationBlock[])
+      .filter((e) => e.institution?.trim() || e.degree?.trim())
+      .map((e) => ({
+        institution: this.cleanOptionalString(e.institution) || '',
+        degree: this.cleanOptionalString(e.degree) || '',
+        city: this.cleanOptionalString(e.city) || '',
+        startDate: this.cleanOptionalString(e.startDate) || '',
+        endDate: this.cleanOptionalString(e.endDate) || '',
+      }));
+  }
+
+  private buildLocalRecruiterPreview(): RecruiterPreview {
+    const identity = this.identityForm.getRawValue();
+    const checks = [
+      Boolean(identity.firstName.trim()),
+      Boolean(identity.lastName.trim()),
+      Boolean(identity.professionalTitle.trim()),
+      Boolean(identity.phone.trim()),
+      Boolean(identity.bio.trim()),
+      Boolean(this.context.profile()?.resumeUrl),
+      Boolean(this.context.profile()?.avatarUrl || this.pendingAvatar()),
+      this.skills().length > 0,
+      this.buildExperiencesPayload().length > 0,
+      this.buildEducationPayload().length > 0,
+      this.languages().length > 0,
+      Boolean(identity.linkedinUrl.trim()),
+    ];
+    const completionPercent = Math.round((checks.filter(Boolean).length / checks.length) * 100);
+    const tips: { id: string; text: string }[] = [];
+    if (!this.context.profile()?.resumeUrl) tips.push({ id: 'resume', text: 'Enregistrez le profil pour générer votre CV PDF.' });
+    if (!this.context.profile()?.avatarUrl && !this.pendingAvatar()) tips.push({ id: 'avatar', text: 'Ajoutez une photo pour rendre le profil plus crédible.' });
+    if (!this.skills().length) tips.push({ id: 'skills', text: 'Ajoutez au moins quelques compétences clés.' });
+    if (!this.buildExperiencesPayload().length) tips.push({ id: 'exp', text: 'Ajoutez une expérience professionnelle, même courte.' });
+    if (!identity.bio.trim()) tips.push({ id: 'bio', text: 'Rédigez un résumé de 2 à 3 phrases.' });
+    if (!this.languages().length) tips.push({ id: 'lang', text: 'Indiquez les langues que vous maîtrisez.' });
+    if (!identity.linkedinUrl.trim()) tips.push({ id: 'linkedin', text: 'Ajoutez un lien LinkedIn si vous en avez un.' });
+    if (completionPercent >= 90) tips.push({ id: 'done', text: 'Excellent profil, vous maximisez vos chances.' });
+
+    return {
+      profile: {
+        firstName: identity.firstName,
+        lastName: identity.lastName,
+        professionalTitle: identity.professionalTitle,
+        bio: identity.bio,
+        skills: this.skills(),
+      },
+      completionPercent,
+      tips: tips.slice(0, 5),
+    };
+  }
+
+  private cleanOptionalString(value: unknown): string | null {
+    const text = String(value ?? '').trim();
+    return text || null;
+  }
+
+  private normalizeOptionalUrl(value: unknown): string | null {
+    const text = this.cleanOptionalString(value);
+    if (!text) return null;
+    return /^https?:\/\//i.test(text) ? text : `https://${text}`;
+  }
+
+  private formatHttpError(err: HttpErrorResponse, fallback: string): string {
+    const errors = err.error?.errors;
+    if (Array.isArray(errors) && errors.length) {
+      return errors
+        .map((e) => `${e.field ? `${e.field}: ` : ''}${e.message || 'Champ invalide'}`)
+        .join(' · ');
+    }
+    return err.error?.message || fallback;
   }
 
   private afterProfileSaved(): void {

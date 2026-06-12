@@ -1,0 +1,63 @@
+.admin-job-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-job-detail-page .admin-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.84));
+}
+
+.admin-detail-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.admin-detail-list div {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.admin-detail-list div:last-child {
+  border-bottom: 0;
+}
+
+.admin-detail-list dt {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.admin-detail-list dd {
+  margin: 0;
+  color: #0f172a;
+}
+
+.admin-card-subtitle {
+  margin: 1rem 0 0.45rem;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.admin-job-text {
+  max-width: 900px;
+  white-space: pre-line;
+  color: #334155;
+}
+
+.data-table .admin-muted {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 900px) {
+  .admin-job-detail-grid,
+  .admin-detail-list div {
+    grid-template-columns: 1fr;
+  }
+}

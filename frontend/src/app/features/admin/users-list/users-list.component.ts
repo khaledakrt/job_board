@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,7 +16,7 @@ const PAGE_SIZE = 15;
 @Component({
   selector: 'app-users-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, AdminPaginationComponent],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, AdminPaginationComponent],
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.css',
 })
@@ -43,6 +44,15 @@ export class UsersListComponent implements OnInit {
   readonly toolbarSummary = computed(() =>
     adminPageSummary(this.pagination(), 'utilisateur')
   );
+  readonly pageSummary = computed(() => {
+    const users = this.users();
+    return {
+      total: users.length,
+      banned: users.filter((u) => u.isBanned).length,
+      unverified: users.filter((u) => !u.isVerified).length,
+      recruiters: users.filter((u) => u.recruiterProfile).length,
+    };
+  });
 
   ngOnInit(): void {
     const ip = this.route.snapshot.queryParamMap.get('ip');

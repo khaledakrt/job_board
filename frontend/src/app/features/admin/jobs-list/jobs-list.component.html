@@ -38,6 +38,29 @@
     </div>
   </form>
 
+  <section class="admin-page-insights" aria-label="Résumé offres de la page">
+    <article class="admin-insight-card">
+      <span>Page actuelle</span>
+      <strong>{{ pageSummary().total }}</strong>
+      <small>offres chargées</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Actives</span>
+      <strong>{{ pageSummary().active }}</strong>
+      <small>visibles candidats</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Masquées</span>
+      <strong>{{ pageSummary().hidden }}</strong>
+      <small>non publiques</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Candidatures</span>
+      <strong>{{ pageSummary().applications }}</strong>
+      <small>sur cette page</small>
+    </article>
+  </section>
+
   @if (errorMessage()) {
     <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
   }
@@ -60,7 +83,9 @@
             <th>Entreprise</th>
             <th>Lieu</th>
             <th class="col-status">Statut</th>
+            <th class="col-numeric">Vues</th>
             <th class="col-numeric">Candidatures</th>
+            <th>Créée le</th>
             <th>Expiration</th>
             <th class="col-actions">Actions</th>
           </tr>
@@ -69,9 +94,17 @@
           @for (j of jobs(); track j.id) {
             <tr>
               <td class="col-title">
-                <span class="job-title-cell">{{ j.title }}</span>
+                <a [routerLink]="routes.ADMIN.JOB_DETAIL(j.id)" class="job-title-cell admin-link">{{ j.title }}</a>
               </td>
-              <td>{{ j.companyName || '—' }}</td>
+              <td>
+                @if (j.companyId) {
+                  <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(j.companyId)" class="admin-link">
+                    {{ j.companyName || 'Entreprise' }}
+                  </a>
+                } @else {
+                  —
+                }
+              </td>
               <td>{{ j.location || '—' }}</td>
               <td>
                 <select
@@ -87,13 +120,25 @@
                 </select>
               </td>
               <td class="col-numeric">
+                <span class="count-pill">{{ j.viewsCount }}</span>
+              </td>
+              <td class="col-numeric">
                 <span class="count-pill">{{ j.applicationsCount }}</span>
+              </td>
+              <td class="date-cell">
+                {{ j.createdAt | date: 'dd/MM/yyyy' }}
               </td>
               <td class="date-cell">
                 {{ j.expiresAt ? (j.expiresAt | date: 'dd/MM/yyyy') : '—' }}
               </td>
               <td class="actions-cell admin-actions-nowrap">
                 <div class="admin-actions-inline">
+                <a
+                  [routerLink]="routes.ADMIN.JOB_DETAIL(j.id)"
+                  class="admin-action-chip admin-action-chip--view"
+                >
+                  Détail
+                </a>
                 @if (hasStatusChange(j)) {
                   <button
                     type="button"
@@ -110,14 +155,14 @@
                   [disabled]="statusUpdating() === j.id"
                   (click)="deleteJob(j)"
                 >
-                  Supprimer
+                  Masquer
                 </button>
                 </div>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="7">
+              <td colspan="9">
                 <div class="admin-empty-state">Aucune offre ne correspond à vos critères.</div>
               </td>
             </tr>

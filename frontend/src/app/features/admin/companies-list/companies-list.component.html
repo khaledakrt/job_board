@@ -1,0 +1,132 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / Entreprises</span>
+      </p>
+      <h1>Entreprises</h1>
+      <p class="admin-page-subtitle">
+        Consultez les entreprises recruteuses, repérez les doublons et préparez la gestion avancée des propriétaires.
+      </p>
+    </div>
+  </header>
+
+  <form class="admin-filters admin-company-filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <div class="admin-field">
+      <label for="companySearch">Recherche</label>
+      <input
+        id="companySearch"
+        type="search"
+        formControlName="search"
+        class="form-input"
+        placeholder="Nom de l’entreprise..."
+      />
+    </div>
+    <div class="admin-filter-actions">
+      <button type="button" class="admin-btn-ghost" (click)="resetFilters()">Réinitialiser</button>
+      <button type="submit" class="btn-primary !w-auto px-5">Filtrer</button>
+    </div>
+  </form>
+
+  <section class="admin-page-insights" aria-label="Résumé entreprises de la page">
+    <article class="admin-insight-card">
+      <span>Page actuelle</span>
+      <strong>{{ pageSummary().total }}</strong>
+      <small>entreprises chargées</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Offres actives</span>
+      <strong>{{ pageSummary().activeJobs }}</strong>
+      <small>visibles candidats</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Candidatures</span>
+      <strong>{{ pageSummary().applications }}</strong>
+      <small>liées aux offres</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Recruteurs</span>
+      <strong>{{ pageSummary().recruiters }}</strong>
+      <small>comptes liés</small>
+    </article>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  }
+
+  @if (pagination()) {
+    <div class="admin-toolbar">
+      <span>{{ toolbarSummary() }}</span>
+      <span class="admin-toolbar-sep">·</span>
+      <span>{{ pageSize }} par page</span>
+    </div>
+  }
+
+  <div class="admin-table-wrap" [class.admin-table-wrap--loading]="loading()">
+    @if (loading()) {
+      <div class="admin-table-loading">Chargement…</div>
+    }
+    <div class="table-panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-title">Entreprise</th>
+            <th>Secteur</th>
+            <th>Ville</th>
+            <th>Contact</th>
+            <th>Offres</th>
+            <th>Candidatures</th>
+            <th>Recruteurs</th>
+            <th>Créée le</th>
+            <th class="col-actions">Gestion</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (company of companies(); track company.id) {
+            <tr>
+              <td class="col-title">
+                <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(company.id)" class="admin-link">
+                  <strong>{{ company.name }}</strong>
+                </a>
+                <span class="company-id">{{ company.id }}</span>
+              </td>
+              <td>{{ company.industry || '—' }}</td>
+              <td>{{ company.city || '—' }}</td>
+              <td>
+                <span class="company-contact">{{ company.contactEmail || company.website || '—' }}</span>
+              </td>
+              <td>
+                <span class="count-pill">{{ company.activeJobsCount }}/{{ company.jobsCount }}</span>
+              </td>
+              <td>
+                <span class="count-pill">{{ company.applicationsCount }}</span>
+              </td>
+              <td>
+                <span class="count-pill">{{ company.recruitersCount }}</span>
+              </td>
+              <td>{{ company.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td class="actions-cell">
+                <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(company.id)" class="link-action">Détail →</a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9">
+                <div class="admin-empty-state">Aucune entreprise ne correspond à vos critères.</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-admin-pagination
+    [pagination]="pagination()"
+    [loading]="loading()"
+    itemLabel="entreprise"
+    (pageChange)="load($event)"
+  />
+</div>

@@ -10,8 +10,11 @@ const adminController = require('../controllers/admin.controller');
 const {
   listUsersQuerySchema,
   listJobsQuerySchema,
+  listApplicationsQuerySchema,
   userIdParamsSchema,
   jobIdParamsSchema,
+  applicationIdParamsSchema,
+  companyIdParamsSchema,
   createUserBodySchema,
   updateUserBodySchema,
   setPasswordBodySchema,
@@ -83,6 +86,11 @@ router.get(
 );
 
 router.get('/jobs', validateQuery(listJobsQuerySchema), adminController.listJobs);
+router.get(
+  '/jobs/:id',
+  validateParams(jobIdParamsSchema),
+  adminController.getJob
+);
 router.patch(
   '/jobs/:id/status',
   validateParams(jobIdParamsSchema),
@@ -95,7 +103,23 @@ router.delete(
   adminController.deleteJob
 );
 
+router.get(
+  '/applications',
+  validateQuery(listApplicationsQuerySchema),
+  adminController.listApplications
+);
+router.get(
+  '/applications/:id',
+  validateParams(applicationIdParamsSchema),
+  adminController.getApplication
+);
+
 router.get('/companies', validateQuery(listUsersQuerySchema.pick({ page: true, limit: true, search: true })), adminController.listCompanies);
+router.get(
+  '/companies/:id',
+  validateParams(companyIdParamsSchema),
+  adminController.getCompany
+);
 
 router.get(
   '/training-centers',

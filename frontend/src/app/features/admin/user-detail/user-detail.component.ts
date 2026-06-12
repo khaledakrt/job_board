@@ -155,9 +155,9 @@ export class UserDetailComponent implements OnInit {
 
   async deleteUser(): Promise<void> {
     const ok = await this.confirmDialog.confirm({
-      title: 'Supprimer définitivement ?',
-      message: 'Action irréversible.',
-      confirmLabel: 'Supprimer',
+      title: 'Désactiver ce compte ?',
+      message: 'Le compte sera banni et ne pourra plus se connecter. Les données liées sont conservées.',
+      confirmLabel: 'Désactiver',
       confirmDanger: true,
     });
     if (!ok) return;

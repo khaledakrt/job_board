@@ -1,0 +1,163 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / Candidatures</span>
+      </p>
+      <h1>Candidatures</h1>
+      <p class="admin-page-subtitle">
+        Suivez les candidatures déposées, les entreprises concernées et les statuts de traitement.
+      </p>
+    </div>
+  </header>
+
+  <form class="admin-filters admin-applications-filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <div class="admin-field admin-field--search">
+      <label for="applicationSearch">Recherche</label>
+      <input
+        id="applicationSearch"
+        type="search"
+        formControlName="search"
+        class="form-input"
+        placeholder="Candidat, e-mail, offre, entreprise..."
+      />
+    </div>
+    <div class="admin-field">
+      <label for="applicationStatus">Statut</label>
+      <select id="applicationStatus" formControlName="status" class="form-input">
+        <option value="">Tous</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabels[status] }}</option>
+        }
+      </select>
+    </div>
+    <div class="admin-filter-actions">
+      <button type="button" class="admin-btn-ghost" (click)="resetFilters()">Réinitialiser</button>
+      <button type="submit" class="btn-primary !w-auto px-5">Filtrer</button>
+    </div>
+  </form>
+
+  <section class="admin-page-insights" aria-label="Résumé candidatures de la page">
+    <article class="admin-insight-card">
+      <span>Page actuelle</span>
+      <strong>{{ pageSummary().total }}</strong>
+      <small>candidatures chargées</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Entretiens</span>
+      <strong>{{ pageSummary().interview }}</strong>
+      <small>statut entretien</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Avec CV</span>
+      <strong>{{ pageSummary().withResume }}</strong>
+      <small>dossier complet</small>
+    </article>
+    <article class="admin-insight-card">
+      <span>Quiz</span>
+      <strong>{{ pageSummary().withQuiz }}</strong>
+      <small>réponses reçues</small>
+    </article>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  }
+
+  @if (pagination()) {
+    <div class="admin-toolbar">
+      <span>{{ toolbarSummary() }}</span>
+      <span class="admin-toolbar-sep">·</span>
+      <span>{{ pageSize }} par page</span>
+    </div>
+  }
+
+  <div class="admin-table-wrap" [class.admin-table-wrap--loading]="loading()">
+    @if (loading()) {
+      <div class="admin-table-loading">Chargement…</div>
+    }
+    <div class="table-panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-title">Candidat</th>
+            <th>Offre</th>
+            <th>Entreprise</th>
+            <th>Statut</th>
+            <th>Note</th>
+            <th>Pièces</th>
+            <th>Déposée le</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (application of applications(); track application.id) {
+            <tr>
+              <td class="col-title">
+                @if (application.candidate?.userId) {
+                  <a [routerLink]="routes.ADMIN.USER_DETAIL(application.candidate!.userId)" class="admin-link">
+                    <strong>{{ application.candidate?.name || 'Candidat' }}</strong>
+                  </a>
+                } @else {
+                  <strong>{{ application.candidate?.name || 'Candidat' }}</strong>
+                }
+                <span class="admin-muted">{{ application.candidate?.email || '—' }}</span>
+              </td>
+              <td>
+                @if (application.job?.id) {
+                  <a [routerLink]="routes.ADMIN.JOB_DETAIL(application.job!.id)" class="admin-link">
+                    {{ application.job!.title }}
+                  </a>
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                @if (application.job?.companyId) {
+                  <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(application.job!.companyId)" class="admin-link">
+                    {{ application.job!.companyName || 'Entreprise' }}
+                  </a>
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <span class="admin-badge admin-badge--role">
+                  {{ statusLabel(application.status) }}
+                </span>
+              </td>
+              <td>{{ application.rating || '—' }}</td>
+              <td>
+                <span class="application-flags">
+                  {{ application.hasResume ? 'CV' : '—' }}
+                  · {{ application.hasCoverLetter ? 'Lettre' : '—' }}
+                  · {{ application.hasQuizAnswers ? 'Quiz' : '—' }}
+                </span>
+              </td>
+              <td>{{ application.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="actions-cell">
+                <a [routerLink]="routes.ADMIN.APPLICATION_DETAIL(application.id)" class="link-action">
+                  Détail →
+                </a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8">
+                <div class="admin-empty-state">Aucune candidature ne correspond à vos critères.</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-admin-pagination
+    [pagination]="pagination()"
+    [loading]="loading()"
+    itemLabel="candidature"
+    (pageChange)="load($event)"
+  />
+</div>

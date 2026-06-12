@@ -1,7 +1,7 @@
 'use strict';
 
 const { z } = require('zod');
-const { USER_ROLES, JOB_STATUS } = require('../config/constants');
+const { USER_ROLES, JOB_STATUS, APPLICATION_STATUS } = require('../config/constants');
 
 const listUsersQuerySchema = z.object({
   page: z.coerce.number().optional(),
@@ -19,11 +19,26 @@ const listJobsQuerySchema = z.object({
   search: z.string().max(255).optional(),
 });
 
+const listApplicationsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  status: z.enum(Object.values(APPLICATION_STATUS)).optional(),
+  search: z.string().max(255).optional(),
+});
+
 const userIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
 const jobIdParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const applicationIdParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const companyIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
@@ -146,8 +161,11 @@ const adminUpdatePrivateInstitutionSchema = adminCreatePrivateInstitutionSchema.
 module.exports = {
   listUsersQuerySchema,
   listJobsQuerySchema,
+  listApplicationsQuerySchema,
   userIdParamsSchema,
   jobIdParamsSchema,
+  applicationIdParamsSchema,
+  companyIdParamsSchema,
   createUserBodySchema,
   updateUserBodySchema,
   setPasswordBodySchema,

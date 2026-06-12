@@ -7,6 +7,11 @@ import { PaginationMeta } from '../../../core/models/pagination.model';
 import {
   AdminCatalogDetail,
   AdminCatalogListItem,
+  AdminApplicationDetail,
+  AdminApplicationListItem,
+  AdminCompanyDetail,
+  AdminCompanyListItem,
+  AdminJobDetail,
   AdminJobListItem,
   AdminStats,
   AdminUserDetail,
@@ -83,6 +88,10 @@ export class AdminService {
     );
   }
 
+  getJob(id: string): Observable<ApiResponse<AdminJobDetail>> {
+    return this.http.get<ApiResponse<AdminJobDetail>>(`${this.base}/jobs/${id}`);
+  }
+
   updateJobStatus(id: string, status: string): Observable<ApiResponse<AdminJobListItem>> {
     return this.http.patch<ApiResponse<AdminJobListItem>>(`${this.base}/jobs/${id}/status`, {
       status,
@@ -91,6 +100,32 @@ export class AdminService {
 
   deleteJob(id: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.base}/jobs/${id}`);
+  }
+
+  listCompanies(params: Record<string, string | number>): Observable<
+    ApiResponse<AdminCompanyListItem[]> & { pagination: PaginationMeta }
+  > {
+    return this.http.get<ApiResponse<AdminCompanyListItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/companies`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
+    );
+  }
+
+  getCompany(id: string): Observable<ApiResponse<AdminCompanyDetail>> {
+    return this.http.get<ApiResponse<AdminCompanyDetail>>(`${this.base}/companies/${id}`);
+  }
+
+  listApplications(params: Record<string, string | number>): Observable<
+    ApiResponse<AdminApplicationListItem[]> & { pagination: PaginationMeta }
+  > {
+    return this.http.get<ApiResponse<AdminApplicationListItem[]> & { pagination: PaginationMeta }>(
+      `${this.base}/applications`,
+      { params: new HttpParams({ fromObject: params as Record<string, string> }) }
+    );
+  }
+
+  getApplication(id: string): Observable<ApiResponse<AdminApplicationDetail>> {
+    return this.http.get<ApiResponse<AdminApplicationDetail>>(`${this.base}/applications/${id}`);
   }
 
   listTrainingCenters(params: Record<string, string | number>): Observable<
@@ -254,5 +289,6 @@ export interface AdminOfferingItem {
   eventDate?: string | null;
   startTime?: string | null;
   price?: number | null;
+  adminNote?: string | null;
   createdAt?: string;
 }

@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -27,7 +28,7 @@ const PAGE_SIZE = 15;
 @Component({
   selector: 'app-admin-offerings-moderation',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, AdminPaginationComponent, DatePipe, DecimalPipe],
+  imports: [FormsModule, ReactiveFormsModule, RouterLink, AdminPaginationComponent, DatePipe, DecimalPipe],
   templateUrl: './admin-offerings-moderation.component.html',
   styleUrls: ['../admin-shared.css', './admin-offerings-moderation.component.css'],
 })
@@ -49,6 +50,8 @@ export class AdminOfferingsModerationComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly actionLoading = signal<string | null>(null);
+  readonly rejectTarget = signal<AdminOfferingItem | null>(null);
+  rejectNote = '';
 
   readonly filters = this.fb.nonNullable.group({
     search: [''],
@@ -130,16 +133,41 @@ export class AdminOfferingsModerationComponent implements OnInit {
   setStatus(item: AdminOfferingItem, status: CatalogPublishStatus, event?: Event): void {
     event?.stopPropagation();
     event?.preventDefault();
+    if (status === 'rejected') {
+      this.rejectTarget.set(item);
+      this.rejectNote = item.adminNote ?? '';
+      return;
+    }
+    this.updateStatus(item, status, null);
+  }
+
+  cancelReject(): void {
+    this.rejectTarget.set(null);
+    this.rejectNote = '';
+  }
+
+  confirmReject(): void {
+    const item = this.rejectTarget();
+    if (!item) return;
+    this.updateStatus(item, 'rejected', this.rejectNote.trim() || null);
+  }
+
+  private updateStatus(
+    item: AdminOfferingItem,
+    status: CatalogPublishStatus,
+    adminNote: string | null
+  ): void {
     this.actionLoading.set(item.id);
     this.successMessage.set(null);
     const req =
       this.kind() === 'formations'
-        ? this.admin.setTrainingFormationStatus(item.id, status)
-        : this.admin.setTrainingEventStatus(item.id, status);
+        ? this.admin.setTrainingFormationStatus(item.id, status, adminNote)
+        : this.admin.setTrainingEventStatus(item.id, status, adminNote);
 
     req.subscribe({
       next: () => {
         this.actionLoading.set(null);
+        this.cancelReject();
         this.successMessage.set(
           status === 'published'
             ? 'Publication confirmée.'

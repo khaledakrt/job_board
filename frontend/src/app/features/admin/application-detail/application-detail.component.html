@@ -1,0 +1,119 @@
+<div class="admin-page admin-application-detail-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / </span>
+        <a [routerLink]="routes.ADMIN.APPLICATIONS">Candidatures</a>
+        <span> / Détail</span>
+      </p>
+      <h1>{{ application()?.candidate?.name || 'Candidature' }}</h1>
+      <p class="admin-page-subtitle">
+        Vue complète de la candidature, du candidat, de l’offre et des notes recruteur.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="admin-table-loading">Chargement…</div>
+  } @else if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  } @else {
+    @if (application(); as app) {
+      <section class="admin-detail-grid">
+        <article class="admin-card">
+          <h2 class="admin-card-title">Candidat</h2>
+          <dl class="detail-list">
+            <div>
+              <dt>Nom</dt>
+              <dd>{{ app.candidate?.name || '—' }}</dd>
+            </div>
+            <div>
+              <dt>E-mail</dt>
+              <dd>{{ app.candidate?.email || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Téléphone</dt>
+              <dd>{{ app.candidate?.phone || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Profil</dt>
+              <dd>{{ app.candidate?.professionalTitle || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Compte</dt>
+              <dd>
+                @if (app.candidate?.userId) {
+                  <a [routerLink]="routes.ADMIN.USER_DETAIL(app.candidate!.userId)" class="admin-link">Voir utilisateur</a>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="admin-card">
+          <h2 class="admin-card-title">Offre</h2>
+          <dl class="detail-list">
+            <div>
+              <dt>Titre</dt>
+              <dd>
+                @if (app.job?.id) {
+                  <a [routerLink]="routes.ADMIN.JOB_DETAIL(app.job!.id)" class="admin-link">{{ app.job!.title }}</a>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Entreprise</dt>
+              <dd>
+                @if (app.job?.companyId) {
+                  <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(app.job!.companyId)" class="admin-link">{{ app.job!.companyName || 'Entreprise' }}</a>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Statut offre</dt>
+              <dd>{{ app.job ? jobStatusLabel(app.job.status) : '—' }}</dd>
+            </div>
+            <div>
+              <dt>Recruteur</dt>
+              <dd>{{ app.job?.recruiterEmail || '—' }}</dd>
+            </div>
+          </dl>
+        </article>
+      </section>
+
+      <section class="admin-card">
+        <h2 class="admin-card-title">Suivi candidature</h2>
+        <div class="status-strip">
+          <span class="admin-badge admin-badge--role">{{ applicationStatusLabel(app.status) }}</span>
+          <span>Note : <strong>{{ app.rating || '—' }}</strong></span>
+          <span>Entretien : <strong>{{ app.interviewAt ? (app.interviewAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</strong></span>
+          <span>CV : <strong>{{ app.resumeSnapshotUrl ? 'Oui' : 'Non' }}</strong></span>
+          <span>Quiz : <strong>{{ app.quizAnswers ? 'Oui' : 'Non' }}</strong></span>
+        </div>
+        @if (app.coverLetter) {
+          <h3 class="admin-card-subtitle">Lettre de motivation</h3>
+          <p class="text-block">{{ app.coverLetter }}</p>
+        }
+      </section>
+
+      <section class="admin-card">
+        <h2 class="admin-card-title">Notes internes</h2>
+        @for (note of app.notes; track note.id) {
+          <article class="note-card">
+            <p>{{ note.text }}</p>
+            <small>{{ note.authorEmail || 'Recruteur' }} · {{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+          </article>
+        } @empty {
+          <div class="admin-empty-state">Aucune note interne enregistrée.</div>
+        }
+      </section>
+    }
+  }
+</div>

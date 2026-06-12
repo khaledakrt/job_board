@@ -1,0 +1,26 @@
+.admin-company-filters {
+  grid-template-columns: minmax(260px, 420px) auto;
+}
+
+.company-id {
+  display: block;
+  margin-top: 0.2rem;
+  color: #94a3b8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.company-contact {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  color: #475569;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .admin-company-filters {
+    grid-template-columns: 1fr;
+  }
+}

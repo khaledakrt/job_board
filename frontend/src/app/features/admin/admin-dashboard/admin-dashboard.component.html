@@ -43,16 +43,16 @@
         <span class="admin-stat-label">Offres</span>
         <strong class="admin-stat-value">{{ stats()!.jobsTotal }}</strong>
       </a>
-      <div class="admin-stat">
+      <a [routerLink]="routes.ADMIN.APPLICATIONS" class="admin-stat admin-stat--link">
         <span class="admin-stat-icon">📋</span>
         <span class="admin-stat-label">Candidatures</span>
         <strong class="admin-stat-value">{{ stats()!.applicationsTotal }}</strong>
-      </div>
-      <div class="admin-stat">
+      </a>
+      <a [routerLink]="routes.ADMIN.COMPANIES" class="admin-stat admin-stat--link">
         <span class="admin-stat-icon">🏭</span>
         <span class="admin-stat-label">Entreprises</span>
         <strong class="admin-stat-value">{{ stats()!.companiesTotal }}</strong>
-      </div>
+      </a>
       <a [routerLink]="routes.ADMIN.TRAINING_CENTERS" class="admin-stat admin-stat--link">
         <span class="admin-stat-icon">📚</span>
         <span class="admin-stat-label">Centres formation</span>

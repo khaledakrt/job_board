@@ -34,6 +34,39 @@ export const ADMIN_ROUTES: Routes = [
           import('./jobs-list/jobs-list.component').then((m) => m.JobsListComponent),
       },
       {
+        path: 'jobs/:id',
+        loadComponent: () =>
+          import('./job-detail/job-detail.component').then((m) => m.JobDetailComponent),
+      },
+      {
+        path: 'applications',
+        loadComponent: () =>
+          import('./applications-list/applications-list.component').then(
+            (m) => m.ApplicationsListComponent
+          ),
+      },
+      {
+        path: 'applications/:id',
+        loadComponent: () =>
+          import('./application-detail/application-detail.component').then(
+            (m) => m.ApplicationDetailComponent
+          ),
+      },
+      {
+        path: 'companies',
+        loadComponent: () =>
+          import('./companies-list/companies-list.component').then(
+            (m) => m.CompaniesListComponent
+          ),
+      },
+      {
+        path: 'companies/:id',
+        loadComponent: () =>
+          import('./company-detail/company-detail.component').then(
+            (m) => m.CompanyDetailComponent
+          ),
+      },
+      {
         path: 'training-centers',
         children: [
           {

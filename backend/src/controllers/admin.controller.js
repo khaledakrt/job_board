@@ -50,12 +50,12 @@ const setUserPassword = asyncHandler(async (req, res) => {
 });
 
 const banUser = asyncHandler(async (req, res) => {
-  const data = await adminService.banUser(req.validatedParams.id, req.validatedBody);
+  const data = await adminService.banUser(req.validatedParams.id, req.validatedBody, req.user.id);
   res.status(200).json({ success: true, message: 'User banned', data });
 });
 
 const unbanUser = asyncHandler(async (req, res) => {
-  const data = await adminService.unbanUser(req.validatedParams.id);
+  const data = await adminService.unbanUser(req.validatedParams.id, req.user.id);
   res.status(200).json({ success: true, message: 'User unbanned', data });
 });
 
@@ -69,22 +69,43 @@ const listJobs = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
 });
 
+const getJob = asyncHandler(async (req, res) => {
+  const data = await adminService.getJobById(req.validatedParams.id);
+  res.status(200).json({ success: true, data });
+});
+
 const updateJobStatus = asyncHandler(async (req, res) => {
   const data = await adminService.updateJobStatus(
     req.validatedParams.id,
-    req.validatedBody.status
+    req.validatedBody.status,
+    req.user.id
   );
   res.status(200).json({ success: true, message: 'Job updated', data });
 });
 
 const deleteJob = asyncHandler(async (req, res) => {
-  const result = await adminService.deleteJob(req.validatedParams.id);
+  const result = await adminService.deleteJob(req.validatedParams.id, req.user.id);
   res.status(200).json({ success: true, message: result.message });
+});
+
+const listApplications = asyncHandler(async (req, res) => {
+  const result = await adminService.listApplications(req.validatedQuery);
+  res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+});
+
+const getApplication = asyncHandler(async (req, res) => {
+  const data = await adminService.getApplicationById(req.validatedParams.id);
+  res.status(200).json({ success: true, data });
 });
 
 const listCompanies = asyncHandler(async (req, res) => {
   const result = await adminService.listCompanies(req.validatedQuery || {});
   res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+});
+
+const getCompany = asyncHandler(async (req, res) => {
+  const data = await adminService.getCompanyById(req.validatedParams.id);
+  res.status(200).json({ success: true, data });
 });
 
 const listTrainingCenters = asyncHandler(async (req, res) => {
@@ -175,9 +196,13 @@ module.exports = {
   unbanUser,
   deleteUser,
   listJobs,
+  getJob,
   updateJobStatus,
   deleteJob,
+  listApplications,
+  getApplication,
   listCompanies,
+  getCompany,
   listTrainingCenters,
   getTrainingCenter,
   createTrainingCenter,

@@ -1,0 +1,122 @@
+<div class="admin-page admin-job-detail-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / </span>
+        <a [routerLink]="routes.ADMIN.JOBS">Offres</a>
+        <span> / Détail</span>
+      </p>
+      <h1>{{ job()?.title || 'Offre' }}</h1>
+      <p class="admin-page-subtitle">
+        Contexte complet de l’annonce, de l’entreprise et des dernières candidatures.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="admin-table-loading">Chargement…</div>
+  } @else if (errorMessage()) {
+    <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  } @else {
+  @if (job(); as j) {
+    <section class="admin-job-detail-grid">
+      <article class="admin-card">
+        <h2 class="admin-card-title">Informations offre</h2>
+        <dl class="admin-detail-list">
+          <div>
+            <dt>Statut</dt>
+            <dd><span class="status-pill" [attr.data-status]="j.status">{{ jobStatusLabel(j.status) }}</span></dd>
+          </div>
+          <div>
+            <dt>Lieu</dt>
+            <dd>{{ j.location || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Contrat</dt>
+            <dd>{{ j.contractType }}</dd>
+          </div>
+          <div>
+            <dt>Remote</dt>
+            <dd>{{ j.remoteType }}</dd>
+          </div>
+          <div>
+            <dt>Salaire</dt>
+            <dd>{{ j.salaryLabel || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Expiration</dt>
+            <dd>{{ j.expiresAt ? (j.expiresAt | date: 'dd/MM/yyyy') : '—' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="admin-card">
+        <h2 class="admin-card-title">Entreprise & recruteur</h2>
+        <dl class="admin-detail-list">
+          <div>
+            <dt>Entreprise</dt>
+            <dd>{{ j.company?.name || j.companyName || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Secteur</dt>
+            <dd>{{ j.company?.industry || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Site web</dt>
+            <dd>{{ j.company?.website || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Recruteur</dt>
+            <dd>{{ j.recruiter?.email || '—' }}</dd>
+          </div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="admin-card">
+      <h2 class="admin-card-title">Description</h2>
+      <p class="admin-job-text">{{ j.description }}</p>
+      @if (j.requirements) {
+        <h3 class="admin-card-subtitle">Exigences</h3>
+        <p class="admin-job-text">{{ j.requirements }}</p>
+      }
+    </section>
+
+    <section class="admin-card">
+      <h2 class="admin-card-title">Dernières candidatures</h2>
+      <div class="table-panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Candidat</th>
+              <th>Statut</th>
+              <th>Note</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (application of j.recentApplications; track application.id) {
+              <tr>
+                <td>
+                  <strong>{{ application.candidate?.name || 'Candidat' }}</strong>
+                  <span class="admin-muted">{{ application.candidate?.email || '—' }}</span>
+                </td>
+                <td>{{ applicationStatusLabel(application.status) }}</td>
+                <td>{{ application.rating || '—' }}</td>
+                <td>{{ application.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4">
+                  <div class="admin-empty-state">Aucune candidature récente.</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+  }
+</div>

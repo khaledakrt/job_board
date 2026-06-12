@@ -14,6 +14,7 @@ const Subscription = require('./Subscription');
 const SavedJob = require('./SavedJob');
 const JobAlert = require('./JobAlert');
 const UserLoginEvent = require('./UserLoginEvent');
+const AdminAuditLog = require('./AdminAuditLog');
 const TrainingCenter = require('./TrainingCenter');
 const TrainingCourse = require('./TrainingCourse');
 const TrainingFormation = require('./TrainingFormation');
@@ -32,6 +33,9 @@ CandidateProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 User.hasMany(UserLoginEvent, { foreignKey: 'user_id', as: 'loginEvents' });
 UserLoginEvent.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasMany(AdminAuditLog, { foreignKey: 'actor_id', as: 'adminAuditLogs' });
+AdminAuditLog.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
 
 Company.hasMany(RecruiterProfile, { foreignKey: 'company_id', as: 'recruiters' });
 RecruiterProfile.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -160,6 +164,7 @@ module.exports = {
   SavedJob,
   JobAlert,
   UserLoginEvent,
+  AdminAuditLog,
   TrainingCenter,
   TrainingCourse,
   TrainingFormation,

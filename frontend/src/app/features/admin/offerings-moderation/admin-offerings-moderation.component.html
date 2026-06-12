@@ -234,4 +234,33 @@
     [itemLabel]="kind() === 'formations' ? 'formation' : 'événement'"
     (pageChange)="load($event)"
   />
+
+  @if (rejectTarget(); as target) {
+    <div class="admin-modal-backdrop" role="presentation">
+      <section class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="rejectTrainingOfferingTitle">
+        <h2 id="rejectTrainingOfferingTitle">Refuser la publication</h2>
+        <p class="admin-muted">
+          Ajoutez un motif clair pour que le centre comprenne les corrections à apporter.
+        </p>
+        <label class="admin-field admin-field--full">
+          <span>Motif de refus</span>
+          <textarea
+            class="form-input"
+            rows="4"
+            [(ngModel)]="rejectNote"
+            name="rejectNote"
+            placeholder="Ex. Description incomplète, dates incohérentes, prix non clair..."
+          ></textarea>
+        </label>
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-btn-ghost" [disabled]="actionLoading() === target.id" (click)="cancelReject()">
+            Annuler
+          </button>
+          <button type="button" class="admin-action-chip admin-action-chip--reject" [disabled]="actionLoading() === target.id" (click)="confirmReject()">
+            Confirmer le refus
+          </button>
+        </div>
+      </section>
+    </div>
+  }
 </div>
