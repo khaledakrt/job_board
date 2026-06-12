@@ -2,7 +2,7 @@
   <div>
     <h1 class="page-title">Offres d'emploi</h1>
     <p class="page-subtitle">
-      Gérez vos annonces. Seules les offres <strong>affichées</strong> sont visibles par les candidats.
+      Gérez vos annonces actives et brouillons. Les offres masquées ou expirées sont rangées dans Archives.
     </p>
   </div>
   @if (context.canPostJob()) {
@@ -26,7 +26,7 @@
       [value]="statusFilter()"
       (change)="onStatusFilterChange($event)"
     >
-      <option value="">Tous les statuts</option>
+      <option value="">Actives et brouillons</option>
       @for (s of statusOptions; track s) {
         <option [value]="s">{{ statusLabels[s] }}</option>
       }
@@ -128,17 +128,12 @@
                       [disabled]="statusUpdating() === job.id"
                       (click)="setStatus(job, 'hidden')"
                     >
-                      Cacher l’offre
+                      Masquer et archiver
                     </button>
                   }
-                  <button
-                    type="button"
-                    class="btn-text-danger btn-delete-inline"
-                    [disabled]="statusUpdating() === job.id"
-                    (click)="deleteJob(job)"
-                  >
-                    Supprimer
-                  </button>
+                  <a [routerLink]="routes.RECRUITER.ARCHIVES" class="archive-inline-link">
+                    Gérer les archives
+                  </a>
                 </div>
               </details>
             }

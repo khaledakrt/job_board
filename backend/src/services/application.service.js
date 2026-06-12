@@ -2,6 +2,7 @@
 
 const { Application, Job, Company, CandidateProfile, ApplicationNote, User } = require('../models');
 const sequelize = require('../database/sequelize');
+const { Op } = require('sequelize');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
 const notificationService = require('./notification.service');
@@ -47,6 +48,9 @@ function formatApplication(application) {
     resumeSnapshotUrl: application.resume_snapshot_url,
     rating: application.rating,
     interviewAt: application.interview_at,
+    archivedAt: application.archived_at,
+    archivedBy: application.archived_by,
+    deletedByRecruiterAt: application.deleted_by_recruiter_at,
     createdAt: application.created_at,
     updatedAt: application.updated_at,
     job: application.job
@@ -119,6 +123,7 @@ async function updateApplicationStatus({
   status,
   rating,
   evaluationText,
+  internalNote,
   interviewAt,
   recruiterUser,
 }) {
@@ -135,6 +140,14 @@ async function updateApplicationStatus({
     updated_at: new Date(),
   };
 
+  if (status === 'rejected') {
+    updates.archived_at = application.archived_at || new Date();
+    updates.archived_by = recruiterUser?.id || application.archived_by || null;
+  } else if (application.archived_at) {
+    updates.archived_at = null;
+    updates.archived_by = null;
+  }
+
   if (interviewAt !== undefined) {
     updates.interview_at = interviewAt ? new Date(interviewAt) : null;
   } else if (status === 'interview' && !application.interview_at) {
@@ -143,6 +156,39 @@ async function updateApplicationStatus({
 
   await sequelize.transaction(async (transaction) => {
     await application.update(updates, { transaction });
+
+    const noteText = buildStatusChangeNote({
+      previousStatus,
+      status,
+      internalNote,
+      interviewAt: updates.interview_at,
+    });
+    if (noteText) {
+      await ApplicationNote.create(
+        {
+          id: generateUuid(),
+          application_id: applicationId,
+          author_id: recruiterUser.id,
+          note_text: noteText,
+          visible_to_candidate: false,
+          created_at: new Date(),
+        },
+        { transaction }
+      );
+    }
+    if (evaluationText && evaluationText.trim()) {
+      await ApplicationNote.create(
+        {
+          id: generateUuid(),
+          application_id: applicationId,
+          author_id: recruiterUser.id,
+          note_text: evaluationText.trim(),
+          visible_to_candidate: true,
+          created_at: new Date(),
+        },
+        { transaction }
+      );
+    }
 
     await application.reload({
       include: [
@@ -165,6 +211,7 @@ async function updateApplicationStatus({
         previousStatus,
         newStatus: status,
         evaluationText: evaluationText || null,
+        interviewAt: application.interview_at,
         recruiterUser,
       });
     } catch (error) {
@@ -176,6 +223,20 @@ async function updateApplicationStatus({
     application: formatApplication(application),
     alert: alertResult,
   };
+}
+
+function buildStatusChangeNote({ previousStatus, status, internalNote, interviewAt }) {
+  const parts = [];
+  if (previousStatus !== status) {
+    parts.push(`Changement d'étape : ${previousStatus} -> ${status}`);
+  }
+  if (status === 'interview' && interviewAt) {
+    parts.push(`Entretien planifié le ${new Date(interviewAt).toLocaleString('fr-FR')}`);
+  }
+  if (internalNote && internalNote.trim()) {
+    parts.push(`Note interne recruteur :\n${internalNote.trim()}`);
+  }
+  return parts.length ? parts.join('\n\n') : null;
 }
 
 async function addApplicationNote({
@@ -224,6 +285,13 @@ async function listCompanyApplications(companyId, filters = {}) {
   if (filters.status) {
     applicationWhere.status = filters.status;
   }
+  if (filters.archived === true || filters.archived === 'true') {
+    applicationWhere.archived_at = { [Op.ne]: null };
+    applicationWhere.deleted_by_recruiter_at = null;
+  } else {
+    applicationWhere.archived_at = null;
+    applicationWhere.deleted_by_recruiter_at = null;
+  }
 
   const { page, limit, offset } = parsePagination(filters);
 
@@ -251,6 +319,41 @@ async function listCompanyApplications(companyId, filters = {}) {
     page,
     limit,
   });
+}
+
+async function restoreApplication({ applicationId, companyId }) {
+  const application = await getApplicationForCompany(applicationId, companyId);
+  if (!application.archived_at) {
+    return formatApplication(application);
+  }
+  await application.update({
+    status: 'screening',
+    archived_at: null,
+    archived_by: null,
+    deleted_by_recruiter_at: null,
+    deleted_by_recruiter_by: null,
+    updated_at: new Date(),
+  });
+  await application.reload({
+    include: [
+      { model: Job, as: 'job', include: [{ model: Company, as: 'company' }] },
+      candidateInclude,
+    ],
+  });
+  return formatApplication(application);
+}
+
+async function deleteArchivedApplication({ applicationId, companyId, recruiterUserId }) {
+  const application = await getApplicationForCompany(applicationId, companyId);
+  if (!application.archived_at) {
+    throw ApiError.badRequest('Archive the application before deleting it from recruiter history');
+  }
+  await application.update({
+    deleted_by_recruiter_at: new Date(),
+    deleted_by_recruiter_by: recruiterUserId,
+    updated_at: new Date(),
+  });
+  return { message: 'Application removed from recruiter archives' };
 }
 
 async function getApplicationDetail(applicationId, companyId) {
@@ -313,6 +416,8 @@ module.exports = {
   listCompanyApplications,
   getApplicationDetail,
   updateApplicationStatus,
+  restoreApplication,
+  deleteArchivedApplication,
   addApplicationNote,
   formatApplication,
 };

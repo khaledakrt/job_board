@@ -139,6 +139,9 @@
               <td data-label="Entreprise">{{ companyName(app) }}</td>
               <td data-label="Statut">
                 <span class="status-pill status-pill-{{ app.status }}">{{ statusLabels[app.status] }}</span>
+                @if (app.interviewAt) {
+                  <span class="interview-date-chip">Entretien {{ app.interviewAt | date: 'dd/MM HH:mm' }}</span>
+                }
               </td>
               <td class="timeline-cell" data-label="Progression">
                 <app-application-timeline [status]="app.status" [compact]="true" />
@@ -330,7 +333,7 @@
         @if (detail.interviewAt) {
           <section class="app-detail-block">
             <h3 class="app-detail-subtitle">Entretien</h3>
-            <p>Prévu le {{ detail.interviewAt | date: 'full' }}</p>
+            <p>Prévu le {{ detail.interviewAt | date: 'dd/MM/yyyy à HH:mm' }}</p>
             <button type="button" class="btn-secondary !w-auto px-4" (click)="downloadInterviewIcs(detail)">
               Ajouter au calendrier (.ics)
             </button>

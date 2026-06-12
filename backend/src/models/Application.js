@@ -52,6 +52,22 @@ Application.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    archived_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    archived_by: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
+    deleted_by_recruiter_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    deleted_by_recruiter_by: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

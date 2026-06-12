@@ -1,6 +1,7 @@
 'use strict';
 
 const { Job, Company, RecruiterProfile } = require('../models');
+const { Op } = require('sequelize');
 const { JOB_STATUS } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
@@ -37,6 +38,9 @@ function formatJob(job) {
     expiresAt: job.expires_at,
     viewsCount: job.views_count,
     applicationsCount: job.applications_count,
+    archivedAt: job.archived_at,
+    archivedBy: job.archived_by,
+    deletedByRecruiterAt: job.deleted_by_recruiter_at,
     quizEnabled: Boolean(job.quiz_enabled),
     quiz: job.quiz_enabled ? formatQuizForRecruiter(job.quiz_data) : null,
     createdAt: job.created_at,
@@ -69,10 +73,14 @@ async function assertJobBelongsToCompany(jobId, companyId) {
 async function listCompanyJobs(companyId, query = {}) {
   await expireDueJobs({ company_id: companyId });
 
-  const where = { company_id: companyId };
+  const where = { company_id: companyId, deleted_by_recruiter_at: null };
 
-  if (query.status) {
+  if (query.archived === true || query.archived === 'true') {
+    where.status = { [Op.in]: [JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED] };
+  } else if (query.status) {
     where.status = query.status;
+  } else {
+    where.status = { [Op.notIn]: [JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED] };
   }
 
   const { page, limit, offset } = parsePagination(query);
@@ -229,7 +237,7 @@ async function updateJob({ jobId, companyId, payload }) {
   return formatJob(updated);
 }
 
-async function updateJobStatus({ jobId, companyId, status }) {
+async function updateJobStatus({ jobId, companyId, status, recruiterUserId }) {
   await expireDueJobs({ company_id: companyId });
   const job = await assertJobBelongsToCompany(jobId, companyId);
 
@@ -241,15 +249,36 @@ async function updateJobStatus({ jobId, companyId, status }) {
     throw ApiError.badRequest('Job expiration is automatic based on the expiration date');
   }
 
-  await job.update({ status });
+  const archiveFields =
+    status === JOB_STATUS.HIDDEN
+      ? {
+          archived_at: job.archived_at || new Date(),
+          archived_by: recruiterUserId || job.archived_by || null,
+        }
+      : {
+          archived_at: null,
+          archived_by: null,
+          deleted_by_recruiter_at: null,
+          deleted_by_recruiter_by: null,
+        };
+
+  await job.update({ status, ...archiveFields });
 
   return formatJob(job);
 }
 
-async function deleteJob({ jobId, companyId }) {
+async function deleteJob({ jobId, companyId, recruiterUserId }) {
   const job = await assertJobBelongsToCompany(jobId, companyId);
-  await job.destroy();
-  return { message: 'Job deleted successfully' };
+  if (![JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED].includes(job.status)) {
+    throw ApiError.badRequest('Archive the job before deleting it from recruiter history');
+  }
+  await job.update({
+    deleted_by_recruiter_at: new Date(),
+    deleted_by_recruiter_by: recruiterUserId,
+    archived_at: job.archived_at || new Date(),
+    archived_by: job.archived_by || recruiterUserId || null,
+  });
+  return { message: 'Job removed from recruiter archives' };
 }
 
 module.exports = {

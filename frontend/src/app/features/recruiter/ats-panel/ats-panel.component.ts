@@ -26,10 +26,17 @@ import { PaginationMeta } from '../../../core/models/pagination.model';
 
 type DrawerTab = 'profile' | 'cv';
 type AtsViewMode = 'kanban' | 'list';
+type PendingStatusChange = {
+  application: Application;
+  targetStatus: ApplicationStatus;
+  selectElement?: HTMLSelectElement;
+};
 
 const PAGE_SIZE = 12;
 const KANBAN_PAGE_SIZE = 50;
 const KANBAN_MAX_ITEMS = 200;
+const NOTES_PAGE_SIZE = 10;
+const ACTIVE_APPLICATION_STATUSES = APPLICATION_STATUSES.filter((status) => status !== 'rejected');
 const VIEW_MODE_STORAGE_KEY = 'recruiter-ats-view-mode';
 const DRAWER_WIDTH_STORAGE_KEY = 'recruiter-ats-drawer-width';
 const DRAWER_MIN_WIDTH_PX = 380;
@@ -66,7 +73,11 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   readonly statusLabels = APPLICATION_STATUS_LABELS;
 
   /** Mêmes étapes / libellés que les colonnes Kanban */
-  readonly stageColumns = APPLICATION_STATUSES.map((status) => ({
+  readonly stageColumns = ACTIVE_APPLICATION_STATUSES.map((status) => ({
+    status,
+    label: APPLICATION_STATUS_LABELS[status],
+  }));
+  readonly statusOptions = APPLICATION_STATUSES.map((status) => ({
     status,
     label: APPLICATION_STATUS_LABELS[status],
   }));
@@ -82,6 +93,8 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   readonly cvPreviewSrc = signal<SafeResourceUrl | null>(null);
   readonly cvPreviewLoading = signal(false);
   readonly cvPreviewError = signal<string | null>(null);
+  readonly pendingStatusChange = signal<PendingStatusChange | null>(null);
+  readonly statusChangeError = signal<string | null>(null);
 
   private drawerResizeCleanup: (() => void) | null = null;
   private cvObjectUrl: string | null = null;
@@ -94,7 +107,9 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   readonly viewMode = signal<AtsViewMode>('kanban');
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
+  readonly notesPage = signal(1);
   readonly pageSize = PAGE_SIZE;
+  readonly notesPageSize = NOTES_PAGE_SIZE;
   readonly kanbanLimitReached = signal(false);
 
   readonly pageSummary = computed(() => {
@@ -117,9 +132,34 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     return this.jobs().find((j) => j.id === id)?.title ?? null;
   });
 
+  readonly paginatedNotes = computed(() => {
+    const notes = this.selectedApplication()?.notes || [];
+    const start = (this.notesPage() - 1) * NOTES_PAGE_SIZE;
+    return notes.slice(start, start + NOTES_PAGE_SIZE);
+  });
+
+  readonly notesTotalPages = computed(() => {
+    const total = this.selectedApplication()?.notes?.length || 0;
+    return Math.max(1, Math.ceil(total / NOTES_PAGE_SIZE));
+  });
+
+  readonly notesRangeLabel = computed(() => {
+    const total = this.selectedApplication()?.notes?.length || 0;
+    if (!total) return 'Aucun élément';
+    const start = (this.notesPage() - 1) * NOTES_PAGE_SIZE + 1;
+    const end = Math.min(this.notesPage() * NOTES_PAGE_SIZE, total);
+    return `${start}–${end} sur ${total}`;
+  });
+
   readonly noteForm = this.fb.nonNullable.group({
     noteText: ['', [Validators.required, Validators.minLength(1)]],
     evaluationText: [''],
+  });
+
+  readonly statusChangeForm = this.fb.nonNullable.group({
+    evaluationText: ['', [Validators.maxLength(5000)]],
+    internalNote: ['', [Validators.maxLength(5000)]],
+    interviewAt: [''],
   });
 
   readonly columns = computed(() => {
@@ -135,7 +175,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       grouped[app.status].push(app);
     }
 
-    return APPLICATION_STATUSES.map((status) => ({
+    return ACTIVE_APPLICATION_STATUSES.map((status) => ({
       status,
       label: APPLICATION_STATUS_LABELS[status],
       items: grouped[status],
@@ -309,7 +349,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     this.router.navigate([this.routes.RECRUITER.ATS], { queryParams: {} });
   }
 
-  async onListStatusChange(app: Application, event: Event): Promise<void> {
+  onListStatusChange(app: Application, event: Event): void {
     const status = (event.target as HTMLSelectElement).value as ApplicationStatus;
     if (!this.context.canDecideApplication() || app.status === status) return;
     if (!this.canMoveToStatus(app.status, status)) {
@@ -318,16 +358,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const ok = await this.confirmDialog.confirm({
-      title: 'Changer l\'étape',
-      message: this.statusChangeMessage(app, status),
-      confirmLabel: 'Confirmer',
-    });
-    if (!ok) {
-      (event.target as HTMLSelectElement).value = app.status;
-      return;
-    }
-    this.updateStatus(app.id, status, app.rating);
+    this.openStatusChangeModal(app, status, event.target as HTMLSelectElement);
   }
 
   candidateInitials(app: Application | ApplicationDetail): string {
@@ -385,7 +416,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       });
   }
 
-  async onDrop(event: DragEvent, status: ApplicationStatus): Promise<void> {
+  onDrop(event: DragEvent, status: ApplicationStatus): void {
     event.preventDefault();
     if (!this.context.canDecideApplication()) return;
 
@@ -399,14 +430,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const ok = await this.confirmDialog.confirm({
-      title: 'Changer l\'étape',
-      message: this.statusChangeMessage(app, status),
-      confirmLabel: 'Confirmer',
-    });
-    if (!ok) return;
-
-    this.updateStatus(applicationId, status, app.rating);
+    this.openStatusChangeModal(app, status);
   }
 
   onDragOver(event: DragEvent): void {
@@ -438,6 +462,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.data) {
           this.selectedApplication.set(res.data);
+          this.notesPage.set(1);
           this.noteForm.patchValue({ noteText: '', evaluationText: '' });
           this.panelOpen.set(true);
           if (this.drawerTab() === 'cv') {
@@ -455,6 +480,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.data) {
           this.selectedApplication.set(res.data);
+          this.notesPage.set(1);
           this.noteForm.patchValue({ noteText: '', evaluationText: '' });
           this.panelOpen.set(true);
           if (this.drawerTab() === 'cv') {
@@ -469,6 +495,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   closePanel(): void {
     this.panelOpen.set(false);
     this.selectedApplication.set(null);
+    this.notesPage.set(1);
     this.drawerTab.set('profile');
     this.coverLetterExpanded.set(false);
     this.stopDrawerResize();
@@ -589,7 +616,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     this.updateStatus(selected.id, selected.status, rating);
   }
 
-  async moveToStatus(status: ApplicationStatus): Promise<void> {
+  moveToStatus(status: ApplicationStatus): void {
     const selected = this.selectedApplication();
     if (!selected || selected.status === status) return;
     if (!this.canMoveToStatus(selected.status, status)) {
@@ -597,18 +624,65 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const ok = await this.confirmDialog.confirm({
-      title: 'Changer l\'étape',
-      message: this.statusChangeMessage(selected, status),
-      confirmLabel: 'Confirmer',
-    });
-    if (!ok) return;
+    this.openStatusChangeModal(selected, status);
+  }
 
-    this.updateStatus(selected.id, status, selected.rating);
+  openStatusChangeModal(
+    application: Application,
+    targetStatus: ApplicationStatus,
+    selectElement?: HTMLSelectElement
+  ): void {
+    this.statusChangeError.set(null);
+    this.statusChangeForm.reset({
+      evaluationText: this.noteForm.controls.evaluationText.value || '',
+      internalNote: '',
+      interviewAt: targetStatus === 'interview' ? this.defaultInterviewDateTimeLocal() : '',
+    });
+    this.pendingStatusChange.set({ application, targetStatus, selectElement });
+  }
+
+  cancelStatusChange(): void {
+    const pending = this.pendingStatusChange();
+    if (pending?.selectElement) {
+      pending.selectElement.value = pending.application.status;
+    }
+    this.pendingStatusChange.set(null);
+    this.statusChangeError.set(null);
+  }
+
+  confirmStatusChange(): void {
+    const pending = this.pendingStatusChange();
+    if (!pending) return;
+
+    const interviewAtLocal = this.statusChangeForm.controls.interviewAt.value;
+    if (pending.targetStatus === 'interview' && !interviewAtLocal) {
+      this.statusChangeError.set('Choisissez la date et l’heure de l’entretien.');
+      return;
+    }
+
+    const interviewAt =
+      pending.targetStatus === 'interview' ? new Date(interviewAtLocal).toISOString() : undefined;
+    const evaluationText = this.statusChangeForm.controls.evaluationText.value.trim() || undefined;
+    const internalNote = this.statusChangeForm.controls.internalNote.value.trim() || undefined;
+
+    this.pendingStatusChange.set(null);
+    this.updateStatus(pending.application.id, pending.targetStatus, pending.application.rating, {
+      evaluationText,
+      internalNote,
+      interviewAt,
+    });
   }
 
   statusChangeMessage(app: Application, newStatus: ApplicationStatus): string {
-    return `${this.candidateName(app)} : « ${this.statusLabels[app.status]} » → « ${this.statusLabels[newStatus]} » ?`;
+    return `${this.candidateName(app)} : « ${this.statusLabels[app.status]} » → « ${this.statusLabels[newStatus]} »`;
+  }
+
+  private defaultInterviewDateTimeLocal(): string {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    date.setMinutes(0, 0, 0);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
   }
 
   canMoveToStatus(currentStatus: ApplicationStatus, targetStatus: ApplicationStatus): boolean {
@@ -616,24 +690,45 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   }
 
   stageColumnsFor(currentStatus: ApplicationStatus): { status: ApplicationStatus; label: string }[] {
-    return this.stageColumns.filter((column) => this.canMoveToStatus(currentStatus, column.status));
+    return this.statusOptions.filter((column) => this.canMoveToStatus(currentStatus, column.status));
   }
 
-  updateStatus(applicationId: string, status: ApplicationStatus, rating: number | null): void {
+  goToNotesPage(page: number): void {
+    const totalPages = this.notesTotalPages();
+    if (page < 1 || page > totalPages) return;
+    this.notesPage.set(page);
+  }
+
+  updateStatus(
+    applicationId: string,
+    status: ApplicationStatus,
+    rating: number | null,
+    options: { evaluationText?: string; internalNote?: string; interviewAt?: string } = {}
+  ): void {
     this.saving.set(true);
     this.errorMessage.set(null);
-    const candidateMessage = this.noteForm.controls.evaluationText.value?.trim() || undefined;
+    const fallbackCandidateMessage = this.noteForm.controls.evaluationText.value?.trim() || undefined;
+    const candidateMessage =
+      options.evaluationText !== undefined
+        ? options.evaluationText.trim() || undefined
+        : fallbackCandidateMessage;
+    const internalNote = options.internalNote?.trim() || undefined;
 
     this.applicationService
       .updateStatus(applicationId, {
         status,
         rating: rating ?? undefined,
         evaluationText: candidateMessage,
+        internalNote,
+        interviewAt: options.interviewAt,
       })
       .subscribe({
         next: (res) => {
+          const archived = status === 'rejected';
           this.successMessage.set(
-            candidateMessage
+            archived
+              ? 'Candidature rejetée et déplacée dans Archives.'
+              : candidateMessage
               ? res.meta?.emailSent
                 ? 'Candidature mise à jour — message envoyé par e-mail au candidat.'
                 : 'Candidature mise à jour — message enregistré, e-mail non envoyé.'
@@ -641,10 +736,18 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
           );
           this.noteForm.controls.evaluationText.reset();
           this.saving.set(false);
+          if (archived) {
+            this.closePanel();
+          }
           this.loadApplications(this.currentPage());
           if (this.selectedApplication()?.id === applicationId) {
             this.applicationService.getById(applicationId).subscribe({
-              next: (res) => res.data && this.selectedApplication.set(res.data),
+              next: (res) => {
+                if (res.data) {
+                  this.selectedApplication.set(res.data);
+                  this.notesPage.set(1);
+                }
+              },
             });
           }
         },
@@ -678,7 +781,12 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
           this.noteForm.controls.noteText.reset();
           this.saving.set(false);
           this.applicationService.getById(selected.id).subscribe({
-            next: (res) => res.data && this.selectedApplication.set(res.data),
+            next: (res) => {
+              if (res.data) {
+                this.selectedApplication.set(res.data);
+                this.notesPage.set(1);
+              }
+            },
           });
         },
         error: (err: HttpErrorResponse) => {

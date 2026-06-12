@@ -17,6 +17,7 @@ export interface RecruiterAnalyticsSummary {
 
 export interface RecruiterJobListParams {
   status?: JobStatus;
+  archived?: boolean;
   page?: number;
   limit?: number;
 }
@@ -32,6 +33,7 @@ export class RecruiterJobService {
   list(params?: RecruiterJobListParams): Observable<RecruiterJobListResponse> {
     const query: Record<string, string | number> = {};
     if (params?.status) query['status'] = params.status;
+    if (params?.archived !== undefined) query['archived'] = String(params.archived);
     if (params?.page) query['page'] = params.page;
     if (params?.limit) query['limit'] = params.limit;
     return this.http.get<RecruiterJobListResponse>(this.apiUrl, { params: query });

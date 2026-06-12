@@ -28,6 +28,7 @@ const listApplicationsQuerySchema = z.object({
   status: z
     .enum(['applied', 'screening', 'interview', 'offer', 'rejected'])
     .optional(),
+  archived: z.enum(['true', 'false']).optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(50).optional(),
 });
@@ -52,6 +53,20 @@ router.patch(
   checkPermission(RECRUITER_PERMISSIONS.CAN_DECIDE_APPLICATION),
   validateBody(updateApplicationStatusSchema),
   applicationController.updateApplicationStatus
+);
+
+router.patch(
+  '/:id/restore',
+  validateParams(applicationIdParamSchema),
+  checkPermission(RECRUITER_PERMISSIONS.CAN_DECIDE_APPLICATION),
+  applicationController.restoreApplication
+);
+
+router.delete(
+  '/:id/archive',
+  validateParams(applicationIdParamSchema),
+  checkPermission(RECRUITER_PERMISSIONS.CAN_DECIDE_APPLICATION),
+  applicationController.deleteArchivedApplication
 );
 
 router.post(

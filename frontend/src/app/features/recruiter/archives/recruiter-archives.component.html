@@ -1,0 +1,160 @@
+<div class="archives-page">
+  <header class="archives-hero">
+    <div>
+      <p class="archives-kicker">Historique recruteur</p>
+      <h1>Archives</h1>
+      <p>
+        Les candidatures rejetées sont archivées automatiquement. Les offres expirées ou masquées
+        restent ici pour garder l’historique sans encombrer l’ATS.
+      </p>
+    </div>
+  </header>
+
+  @if (message()) {
+    <div class="alert alert-success">{{ message() }}</div>
+  }
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <section class="archive-summary-grid" aria-label="Résumé archives">
+    <article>
+      <span>Candidatures</span>
+      <strong>{{ summary().applications }}</strong>
+      <small>rejetées archivées</small>
+    </article>
+    <article>
+      <span>Offres archivées</span>
+      <strong>{{ summary().jobs }}</strong>
+      <small>expirées ou masquées</small>
+    </article>
+    <article>
+      <span>Expirées</span>
+      <strong>{{ summary().expiredJobs }}</strong>
+      <small>fin de publication</small>
+    </article>
+    <article>
+      <span>Masquées</span>
+      <strong>{{ summary().hiddenJobs }}</strong>
+      <small>retirées manuellement</small>
+    </article>
+  </section>
+
+  <nav class="archive-tabs" aria-label="Type d’archives">
+    <button
+      type="button"
+      class="archive-tab"
+      [class.archive-tab-active]="activeTab() === 'applications'"
+      (click)="setTab('applications')"
+    >
+      Candidatures rejetées
+    </button>
+    <button
+      type="button"
+      class="archive-tab"
+      [class.archive-tab-active]="activeTab() === 'jobs'"
+      (click)="setTab('jobs')"
+    >
+      Offres expirées / masquées
+    </button>
+  </nav>
+
+  @if (loading()) {
+    <p class="table-loading panel-card">Chargement des archives...</p>
+  } @else if (activeTab() === 'applications') {
+    <section class="archive-list">
+      @for (application of applications(); track application.id) {
+        <article class="archive-card">
+          <div class="archive-card-main">
+            <span class="archive-type">Candidature</span>
+            <h2>{{ candidateName(application) }}</h2>
+            <p>{{ application.job?.title || 'Offre' }}</p>
+            <div class="archive-meta">
+              <span class="archive-badge archive-badge-rejected">
+                {{ applicationStatusLabels[application.status] }}
+              </span>
+              <span>Postulée le {{ application.createdAt | date: 'dd/MM/yyyy' }}</span>
+              <span>Archivée le {{ application.archivedAt ? (application.archivedAt | date: 'dd/MM/yyyy') : '—' }}</span>
+            </div>
+          </div>
+          <div class="archive-actions">
+            <a
+              [routerLink]="routes.RECRUITER.ATS"
+              [queryParams]="{ jobId: application.jobId, applicationId: application.id }"
+              class="archive-action archive-action-view"
+            >
+              Voir détail
+            </a>
+            <button
+              type="button"
+              class="archive-action archive-action-restore"
+              [disabled]="actionLoading() === application.id"
+              (click)="restoreApplication(application)"
+            >
+              Restaurer
+            </button>
+            <button
+              type="button"
+              class="archive-action archive-action-delete"
+              [disabled]="actionLoading() === application.id"
+              (click)="deleteApplication(application)"
+            >
+              Supprimer
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <div class="archives-empty panel-card">
+          <strong>Aucune candidature rejetée archivée.</strong>
+          <p>Quand un recruteur rejette une candidature, elle apparaîtra ici automatiquement.</p>
+        </div>
+      }
+    </section>
+  } @else {
+    <section class="archive-list">
+      @for (job of jobs(); track job.id) {
+        <article class="archive-card">
+          <div class="archive-card-main">
+            <span class="archive-type">Offre</span>
+            <h2>{{ job.title }}</h2>
+            <p>{{ job.contractType }} · {{ job.location || 'Lieu flexible' }}</p>
+            <div class="archive-meta">
+              <span class="archive-badge">{{ jobStatusLabels[job.status] }}</span>
+              <span>Créée le {{ job.createdAt | date: 'dd/MM/yyyy' }}</span>
+              <span>Expire le {{ job.expiresAt | date: 'dd/MM/yyyy' }}</span>
+              <span>{{ job.applicationsCount }} candidature(s)</span>
+            </div>
+          </div>
+          <div class="archive-actions">
+            <a [routerLink]="['/recruiter/jobs', job.id]" class="archive-action archive-action-view">
+              Voir détail
+            </a>
+            @if (job.status !== 'expired') {
+              <button
+                type="button"
+                class="archive-action archive-action-restore"
+                [disabled]="actionLoading() === job.id"
+                (click)="restoreJob(job)"
+              >
+                Restaurer
+              </button>
+            }
+            <button
+              type="button"
+              class="archive-action archive-action-delete"
+              [disabled]="actionLoading() === job.id"
+              (click)="deleteJob(job)"
+            >
+              Supprimer
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <div class="archives-empty panel-card">
+          <strong>Aucune offre archivée.</strong>
+          <p>Les offres expirées ou masquées seront affichées ici.</p>
+        </div>
+      }
+    </section>
+  }
+</div>

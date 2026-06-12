@@ -18,6 +18,14 @@ const STATUS_LABELS = {
   rejected: 'Mise à jour de candidature',
 };
 
+const STATUS_DISPLAY = {
+  applied: 'Candidature envoyée',
+  screening: 'Présélection',
+  interview: 'Entretien',
+  offer: 'Offre',
+  rejected: 'Refusée',
+};
+
 const DEFAULT_NOTIFICATION_PREFERENCES = {
   emailEnabled: true,
   inAppEnabled: true,
@@ -129,6 +137,7 @@ async function notifyApplicationStatusChange({
   previousStatus,
   newStatus,
   evaluationText,
+  interviewAt,
   recruiterUser,
 }) {
   const job = await Job.findByPk(application.job_id, {
@@ -142,8 +151,12 @@ async function notifyApplicationStatusChange({
   const title = `${statusLabel} — ${jobTitle}`;
 
   let messageText = `Votre candidature pour « ${jobTitle} » chez ${companyName} a été mise à jour.\n\n`;
-  messageText += `Ancien statut : ${previousStatus}\n`;
-  messageText += `Nouveau statut : ${newStatus}\n`;
+  messageText += `Ancien statut : ${STATUS_DISPLAY[previousStatus] || previousStatus}\n`;
+  messageText += `Nouveau statut : ${STATUS_DISPLAY[newStatus] || newStatus}\n`;
+
+  if (newStatus === 'interview' && interviewAt) {
+    messageText += `\nEntretien prévu : ${new Date(interviewAt).toLocaleString('fr-FR')}\n`;
+  }
 
   if (evaluationText) {
     messageText += `\nÉvaluation du recruteur :\n${evaluationText}\n`;

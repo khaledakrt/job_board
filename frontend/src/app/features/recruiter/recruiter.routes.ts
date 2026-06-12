@@ -63,6 +63,14 @@ export const RECRUITER_ROUTES: Routes = [
           import('./ats-panel/ats-panel.component').then((m) => m.AtsPanelComponent),
       },
       {
+        path: 'archives',
+        canActivate: [recruiterWorkspaceGuard, applicationPermissionGuard],
+        loadComponent: () =>
+          import('./archives/recruiter-archives.component').then(
+            (m) => m.RecruiterArchivesComponent
+          ),
+      },
+      {
         path: 'settings',
         canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>

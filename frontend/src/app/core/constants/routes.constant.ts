@@ -60,6 +60,7 @@ export const APP_ROUTES = {
     JOBS: '/recruiter/jobs',
     JOBS_NEW: '/recruiter/jobs/new',
     ATS: '/recruiter/ats',
+    ARCHIVES: '/recruiter/archives',
     SETTINGS: '/recruiter/settings',
   },
   ADMIN: {

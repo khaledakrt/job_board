@@ -252,6 +252,19 @@
   font-size: 0.76rem;
 }
 
+.interview-date-chip {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 0.35rem;
+  padding: 0.22rem 0.48rem;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .saved-card {
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;

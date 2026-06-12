@@ -40,7 +40,9 @@ export class JobsListComponent implements OnInit {
   readonly error = signal<string | null>(null);
 
   readonly statusLabels = JOB_STATUS_LABELS;
-  readonly statusOptions = JOB_STATUSES;
+  readonly statusOptions = JOB_STATUSES.filter(
+    (status) => status !== 'hidden' && status !== 'expired'
+  ) as JobStatus[];
   readonly routes = APP_ROUTES;
   readonly pageSize = PAGE_SIZE;
 
@@ -94,28 +96,6 @@ export class JobsListComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async deleteJob(job: Job): Promise<void> {
-    const ok = await this.confirmDialog.confirm({
-      title: 'Supprimer l\'offre',
-      message: `Supprimer définitivement « ${job.title} » ?`,
-      confirmLabel: 'Supprimer',
-      confirmDanger: true,
-    });
-    if (!ok) return;
-
-    this.jobService.delete(job.id).subscribe({
-      next: () => {
-        this.message.set('Offre supprimée.');
-        const page = this.currentPage();
-        const p = this.pagination();
-        const nextPage =
-          p && this.jobs().length === 1 && page > 1 ? page - 1 : page;
-        this.loadJobs(nextPage);
-      },
-      error: () => this.error.set('Suppression impossible.'),
-    });
-  }
-
   async setStatus(job: Job, status: JobStatus): Promise<void> {
     if (job.status === status) return;
 
@@ -129,7 +109,11 @@ export class JobsListComponent implements OnInit {
     this.statusUpdating.set(job.id);
     this.jobService.updateStatus(job.id, status).subscribe({
       next: () => {
-        this.message.set(`Statut mis à jour : ${JOB_STATUS_LABELS[status]}.`);
+        this.message.set(
+          status === 'hidden'
+            ? 'Offre masquée et déplacée dans Archives.'
+            : `Statut mis à jour : ${JOB_STATUS_LABELS[status]}.`
+        );
         this.statusUpdating.set(null);
         this.loadJobs(this.currentPage());
       },

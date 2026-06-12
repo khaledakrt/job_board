@@ -1,6 +1,6 @@
 'use strict';
 
-const { Application, Job, Company, CandidateProfile } = require('../models');
+const { Application, Job, Company, CandidateProfile, ApplicationNote } = require('../models');
 const sequelize = require('../database/sequelize');
 const ApiError = require('../utils/ApiError');
 const { JOB_STATUS, APPLICATION_STATUS } = require('../config/constants');
@@ -242,6 +242,14 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
         ],
         include: [{ model: Company, as: 'company' }],
       },
+      {
+        model: ApplicationNote,
+        as: 'notes',
+        where: { visible_to_candidate: true },
+        required: false,
+        separate: true,
+        order: [['created_at', 'DESC']],
+      },
     ],
   });
 
@@ -259,7 +267,12 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
     ...formatted,
     quizAnswers: application.quiz_answers ?? null,
     quizReview,
-    notes: [],
+    notes: (application.notes || []).map((note) => ({
+      id: note.id,
+      authorId: note.author_id,
+      noteText: note.note_text,
+      createdAt: note.created_at,
+    })),
   };
 }
 

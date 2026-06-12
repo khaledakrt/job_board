@@ -10,6 +10,7 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
     status: req.validatedBody.status,
     rating: req.validatedBody.rating,
     evaluationText: req.validatedBody.evaluationText,
+    internalNote: req.validatedBody.internalNote,
     interviewAt: req.validatedBody.interviewAt,
     recruiterUser: { id: req.user.id, email: req.user.email },
   });
@@ -53,6 +54,7 @@ const listApplications = asyncHandler(async (req, res) => {
   const result = await applicationService.listCompanyApplications(req.companyId, {
     jobId: req.validatedQuery.jobId,
     status: req.validatedQuery.status,
+    archived: req.validatedQuery.archived,
     page: req.validatedQuery.page,
     limit: req.validatedQuery.limit,
   });
@@ -61,6 +63,32 @@ const listApplications = asyncHandler(async (req, res) => {
     success: true,
     data: result.items,
     pagination: result.pagination,
+  });
+});
+
+const restoreApplication = asyncHandler(async (req, res) => {
+  const application = await applicationService.restoreApplication({
+    applicationId: req.validatedParams.id,
+    companyId: req.companyId,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Application restored successfully',
+    data: application,
+  });
+});
+
+const deleteArchivedApplication = asyncHandler(async (req, res) => {
+  const result = await applicationService.deleteArchivedApplication({
+    applicationId: req.validatedParams.id,
+    companyId: req.companyId,
+    recruiterUserId: req.user.id,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: result.message,
   });
 });
 
@@ -80,5 +108,7 @@ module.exports = {
   listApplications,
   getApplication,
   updateApplicationStatus,
+  restoreApplication,
+  deleteArchivedApplication,
   addApplicationNote,
 };

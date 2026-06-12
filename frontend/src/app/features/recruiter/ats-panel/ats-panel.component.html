@@ -30,23 +30,6 @@
       </button>
     </div>
 
-    <div class="filter-wrap">
-      <label class="form-label" for="jobFilter">Filtrer par offre</label>
-      <select
-        id="jobFilter"
-        class="form-input filter-select"
-        [value]="selectedJobId()"
-        (change)="onJobFilterChange($event)"
-      >
-        <option value="">Toutes les offres</option>
-        @for (job of jobs(); track job.id) {
-          <option [value]="job.id">{{ job.title }}</option>
-        }
-      </select>
-    </div>
-    @if (selectedJobId()) {
-      <button type="button" class="btn-secondary !w-auto px-3" (click)="clearJobFilter()">Tout afficher</button>
-    }
     <a [routerLink]="routes.RECRUITER.JOBS" class="btn-secondary !w-auto px-3">← Offres</a>
   </div>
 </div>
@@ -59,9 +42,35 @@
 }
 
 @if (pagination(); as p) {
-  @if (p.totalItems > 0) {
-    <p class="ats-summary panel-card">{{ pageSummary() }}</p>
-  }
+  <div class="ats-summary panel-card">
+    <p>
+      @if (p.totalItems > 0) {
+        {{ pageSummary() }}
+      } @else {
+        Aucune candidature
+      }
+    </p>
+
+    <div class="summary-filter">
+      <label class="form-label" for="jobFilter">Filtrer par offre</label>
+      <div class="summary-filter-actions">
+        <select
+          id="jobFilter"
+          class="form-input filter-select"
+          [value]="selectedJobId()"
+          (change)="onJobFilterChange($event)"
+        >
+          <option value="">Toutes les offres</option>
+          @for (job of jobs(); track job.id) {
+            <option [value]="job.id">{{ job.title }}</option>
+          }
+        </select>
+        @if (selectedJobId()) {
+          <button type="button" class="btn-secondary !w-auto px-3" (click)="clearJobFilter()">Tout afficher</button>
+        }
+      </div>
+    </div>
+  </div>
 }
 @if (kanbanLimitReached()) {
   <div class="alert alert-info">
@@ -543,18 +552,115 @@
       </form>
 
       <section class="drawer-card">
-        <h3 class="drawer-card-title">Historique des notes</h3>
+        <div class="drawer-card-title-row">
+          <h3 class="drawer-card-title">Historique recruteur</h3>
+          @if (selected.notes.length) {
+            <span class="notes-count">{{ notesRangeLabel() }}</span>
+          }
+        </div>
         <div class="notes-list">
-          @for (note of selected.notes; track note.id) {
+          @for (note of paginatedNotes(); track note.id) {
             <article class="note-item">
               <p>{{ note.noteText }}</p>
               <time>{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
             </article>
           } @empty {
-            <p class="drawer-empty">Aucune note pour le moment.</p>
+            <p class="drawer-empty">Aucune note ou message envoyé pour le moment.</p>
           }
         </div>
+        @if (selected.notes.length > notesPageSize) {
+          <nav class="notes-pagination" aria-label="Pagination historique recruteur">
+            <button
+              type="button"
+              class="notes-page-btn"
+              [disabled]="notesPage() === 1"
+              (click)="goToNotesPage(notesPage() - 1)"
+            >
+              Précédent
+            </button>
+            <span>Page {{ notesPage() }} / {{ notesTotalPages() }}</span>
+            <button
+              type="button"
+              class="notes-page-btn"
+              [disabled]="notesPage() === notesTotalPages()"
+              (click)="goToNotesPage(notesPage() + 1)"
+            >
+              Suivant
+            </button>
+          </nav>
+        }
       </section>
     </div>
   </aside>
+}
+
+@if (pendingStatusChange(); as pending) {
+  <div class="status-modal-backdrop" (click)="cancelStatusChange()"></div>
+  <section
+    class="status-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="status-modal-title"
+  >
+    <header class="status-modal-head">
+      <span class="status-modal-kicker">Suivi candidature</span>
+      <h2 id="status-modal-title">Changer l’étape</h2>
+      <p>
+        {{ statusChangeMessage(pending.application, pending.targetStatus) }}
+      </p>
+    </header>
+
+    <form [formGroup]="statusChangeForm" (ngSubmit)="confirmStatusChange()" class="status-modal-body">
+      @if (pending.targetStatus === 'interview') {
+        <div class="status-modal-field">
+          <label class="form-label" for="statusInterviewAt">Date et heure de l’entretien</label>
+          <input
+            id="statusInterviewAt"
+            type="datetime-local"
+            class="form-input"
+            formControlName="interviewAt"
+            required
+          />
+          <p class="field-hint">Cette date sera enregistrée sur la candidature et ajoutée dans la note interne.</p>
+        </div>
+      }
+
+      <div class="status-modal-field status-modal-field-candidate">
+        <label class="form-label" for="statusCandidateMessage">Message au candidat</label>
+        <textarea
+          id="statusCandidateMessage"
+          class="form-input status-modal-textarea"
+          rows="3"
+          formControlName="evaluationText"
+          placeholder="Ex: Bonjour, votre profil avance à l’étape suivante. Voici les prochaines informations…"
+        ></textarea>
+        <p class="field-hint">Ce message sera visible côté candidat et envoyé par notification/e-mail.</p>
+      </div>
+
+      <div class="status-modal-field">
+        <label class="form-label" for="statusInternalNote">Note interne recruteur</label>
+        <textarea
+          id="statusInternalNote"
+          class="form-input status-modal-textarea"
+          rows="4"
+          formControlName="internalNote"
+          placeholder="Ex: Bon profil, à rappeler après l’entretien technique…"
+        ></textarea>
+        <p class="field-hint">Cette note restera visible dans l’historique recruteur du profil candidat.</p>
+      </div>
+
+      @if (statusChangeError()) {
+        <p class="alert alert-error">{{ statusChangeError() }}</p>
+      }
+
+      <footer class="status-modal-actions">
+        <button type="button" class="btn-secondary !w-auto px-4" (click)="cancelStatusChange()">
+          Annuler
+        </button>
+        <button type="submit" class="btn-primary !w-auto px-5" [disabled]="saving()">
+          @if (saving()) { Enregistrement… } @else { Confirmer }
+        </button>
+      </footer>
+    </form>
+  </section>
 }

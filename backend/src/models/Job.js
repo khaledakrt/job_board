@@ -91,6 +91,22 @@ Job.init(
       allowNull: false,
       defaultValue: 0,
     },
+    archived_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    archived_by: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
+    deleted_by_recruiter_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    deleted_by_recruiter_by: {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+    },
     quiz_enabled: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

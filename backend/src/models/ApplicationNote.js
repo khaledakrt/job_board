@@ -24,6 +24,11 @@ ApplicationNote.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    visible_to_candidate: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

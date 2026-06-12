@@ -158,6 +158,7 @@ const listJobsQuerySchema = z.object({
   status: z
     .enum([JOB_STATUS.DRAFT, JOB_STATUS.ACTIVE, JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED])
     .optional(),
+  archived: z.enum(['true', 'false']).optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(MAX_LIMIT).optional(),
 });

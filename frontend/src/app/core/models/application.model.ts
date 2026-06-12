@@ -54,6 +54,9 @@ export interface Application {
   resumeSnapshotUrl: string | null;
   rating: number | null;
   interviewAt: string | null;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
+  deletedByRecruiterAt?: string | null;
   createdAt: string;
   updatedAt: string;
   job?: ApplicationJob;
@@ -97,4 +100,6 @@ export interface UpdateApplicationStatusPayload {
   status: ApplicationStatus;
   rating?: number | null;
   evaluationText?: string | null;
+  internalNote?: string | null;
+  interviewAt?: string | null;
 }

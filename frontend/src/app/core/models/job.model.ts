@@ -20,6 +20,9 @@ export interface Job {
   expiresAt: string;
   viewsCount: number;
   applicationsCount: number;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
+  deletedByRecruiterAt?: string | null;
   quizEnabled?: boolean;
   quiz?: JobQuiz | PublicJobQuiz | null;
   createdAt: string;

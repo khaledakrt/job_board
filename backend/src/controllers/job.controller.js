@@ -55,6 +55,7 @@ const updateJobStatus = asyncHandler(async (req, res) => {
     jobId: req.validatedParams.id,
     companyId: req.companyId,
     status: req.validatedBody.status,
+    recruiterUserId: req.user.id,
   });
 
   res.status(200).json({
@@ -78,6 +79,7 @@ const deleteJob = asyncHandler(async (req, res) => {
   const result = await jobService.deleteJob({
     jobId: req.validatedParams.id,
     companyId: req.companyId,
+    recruiterUserId: req.user.id,
   });
 
   res.status(200).json({

@@ -14,6 +14,7 @@ import { ApplicationStatus } from '../../../core/constants/application-status.co
 export interface ApplicationListParams {
   jobId?: string;
   status?: ApplicationStatus;
+  archived?: boolean;
   page?: number;
   limit?: number;
 }
@@ -37,6 +38,7 @@ export class RecruiterApplicationService {
     const query: Record<string, string | number> = {};
     if (params?.jobId) query['jobId'] = params.jobId;
     if (params?.status) query['status'] = params.status;
+    if (params?.archived !== undefined) query['archived'] = String(params.archived);
     if (params?.page) query['page'] = params.page;
     if (params?.limit) query['limit'] = params.limit;
     return this.http.get<ApplicationListResponse>(this.apiUrl, { params: query });
@@ -55,6 +57,14 @@ export class RecruiterApplicationService {
 
   addNote(id: string, noteText: string): Observable<ApiResponse<{ id: string }>> {
     return this.http.post<ApiResponse<{ id: string }>>(`${this.apiUrl}/${id}/notes`, { noteText });
+  }
+
+  restore(id: string): Observable<ApiResponse<Application>> {
+    return this.http.patch<ApiResponse<Application>>(`${this.apiUrl}/${id}/restore`, {});
+  }
+
+  deleteFromArchive(id: string): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/${id}/archive`);
   }
 }
 
