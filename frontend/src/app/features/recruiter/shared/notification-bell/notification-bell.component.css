@@ -1,5 +1,6 @@
 .notif-bell {
   position: relative;
+  z-index: 600;
 }
 
 .bell-btn {
@@ -50,7 +51,7 @@
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  z-index: 50;
+  z-index: 1000;
   width: min(24rem, calc(100vw - 2rem));
   max-height: 28rem;
   display: flex;
