@@ -639,6 +639,63 @@ a.catalog-card--link:hover .catalog-card-cta {
   min-width: 0;
 }
 
+.catalog-detail-panel.catalog-detail-panel--cover {
+  overflow: hidden;
+  padding: 0;
+}
+
+.catalog-profile-cover {
+  min-height: clamp(13rem, 25vw, 19rem);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.catalog-profile-cover--training {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 56%, rgba(255, 255, 255, 0.84) 100%),
+    url('/training-cover-public-v3.png') center center / cover no-repeat;
+}
+
+.catalog-profile-cover--institution {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 56%, rgba(255, 255, 255, 0.84) 100%),
+    url('/institution-cover-public-v3.png') center center / cover no-repeat;
+}
+
+.catalog-detail-panel--cover .catalog-detail-head {
+  position: relative;
+  width: calc(100% - 3.5rem);
+  margin: -3.4rem auto 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+}
+
+.catalog-detail-panel--cover > :not(.catalog-profile-cover):not(.catalog-detail-head) {
+  margin-inline: 1.75rem;
+}
+
+.catalog-detail-panel--cover > :last-child {
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 640px) {
+  .catalog-profile-cover {
+    min-height: 10.5rem;
+    background-position: center top;
+  }
+
+  .catalog-detail-panel--cover .catalog-detail-head {
+    width: calc(100% - 1.5rem);
+    margin-top: -2.2rem;
+  }
+
+  .catalog-detail-panel--cover > :not(.catalog-profile-cover):not(.catalog-detail-head) {
+    margin-inline: 1rem;
+  }
+}
+
 .catalog-detail-block {
   margin-top: 1.5rem;
   padding-top: 1.5rem;

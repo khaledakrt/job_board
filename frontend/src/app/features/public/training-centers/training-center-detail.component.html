@@ -26,7 +26,8 @@
         </div>
       } @else if (center()) {
         <div class="catalog-detail-layout">
-          <div class="catalog-detail-panel">
+          <div class="catalog-detail-panel catalog-detail-panel--cover">
+            <div class="catalog-profile-cover catalog-profile-cover--training" aria-hidden="true"></div>
             <div class="catalog-detail-head">
               @if (mediaUrl(center()!.logoUrl); as logo) {
                 <img [src]="logo" alt="" class="catalog-card-logo" />

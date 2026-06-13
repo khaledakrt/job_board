@@ -244,37 +244,93 @@
 .directory-detail-company {
   width: 100%;
   padding: 1.15rem;
+  overflow: hidden;
+}
+
+.company-cover {
+  min-height: clamp(8rem, 18vw, 13.5rem);
+  margin: 0.85rem 0 0;
+  border: 1px solid #dbe4ee;
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, 0.9) 100%),
+    #fffaf3 url('/company-cover-candidate.png') center 32% / cover no-repeat;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
 }
 
 .directory-detail-training {
   width: 100%;
   padding: 1.15rem;
+  overflow: hidden;
 }
 
 .directory-detail-institution {
   width: 100%;
   padding: 1.15rem;
+  overflow: hidden;
+}
+
+.training-cover,
+.institution-cover {
+  min-height: clamp(8rem, 18vw, 13.5rem);
+  margin: 0.85rem 0 0;
+  border: 1px solid #dbe4ee;
+  border-radius: 1rem;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+}
+
+.training-cover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 72%, rgba(255, 255, 255, 0.24) 100%),
+    #fffaf3 url('/training-cover-candidate-v3.png') center center / cover no-repeat;
+}
+
+.institution-cover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 72%, rgba(255, 255, 255, 0.24) 100%),
+    #fffaf3 url('/institution-cover-candidate-v3.png') center center / cover no-repeat;
 }
 
 .company-profile-header {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
   gap: 1rem;
   align-items: start;
+  margin-top: -2.5rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
 }
 
 .training-profile-header {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
   gap: 1rem;
   align-items: start;
+  margin-top: -2.5rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
 }
 
 .institution-profile-header {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
   gap: 1rem;
   align-items: start;
+  margin-top: -2.5rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
 }
 
 .institution-main-info {
@@ -1198,6 +1254,16 @@
   padding: 0.35rem;
 }
 
+.directory-detail-company .company-profile-header {
+  padding: 1rem;
+}
+
+.directory-detail-training .training-profile-header,
+.directory-detail-institution .institution-profile-header {
+  margin-top: 0.75rem;
+  padding: 1rem;
+}
+
 .company-side-info {
   border-color: #dbeafe;
   border-radius: 1rem;
@@ -1541,6 +1607,28 @@
 @media (max-width: 640px) {
   .directory-filters {
     grid-template-columns: 1fr;
+  }
+
+  .company-cover {
+    min-height: 8rem;
+    background-position: center top;
+  }
+
+  .training-cover,
+  .institution-cover {
+    min-height: 8rem;
+    background-position: center center;
+  }
+
+  .directory-detail-company .company-profile-header {
+    margin-top: -1.5rem;
+    padding: 0.85rem;
+  }
+
+  .directory-detail-training .training-profile-header,
+  .directory-detail-institution .institution-profile-header {
+    margin-top: 0.75rem;
+    padding: 0.85rem;
   }
 }
 

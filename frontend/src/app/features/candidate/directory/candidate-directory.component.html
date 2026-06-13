@@ -82,6 +82,7 @@
     @if (selectedCompany(); as company) {
       <section class="directory-detail directory-detail-company panel-card">
         <button type="button" class="back-link" (click)="backToDirectory()">← Retour à l’annuaire</button>
+        <div class="company-cover" aria-hidden="true"></div>
         <div class="company-profile-header">
           <div class="company-main-info">
             @if (logoUrl(company.logoUrl); as logo) {
@@ -154,6 +155,7 @@
       <section class="directory-detail directory-detail-training panel-card">
         <button type="button" class="back-link" (click)="backToDirectory()">← Retour à l’annuaire</button>
 
+        <div class="training-cover" aria-hidden="true"></div>
         <div class="training-profile-header">
           <div class="training-main-info">
             @if (logoUrl(center.logoUrl); as logo) {
@@ -228,6 +230,7 @@
       <section class="directory-detail directory-detail-institution panel-card">
         <button type="button" class="back-link" (click)="backToDirectory()">← Retour à l’annuaire</button>
 
+        <div class="institution-cover" aria-hidden="true"></div>
         <div class="institution-profile-header">
           <div class="institution-main-info">
             @if (logoUrl(institution.logoUrl); as logo) {
