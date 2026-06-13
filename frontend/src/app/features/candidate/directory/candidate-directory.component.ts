@@ -691,7 +691,13 @@ export class CandidateDirectoryComponent implements OnInit {
 
   textPreview(value: string | null | undefined, max = 180): string {
     if (!value) return '';
-    const text = value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const decoded = value
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&amp;/gi, '&')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/g, "'");
+    const text = decoded.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     return text.length > max ? `${text.slice(0, max).trim()}...` : text;
   }
 

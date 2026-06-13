@@ -344,7 +344,9 @@
               <p>{{ center.trainingDomain || 'Domaine non précisé' }}</p>
               <span>{{ center.city || 'Ville non précisée' }} · {{ deliveryLabel(center.deliveryMode) || 'Mode non précisé' }}</span>
               @if (center.shortDescription) {
-                <p class="directory-description">{{ center.shortDescription }}</p>
+                <p class="directory-description">
+                  {{ textPreview(center.shortDescription, 180) }}
+                </p>
               }
               <small>{{ center.publishedOfferingsCount ?? center.courseCount }} publication(s)</small>
             </div>
@@ -372,7 +374,9 @@
               <p>{{ institutionLabel(institution.institutionType) }}</p>
               <span>{{ institution.city || 'Ville non précisée' }}</span>
               @if (institution.shortDescription) {
-                <p class="directory-description">{{ institution.shortDescription }}</p>
+                <p class="directory-description">
+                  {{ textPreview(institution.shortDescription, 180) }}
+                </p>
               }
             </div>
           </article>
