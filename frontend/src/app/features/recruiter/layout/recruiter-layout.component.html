@@ -108,12 +108,18 @@
             </div>
             @if (context.publicationAccess(); as access) {
               @if (access.canPublish) {
-                <div class="topbar-publish-status topbar-publish-status--ok">
-                  Publication autorisée
+                <div
+                  class="topbar-publish-status topbar-publish-status--ok"
+                  [title]="publicationStatusTitle(access)"
+                >
+                  {{ publicationStatusLabel(access) }}
                 </div>
               } @else {
-                <div class="topbar-publish-status topbar-publish-status--blocked">
-                  Paiement requis
+                <div
+                  class="topbar-publish-status topbar-publish-status--blocked"
+                  [title]="publicationStatusTitle(access)"
+                >
+                  {{ publicationStatusLabel(access) }}
                 </div>
               }
             }

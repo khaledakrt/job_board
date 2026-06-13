@@ -1,9 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { RecruiterNotificationBellComponent } from '../shared/notification-bell/notification-bell.component';
+import type { RecruiterProfile } from '../../../core/models/recruiter.model';
+
+type PublicationAccess = NonNullable<RecruiterProfile['publicationAccess']>;
 
 @Component({
   selector: 'app-recruiter-layout',
@@ -12,18 +15,38 @@ import { RecruiterNotificationBellComponent } from '../shared/notification-bell/
   templateUrl: './recruiter-layout.component.html',
   styleUrl: './recruiter-layout.component.css',
 })
-export class RecruiterLayoutComponent implements OnInit {
+export class RecruiterLayoutComponent implements OnInit, OnDestroy {
   readonly authService = inject(AuthService);
   readonly context = inject(RecruiterContextService);
   readonly routes = APP_ROUTES;
   private readonly router = inject(Router);
+  private refreshIntervalId: ReturnType<typeof window.setInterval> | null = null;
+  private readonly handleWindowFocus = () => this.refreshContext(false);
 
   ngOnInit(): void {
-    if (this.context.profile() || this.context.checked()) return;
+    this.refreshContext(true);
 
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', this.handleWindowFocus);
+      this.refreshIntervalId = window.setInterval(() => this.refreshContext(false), 60000);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (typeof window === 'undefined') return;
+
+    window.removeEventListener('focus', this.handleWindowFocus);
+    if (this.refreshIntervalId) {
+      window.clearInterval(this.refreshIntervalId);
+      this.refreshIntervalId = null;
+    }
+  }
+
+  private refreshContext(redirectIfMissing: boolean): void {
+    if (this.context.loading()) return;
     this.context.loadContext().subscribe({
       next: (response) => {
-        if (!response.data && !this.isOnboardingRoute()) {
+        if (redirectIfMissing && !response.data && !this.isOnboardingRoute()) {
           this.authService.logout(false);
           void this.router.navigate([APP_ROUTES.HOME]);
         }
@@ -34,6 +57,22 @@ export class RecruiterLayoutComponent implements OnInit {
 
   isOnboardingRoute(): boolean {
     return this.router.url.startsWith(APP_ROUTES.RECRUITER.ONBOARDING);
+  }
+
+  publicationStatusLabel(access: PublicationAccess): string {
+    if (!access.canPublish) return 'Paiement requis';
+    if (access.reason === 'free_global') return 'Gratuit global';
+    return 'Abonnement actif';
+  }
+
+  publicationStatusTitle(access: PublicationAccess): string {
+    if (access.reason === 'free_global') {
+      return 'Mode admin gratuit global: toutes les entreprises peuvent publier.';
+    }
+    if (access.reason === 'company_subscription_active') {
+      return 'Cette entreprise a un abonnement ou accès gratuit actif.';
+    }
+    return 'Paiement obligatoire: cette entreprise doit avoir un abonnement actif pour publier.';
   }
 
   logout(): void {
