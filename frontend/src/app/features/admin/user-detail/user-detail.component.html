@@ -111,7 +111,7 @@
         <form [formGroup]="editForm" (ngSubmit)="saveProfile()" class="admin-form-grid">
           <div class="admin-field field-full">
             <label for="email">E-mail</label>
-            <input id="email" type="email" formControlName="email" class="form-input" />
+            <input id="email" name="email" type="email" autocomplete="email" formControlName="email" class="form-input" />
           </div>
           <div class="admin-field">
             <label for="role">Rôle</label>
@@ -215,9 +215,11 @@
               <label for="pwd">Nouveau mot de passe</label>
               <input
                 id="pwd"
+                name="pwd"
                 type="password"
                 formControlName="password"
                 class="form-input"
+                autocomplete="new-password"
                 placeholder="Minimum 8 caractères"
               />
             </div>

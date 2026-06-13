@@ -1,4 +1,4 @@
-<ng-template #filtersPanel>
+<ng-template #filtersPanel let-fieldPrefix="fieldPrefix">
   <div class="public-jobs-filters">
     <div class="public-jobs-filters-head">
       <h3 class="public-jobs-filters-title">Recherche avancée</h3>
@@ -16,8 +16,10 @@
 
     <div class="public-jobs-filters-grid">
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Mots-clés</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-keywords'">Mots-clés</label>
         <input
+          [id]="fieldPrefix + '-keywords'"
+          [attr.name]="fieldPrefix + '-keywords'"
           class="public-jobs-input"
           placeholder="Titre, compétence, technologie…"
           [value]="filters().keywords"
@@ -26,8 +28,10 @@
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Localisation</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-location'">Localisation</label>
         <input
+          [id]="fieldPrefix + '-location'"
+          [attr.name]="fieldPrefix + '-location'"
           class="public-jobs-input"
           placeholder="Ville, région…"
           [value]="filters().location"
@@ -36,8 +40,10 @@
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Entreprise</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-company'">Entreprise</label>
         <input
+          [id]="fieldPrefix + '-company'"
+          [attr.name]="fieldPrefix + '-company'"
           class="public-jobs-input"
           placeholder="Nom de l'employeur…"
           [value]="filters().company"
@@ -46,8 +52,10 @@
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Secteur</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-industry'">Secteur</label>
         <input
+          [id]="fieldPrefix + '-industry'"
+          [attr.name]="fieldPrefix + '-industry'"
           class="public-jobs-input"
           placeholder="Ex. Technology, Logistics…"
           [value]="filters().industry"
@@ -56,8 +64,10 @@
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Expérience</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-experience'">Expérience</label>
         <select
+          [id]="fieldPrefix + '-experience'"
+          [attr.name]="fieldPrefix + '-experience'"
           class="public-jobs-select"
           [value]="filters().experience"
           (change)="setExperience($any($event.target).value)"
@@ -70,6 +80,8 @@
       <div class="public-jobs-filter-field public-jobs-filter-field-check">
         <label class="public-jobs-check">
           <input
+            [id]="fieldPrefix + '-quiz-only'"
+            [attr.name]="fieldPrefix + '-quiz-only'"
             type="checkbox"
             [checked]="filters().quizOnly"
             (change)="toggleQuizOnly()"
@@ -243,7 +255,7 @@
       </p>
     </div>
 
-    <ng-container *ngTemplateOutlet="filtersPanel" />
+    <ng-container *ngTemplateOutlet="filtersPanel; context: { fieldPrefix: 'landing-jobs' }" />
 
     <p class="public-jobs-count">
       Page {{ previewPage() }} / {{ previewTotalPages() }} —
@@ -279,7 +291,7 @@
     </header>
 
     <div class="public-jobs-browse-all-body">
-      <ng-container *ngTemplateOutlet="filtersPanel" />
+      <ng-container *ngTemplateOutlet="filtersPanel; context: { fieldPrefix: 'catalog-jobs' }" />
 
       <p class="public-jobs-count">
         Page {{ catalogPage() }} / {{ catalogTotalPages() }} —

@@ -87,15 +87,15 @@
       <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" class="modal-form">
         <div class="form-field">
           <label class="form-label" for="email">E-mail</label>
-          <input id="email" class="form-input" formControlName="email" />
+          <input id="email" name="email" type="email" autocomplete="email" class="form-input" formControlName="email" />
         </div>
         <div class="form-field">
           <label class="form-label" for="jobTitle">Poste</label>
-          <input id="jobTitle" class="form-input" formControlName="jobTitle" />
+          <input id="jobTitle" name="jobTitle" autocomplete="organization-title" class="form-input" formControlName="jobTitle" />
         </div>
         <div class="form-field">
           <label class="form-label" for="phone">Téléphone</label>
-          <input id="phone" class="form-input" formControlName="phone" />
+          <input id="phone" name="phone" type="tel" autocomplete="tel" class="form-input" formControlName="phone" />
         </div>
 
         <fieldset class="permissions-fieldset">

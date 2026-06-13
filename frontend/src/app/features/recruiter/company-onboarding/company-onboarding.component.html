@@ -191,7 +191,7 @@
                 {{ form.controls.contactEmailPublic.value ? 'Public' : 'Privé' }}
               </button>
             </div>
-            <input id="contactEmail" type="email" class="form-input" formControlName="contactEmail" />
+            <input id="contactEmail" name="contactEmail" type="email" autocomplete="email" class="form-input" formControlName="contactEmail" />
             <p class="form-hint">
               @if (form.controls.contactEmailPublic.value) {
                 Visible sur votre page entreprise publique.
@@ -218,7 +218,7 @@
                 {{ form.controls.contactPhonePublic.value ? 'Public' : 'Privé' }}
               </button>
             </div>
-            <input id="contactPhone" type="tel" class="form-input" formControlName="contactPhone" />
+            <input id="contactPhone" name="contactPhone" type="tel" autocomplete="tel" class="form-input" formControlName="contactPhone" />
             <p class="form-hint">
               @if (form.controls.contactPhonePublic.value) {
                 Visible sur votre page entreprise publique.
@@ -229,12 +229,15 @@
           </div>
           <div class="form-field">
             <label class="form-label" for="website">Site web</label>
-            <input id="website" class="form-input" formControlName="website" placeholder="https://" />
+            <input id="website" name="website" type="url" autocomplete="url" class="form-input" formControlName="website" placeholder="https://" />
           </div>
           <div class="form-field">
             <label class="form-label" for="linkedinUrl">Page LinkedIn</label>
             <input
               id="linkedinUrl"
+              name="linkedinUrl"
+              type="url"
+              autocomplete="url"
               class="form-input"
               formControlName="linkedinUrl"
               placeholder="https://linkedin.com/company/..."
