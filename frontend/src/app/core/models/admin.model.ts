@@ -96,6 +96,7 @@ export type SubscriptionPolicyMode = 'free_all' | 'paid_required';
 
 export interface AdminSubscriptionPolicy {
   mode: SubscriptionPolicyMode;
+  canceledManualAccessCount?: number;
 }
 
 export interface AdminCompanySubscription {

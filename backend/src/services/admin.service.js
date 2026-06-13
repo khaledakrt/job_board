@@ -1207,14 +1207,18 @@ async function getSubscriptionPolicy() {
 async function updateSubscriptionPolicy(mode, actingAdminId) {
   const previous = await subscriptionService.getRecruiterSubscriptionMode();
   const result = await subscriptionService.setRecruiterSubscriptionMode(mode);
+  const canceledManualAccessCount =
+    mode === subscriptionService.SUBSCRIPTION_MODES.PAID_REQUIRED
+      ? await subscriptionService.cancelManualFreeSubscriptions()
+      : 0;
   await logAdminAction({
     actorId: actingAdminId,
     action: 'subscription.policy.update',
     targetType: 'platform_setting',
     targetId: 'recruiter_subscription_mode',
-    metadata: { previous, mode },
+    metadata: { previous, mode, canceledManualAccessCount },
   });
-  return result;
+  return { ...result, canceledManualAccessCount };
 }
 
 async function updateCompanySubscription(companyId, payload, actingAdminId) {

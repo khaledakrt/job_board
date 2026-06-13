@@ -69,7 +69,7 @@ export class CompanyDetailComponent implements OnInit {
       message:
         mode === 'free_all'
           ? 'Toutes les entreprises pourront publier sans abonnement actif.'
-          : 'Seules les entreprises avec abonnement actif ou accès manuel pourront publier.',
+          : 'Le paiement sera obligatoire pour toutes les entreprises. Les accès gratuits manuels déjà accordés seront retirés; seuls les vrais abonnements actifs resteront autorisés.',
       confirmLabel: 'Confirmer',
       confirmDanger: mode === 'paid_required',
     });
@@ -79,11 +79,13 @@ export class CompanyDetailComponent implements OnInit {
     this.message.set(null);
     this.errorMessage.set(null);
     this.adminService.updateSubscriptionPolicy(mode).subscribe({
-      next: () => {
+      next: (res) => {
         this.loadSubscriptionPolicy();
+        this.loadCompany();
+        const canceledCount = res.data?.canceledManualAccessCount ?? 0;
         this.message.set(
           mode === 'paid_required'
-            ? 'Mode plateforme mis à jour : les offres déjà publiées restent visibles; les nouvelles publications exigent un abonnement actif.'
+            ? `Mode plateforme mis à jour : paiement obligatoire pour toutes les entreprises. Accès gratuits manuels annulés : ${canceledCount}. Les offres déjà publiées restent visibles.`
             : 'Mode plateforme mis à jour : publication gratuite pour toutes les entreprises.'
         );
         this.actionLoading.set(null);
@@ -126,7 +128,7 @@ export class CompanyDetailComponent implements OnInit {
     const ok = await this.confirmDialog.confirm({
       title: 'Retirer l’accès gratuit de cette entreprise ?',
       message:
-        'Son abonnement manuel sera annulé. En mode paiement obligatoire, elle devra payer pour publier.',
+        'Son accès gratuit manuel sera annulé. Si elle possède un vrai abonnement payé actif, il restera valide.',
       confirmLabel: 'Retirer accès gratuit',
       confirmDanger: true,
     });

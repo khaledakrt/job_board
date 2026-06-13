@@ -10,6 +10,7 @@ const SUBSCRIPTION_MODES = Object.freeze({
   FREE_ALL: 'free_all',
   PAID_REQUIRED: 'paid_required',
 });
+const MANUAL_FREE_PLAN_TYPE = 'manual_free';
 
 async function getRecruiterSubscriptionMode() {
   const setting = await PlatformSetting.findByPk(SUBSCRIPTION_MODE_KEY);
@@ -30,6 +31,23 @@ async function setRecruiterSubscriptionMode(mode) {
   });
 
   return { mode };
+}
+
+async function cancelManualFreeSubscriptions() {
+  const [count] = await Subscription.update(
+    {
+      status: 'canceled',
+      updated_at: new Date(),
+    },
+    {
+      where: {
+        plan_type: MANUAL_FREE_PLAN_TYPE,
+        status: 'active',
+      },
+    }
+  );
+
+  return count;
 }
 
 function formatSubscription(subscription) {
@@ -82,7 +100,7 @@ async function getCompanySubscription(companyId) {
   return formatSubscription(subscription);
 }
 
-async function grantManualSubscription(companyId, { planType = 'manual_free', months = 12 } = {}) {
+async function grantManualSubscription(companyId, { planType = MANUAL_FREE_PLAN_TYPE, months = 12 } = {}) {
   const periodEnd = new Date();
   periodEnd.setMonth(periodEnd.getMonth() + Number(months || 12));
 
@@ -112,9 +130,11 @@ async function grantManualSubscription(companyId, { planType = 'manual_free', mo
 }
 
 async function cancelCompanySubscription(companyId) {
-  const subscription = await Subscription.findOne({ where: { company_id: companyId } });
+  const subscription = await Subscription.findOne({
+    where: { company_id: companyId, plan_type: MANUAL_FREE_PLAN_TYPE },
+  });
   if (!subscription) {
-    return formatSubscription(null);
+    return getCompanySubscription(companyId);
   }
 
   await subscription.update({
@@ -151,8 +171,10 @@ async function createMockSubscription(companyId, planType = 'enterprise', option
 
 module.exports = {
   SUBSCRIPTION_MODES,
+  MANUAL_FREE_PLAN_TYPE,
   getRecruiterSubscriptionMode,
   setRecruiterSubscriptionMode,
+  cancelManualFreeSubscriptions,
   formatSubscription,
   verifyActiveSubscription,
   getCompanySubscription,
