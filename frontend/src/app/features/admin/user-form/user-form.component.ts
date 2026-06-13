@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AdminService } from '../services/admin.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES, UserRole } from '../../../core/constants/roles.constant';
+import { InstitutionType } from '../../../core/models/catalog.model';
 
 @Component({
   selector: 'app-user-form',
@@ -31,7 +32,10 @@ export class UserFormComponent {
     firstName: [''],
     lastName: [''],
     companyName: [''],
+    companyIndustry: [''],
     jobTitle: ['Recruteur'],
+    providerName: [''],
+    institutionType: ['academy' as InstitutionType],
   });
 
   submit(): void {
@@ -47,7 +51,14 @@ export class UserFormComponent {
         firstName: v.firstName || undefined,
         lastName: v.lastName || undefined,
         companyName: v.role === USER_ROLES.RECRUITER ? v.companyName || 'Nouvelle entreprise' : undefined,
+        companyIndustry: v.role === USER_ROLES.RECRUITER ? v.companyIndustry || undefined : undefined,
         jobTitle: v.jobTitle || undefined,
+        providerName:
+          v.role === USER_ROLES.TRAINING_PROVIDER || v.role === USER_ROLES.INSTITUTION_PROVIDER
+            ? v.providerName || undefined
+            : undefined,
+        institutionType:
+          v.role === USER_ROLES.INSTITUTION_PROVIDER ? v.institutionType : undefined,
       })
       .subscribe({
         next: (res) => {

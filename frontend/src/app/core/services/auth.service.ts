@@ -137,7 +137,7 @@ export class AuthService {
         withCredentials: true,
       })
       .pipe(
-        tap(() => this.logout(false)),
+        tap(() => this.expireSession(APP_ROUTES.SETTINGS, 'passwordChanged')),
         finalize(() => this.loading.set(false))
       );
   }
@@ -156,7 +156,7 @@ export class AuthService {
         withCredentials: true,
       })
       .pipe(
-        tap(() => this.logout(false)),
+        tap(() => this.expireSession(APP_ROUTES.SETTINGS, 'emailChanged')),
         finalize(() => this.loading.set(false))
       );
   }
@@ -202,16 +202,42 @@ export class AuthService {
   }
 
   logout(redirect = true): void {
+    this.clearLocalSession();
+    this.clearServerSession();
+
+    if (redirect) {
+      void this.router.navigate([APP_ROUTES.HOME]);
+    }
+  }
+
+  expireSession(returnUrl: string | undefined = this.router.url, reason = 'sessionExpired'): void {
+    this.clearLocalSession();
+    this.clearServerSession();
+
+    const safeReturnUrl =
+      returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')
+        ? returnUrl
+        : APP_ROUTES.HOME;
+
+    void this.router.navigate([APP_ROUTES.AUTH.LOGIN], {
+      queryParams: { returnUrl: safeReturnUrl, reason },
+      replaceUrl: true,
+    });
+  }
+
+  private clearLocalSession(): void {
     this.tokenStorage.clear();
     this.state.set({
       user: null,
       accessToken: null,
       initialized: true,
     });
+  }
 
-    if (redirect) {
-      void this.router.navigate([APP_ROUTES.HOME]);
-    }
+  private clearServerSession(): void {
+    this.http
+      .post<ApiResponse<null>>(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true })
+      .subscribe({ error: () => undefined });
   }
 
   navigateByRole(role: AuthUser['role']): void {

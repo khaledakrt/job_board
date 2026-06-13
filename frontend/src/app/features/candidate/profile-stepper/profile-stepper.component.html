@@ -56,58 +56,24 @@
     </div>
 
     <div class="cv-tools">
-      <div class="cv-mode-tabs" role="tablist">
-        <button
-          type="button"
-          class="cv-mode-tab"
-          [class.cv-mode-tab--active]="cvMode() === 'manual'"
-          (click)="setCvMode('manual')"
-        >
-          Créer mon CV manuellement
-        </button>
-        <button
-          type="button"
-          class="cv-mode-tab cv-mode-tab--disabled"
-          disabled
-          aria-disabled="true"
-          title="Import PDF bientôt disponible"
-        >
-          Importer un PDF — bientôt
-        </button>
-      </div>
-
-      @if (cvMode() === 'manual') {
-        <p class="panel-hint">
-          Complétez les 4 étapes. Le <strong>résumé</strong> et la <strong>photo</strong> se gèrent ici ;
-          LinkedIn et langues à l’étape Préférences.
-        </p>
-      } @else {
-        <p class="panel-hint">
-          Importez votre CV (PDF), corrigez les données extraites puis appliquez au profil.
-        </p>
-        <app-cv-drop-uploader (fileSelected)="onCvSelected($event)" />
-        @if (parsing()) {
-          <p class="parse-status" role="status">
-            {{ parseStatus() || 'Analyse du CV en cours…' }}
-          </p>
-        }
-      }
+      <p class="panel-hint">
+        Complétez les 4 étapes. Le <strong>résumé</strong> et la <strong>photo</strong> se gèrent ici ;
+        LinkedIn et langues à l’étape Préférences. Un CV PDF sera généré automatiquement.
+      </p>
 
       @if (context.profile()?.resumeUrl) {
         <div class="resume-link-wrap">
-          <a [href]="resumeUrl()" target="_blank" rel="noopener noreferrer" class="resume-link">
+          <a href="#" class="resume-link" (click)="openResume($event)">
             Voir mon CV PDF (recruteurs)
           </a>
-          @if (cvMode() === 'manual') {
-            <button
-              type="button"
-              class="btn-secondary cv-regen-btn"
-              [disabled]="generatingPdf() || saving()"
-              (click)="generateResumePdf()"
-            >
-              @if (generatingPdf()) { Génération… } @else { Régénérer le PDF }
-            </button>
-          }
+          <button
+            type="button"
+            class="btn-secondary cv-regen-btn"
+            [disabled]="generatingPdf() || saving()"
+            (click)="generateResumePdf()"
+          >
+            @if (generatingPdf()) { Génération… } @else { Régénérer le PDF }
+          </button>
         </div>
       }
     </div>
@@ -437,10 +403,8 @@
     >
       @if (saving() || generatingPdf()) {
         {{ generatingPdf() ? 'Génération du CV PDF…' : 'Enregistrement…' }}
-      } @else if (cvMode() === 'manual') {
-        Enregistrer et générer mon CV PDF
       } @else {
-        Enregistrer mon profil
+        Enregistrer et générer mon CV PDF
       }
     </button>
   }
@@ -480,15 +444,4 @@
 </aside>
 </div>
 
-@if (parsePreviewOpen() && parsePreviewData(); as previewData) {
-  <div class="cv-preview-backdrop" role="presentation" (click)="closeParsePreview()">
-    <div class="cv-preview-wrap" (click)="$event.stopPropagation()">
-      <app-cv-parse-preview
-        [data]="previewData"
-        (apply)="applyParsedData($event)"
-        (cancel)="closeParsePreview()"
-      />
-    </div>
-  </div>
-}
 </div>

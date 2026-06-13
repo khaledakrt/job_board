@@ -40,7 +40,7 @@
 
   <section class="admin-page-insights" aria-label="Résumé candidatures de la page">
     <article class="admin-insight-card">
-      <span>Page actuelle</span>
+      <span>Page affichée</span>
       <strong>{{ pageSummary().total }}</strong>
       <small>candidatures chargées</small>
     </article>
@@ -130,9 +130,9 @@
               <td>{{ application.rating || '—' }}</td>
               <td>
                 <span class="application-flags">
-                  {{ application.hasResume ? 'CV' : '—' }}
-                  · {{ application.hasCoverLetter ? 'Lettre' : '—' }}
-                  · {{ application.hasQuizAnswers ? 'Quiz' : '—' }}
+                  <span [class.application-flag-muted]="!application.hasResume">CV</span>
+                  <span [class.application-flag-muted]="!application.hasCoverLetter">Lettre</span>
+                  <span [class.application-flag-muted]="!application.hasQuizAnswers">Quiz</span>
                 </span>
               </td>
               <td>{{ application.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>

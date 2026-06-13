@@ -65,6 +65,33 @@ const updateJobStatus = asyncHandler(async (req, res) => {
   });
 });
 
+const archiveJob = asyncHandler(async (req, res) => {
+  const job = await jobService.archiveJob({
+    jobId: req.validatedParams.id,
+    companyId: req.companyId,
+    recruiterUserId: req.user.id,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Job archived successfully',
+    data: job,
+  });
+});
+
+const restoreArchivedJob = asyncHandler(async (req, res) => {
+  const job = await jobService.restoreArchivedJob({
+    jobId: req.validatedParams.id,
+    companyId: req.companyId,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Job restored successfully',
+    data: job,
+  });
+});
+
 const generateQuiz = asyncHandler(async (req, res) => {
   const quiz = await jobService.generateQuizFromJobContent(req.validatedBody);
 
@@ -94,6 +121,8 @@ module.exports = {
   createJob,
   updateJob,
   updateJobStatus,
+  archiveJob,
+  restoreArchivedJob,
   generateQuiz,
   deleteJob,
 };

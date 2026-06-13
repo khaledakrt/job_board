@@ -1,6 +1,6 @@
 'use strict';
 
-const { CandidateProfile, User } = require('../models');
+const { CandidateProfile, User, Application } = require('../models');
 const { USER_ROLES } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
@@ -37,6 +37,10 @@ function formatProfile(profile) {
     onboardingCompletedAt: profile.onboarding_completed_at,
     updatedAt: profile.updated_at,
   };
+}
+
+function valueFromPayload(payload, key, currentValue) {
+  return Object.prototype.hasOwnProperty.call(payload, key) ? payload[key] : currentValue;
 }
 
 async function getProfileByUserId(userId) {
@@ -103,21 +107,25 @@ async function updateProfile({ userId, payload }) {
   }
 
   await profile.update({
-    first_name: payload.firstName ?? profile.first_name,
-    last_name: payload.lastName ?? profile.last_name,
-    phone: payload.phone ?? profile.phone,
-    professional_title: payload.professionalTitle ?? profile.professional_title,
-    bio: payload.bio ?? profile.bio,
-    skills: payload.skills ?? profile.skills,
-    languages: payload.languages ?? profile.languages,
-    certifications: payload.certifications ?? profile.certifications,
-    linkedin_url: payload.linkedinUrl ?? profile.linkedin_url,
-    portfolio_url: payload.portfolioUrl ?? profile.portfolio_url,
-    experiences: payload.experiences ?? profile.experiences,
-    education: payload.education ?? profile.education,
-    min_salary: payload.minSalary ?? profile.min_salary,
-    job_preferences: payload.jobPreferences ?? profile.job_preferences,
-    notification_preferences: payload.notificationPreferences ?? profile.notification_preferences,
+    first_name: valueFromPayload(payload, 'firstName', profile.first_name),
+    last_name: valueFromPayload(payload, 'lastName', profile.last_name),
+    phone: valueFromPayload(payload, 'phone', profile.phone),
+    professional_title: valueFromPayload(payload, 'professionalTitle', profile.professional_title),
+    bio: valueFromPayload(payload, 'bio', profile.bio),
+    skills: valueFromPayload(payload, 'skills', profile.skills),
+    languages: valueFromPayload(payload, 'languages', profile.languages),
+    certifications: valueFromPayload(payload, 'certifications', profile.certifications),
+    linkedin_url: valueFromPayload(payload, 'linkedinUrl', profile.linkedin_url),
+    portfolio_url: valueFromPayload(payload, 'portfolioUrl', profile.portfolio_url),
+    experiences: valueFromPayload(payload, 'experiences', profile.experiences),
+    education: valueFromPayload(payload, 'education', profile.education),
+    min_salary: valueFromPayload(payload, 'minSalary', profile.min_salary),
+    job_preferences: valueFromPayload(payload, 'jobPreferences', profile.job_preferences),
+    notification_preferences: valueFromPayload(
+      payload,
+      'notificationPreferences',
+      profile.notification_preferences
+    ),
     onboarding_completed_at:
       payload.onboardingCompleted === true
         ? new Date()
@@ -139,6 +147,13 @@ async function deleteProfile(userId) {
 
   if (!profile) {
     throw ApiError.notFound('Candidate profile not found');
+  }
+
+  const applicationsCount = await Application.count({ where: { candidate_id: profile.id } });
+  if (applicationsCount > 0) {
+    throw ApiError.badRequest(
+      'Profile deletion is blocked because this candidate has application history.'
+    );
   }
 
   if (profile.resume_url) {

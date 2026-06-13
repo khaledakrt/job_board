@@ -4,11 +4,10 @@ import {
   HttpInterceptorFn,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { BehaviorSubject, catchError, filter, map, switchMap, take, throwError } from 'rxjs';
+import { Observable, catchError, finalize, map, shareReplay, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
-let refreshRequestInFlight = false;
-const refreshedToken$ = new BehaviorSubject<string | null>(null);
+let refreshRequest$: Observable<string> | null = null;
 const REFRESH_SKEW_MS = 30_000;
 
 function isAuthBypassUrl(url: string): boolean {
@@ -16,11 +15,32 @@ function isAuthBypassUrl(url: string): boolean {
     url.includes('/auth/login') ||
     url.includes('/auth/register') ||
     url.includes('/auth/refresh') ||
+    url.includes('/auth/logout') ||
     url.includes('/auth/forgot-password') ||
     url.includes('/auth/reset-password') ||
     url.includes('/auth/verify-email') ||
     url.includes('/auth/resend-verification')
   );
+}
+
+function shouldExpireSessionOnForbidden(error: HttpErrorResponse): boolean {
+  const message = String(error.error?.message || '').toLowerCase();
+  return (
+    message.includes('suspendu') ||
+    message.includes('banned') ||
+    message.includes('non confirm') ||
+    message.includes('not verified') ||
+    message.includes('candidate access required') ||
+    message.includes('recruiter workspace access required') ||
+    message.includes('admin access required')
+  );
+}
+
+function forbiddenSessionReason(error: HttpErrorResponse): string {
+  const message = String(error.error?.message || '').toLowerCase();
+  if (message.includes('suspendu') || message.includes('banned')) return 'accountBanned';
+  if (message.includes('non confirm') || message.includes('not verified')) return 'emailNotVerified';
+  return 'forbidden';
 }
 
 function withAuthHeader(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
@@ -58,37 +78,31 @@ function shouldRefreshAccessToken(token: string): boolean {
 }
 
 function refreshAccessToken(authService: AuthService) {
-  if (refreshRequestInFlight) {
-    return refreshedToken$.pipe(
-      filter((token): token is string => Boolean(token)),
-      take(1)
-    );
+  if (refreshRequest$) {
+    return refreshRequest$;
   }
 
-  refreshRequestInFlight = true;
-  refreshedToken$.next(null);
-
-  return authService.refreshToken().pipe(
+  refreshRequest$ = authService.refreshToken().pipe(
     map((response) => {
-      refreshRequestInFlight = false;
-
       if (!response.data?.accessToken) {
-        refreshedToken$.next(null);
-        authService.logout();
+        authService.expireSession();
         throw new Error('Unable to refresh access token');
       }
 
       authService.setSession(response.data.accessToken, response.data.user);
-      refreshedToken$.next(response.data.accessToken);
       return response.data.accessToken;
     }),
     catchError((refreshError) => {
-      refreshRequestInFlight = false;
-      refreshedToken$.next(null);
-      authService.logout();
+      authService.expireSession();
       return throwError(() => refreshError);
-    })
+    }),
+    finalize(() => {
+      refreshRequest$ = null;
+    }),
+    shareReplay({ bufferSize: 1, refCount: false })
   );
+
+  return refreshRequest$;
 }
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -106,6 +120,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      if (error.status === 403 && !skipAuthHeader && shouldExpireSessionOnForbidden(error)) {
+        authService.expireSession(undefined, forbiddenSessionReason(error));
+        return throwError(() => error);
+      }
+
       if (error.status !== 401 || skipAuthHeader || req.url.includes('/auth/refresh')) {
         return throwError(() => error);
       }

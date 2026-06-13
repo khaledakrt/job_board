@@ -10,6 +10,13 @@ export interface RecruiterProfile {
   canPostJob: boolean;
   canDecideApplication: boolean;
   canEditCompany: boolean;
+  publicationAccess?: {
+    mode: 'free_all' | 'paid_required';
+    companySubscriptionStatus: 'active' | 'canceled' | 'missing';
+    companySubscriptionEndsAt: string | null;
+    canPublish: boolean;
+    reason: 'free_global' | 'company_subscription_active' | 'company_subscription_required';
+  };
   company: Company | null;
 }
 
@@ -28,7 +35,6 @@ export interface TeamMember {
 
 export interface InviteTeamMemberPayload {
   email: string;
-  password?: string;
   jobTitle?: string | null;
   phone?: string | null;
   canPostJob: boolean;

@@ -10,10 +10,12 @@ import {
   AdminApplicationDetail,
   AdminApplicationListItem,
   AdminCompanyDetail,
+  AdminCompanySubscription,
   AdminCompanyListItem,
   AdminJobDetail,
   AdminJobListItem,
   AdminStats,
+  AdminSubscriptionPolicy,
   AdminUserDetail,
   AdminUserListItem,
   CatalogPublishStatus,
@@ -30,6 +32,21 @@ export class AdminService {
 
   getStats(): Observable<ApiResponse<AdminStats>> {
     return this.http.get<ApiResponse<AdminStats>>(`${this.base}/stats`);
+  }
+
+  getSubscriptionPolicy(): Observable<ApiResponse<AdminSubscriptionPolicy>> {
+    return this.http.get<ApiResponse<AdminSubscriptionPolicy>>(
+      `${this.base}/subscription-policy`
+    );
+  }
+
+  updateSubscriptionPolicy(
+    mode: AdminSubscriptionPolicy['mode']
+  ): Observable<ApiResponse<AdminSubscriptionPolicy>> {
+    return this.http.patch<ApiResponse<AdminSubscriptionPolicy>>(
+      `${this.base}/subscription-policy`,
+      { mode }
+    );
   }
 
   listUsers(params: Record<string, string | number>): Observable<
@@ -113,6 +130,23 @@ export class AdminService {
 
   getCompany(id: string): Observable<ApiResponse<AdminCompanyDetail>> {
     return this.http.get<ApiResponse<AdminCompanyDetail>>(`${this.base}/companies/${id}`);
+  }
+
+  activateCompanySubscription(
+    id: string,
+    months = 12
+  ): Observable<ApiResponse<AdminCompanySubscription>> {
+    return this.http.patch<ApiResponse<AdminCompanySubscription>>(
+      `${this.base}/companies/${id}/subscription`,
+      { action: 'activate_manual', planType: 'manual_free', months }
+    );
+  }
+
+  cancelCompanySubscription(id: string): Observable<ApiResponse<AdminCompanySubscription>> {
+    return this.http.patch<ApiResponse<AdminCompanySubscription>>(
+      `${this.base}/companies/${id}/subscription`,
+      { action: 'cancel' }
+    );
   }
 
   listApplications(params: Record<string, string | number>): Observable<

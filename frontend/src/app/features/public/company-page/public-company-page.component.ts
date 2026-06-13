@@ -7,10 +7,7 @@ import { PublicCompanyService } from '../services/public-company.service';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { remoteLabel, salaryDisplayLabel } from '../../../core/utils/job-display.util';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
-import {
-  COMPANY_SIZES,
-  LEGAL_FORMS,
-} from '../../recruiter/company-onboarding/company-onboarding.constants';
+import { COMPANY_SIZES } from '../../recruiter/company-onboarding/company-onboarding.constants';
 
 @Component({
   selector: 'app-public-company-page',
@@ -86,16 +83,4 @@ export class PublicCompanyPageComponent implements OnInit {
     return match && match.value ? match.label : value;
   }
 
-  formatLegalForm(value: string | null | undefined): string | null {
-    if (!value) return null;
-    const match = LEGAL_FORMS.find((f) => f.value === value);
-    return match && match.value ? match.label : value;
-  }
-
-  formatSiret(value: string | null | undefined): string | null {
-    if (!value) return null;
-    const digits = value.replace(/\s/g, '');
-    if (digits.length !== 14) return value;
-    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
-  }
 }

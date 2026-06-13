@@ -33,7 +33,6 @@ function formatCandidate(candidate) {
     skills: candidate.skills,
     experiences: candidate.experiences,
     education: candidate.education,
-    resumeUrl: candidate.resume_url,
     minSalary: candidate.min_salary,
   };
 }
@@ -78,7 +77,6 @@ const candidateInclude = {
     'skills',
     'experiences',
     'education',
-    'resume_url',
     'min_salary',
   ],
   include: [{ model: User, as: 'user', attributes: ['email'] }],
@@ -148,10 +146,26 @@ async function updateApplicationStatus({
     updates.archived_by = null;
   }
 
+  if (status === 'interview' && !interviewAt && !application.interview_at) {
+    throw ApiError.badRequest('La date et l’heure de l’entretien sont obligatoires.');
+  }
+
   if (interviewAt !== undefined) {
-    updates.interview_at = interviewAt ? new Date(interviewAt) : null;
-  } else if (status === 'interview' && !application.interview_at) {
-    updates.interview_at = new Date();
+    if (!interviewAt && status === 'interview') {
+      throw ApiError.badRequest('La date et l’heure de l’entretien sont obligatoires.');
+    }
+    const interviewDate = interviewAt ? new Date(interviewAt) : null;
+    if (interviewDate && Number.isNaN(interviewDate.getTime())) {
+      throw ApiError.badRequest('Date d’entretien invalide.');
+    }
+    if (status === 'interview' && interviewDate && interviewDate.getTime() <= Date.now()) {
+      throw ApiError.badRequest('La date d’entretien doit être dans le futur.');
+    }
+    updates.interview_at = interviewDate;
+  }
+
+  if (status !== 'interview') {
+    updates.interview_at = null;
   }
 
   await sequelize.transaction(async (transaction) => {

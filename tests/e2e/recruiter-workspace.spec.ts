@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { expectPageHealthy, loginAs } from './helpers/auth';
 
 const RECRUITER_PAGES = [
-  { path: '/recruiter/dashboard', heading: /tableau de bord/i },
+  { path: '/recruiter/dashboard', heading: /Acme Corp|tableau de bord recruteur/i },
   { path: '/recruiter/onboarding', heading: /profil entreprise/i },
   { path: '/recruiter/jobs', heading: /offres d'emploi/i },
   { path: '/recruiter/ats', heading: /suivi des candidatures/i },

@@ -59,6 +59,14 @@ export class RecruiterJobService {
     return this.http.patch<ApiResponse<Job>>(`${this.apiUrl}/${id}/status`, { status });
   }
 
+  archive(id: string): Observable<ApiResponse<Job>> {
+    return this.http.patch<ApiResponse<Job>>(`${this.apiUrl}/${id}/archive`, {});
+  }
+
+  restore(id: string): Observable<ApiResponse<Job>> {
+    return this.http.patch<ApiResponse<Job>>(`${this.apiUrl}/${id}/restore`, {});
+  }
+
   delete(id: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/${id}`);
   }

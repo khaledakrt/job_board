@@ -19,24 +19,171 @@
   } @else if (errorMessage()) {
     <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
   } @else {
+    @if (message()) {
+      <div class="alert-success admin-alerts">{{ message() }}</div>
+    }
     @if (company(); as c) {
-      <section class="metric-grid">
-        <article>
-          <strong>{{ c.jobsCount }}</strong>
-          <span>Offres</span>
-        </article>
-        <article>
-          <strong>{{ c.activeJobsCount }}</strong>
-          <span>Actives</span>
-        </article>
-        <article>
-          <strong>{{ c.applicationsCount }}</strong>
-          <span>Candidatures</span>
-        </article>
-        <article>
-          <strong>{{ c.recruitersCount }}</strong>
-          <span>Recruteurs</span>
-        </article>
+      <section class="company-command-card">
+        <div class="company-command-main">
+          <div class="company-logo-box">
+            @if (logoUrl(c); as logo) {
+              <img [src]="logo" alt="" />
+            } @else {
+              <span>{{ c.name.charAt(0) }}</span>
+            }
+          </div>
+          <div>
+            <p class="company-command-kicker">Dossier entreprise</p>
+            <h2>{{ c.name }}</h2>
+            <p>{{ c.industry || 'Secteur non renseigné' }} · {{ c.city || 'Ville non renseignée' }}</p>
+          </div>
+        </div>
+        <div class="metric-grid metric-grid--inline">
+          <article>
+            <strong>{{ c.jobsCount }}</strong>
+            <span>Offres</span>
+          </article>
+          <article>
+            <strong>{{ c.activeJobsCount }}</strong>
+            <span>Actives</span>
+          </article>
+          <article>
+            <strong>{{ c.applicationsCount }}</strong>
+            <span>Candidatures</span>
+          </article>
+          <article>
+            <strong>{{ c.recruitersCount }}</strong>
+            <span>Recruteurs</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="admin-card subscription-card">
+        <div class="subscription-head">
+          <div>
+            <h2 class="admin-card-title">Abonnement & publication des offres</h2>
+            <p class="admin-empty-hint">
+              Le mode global décide si toutes les entreprises publient gratuitement ou si un
+              abonnement/paiement est obligatoire.
+            </p>
+          </div>
+          <span
+            class="subscription-badge"
+            [class.subscription-badge--active]="subscriptionPolicy()?.mode === 'free_all'"
+          >
+            {{ policyLabel(subscriptionPolicy()?.mode) }}
+          </span>
+        </div>
+
+        <div class="subscription-grid">
+          <article class="subscription-panel">
+            <h3>Règle globale plateforme</h3>
+            <p>
+              @if (subscriptionPolicy()?.mode === 'free_all') {
+                Le mode gratuit global est actif. Cette entreprise et tous ses recruteurs peuvent publier.
+              } @else {
+                Le paiement est obligatoire par entreprise. Les recruteurs de cette entreprise publient seulement si l’entreprise a un abonnement actif.
+              }
+            </p>
+            <div class="subscription-actions">
+              <button
+                type="button"
+                class="subscription-action-button"
+                [class.subscription-action-button--selected]="subscriptionPolicy()?.mode === 'free_all'"
+                [disabled]="actionLoading() === 'policy' || subscriptionPolicy()?.mode === 'free_all'"
+                (click)="setPolicy('free_all')"
+              >
+                {{ subscriptionPolicy()?.mode === 'free_all' ? 'Gratuit global actif' : 'Activer gratuit global' }}
+              </button>
+              <button
+                type="button"
+                class="subscription-action-button subscription-action-button--danger"
+                [class.subscription-action-button--selected]="subscriptionPolicy()?.mode === 'paid_required'"
+                [disabled]="actionLoading() === 'policy' || subscriptionPolicy()?.mode === 'paid_required'"
+                (click)="setPolicy('paid_required')"
+              >
+                {{ subscriptionPolicy()?.mode === 'paid_required' ? 'Paiement global actif' : 'Revenir au paiement global' }}
+              </button>
+            </div>
+          </article>
+
+          <article class="subscription-panel">
+            <h3>Accès de cette entreprise</h3>
+            <dl class="detail-list">
+              <div>
+                <dt>Mode plateforme</dt>
+                <dd>
+                  <span class="subscription-state-pill">
+                    {{ policyLabel(subscriptionPolicy()?.mode) }}
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt>Abonnement entreprise</dt>
+                <dd>
+                  <span
+                    class="subscription-state-pill"
+                    [class.subscription-state-pill--active]="c.subscription?.isActive"
+                    [class.subscription-state-pill--blocked]="subscriptionPolicy()?.mode === 'paid_required' && !c.subscription?.isActive"
+                  >
+                    {{ subscriptionStatusLabel(c.subscription?.status) }}
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt>Plan</dt>
+                <dd>{{ c.subscription?.planType || '—' }}</dd>
+              </div>
+              <div>
+                <dt>Fin période</dt>
+                <dd>
+                  @if (c.subscription?.currentPeriodEnd) {
+                    {{ c.subscription?.currentPeriodEnd | date: 'dd/MM/yyyy HH:mm' }}
+                  } @else {
+                    —
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Publication effective</dt>
+                <dd>
+                  <strong
+                    [class.subscription-access-ok]="subscriptionPolicy()?.mode === 'free_all' || c.subscription?.isActive"
+                    [class.subscription-access-blocked]="subscriptionPolicy()?.mode === 'paid_required' && !c.subscription?.isActive"
+                  >
+                    {{ publicationAccessLabel(c) }}
+                  </strong>
+                </dd>
+              </div>
+            </dl>
+            <div class="subscription-actions">
+              <button
+                type="button"
+                class="subscription-action-button"
+                [disabled]="actionLoading() === 'activate-1'"
+                (click)="activateManualSubscription(1)"
+              >
+                Activer 1 mois gratuit
+              </button>
+              <button
+                type="button"
+                class="subscription-action-button subscription-action-button--primary"
+                [disabled]="actionLoading() === 'activate-12'"
+                (click)="activateManualSubscription(12)"
+              >
+                Activer 1 an gratuit
+              </button>
+              <button
+                type="button"
+                class="subscription-action-button subscription-action-button--danger-outline"
+                [disabled]="actionLoading() === 'cancel'"
+                (click)="cancelSubscription()"
+              >
+                Retirer l’accès gratuit de cette entreprise
+              </button>
+            </div>
+          </article>
+        </div>
       </section>
 
       <section class="admin-detail-grid">

@@ -17,7 +17,16 @@ async function authenticate(req, res, next) {
     const decoded = tokenService.verifyAccessToken(token);
 
     const user = await User.findByPk(decoded.sub, {
-      attributes: ['id', 'email', 'role', 'is_verified', 'is_banned', 'ban_reason'],
+      attributes: [
+        'id',
+        'email',
+        'role',
+        'is_verified',
+        'is_banned',
+        'ban_reason',
+        'password_changed_at',
+        'session_version',
+      ],
     });
 
     if (!user) {
@@ -28,6 +37,14 @@ async function authenticate(req, res, next) {
       throw ApiError.forbidden(
         user.ban_reason || 'Votre compte a été suspendu. Contactez le support.'
       );
+    }
+
+    if (tokenIssuedBeforePasswordChange(decoded, user.password_changed_at)) {
+      throw ApiError.unauthorized('Session expired after password change');
+    }
+
+    if ((decoded.sessionVersion || 0) !== (user.session_version || 0)) {
+      throw ApiError.unauthorized('Session expired after password change');
     }
 
     if (!user.is_verified && user.role !== USER_ROLES.ADMIN) {
@@ -51,6 +68,11 @@ async function authenticate(req, res, next) {
     }
     return next(ApiError.unauthorized('Invalid or expired access token'));
   }
+}
+
+function tokenIssuedBeforePasswordChange(decoded, passwordChangedAt) {
+  if (!passwordChangedAt || !decoded.iat) return false;
+  return decoded.iat * 1000 <= new Date(passwordChangedAt).getTime();
 }
 
 module.exports = authenticate;

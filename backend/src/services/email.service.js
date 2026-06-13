@@ -19,8 +19,8 @@ function escapeHtml(value) {
 }
 
 function logDevLink(label, url) {
-  logger.info(`[Email] ${label} → ${url}`);
   if (env.NODE_ENV === 'development') {
+    logger.info(`[Email] ${label} → ${url}`);
     console.log(`\n========== ${label} ==========\n${url}\n================================\n`);
   }
 }
@@ -109,7 +109,7 @@ async function sendVerificationEmail({ email, verificationToken, reason = 'regis
     devLinkUrl: verifyUrl,
   });
 
-  if (!result.sent) {
+  if (!result.sent && env.NODE_ENV === 'development') {
     logDevLink('Lien de confirmation (copiez dans le navigateur)', verifyUrl);
   }
 
@@ -132,7 +132,7 @@ async function sendPasswordResetEmail({ email, resetToken }) {
     devLinkUrl: resetUrl,
   });
 
-  if (!result.sent) {
+  if (!result.sent && env.NODE_ENV === 'development') {
     logDevLink('Lien réinitialisation', resetUrl);
   }
 
@@ -190,10 +190,13 @@ async function sendTeamInviteEmail({
   to,
   companyName,
   inviterEmail,
-  temporaryPassword,
+  setupToken,
   isNewAccount,
 }) {
   const loginUrl = `${env.CLIENT_URL}/auth/login`;
+  const setupUrl = setupToken
+    ? `${env.CLIENT_URL}/auth/reset-password?token=${encodeURIComponent(setupToken)}`
+    : null;
   const subject = `Invitation à rejoindre ${companyName} — Job Board`;
 
   let text = `${inviterEmail} vous a ajouté à l'équipe recrutement de ${companyName} sur Job Board.\n\n`;
@@ -203,12 +206,12 @@ async function sendTeamInviteEmail({
   let bodyHtml = `<p><strong>${escapeHtml(inviterEmail)}</strong> vous a invité à rejoindre <strong>${escapeHtml(companyName)}</strong> sur Job Board.</p>`;
   bodyHtml += `<p>E-mail de connexion : <strong>${escapeHtml(to)}</strong></p>`;
 
-  if (isNewAccount && temporaryPassword) {
-    text += `Mot de passe temporaire : ${temporaryPassword}\n`;
-    text += 'Changez ce mot de passe après votre première connexion (Paramètres).\n';
-    bodyHtml += `<p>Mot de passe temporaire : <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;">${escapeHtml(temporaryPassword)}</code></p>`;
+  if (isNewAccount && setupUrl) {
+    text += `Définissez votre mot de passe : ${setupUrl}\n`;
+    text += 'Ce lien est personnel et expire rapidement.\n';
+    bodyHtml += `<p style="margin-top:20px;">${brandButton(setupUrl, 'Définir mon mot de passe')}</p>`;
     bodyHtml +=
-      '<p style="font-size:13px;color:#6b7280;">Changez ce mot de passe après votre première connexion dans Paramètres.</p>';
+      '<p style="font-size:13px;color:#6b7280;">Ce lien est personnel et expire rapidement.</p>';
   } else {
     text += 'Utilisez le mot de passe de votre compte Job Board existant.\n';
     bodyHtml +=
@@ -222,8 +225,8 @@ async function sendTeamInviteEmail({
     subject,
     text,
     html: wrapEmailHtml({ title: 'Invitation équipe recrutement', bodyHtml }),
-    devLinkLabel: 'Connexion équipe',
-    devLinkUrl: loginUrl,
+    devLinkLabel: setupUrl ? 'Définition mot de passe équipe' : 'Connexion équipe',
+    devLinkUrl: setupUrl || loginUrl,
   });
 }
 
@@ -280,6 +283,38 @@ async function sendRecruiterNewApplicationEmail({
   });
 }
 
+async function sendRecruiterJobExpiredEmail({
+  to,
+  jobTitle,
+  companyName,
+  expiredAt,
+  archivesUrl,
+}) {
+  const url = archivesUrl || `${env.CLIENT_URL}/recruiter/archives`;
+  const subject = `Offre expirée et archivée — ${jobTitle}`;
+  const expirationLabel = expiredAt
+    ? new Date(expiredAt).toLocaleDateString('fr-FR')
+    : 'date d’expiration atteinte';
+  const text =
+    `Votre offre « ${jobTitle} »${companyName ? ` (${companyName})` : ''} est arrivée à expiration le ${expirationLabel}.\n\n` +
+    'Elle a été déplacée automatiquement dans Archives et n’est plus visible par les candidats.\n\n' +
+    `Voir les archives : ${url}`;
+
+  const bodyHtml = `
+  <p>Votre offre <strong>« ${escapeHtml(jobTitle)} »</strong>${companyName ? ` chez <strong>${escapeHtml(companyName)}</strong>` : ''} est arrivée à expiration le <strong>${escapeHtml(expirationLabel)}</strong>.</p>
+  <p>Elle a été déplacée automatiquement dans <strong>Archives</strong> et n’est plus disponible publiquement pour les candidats.</p>
+  <p style="margin-top:20px;">${brandButton(url, 'Voir les archives')}</p>`;
+
+  return sendMail({
+    to,
+    subject,
+    text,
+    html: wrapEmailHtml({ title: 'Offre expirée', bodyHtml }),
+    devLinkLabel: 'Archives recruteur',
+    devLinkUrl: url,
+  });
+}
+
 async function sendContactFormEmail({ to, name, email, subject, message }) {
   const mailSubject = `[JobBoard Contact] ${subject}`;
   const text = [
@@ -319,6 +354,7 @@ module.exports = {
   buildCandidateAlertHtml,
   sendTeamInviteEmail,
   sendRecruiterNewApplicationEmail,
+  sendRecruiterJobExpiredEmail,
   sendProviderParticipationEmail,
   sendContactFormEmail,
 };

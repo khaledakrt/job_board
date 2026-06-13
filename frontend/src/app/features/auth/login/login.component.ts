@@ -23,6 +23,7 @@ export class LoginComponent {
   readonly showResendVerification = signal(false);
   readonly resendSuccess = signal<string | null>(null);
   readonly resendDevVerifyUrl = signal<string | null>(null);
+  readonly sessionNotice = signal<string | null>(this.buildSessionNotice());
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -54,9 +55,33 @@ export class LoginComponent {
     });
   }
 
+  private buildSessionNotice(): string | null {
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+    if (reason === 'passwordChanged') {
+      return 'Votre mot de passe a été modifié. Reconnectez-vous avec le nouveau mot de passe.';
+    }
+    if (reason === 'emailChanged') {
+      return 'Votre e-mail a été modifié. Confirmez la nouvelle adresse puis reconnectez-vous.';
+    }
+    if (reason === 'sessionExpired') {
+      return 'Votre session a expiré ou n’est plus valide. Connectez-vous à nouveau.';
+    }
+    if (reason === 'accountBanned') {
+      return 'Votre compte est suspendu. Contactez le support si vous pensez qu’il s’agit d’une erreur.';
+    }
+    if (reason === 'emailNotVerified') {
+      return 'Votre adresse e-mail doit être confirmée avant de continuer.';
+    }
+    if (reason === 'forbidden') {
+      return 'Votre compte n’a pas accès à cet espace. Reconnectez-vous avec le bon compte.';
+    }
+    return null;
+  }
+
   onSubmit(): void {
     this.submitted.set(true);
     this.authService.clearError();
+    this.sessionNotice.set(null);
     this.resendSuccess.set(null);
     this.resendDevVerifyUrl.set(null);
     this.showResendVerification.set(false);

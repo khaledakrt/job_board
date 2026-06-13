@@ -2,6 +2,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const fsp = require('fs/promises');
 const multer = require('multer');
 const { LOGO_UPLOAD, CATALOG_BROCHURE_UPLOAD, CATALOG_IMAGE_UPLOAD } = require('../config/constants');
 const { generateUuid } = require('../utils/uuid');
@@ -14,6 +15,7 @@ const {
   getCatalogImageDirectory,
 } = require('../utils/fileStorage');
 const ApiError = require('../utils/ApiError');
+const { matchesFileSignature } = require('../utils/fileSignature');
 
 const MIME_TO_EXTENSION = {
   'image/jpeg': '.jpg',
@@ -84,7 +86,7 @@ function uploadCompanyLogo(req, res, next) {
       return next(ApiError.badRequest('Logo file is required'));
     }
 
-    return next();
+    return validateUploadedSignature(req.file, 'Le logo ne correspond pas à une image valide', next);
   });
 }
 
@@ -123,7 +125,7 @@ function uploadProviderLogo(req, res, next) {
   companyLogoUpload.single('logo')(req, res, (err) => {
     if (err) return next(err);
     if (!req.file) return next(ApiError.badRequest('Fichier logo requis'));
-    return next();
+    return validateUploadedSignature(req.file, 'Le logo ne correspond pas à une image valide', next);
   });
 }
 
@@ -131,7 +133,7 @@ function uploadProviderBrochure(req, res, next) {
   brochureUpload.single('brochure')(req, res, (err) => {
     if (err) return next(err);
     if (!req.file) return next(ApiError.badRequest('Fichier PDF requis'));
-    return next();
+    return validateUploadedSignature(req.file, 'La brochure ne correspond pas à un PDF valide', next);
   });
 }
 
@@ -166,7 +168,7 @@ function uploadCatalogImage(req, res, next) {
   catalogImageUpload.single('image')(req, res, (err) => {
     if (err) return next(err);
     if (!req.file) return next(ApiError.badRequest('Image requise'));
-    return next();
+    return validateUploadedSignature(req.file, 'L’image ne correspond pas à un fichier valide', next);
   });
 }
 
@@ -174,8 +176,38 @@ function uploadCatalogGallery(req, res, next) {
   catalogImageUpload.array('images', CATALOG_IMAGE_UPLOAD.MAX_GALLERY_FILES)(req, res, (err) => {
     if (err) return next(err);
     if (!req.files?.length) return next(ApiError.badRequest('Au moins une image requise'));
-    return next();
+    return validateUploadedSignatures(req.files, 'Une image ne correspond pas à un fichier valide', next);
   });
+}
+
+async function validateUploadedSignature(file, message, next) {
+  try {
+    const isValid = await matchesFileSignature(file.path, file.mimetype);
+    if (!isValid) {
+      await fsp.unlink(file.path).catch(() => undefined);
+      return next(ApiError.badRequest(message));
+    }
+    return next();
+  } catch (error) {
+    await fsp.unlink(file.path).catch(() => undefined);
+    return next(error);
+  }
+}
+
+async function validateUploadedSignatures(files, message, next) {
+  try {
+    for (const file of files) {
+      const isValid = await matchesFileSignature(file.path, file.mimetype);
+      if (!isValid) {
+        await Promise.all(files.map((item) => fsp.unlink(item.path).catch(() => undefined)));
+        return next(ApiError.badRequest(message));
+      }
+    }
+    return next();
+  } catch (error) {
+    await Promise.all(files.map((item) => fsp.unlink(item.path).catch(() => undefined)));
+    return next(error);
+  }
 }
 
 module.exports = {

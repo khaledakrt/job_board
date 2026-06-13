@@ -96,6 +96,28 @@ function drawCircularImage(doc, imagePath, x, y, size) {
   doc.restore();
 }
 
+function candidateInitials(fullName) {
+  const parts = text(fullName).split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+}
+
+function drawPhotoFallback(doc, fullName, x, y, size) {
+  const radius = size / 2;
+  doc.save();
+  doc.circle(x + radius, y + radius, radius).fill('#e0f2fe');
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(20)
+    .fillColor('#0a66c2')
+    .text(candidateInitials(fullName), x, y + radius - 11, {
+      width: size,
+      align: 'center',
+    });
+  doc.restore();
+}
+
 function getProfileLinks(profile) {
   const links = [];
   const linkedin = String(profile.linkedinUrl ?? '').trim();
@@ -170,7 +192,15 @@ function drawHeaderWithPhoto(doc, profile, fullName, contactParts, profileLinks,
   const textX = margin + photoSize + 18;
   const textWidth = doc.page.width - doc.page.margins.right - textX;
 
-  drawCircularImage(doc, avatarPath, margin, headerY, photoSize);
+  if (avatarPath) {
+    try {
+      drawCircularImage(doc, avatarPath, margin, headerY, photoSize);
+    } catch {
+      drawPhotoFallback(doc, fullName, margin, headerY, photoSize);
+    }
+  } else {
+    drawPhotoFallback(doc, fullName, margin, headerY, photoSize);
+  }
 
   doc.font('Helvetica-Bold').fontSize(20).fillColor('#0f172a');
   doc.text(fullName, textX, headerY, { width: textWidth, lineGap: 2 });
@@ -201,17 +231,7 @@ function drawHeaderWithPhoto(doc, profile, fullName, contactParts, profileLinks,
 function drawProfileHeader(doc, profile, fullName, contactParts, profileLinks) {
   const avatarPath = resolveAvatarPath(profile.avatarUrl);
 
-  if (avatarPath) {
-    try {
-      drawHeaderWithPhoto(doc, profile, fullName, contactParts, profileLinks, avatarPath);
-      return;
-    } catch {
-      doc.y = doc.page.margins.top;
-      doc.x = doc.page.margins.left;
-    }
-  }
-
-  drawCenteredHeader(doc, profile, fullName, contactParts, profileLinks);
+  drawHeaderWithPhoto(doc, profile, fullName, contactParts, profileLinks, avatarPath);
 }
 
 async function generateResumePdfFile(profile) {

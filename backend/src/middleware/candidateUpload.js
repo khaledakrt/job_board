@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const fs = require('fs/promises');
 const multer = require('multer');
 const {
   RESUME_UPLOAD,
@@ -14,6 +15,7 @@ const {
   ensureAvatarDirectory,
 } = require('../utils/fileStorage');
 const ApiError = require('../utils/ApiError');
+const { matchesFileSignature } = require('../utils/fileSignature');
 
 const RESUME_MIME_TO_EXTENSION = {
   'application/pdf': '.pdf',
@@ -125,7 +127,7 @@ function uploadCandidateResume(req, res, next) {
       return next(ApiError.badRequest('Resume PDF file is required'));
     }
 
-    return next();
+    return validateUploadedSignature(req.file, 'Le fichier CV ne correspond pas à un PDF valide', next);
   });
 }
 
@@ -139,8 +141,22 @@ function uploadCandidateAvatar(req, res, next) {
       return next(ApiError.badRequest('Avatar image file is required'));
     }
 
-    return next();
+    return validateUploadedSignature(req.file, 'La photo ne correspond pas à une image valide', next);
   });
+}
+
+async function validateUploadedSignature(file, message, next) {
+  try {
+    const isValid = await matchesFileSignature(file.path, file.mimetype);
+    if (!isValid) {
+      await fs.unlink(file.path).catch(() => undefined);
+      return next(ApiError.badRequest(message));
+    }
+    return next();
+  } catch (error) {
+    await fs.unlink(file.path).catch(() => undefined);
+    return next(error);
+  }
 }
 
 module.exports = {

@@ -16,6 +16,10 @@ export interface Job {
   remoteType: RemoteType;
   contractType: ContractType;
   salaryLabel: string | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  salaryCurrency?: 'TND' | 'EUR' | 'USD' | null;
+  salaryPeriod?: 'month' | 'year' | 'day' | 'hour' | null;
   status: JobStatus;
   expiresAt: string;
   viewsCount: number;
@@ -49,6 +53,10 @@ export interface JobPayload {
   remoteType: RemoteType;
   contractType: ContractType;
   salaryLabel?: string | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  salaryCurrency?: 'TND' | 'EUR' | 'USD' | null;
+  salaryPeriod?: 'month' | 'year' | 'day' | 'hour' | null;
   status?: JobStatus;
   expiresAt?: string;
   quizEnabled?: boolean;

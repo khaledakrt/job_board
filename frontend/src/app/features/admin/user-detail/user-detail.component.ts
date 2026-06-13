@@ -5,12 +5,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AdminService } from '../services/admin.service';
 import { AdminUserDetail, LoginEvent } from '../../../core/models/admin.model';
+import { InstitutionType } from '../../../core/models/catalog.model';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES, UserRole } from '../../../core/constants/roles.constant';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { PaginationMeta } from '../../../core/models/pagination.model';
 import { adminPageSummary } from '../shared/admin-pagination.util';
+import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 
 @Component({
   selector: 'app-user-detail',
@@ -34,6 +36,7 @@ export class UserDetailComponent implements OnInit {
   readonly loginLoading = signal(false);
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly actionLoading = signal<string | null>(null);
   readonly message = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
 
@@ -43,6 +46,13 @@ export class UserDetailComponent implements OnInit {
     isVerified: [false],
     firstName: [''],
     lastName: [''],
+    professionalTitle: [''],
+    phone: [''],
+    jobTitle: [''],
+    companyName: [''],
+    companyIndustry: [''],
+    providerName: [''],
+    institutionType: ['academy' as InstitutionType],
   });
 
   readonly passwordForm = this.fb.nonNullable.group({
@@ -76,6 +86,13 @@ export class UserDetailComponent implements OnInit {
           isVerified: u.isVerified,
           firstName: u.candidateProfile?.firstName || '',
           lastName: u.candidateProfile?.lastName || '',
+          professionalTitle: u.candidateProfile?.professionalTitle || '',
+          phone: u.candidateProfile?.phone || '',
+          jobTitle: u.recruiterProfile?.jobTitle || '',
+          companyName: u.recruiterProfile?.companyName || '',
+          companyIndustry: '',
+          providerName: '',
+          institutionType: 'academy' as InstitutionType,
         });
         this.loading.set(false);
       },
@@ -114,16 +131,29 @@ export class UserDetailComponent implements OnInit {
     });
   }
 
-  setPassword(): void {
+  async setPassword(): Promise<void> {
     if (this.passwordForm.invalid) return;
+    const ok = await this.confirmDialog.confirm({
+      title: 'Réinitialiser le mot de passe ?',
+      message: 'Toutes les sessions ouvertes de cet utilisateur seront déconnectées.',
+      confirmLabel: 'Réinitialiser',
+      confirmDanger: true,
+    });
+    if (!ok) return;
     const pwd = this.passwordForm.getRawValue().password;
+    this.message.set(null);
+    this.errorMessage.set(null);
+    this.actionLoading.set('password');
     this.adminService.setPassword(this.userId, pwd).subscribe({
       next: () => {
         this.message.set('Mot de passe modifié');
         this.passwordForm.reset();
+        this.actionLoading.set(null);
       },
-      error: (err: HttpErrorResponse) =>
-        this.errorMessage.set(err.error?.message || 'Erreur mot de passe'),
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Erreur mot de passe');
+        this.actionLoading.set(null);
+      },
     });
   }
 
@@ -135,20 +165,41 @@ export class UserDetailComponent implements OnInit {
       confirmDanger: true,
     });
     if (!ok) return;
+    this.message.set(null);
+    this.errorMessage.set(null);
+    this.actionLoading.set('ban');
     this.adminService.banUser(this.userId, this.banForm.getRawValue().reason).subscribe({
       next: (res) => {
         this.user.set(res.data!);
         this.message.set('Utilisateur banni');
+        this.actionLoading.set(null);
       },
-      error: (err: HttpErrorResponse) => this.errorMessage.set(err.error?.message || 'Erreur'),
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Erreur');
+        this.actionLoading.set(null);
+      },
     });
   }
 
-  unban(): void {
+  async unban(): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Lever le bannissement ?',
+      message: 'L’utilisateur pourra se reconnecter si son compte est vérifié.',
+      confirmLabel: 'Lever le bannissement',
+    });
+    if (!ok) return;
+    this.message.set(null);
+    this.errorMessage.set(null);
+    this.actionLoading.set('unban');
     this.adminService.unbanUser(this.userId).subscribe({
       next: (res) => {
         this.user.set(res.data!);
         this.message.set('Ban levé');
+        this.actionLoading.set(null);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Erreur');
+        this.actionLoading.set(null);
       },
     });
   }
@@ -161,9 +212,15 @@ export class UserDetailComponent implements OnInit {
       confirmDanger: true,
     });
     if (!ok) return;
+    this.message.set(null);
+    this.errorMessage.set(null);
+    this.actionLoading.set('delete');
     this.adminService.deleteUser(this.userId).subscribe({
       next: () => void this.router.navigate([this.routes.ADMIN.USERS]),
-      error: (err: HttpErrorResponse) => this.errorMessage.set(err.error?.message || 'Erreur'),
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Erreur');
+        this.actionLoading.set(null);
+      },
     });
   }
 
@@ -187,6 +244,19 @@ export class UserDetailComponent implements OnInit {
       return u.recruiterProfile.companyName;
     }
     return '—';
+  }
+
+  userImageUrl(u: AdminUserDetail): string | null {
+    return (
+      resolveUploadUrl(u.candidateProfile?.avatarUrl ?? null) ||
+      resolveUploadUrl(u.recruiterProfile?.companyLogoUrl ?? null)
+    );
+  }
+
+  accountStateLabel(u: AdminUserDetail): string {
+    if (u.isBanned) return 'Compte bloqué';
+    if (!u.isVerified) return 'Vérification requise';
+    return 'Compte opérationnel';
   }
 
   userInitials(u: AdminUserDetail): string {

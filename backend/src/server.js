@@ -18,7 +18,11 @@ async function startServer() {
     logger.info(`API base: http://localhost:${env.PORT}${env.API_PREFIX}`);
   });
 
-  stopWeeklyJobAlerts = startWeeklyJobAlertScheduler();
+  if (env.ENABLE_SCHEDULER) {
+    stopWeeklyJobAlerts = startWeeklyJobAlertScheduler();
+  } else {
+    logger.info('Weekly job alert scheduler disabled for this process.');
+  }
 }
 
 async function shutdown(signal) {

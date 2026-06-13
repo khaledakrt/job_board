@@ -6,6 +6,7 @@
   ></div>
   <div
     class="confirm-dialog"
+    [class.confirm-dialog-alert]="dialog.mode === 'alert'"
     role="alertdialog"
     aria-modal="true"
     [attr.aria-labelledby]="'confirm-title'"
@@ -15,9 +16,11 @@
     <h2 id="confirm-title" class="confirm-title">{{ dialog.title }}</h2>
     <p id="confirm-message" class="confirm-message">{{ dialog.message }}</p>
     <div class="confirm-actions">
-      <button type="button" class="btn-secondary !w-auto px-5" (click)="cancel()">
-        {{ dialog.cancelLabel }}
-      </button>
+      @if (dialog.mode === 'confirm') {
+        <button type="button" class="btn-secondary !w-auto px-5" (click)="cancel()">
+          {{ dialog.cancelLabel }}
+        </button>
+      }
       <button
         type="button"
         class="btn-primary !w-auto px-5"

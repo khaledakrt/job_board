@@ -1,5 +1,6 @@
 'use strict';
 
+const { Op } = require('sequelize');
 const { Application, Job, Company, CandidateProfile, ApplicationNote } = require('../models');
 const sequelize = require('../database/sequelize');
 const ApiError = require('../utils/ApiError');
@@ -9,7 +10,8 @@ const { copyResumeToSnapshot } = require('../utils/fileStorage');
 const { generateCoverLetter } = require('../utils/coverLetterGenerator');
 const { validateQuizAnswers, buildQuizReview } = require('../utils/jobQuiz');
 const recruiterNotificationService = require('./recruiterNotification.service');
-const { isArchivedApplication } = require('./candidateDashboard.service');
+const { ARCHIVE_MONTHS } = require('./candidateDashboard.service');
+const { expireDueJobs } = require('../utils/jobExpiration');
 const logger = require('../utils/logger');
 
 function formatApplication(application) {
@@ -46,13 +48,44 @@ function formatApplication(application) {
 async function listCandidateApplications(candidateId, filters = {}) {
   const page = Math.max(Number(filters.page) || 1, 1);
   const limit = Math.min(Math.max(Number(filters.limit) || 8, 1), 25);
+  const offset = (page - 1) * limit;
+  const where = { candidate_id: candidateId };
+  const scope = filters.scope || 'active';
+  const archiveCutoff = new Date();
+  archiveCutoff.setMonth(archiveCutoff.getMonth() - ARCHIVE_MONTHS);
 
-  const applications = await Application.findAll({
-    where: { candidate_id: candidateId },
+  if (scope === 'active') {
+    where[Op.or] = [
+      { status: { [Op.ne]: APPLICATION_STATUS.REJECTED } },
+      { updated_at: { [Op.gte]: archiveCutoff } },
+    ];
+  } else if (scope === 'archived') {
+    where.status = APPLICATION_STATUS.REJECTED;
+    where.updated_at = { [Op.lt]: archiveCutoff };
+  }
+
+  if (filters.status) {
+    where.status = filters.status;
+  }
+
+  const q = (filters.q || '').trim();
+  if (q) {
+    const searchCondition = {
+      [Op.or]: [
+        { '$job.title$': { [Op.like]: `%${q}%` } },
+        { '$job.company.name$': { [Op.like]: `%${q}%` } },
+      ],
+    };
+    where[Op.and] = where[Op.and] ? [...where[Op.and], searchCondition] : [searchCondition];
+  }
+
+  const { rows, count } = await Application.findAndCountAll({
+    where,
     include: [
       {
         model: Job,
         as: 'job',
+        required: Boolean(q),
         attributes: [
           'id',
           'title',
@@ -66,45 +99,24 @@ async function listCandidateApplications(candidateId, filters = {}) {
       },
     ],
     order: [['updated_at', 'DESC']],
+    limit,
+    offset,
+    distinct: true,
+    subQuery: false,
   });
 
-  let list = applications.map(formatApplication);
-
-  const scope = filters.scope || 'active';
-  if (scope === 'active') {
-    list = list.filter((_, i) => !isArchivedApplication(applications[i]));
-  } else if (scope === 'archived') {
-    list = list.filter((_, i) => isArchivedApplication(applications[i]));
-  }
-
-  if (filters.status) {
-    list = list.filter((a) => a.status === filters.status);
-  }
-
-  const q = (filters.q || '').trim().toLowerCase();
-  if (q) {
-    list = list.filter((a) => {
-      const title = (a.job?.title || '').toLowerCase();
-      const company = (a.job?.company?.name || '').toLowerCase();
-      return title.includes(q) || company.includes(q);
-    });
-  }
-
-  const totalItems = list.length;
+  const totalItems = count;
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
-  const safePage = Math.min(page, totalPages);
-  const start = (safePage - 1) * limit;
-  const items = list.slice(start, start + limit);
 
   return {
-    items,
+    items: rows.map(formatApplication),
     pagination: {
-      page: safePage,
+      page,
       limit,
       totalItems,
       totalPages,
-      hasNextPage: safePage < totalPages,
-      hasPreviousPage: safePage > 1,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
     },
   };
 }
@@ -118,10 +130,13 @@ async function listAppliedJobIds(candidateId) {
 }
 
 async function applyToJob({ candidate, jobId, coverLetter, quizAnswers }) {
+  await expireDueJobs({ id: jobId }, { force: true });
+
   const job = await Job.findOne({
     where: {
       id: jobId,
       status: JOB_STATUS.ACTIVE,
+      expires_at: { [Op.gt]: new Date() },
     },
     include: [{ model: Company, as: 'company' }],
   });
@@ -277,10 +292,13 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
 }
 
 async function generateApplicationLetter({ candidate, jobId }) {
+  await expireDueJobs({ id: jobId }, { force: true });
+
   const job = await Job.findOne({
     where: {
       id: jobId,
       status: JOB_STATUS.ACTIVE,
+      expires_at: { [Op.gt]: new Date() },
     },
     include: [{ model: Company, as: 'company' }],
   });

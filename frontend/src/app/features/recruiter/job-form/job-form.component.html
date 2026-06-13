@@ -127,6 +127,59 @@
       </div>
     </div>
 
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="salaryMin">Salaire min</label>
+      <div class="form-field-body">
+        <input
+          id="salaryMin"
+          type="number"
+          min="0"
+          step="1"
+          class="form-input"
+          formControlName="salaryMin"
+          placeholder="Ex. 1800"
+        />
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="salaryMax">Salaire max</label>
+      <div class="form-field-body">
+        <input
+          id="salaryMax"
+          type="number"
+          min="0"
+          step="1"
+          class="form-input"
+          formControlName="salaryMax"
+          placeholder="Ex. 2500"
+        />
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="salaryCurrency">Devise</label>
+      <div class="form-field-body">
+        <select id="salaryCurrency" class="form-input" formControlName="salaryCurrency">
+          <option value="TND">TND</option>
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-field form-field-inline">
+      <label class="form-label" for="salaryPeriod">Période</label>
+      <div class="form-field-body">
+        <select id="salaryPeriod" class="form-input" formControlName="salaryPeriod">
+          <option value="month">Mois</option>
+          <option value="year">An</option>
+          <option value="day">Jour</option>
+          <option value="hour">Heure</option>
+        </select>
+      </div>
+    </div>
+
     <div class="form-field form-field-inline form-field-inline-top span-2">
       <label class="form-label" for="languageInput">Langues</label>
       <div class="form-field-body">

@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op, fn, col, where } = require('sequelize');
-const { User } = require('../models');
+const { User, RefreshSession } = require('../models');
 const { env } = require('../config');
 const { USER_ROLES } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
@@ -11,6 +11,50 @@ const tokenService = require('./token.service');
 const emailService = require('./email.service');
 const loginEventService = require('./loginEvent.service');
 
+function buildVerificationExpiry() {
+  const expires = new Date();
+  expires.setHours(expires.getHours() + env.EMAIL_VERIFICATION_EXPIRES_HOURS);
+  return expires;
+}
+
+async function createRefreshSession({ user, refreshToken, ipAddress, userAgent }) {
+  await RefreshSession.create({
+    id: generateUuid(),
+    user_id: user.id,
+    token_hash: tokenService.hashSecureToken(refreshToken),
+    user_agent: userAgent ? String(userAgent).slice(0, 500) : null,
+    ip_address: ipAddress || null,
+    expires_at: tokenService.getRefreshTokenExpiresAt(),
+    revoked_at: null,
+    created_at: new Date(),
+  });
+}
+
+async function revokeRefreshToken(refreshToken) {
+  if (!refreshToken) return;
+  await RefreshSession.update(
+    { revoked_at: new Date() },
+    {
+      where: {
+        token_hash: tokenService.hashSecureToken(refreshToken),
+        revoked_at: null,
+      },
+    }
+  );
+}
+
+async function revokeAllUserRefreshSessions(userId) {
+  await RefreshSession.update(
+    { revoked_at: new Date() },
+    {
+      where: {
+        user_id: userId,
+        revoked_at: null,
+      },
+    }
+  );
+}
+
 async function register({ email, password, role }) {
   const existingUser = await User.findOne({ where: { email } });
 
@@ -19,6 +63,7 @@ async function register({ email, password, role }) {
   }
 
   const verificationToken = tokenService.generateSecureToken();
+  const verificationExpires = buildVerificationExpiry();
   const passwordHash = await hashPassword(password);
 
   const user = await User.create({
@@ -27,7 +72,8 @@ async function register({ email, password, role }) {
     password_hash: passwordHash,
     role: role || USER_ROLES.CANDIDATE,
     is_verified: false,
-    verification_token: verificationToken,
+    verification_token: tokenService.hashSecureToken(verificationToken),
+    verification_expires: verificationExpires,
     reset_token: null,
     reset_expires: null,
     created_at: new Date(),
@@ -83,6 +129,7 @@ async function login({ email, password, ipAddress, userAgent }) {
 
   const accessToken = tokenService.signAccessToken(user);
   const refreshToken = tokenService.signRefreshToken(user);
+  await createRefreshSession({ user, refreshToken, ipAddress, userAgent });
 
   return {
     user: {
@@ -105,7 +152,7 @@ async function forgotPassword({ email }) {
     resetExpires.setHours(resetExpires.getHours() + env.PASSWORD_RESET_EXPIRES_HOURS);
 
     await user.update({
-      reset_token: resetToken,
+      reset_token: tokenService.hashSecureToken(resetToken),
       reset_expires: resetExpires,
     });
 
@@ -122,9 +169,10 @@ async function forgotPassword({ email }) {
 }
 
 async function resetPassword({ token, password }) {
+  const tokenHash = tokenService.hashSecureToken(token);
   const user = await User.findOne({
     where: {
-      reset_token: token,
+      reset_token: tokenHash,
       reset_expires: {
         [Op.gt]: new Date(),
       },
@@ -139,9 +187,12 @@ async function resetPassword({ token, password }) {
 
   await user.update({
     password_hash: passwordHash,
+    password_changed_at: new Date(),
+    session_version: (user.session_version || 0) + 1,
     reset_token: null,
     reset_expires: null,
   });
+  await revokeAllUserRefreshSessions(user.id);
 
   return {
     message: 'Password has been reset successfully. You can now log in.',
@@ -169,7 +220,12 @@ async function changePassword({ userId, currentPassword, newPassword }) {
 
   const passwordHash = await hashPassword(newPassword);
 
-  await user.update({ password_hash: passwordHash });
+  await user.update({
+    password_hash: passwordHash,
+    password_changed_at: new Date(),
+    session_version: (user.session_version || 0) + 1,
+  });
+  await revokeAllUserRefreshSessions(user.id);
 
   return {
     message: 'Password changed successfully',
@@ -215,15 +271,19 @@ async function changeEmail({ userId, newEmail, currentPassword }) {
   }
 
   const verificationToken = tokenService.generateSecureToken();
+  const verificationExpires = buildVerificationExpiry();
 
   try {
     await user.update({
       email: normalizedNew,
       is_verified: false,
-      verification_token: verificationToken,
+      verification_token: tokenService.hashSecureToken(verificationToken),
+      verification_expires: verificationExpires,
       reset_token: null,
       reset_expires: null,
+      session_version: (user.session_version || 0) + 1,
     });
+    await revokeAllUserRefreshSessions(user.id);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
       throw ApiError.conflict(
@@ -263,17 +323,22 @@ async function verifyEmail({ token }) {
     throw ApiError.badRequest('Lien de confirmation invalide');
   }
 
+  const tokenHash = tokenService.hashSecureToken(trimmed);
   const user = await User.findOne({
-    where: { verification_token: trimmed },
+    where: {
+      verification_token: tokenHash,
+      verification_expires: { [Op.gt]: new Date() },
+    },
   });
 
   if (!user) {
-    throw ApiError.badRequest('Lien de confirmation invalide ou déjà utilisé');
+    throw ApiError.badRequest('Lien de confirmation invalide, expiré ou déjà utilisé');
   }
 
   await user.update({
     is_verified: true,
     verification_token: null,
+    verification_expires: null,
   });
 
   return {
@@ -300,7 +365,11 @@ async function resendVerificationEmail({ email }) {
   }
 
   const verificationToken = tokenService.generateSecureToken();
-  await user.update({ verification_token: verificationToken });
+  const verificationExpires = buildVerificationExpiry();
+  await user.update({
+    verification_token: tokenService.hashSecureToken(verificationToken),
+    verification_expires: verificationExpires,
+  });
 
   const mailResult = await emailService.sendVerificationEmail({
     email: user.email,
@@ -320,12 +389,29 @@ async function resendVerificationEmail({ email }) {
   return result;
 }
 
-async function refreshSession(refreshToken) {
+async function refreshSession(refreshToken, { ipAddress, userAgent } = {}) {
   if (!refreshToken) {
     throw ApiError.unauthorized('Refresh token is missing');
   }
 
   const decoded = tokenService.verifyRefreshToken(refreshToken);
+  const session = await RefreshSession.findOne({
+    where: {
+      token_hash: tokenService.hashSecureToken(refreshToken),
+      revoked_at: null,
+      expires_at: { [Op.gt]: new Date() },
+    },
+  });
+
+  if (!session) {
+    throw ApiError.unauthorized('Refresh session is invalid or expired');
+  }
+
+  if (session.user_id !== decoded.sub) {
+    await session.update({ revoked_at: new Date() });
+    throw ApiError.unauthorized('Refresh session is invalid');
+  }
+
   const user = await User.findByPk(decoded.sub);
 
   if (!user) {
@@ -338,14 +424,43 @@ async function refreshSession(refreshToken) {
     );
   }
 
+  if (tokenIssuedBeforePasswordChange(decoded, user.password_changed_at)) {
+    throw ApiError.unauthorized('Session expired after password change');
+  }
+
+  if ((decoded.sessionVersion || 0) !== (user.session_version || 0)) {
+    throw ApiError.unauthorized('Session expired after password change');
+  }
+
   if (!user.is_verified && user.role !== USER_ROLES.ADMIN) {
     throw ApiError.forbidden(
       'Adresse e-mail non confirmée. Ouvrez le lien reçu par e-mail ou demandez un nouvel envoi.'
     );
   }
 
+  const [revokedCount] = await RefreshSession.update(
+    { revoked_at: new Date() },
+    {
+      where: {
+        id: session.id,
+        revoked_at: null,
+        expires_at: { [Op.gt]: new Date() },
+      },
+    }
+  );
+
+  if (revokedCount !== 1) {
+    throw ApiError.unauthorized('Refresh session is invalid or expired');
+  }
+
   const accessToken = tokenService.signAccessToken(user);
   const newRefreshToken = tokenService.signRefreshToken(user);
+  await createRefreshSession({
+    user,
+    refreshToken: newRefreshToken,
+    ipAddress,
+    userAgent,
+  });
 
   return {
     user: {
@@ -359,6 +474,16 @@ async function refreshSession(refreshToken) {
   };
 }
 
+async function logout(refreshToken) {
+  await revokeRefreshToken(refreshToken);
+  return { message: 'Logged out successfully' };
+}
+
+function tokenIssuedBeforePasswordChange(decoded, passwordChangedAt) {
+  if (!passwordChangedAt || !decoded.iat) return false;
+  return decoded.iat * 1000 <= new Date(passwordChangedAt).getTime();
+}
+
 module.exports = {
   register,
   login,
@@ -369,4 +494,5 @@ module.exports = {
   verifyEmail,
   resendVerificationEmail,
   refreshSession,
+  logout,
 };

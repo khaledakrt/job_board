@@ -22,6 +22,15 @@ User.init(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    password_changed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    session_version: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0,
+    },
     role: {
       type: DataTypes.ENUM(
         USER_ROLES.CANDIDATE,
@@ -57,6 +66,10 @@ User.init(
     },
     verification_token: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    verification_expires: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
     reset_token: {

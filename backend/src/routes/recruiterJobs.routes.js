@@ -6,7 +6,6 @@ const authenticate = require('../middleware/authenticate');
 const { requireRecruiterRole } = require('../middleware/authorize');
 const requireRecruiter = require('../middleware/requireRecruiter');
 const { checkPermission } = require('../middleware/checkPermission');
-const verifySubscription = require('../middleware/verifySubscription');
 const { validateBody } = require('../middleware/validate');
 const { validateParams } = require('../middleware/validateParams');
 const { validateQuery } = require('../middleware/validateQuery');
@@ -40,7 +39,6 @@ router.get('/:id', validateParams(jobIdParamSchema), jobController.getJob);
 router.post(
   '/',
   checkPermission(RECRUITER_PERMISSIONS.CAN_POST_JOB),
-  verifySubscription,
   validateBody(createJobSchema),
   jobController.createJob
 );
@@ -49,7 +47,6 @@ router.put(
   '/:id',
   validateParams(jobIdParamSchema),
   checkPermission(RECRUITER_PERMISSIONS.CAN_POST_JOB),
-  verifySubscription,
   validateBody(updateJobSchema),
   jobController.updateJob
 );
@@ -58,16 +55,28 @@ router.patch(
   '/:id/status',
   validateParams(jobIdParamSchema),
   checkPermission(RECRUITER_PERMISSIONS.CAN_POST_JOB),
-  verifySubscription,
   validateBody(updateJobStatusSchema),
   jobController.updateJobStatus
+);
+
+router.patch(
+  '/:id/archive',
+  validateParams(jobIdParamSchema),
+  checkPermission(RECRUITER_PERMISSIONS.CAN_POST_JOB),
+  jobController.archiveJob
+);
+
+router.patch(
+  '/:id/restore',
+  validateParams(jobIdParamSchema),
+  checkPermission(RECRUITER_PERMISSIONS.CAN_POST_JOB),
+  jobController.restoreArchivedJob
 );
 
 router.delete(
   '/:id',
   validateParams(jobIdParamSchema),
   checkPermission(RECRUITER_PERMISSIONS.CAN_POST_JOB),
-  verifySubscription,
   jobController.deleteJob
 );
 

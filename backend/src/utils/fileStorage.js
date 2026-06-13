@@ -51,7 +51,9 @@ function buildPublicUrl(subdirectory, filename) {
 }
 
 function buildProtectedUploadUrl(subdirectory, filename) {
-  return `${env.API_PUBLIC_URL}/uploads/${subdirectory}/${filename}`;
+  const publicUrl = env.API_PUBLIC_URL.replace(/\/$/, '');
+  const apiPrefix = env.API_PREFIX.startsWith('/') ? env.API_PREFIX : `/${env.API_PREFIX}`;
+  return `${publicUrl}${apiPrefix.replace(/\/$/, '')}/uploads/${subdirectory}/${filename}`;
 }
 
 function buildLogoPublicUrl(filename) {

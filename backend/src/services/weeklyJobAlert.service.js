@@ -118,7 +118,18 @@ function buildJobWhere(filters, since) {
   if (filters.experience === 'senior') where.experience_years = { [Op.gte]: 6 };
 
   if (filters.minSalary != null && Number(filters.minSalary) > 0) {
-    addAnd(where, { salary_label: { [Op.regexp]: '[0-9]' } });
+    const min = Math.floor(Number(filters.minSalary));
+    addAnd(where, {
+      [Op.or]: [
+        { salary_max: { [Op.gte]: min } },
+        {
+          [Op.and]: [
+            { salary_max: null },
+            { salary_min: { [Op.gte]: min } },
+          ],
+        },
+      ],
+    });
   }
 
   return where;
@@ -235,7 +246,7 @@ function buildEmail({ candidateName, alert, jobs }) {
 }
 
 async function sendWeeklyJobAlerts({ now = new Date(), force = false } = {}) {
-  await expireDueJobs();
+  await expireDueJobs({}, { force: true });
 
   const alerts = await JobAlert.findAll({
     where: {

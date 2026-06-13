@@ -15,6 +15,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 import { RecruiterJobService } from '../services/job.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
+import { PublicationAccessDialogService } from '../services/publication-access-dialog.service';
 
 const PAGE_SIZE = 10;
 
@@ -28,6 +29,7 @@ const PAGE_SIZE = 10;
 export class JobsListComponent implements OnInit {
   private readonly jobService = inject(RecruiterJobService);
   private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly publicationAccessDialog = inject(PublicationAccessDialogService);
   readonly context = inject(RecruiterContextService);
 
   readonly jobs = signal<Job[]>([]);
@@ -41,7 +43,7 @@ export class JobsListComponent implements OnInit {
 
   readonly statusLabels = JOB_STATUS_LABELS;
   readonly statusOptions = JOB_STATUSES.filter(
-    (status) => status !== 'hidden' && status !== 'expired'
+    (status) => status !== 'expired'
   ) as JobStatus[];
   readonly routes = APP_ROUTES;
   readonly pageSize = PAGE_SIZE;
@@ -99,6 +101,11 @@ export class JobsListComponent implements OnInit {
   async setStatus(job: Job, status: JobStatus): Promise<void> {
     if (job.status === status) return;
 
+    if (status === 'active' && !this.context.canPublishJobs()) {
+      await this.publicationAccessDialog.showPublishBlocked();
+      return;
+    }
+
     const ok = await this.confirmDialog.confirm({
       title: 'Modifier la visibilité',
       message: `Passer « ${job.title} » au statut « ${JOB_STATUS_LABELS[status]} » ?`,
@@ -111,14 +118,41 @@ export class JobsListComponent implements OnInit {
       next: () => {
         this.message.set(
           status === 'hidden'
-            ? 'Offre masquée et déplacée dans Archives.'
+            ? 'Offre masquée. Elle reste disponible dans votre liste.'
             : `Statut mis à jour : ${JOB_STATUS_LABELS[status]}.`
         );
         this.statusUpdating.set(null);
         this.loadJobs(this.currentPage());
       },
       error: (err: HttpErrorResponse) => {
-        this.error.set(err.error?.message || 'Échec de la mise à jour du statut.');
+        if (this.publicationAccessDialog.isPublishBlockedError(err)) {
+          void this.publicationAccessDialog.showPublishBlocked();
+        } else {
+          this.error.set(err.error?.message || 'Échec de la mise à jour du statut.');
+        }
+        this.statusUpdating.set(null);
+      },
+    });
+  }
+
+  async archiveJob(job: Job): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Archiver cette offre ?',
+      message:
+        'Elle quittera la liste active et restera récupérable depuis Archives. Vous pourrez la restaurer plus tard en brouillon, la modifier puis la republier.',
+      confirmLabel: 'Archiver',
+    });
+    if (!ok) return;
+
+    this.statusUpdating.set(job.id);
+    this.jobService.archive(job.id).subscribe({
+      next: () => {
+        this.message.set('Offre archivée. Elle reste récupérable depuis Archives.');
+        this.statusUpdating.set(null);
+        this.loadJobs(this.currentPage());
+      },
+      error: (err: HttpErrorResponse) => {
+        this.error.set(err.error?.message || 'Archivage impossible.');
         this.statusUpdating.set(null);
       },
     });
@@ -139,9 +173,14 @@ export class JobsListComponent implements OnInit {
   expirationLabel(job: Job): string {
     if (job.status === 'expired') return 'Expirée';
     const days = daysUntilExpiration(job.expiresAt);
+    if (days < 0) return 'Échue';
     if (days === 0) return 'Aujourd\'hui';
     if (days === 1) return 'Demain';
     return `J-${days}`;
+  }
+
+  isPastExpiration(job: Job): boolean {
+    return daysUntilExpiration(job.expiresAt) < 0;
   }
 
   isPublic(job: Job): boolean {

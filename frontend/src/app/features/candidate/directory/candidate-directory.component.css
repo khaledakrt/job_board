@@ -897,6 +897,42 @@
   margin-top: 0.75rem;
 }
 
+.directory-quiz-list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.directory-quiz-question {
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid #dbeafe;
+  border-radius: 0.85rem;
+  background: #ffffff;
+}
+
+.directory-quiz-question legend {
+  padding: 0 0.25rem;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.directory-quiz-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+  color: #334155;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.directory-quiz-choice input {
+  margin-top: 0.15rem;
+}
+
 .job-popup-message {
   margin: 0.85rem 0 0;
   padding: 0.65rem 0.8rem;

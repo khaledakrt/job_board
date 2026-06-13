@@ -19,6 +19,7 @@ import {
   eventTypeLabel,
 } from '../../public/shared/catalog-offerings.constants';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-provider-workspace',
@@ -29,6 +30,7 @@ import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 })
 export class ProviderWorkspaceComponent implements OnInit {
   private readonly providerService = inject(ProviderService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   readonly authService = inject(AuthService);
 
   readonly routes = APP_ROUTES;
@@ -206,16 +208,37 @@ export class ProviderWorkspaceComponent implements OnInit {
       });
   }
 
-  deleteCourse(id: string | undefined): void {
+  async deleteCourse(id: string | undefined): Promise<void> {
     if (!id) return;
+    const ok = await this.confirmDialog.confirm({
+      title: 'Supprimer le cours',
+      message: 'Cette action supprime définitivement ce cours de votre profil public.',
+      confirmLabel: 'Supprimer',
+      confirmDanger: true,
+    });
+    if (!ok) return;
     this.providerService.deleteTrainingCourse(id).subscribe({ next: () => this.loadCourses() });
   }
 
-  deleteFormation(id: string): void {
+  async deleteFormation(id: string): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Supprimer la formation',
+      message: 'Cette formation sera retirée de votre espace. Confirmez-vous la suppression ?',
+      confirmLabel: 'Supprimer',
+      confirmDanger: true,
+    });
+    if (!ok) return;
     this.providerService.deleteFormation(id).subscribe({ next: () => this.loadOfferings() });
   }
 
-  deleteEvent(id: string): void {
+  async deleteEvent(id: string): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Supprimer l’événement',
+      message: 'Cet événement sera retiré de votre espace. Confirmez-vous la suppression ?',
+      confirmLabel: 'Supprimer',
+      confirmDanger: true,
+    });
+    if (!ok) return;
     this.providerService.deleteEvent(id).subscribe({ next: () => this.loadOfferings() });
   }
 

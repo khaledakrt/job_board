@@ -23,6 +23,13 @@ const { USER_ROLES, COMPANY_ROLES } = require('../src/config/constants');
 
 const TEST_PASSWORD = 'Test1234!';
 
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_TEST_SEED !== 'true') {
+  console.error(
+    'Refusing to seed test users in production. Set ALLOW_PROD_TEST_SEED=true only for an intentional, temporary smoke setup.'
+  );
+  process.exit(1);
+}
+
 const TEST_USERS = [
   {
     email: 'candidate@test.com',

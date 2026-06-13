@@ -5,6 +5,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { Job } from '../../../core/models/job.model';
+import { PublicJobQuiz, QuizAnswerPayload } from '../../../core/models/job-quiz.model';
 import {
   InstitutionOfferingItem,
   PrivateInstitutionCard,
@@ -19,6 +20,7 @@ import { remoteLabel, salaryDisplayLabel } from '../../../core/utils/job-display
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 import { CandidateJobService, CompanyDirectoryItem } from '../services/candidate-job.service';
 import { CandidateApplicationsService } from '../services/candidate-applications.service';
+import { CandidateContextService } from '../services/candidate-context.service';
 import { PublicCatalogService } from '../../public/services/public-catalog.service';
 import {
   deliveryModeLabel,
@@ -46,6 +48,7 @@ export class CandidateDirectoryComponent implements OnInit {
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly jobs = inject(CandidateJobService);
   private readonly applications = inject(CandidateApplicationsService);
+  private readonly candidateContext = inject(CandidateContextService);
   private readonly catalog = inject(PublicCatalogService);
 
   readonly routes = APP_ROUTES;
@@ -74,8 +77,10 @@ export class CandidateDirectoryComponent implements OnInit {
   readonly jobPopupLoading = signal(false);
   readonly jobPopup = signal<Job | null>(null);
   readonly applyOpen = signal(false);
+  readonly applyStep = signal<'quiz' | 'letter'>('letter');
   readonly applying = signal(false);
   readonly generatingLetter = signal(false);
+  readonly quizSelections = signal<Record<number, number>>({});
   readonly appliedJobIds = signal<Set<string>>(new Set());
   readonly trainingPopupOpen = signal(false);
   readonly trainingPopup = signal<TrainingContent | null>(null);
@@ -90,6 +95,8 @@ export class CandidateDirectoryComponent implements OnInit {
   readonly applyForm = this.fb.nonNullable.group({
     coverLetter: [''],
   });
+
+  private activeQuizJobId: string | null = null;
 
   search = '';
   city = '';
@@ -267,8 +274,7 @@ export class CandidateDirectoryComponent implements OnInit {
   closeJobPopup(): void {
     this.jobPopupOpen.set(false);
     this.jobPopupLoading.set(false);
-    this.applyOpen.set(false);
-    this.applyForm.reset({ coverLetter: '' });
+    this.closeApply(false);
   }
 
   startApply(job: Job): void {
@@ -278,18 +284,51 @@ export class CandidateDirectoryComponent implements OnInit {
       this.error.set('Vous avez déjà postulé à cette offre.');
       return;
     }
+
+    if (!this.candidateContext.profile()?.resumeUrl) {
+      this.error.set('Ajoutez un CV dans Mon profil (étape Identité & CV) avant de postuler.');
+      return;
+    }
+
+    if (this.activeQuizJobId !== job.id) {
+      this.quizSelections.set({});
+      this.activeQuizJobId = job.id;
+    }
+
+    this.applyForm.reset({ coverLetter: '' });
+    this.applyStep.set(this.isQuizEnabled(job) ? 'quiz' : 'letter');
     this.applyOpen.set(true);
+  }
+
+  closeApply(resetError = true): void {
+    this.applyOpen.set(false);
+    this.applyStep.set('letter');
+    this.applying.set(false);
+    this.generatingLetter.set(false);
+    this.applyForm.reset({ coverLetter: '' });
+    if (resetError) {
+      this.error.set(null);
+    }
+  }
+
+  proceedToLetterStep(job: Job): void {
+    if (this.isQuizEnabled(job) && !this.isQuizCompleteForJob(job)) {
+      this.error.set('Répondez à toutes les questions du quiz avant de continuer.');
+      return;
+    }
+    this.error.set(null);
+    this.applyStep.set('letter');
     this.applyForm.reset({ coverLetter: '' });
   }
 
-  cancelApply(): void {
-    this.applyOpen.set(false);
+  backToQuizStep(): void {
+    this.applyStep.set('quiz');
     this.applyForm.reset({ coverLetter: '' });
   }
 
   generateLetter(): void {
     const job = this.jobPopup();
-    if (!job) return;
+    if (!job || !this.applyOpen()) return;
     this.generatingLetter.set(true);
     this.jobs.generateLetter(job.id).subscribe({
       next: (res) => {
@@ -299,20 +338,56 @@ export class CandidateDirectoryComponent implements OnInit {
         this.generatingLetter.set(false);
       },
       error: () => {
-        this.error.set('Impossible de générer la lettre pour le moment.');
+        this.error.set('Impossible de générer la lettre de motivation.');
         this.generatingLetter.set(false);
       },
     });
   }
 
-  async submitApplication(): Promise<void> {
-    const job = this.jobPopup();
-    if (!job || this.applying()) return;
+  isQuizEnabled(job: Job): boolean {
+    return Boolean(job.quizEnabled && job.quiz?.questions?.length);
+  }
+
+  jobQuiz(job: Job): PublicJobQuiz | null {
+    return this.isQuizEnabled(job) ? (job.quiz as PublicJobQuiz) : null;
+  }
+
+  selectQuizAnswer(questionIndex: number, choiceIndex: number): void {
+    this.quizSelections.update((s) => ({ ...s, [questionIndex]: choiceIndex }));
+  }
+
+  quizAnswerFor(questionIndex: number): number | null {
+    const value = this.quizSelections()[questionIndex];
+    return value === undefined ? null : value;
+  }
+
+  isQuizCompleteForJob(job: Job): boolean {
+    const quiz = this.jobQuiz(job);
+    if (!quiz) return true;
+    if (this.activeQuizJobId !== job.id) return false;
+    return quiz.questions.every((_, index) => this.quizSelections()[index] !== undefined);
+  }
+
+  private buildQuizAnswers(job: Job): QuizAnswerPayload[] | undefined {
+    const quiz = this.jobQuiz(job);
+    if (!quiz) return undefined;
+    return quiz.questions.map((_, index) => ({
+      questionIndex: index,
+      choiceIndex: this.quizSelections()[index] ?? -1,
+    }));
+  }
+
+  async submitApplication(job: Job): Promise<void> {
+    if (this.applying()) return;
+    if (this.isQuizEnabled(job) && !this.isQuizCompleteForJob(job)) {
+      this.error.set('Répondez à toutes les questions du quiz avant d’envoyer votre candidature.');
+      return;
+    }
 
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Confirmer la candidature',
-      message: `Voulez-vous envoyer votre candidature pour "${job.title}" ?`,
-      confirmLabel: 'Envoyer ma candidature',
+      title: 'Envoyer la candidature',
+      message: `Envoyer votre candidature pour « ${job.title} » ?`,
+      confirmLabel: 'Envoyer',
       cancelLabel: 'Annuler',
     });
     if (!confirmed) return;
@@ -322,13 +397,17 @@ export class CandidateDirectoryComponent implements OnInit {
     this.success.set(null);
 
     const coverLetter = this.applyForm.controls.coverLetter.value.trim();
-    this.jobs.apply(job.id, coverLetter ? { coverLetter } : {}).subscribe({
+    const quizAnswers = this.buildQuizAnswers(job);
+    const payload: { coverLetter?: string; quizAnswers?: QuizAnswerPayload[] } = {};
+    if (coverLetter) payload.coverLetter = coverLetter;
+    if (quizAnswers?.length) payload.quizAnswers = quizAnswers;
+
+    this.jobs.apply(job.id, payload).subscribe({
       next: () => {
         this.appliedJobIds.update((ids) => new Set(ids).add(job.id));
         this.success.set('Candidature envoyée avec succès.');
-        this.applyOpen.set(false);
-        this.applyForm.reset({ coverLetter: '' });
         this.applying.set(false);
+        this.closeApply(false);
       },
       error: (err: HttpErrorResponse) => {
         if (err.status === 409) {

@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Subject, takeUntil } from 'rxjs';
 import { AdminService } from '../services/admin.service';
 import { AdminUserListItem } from '../../../core/models/admin.model';
 import { PaginationMeta } from '../../../core/models/pagination.model';
@@ -10,6 +11,7 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
 import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { adminPageSummary } from '../shared/admin-pagination.util';
+import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 
 const PAGE_SIZE = 15;
 
@@ -20,7 +22,7 @@ const PAGE_SIZE = 15;
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.css',
 })
-export class UsersListComponent implements OnInit {
+export class UsersListComponent implements OnInit, OnDestroy {
   private readonly adminService = inject(AdminService);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -40,10 +42,26 @@ export class UsersListComponent implements OnInit {
     banned: [''],
     ip: [''],
   });
+  private readonly destroy$ = new Subject<void>();
 
   readonly toolbarSummary = computed(() =>
     adminPageSummary(this.pagination(), 'utilisateur')
   );
+  pageTitle(): string {
+    const role = this.filters.controls.role.value;
+    if (role === USER_ROLES.CANDIDATE) return 'Candidats';
+    if (role === USER_ROLES.RECRUITER) return 'Recruteurs';
+    if (role === USER_ROLES.ADMIN) return 'Administrateurs';
+    return 'Comptes';
+  }
+
+  pageSubtitle(): string {
+    const role = this.filters.controls.role.value;
+    if (role === USER_ROLES.CANDIDATE) return 'Gérez les comptes candidats, leur vérification et leur activité.';
+    if (role === USER_ROLES.RECRUITER) return 'Gérez les comptes recruteurs, leurs sociétés et leurs accès.';
+    if (role === USER_ROLES.ADMIN) return 'Contrôlez les comptes administrateurs et les accès sensibles.';
+    return 'Gérez les comptes par rôle, statut, e-mail et adresse IP.';
+  }
   readonly pageSummary = computed(() => {
     const users = this.users();
     return {
@@ -55,11 +73,21 @@ export class UsersListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const ip = this.route.snapshot.queryParamMap.get('ip');
-    if (ip) {
-      this.filters.patchValue({ ip });
-    }
-    this.load(1);
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.filters.patchValue(
+        {
+          role: params.get('role') || '',
+          ip: params.get('ip') || '',
+        },
+        { emitEvent: false }
+      );
+      this.load(1);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   load(page: number): void {
@@ -92,7 +120,6 @@ export class UsersListComponent implements OnInit {
   resetFilters(): void {
     this.filters.reset();
     void this.router.navigate([this.routes.ADMIN.USERS]);
-    this.load(1);
   }
 
   roleLabel(role: string): string {
@@ -101,5 +128,19 @@ export class UsersListComponent implements OnInit {
     if (role === USER_ROLES.TRAINING_PROVIDER) return 'Centre de formation';
     if (role === USER_ROLES.INSTITUTION_PROVIDER) return 'Établissement';
     return 'Candidat';
+  }
+
+  userImageUrl(user: AdminUserListItem): string | null {
+    return (
+      resolveUploadUrl(user.candidateProfile?.avatarUrl ?? null) ||
+      resolveUploadUrl(user.recruiterProfile?.companyLogoUrl ?? null)
+    );
+  }
+
+  userInitial(user: AdminUserListItem): string {
+    const profileName = user.candidateProfile
+      ? `${user.candidateProfile.firstName} ${user.candidateProfile.lastName}`.trim()
+      : user.recruiterProfile?.companyName || user.email;
+    return (profileName.charAt(0) || '?').toUpperCase();
   }
 }

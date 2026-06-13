@@ -14,7 +14,9 @@ const Subscription = require('./Subscription');
 const SavedJob = require('./SavedJob');
 const JobAlert = require('./JobAlert');
 const UserLoginEvent = require('./UserLoginEvent');
+const RefreshSession = require('./RefreshSession');
 const AdminAuditLog = require('./AdminAuditLog');
+const PlatformSetting = require('./PlatformSetting');
 const TrainingCenter = require('./TrainingCenter');
 const TrainingCourse = require('./TrainingCourse');
 const TrainingFormation = require('./TrainingFormation');
@@ -33,6 +35,9 @@ CandidateProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 User.hasMany(UserLoginEvent, { foreignKey: 'user_id', as: 'loginEvents' });
 UserLoginEvent.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasMany(RefreshSession, { foreignKey: 'user_id', as: 'refreshSessions' });
+RefreshSession.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 User.hasMany(AdminAuditLog, { foreignKey: 'actor_id', as: 'adminAuditLogs' });
 AdminAuditLog.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
@@ -164,7 +169,9 @@ module.exports = {
   SavedJob,
   JobAlert,
   UserLoginEvent,
+  RefreshSession,
   AdminAuditLog,
+  PlatformSetting,
   TrainingCenter,
   TrainingCourse,
   TrainingFormation,

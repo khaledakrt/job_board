@@ -326,7 +326,7 @@
 
         @if (resumeLink(detail.resumeSnapshotUrl); as resume) {
           <p class="app-detail-resume">
-            <a [href]="resume" target="_blank" rel="noopener noreferrer">Télécharger le CV envoyé</a>
+            <a href="#" (click)="openResume(detail.resumeSnapshotUrl, $event)">Télécharger le CV envoyé</a>
           </p>
         }
 

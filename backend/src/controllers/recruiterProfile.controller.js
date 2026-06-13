@@ -4,6 +4,7 @@ const { QueryTypes } = require('sequelize');
 const asyncHandler = require('../utils/asyncHandler');
 const sequelize = require('../database/sequelize');
 const { formatCompany } = require('../services/company.service');
+const subscriptionService = require('../services/subscription.service');
 const { RecruiterProfile, Company } = require('../models');
 const { JOB_STATUS } = require('../config/constants');
 
@@ -22,6 +23,15 @@ const getProfile = asyncHandler(async (req, res) => {
     });
   }
 
+  const [subscriptionMode, subscription] = await Promise.all([
+    subscriptionService.getRecruiterSubscriptionMode(),
+    recruiter.company_id
+      ? subscriptionService.getCompanySubscription(recruiter.company_id)
+      : Promise.resolve(subscriptionService.formatSubscription(null)),
+  ]);
+  const canPublish =
+    subscriptionMode === subscriptionService.SUBSCRIPTION_MODES.FREE_ALL || subscription.isActive;
+
   res.status(200).json({
     success: true,
     data: {
@@ -34,6 +44,17 @@ const getProfile = asyncHandler(async (req, res) => {
       canPostJob: recruiter.can_post_job,
       canDecideApplication: recruiter.can_decide_application,
       canEditCompany: recruiter.can_edit_company,
+      publicationAccess: {
+        mode: subscriptionMode,
+        companySubscriptionStatus: subscription.status,
+        companySubscriptionEndsAt: subscription.currentPeriodEnd,
+        canPublish,
+        reason: canPublish
+          ? subscriptionMode === subscriptionService.SUBSCRIPTION_MODES.FREE_ALL
+            ? 'free_global'
+            : 'company_subscription_active'
+          : 'company_subscription_required',
+      },
       company: recruiter.company ? formatCompany(recruiter.company) : null,
     },
   });

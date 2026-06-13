@@ -108,6 +108,25 @@ const getCompany = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data });
 });
 
+const getSubscriptionPolicy = asyncHandler(async (_req, res) => {
+  const data = await adminService.getSubscriptionPolicy();
+  res.status(200).json({ success: true, data });
+});
+
+const updateSubscriptionPolicy = asyncHandler(async (req, res) => {
+  const data = await adminService.updateSubscriptionPolicy(req.validatedBody.mode, req.user.id);
+  res.status(200).json({ success: true, message: 'Politique abonnement mise à jour', data });
+});
+
+const updateCompanySubscription = asyncHandler(async (req, res) => {
+  const data = await adminService.updateCompanySubscription(
+    req.validatedParams.id,
+    req.validatedBody,
+    req.user.id
+  );
+  res.status(200).json({ success: true, message: 'Abonnement entreprise mis à jour', data });
+});
+
 const listTrainingCenters = asyncHandler(async (req, res) => {
   const result = await publicCatalogService.adminListTrainingCenters(req.validatedQuery);
   res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
@@ -203,6 +222,9 @@ module.exports = {
   getApplication,
   listCompanies,
   getCompany,
+  getSubscriptionPolicy,
+  updateSubscriptionPolicy,
+  updateCompanySubscription,
   listTrainingCenters,
   getTrainingCenter,
   createTrainingCenter,

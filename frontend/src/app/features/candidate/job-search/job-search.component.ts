@@ -327,13 +327,16 @@ export class JobSearchComponent implements OnInit {
     this.viewModeService.setMode(mode);
   }
 
-  selectJob(job: Job): void {
+  selectJob(job: Job, options: { refresh?: boolean } = {}): void {
     if (this.activeQuizJobId !== job.id) {
       this.quizSelections.set({});
       this.activeQuizJobId = job.id;
     }
     this.closeApplyModal();
     this.selectedJob.set(job);
+    if (options.refresh === false) {
+      return;
+    }
     this.jobService.getById(job.id).subscribe({
       next: (res) => {
         if (res.data) {
@@ -408,7 +411,7 @@ export class JobSearchComponent implements OnInit {
     this.applyForm.reset({ coverLetter: '' });
   }
 
-  private startApplyFlow(job: Job): void {
+  private startApplyFlow(job: Job, options: { refresh?: boolean } = {}): void {
     this.error.set(null);
     this.closeCardsDetail();
 
@@ -434,6 +437,9 @@ export class JobSearchComponent implements OnInit {
     this.applyFlowStep.set(this.isQuizEnabled(job) ? 'offer' : 'letter');
     this.applyFlowOpen.set(true);
 
+    if (options.refresh === false) {
+      return;
+    }
     this.jobService.getById(job.id).subscribe({
       next: (res) => {
         if (res.data) {
@@ -478,40 +484,56 @@ export class JobSearchComponent implements OnInit {
   }
 
   private syncFromQueryParams(): void {
-    const navState = this.router.lastSuccessfulNavigation?.extras?.state as
-      | { skipJobQuerySync?: boolean }
-      | undefined;
+    const navState =
+      (this.router.lastSuccessfulNavigation?.extras?.state as
+        | { apply?: boolean; job?: Job; jobId?: string; skipJobQuerySync?: boolean }
+        | undefined) ||
+      (window.history.state as
+        | { apply?: boolean; job?: Job; jobId?: string; skipJobQuerySync?: boolean }
+        | undefined);
     if (navState?.skipJobQuerySync) {
       return;
     }
-    const jobId = this.route.snapshot.queryParamMap.get('jobId');
+    const queryJobId = this.route.snapshot.queryParamMap.get('jobId');
+    const jobId = queryJobId || navState?.jobId || null;
     if (!jobId) {
       this.lastHandledQueryKey = '';
       return;
     }
 
-    const apply = this.route.snapshot.queryParamMap.get('apply') === '1';
+    const apply = queryJobId
+      ? this.route.snapshot.queryParamMap.get('apply') === '1'
+      : navState?.apply === true;
     const queryKey = `${jobId}:${apply ? '1' : '0'}`;
     if (queryKey === this.lastHandledQueryKey) {
       return;
     }
     this.lastHandledQueryKey = queryKey;
 
-    const openForJob = (job: Job) => {
+    const openForJob = (job: Job, options: { refresh?: boolean } = {}) => {
       const inList = this.allJobs().some((j) => j.id === job.id);
       if (!inList) {
         this.allJobs.update((list) => [job, ...list]);
       }
-      if (this.viewMode() === 'cards') {
+      if (apply) {
+        this.selectedJob.set(job);
+      } else if (this.viewMode() === 'cards') {
         this.openCardsJobDetail(job);
       } else {
-        this.selectJob(job);
+        this.selectJob(job, options);
       }
       if (apply && !this.hasApplied(job.id)) {
-        afterNextRender(() => this.startApplyFlow(job), { injector: this.injector });
+        afterNextRender(() => this.startApplyFlow(job, options), { injector: this.injector });
       }
-      this.clearJobQueryParams();
+      if (queryJobId) {
+        this.clearJobQueryParams();
+      }
     };
+
+    if (!queryJobId && navState?.job?.id === jobId) {
+      openForJob(navState.job, { refresh: false });
+      return;
+    }
 
     const cached = this.allJobs().find((j) => j.id === jobId);
     if (cached) {

@@ -5,8 +5,11 @@ const {
   Company,
   RecruiterProfile,
   User,
+  Job,
+  Application,
 } = require('../models');
 const { COMPANY_ROLES, USER_ROLES } = require('../config/constants');
+const { env } = require('../config');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
 const { buildLogoPublicUrl, deleteLogoFile } = require('../utils/fileStorage');
@@ -120,7 +123,9 @@ async function createCompany({ userId, payload }) {
       { transaction }
     );
 
-    await subscriptionService.createMockSubscription(company.id, 'starter', { transaction });
+    if (env.NODE_ENV !== 'production') {
+      await subscriptionService.createMockSubscription(company.id, 'starter', { transaction });
+    }
 
     await transaction.commit();
 
@@ -191,6 +196,20 @@ async function deleteCompany({ companyId, recruiter }) {
 
   if (recruiter.company_role !== COMPANY_ROLES.OWNER) {
     throw ApiError.forbidden('Only the company owner can delete the company');
+  }
+
+  const [jobsCount, recruitersCount, applicationsCount] = await Promise.all([
+    Job.count({ where: { company_id: companyId } }),
+    RecruiterProfile.count({ where: { company_id: companyId } }),
+    Application.count({
+      include: [{ model: Job, as: 'job', where: { company_id: companyId }, attributes: [] }],
+    }),
+  ]);
+
+  if (jobsCount > 0 || applicationsCount > 0 || recruitersCount > 1) {
+    throw ApiError.badRequest(
+      'Company deletion is blocked to preserve jobs, applications, and team history.'
+    );
   }
 
   if (company.logo_url) {

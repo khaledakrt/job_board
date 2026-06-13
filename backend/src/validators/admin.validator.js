@@ -1,7 +1,16 @@
 'use strict';
 
 const { z } = require('zod');
-const { USER_ROLES, JOB_STATUS, APPLICATION_STATUS } = require('../config/constants');
+const {
+  USER_ROLES,
+  JOB_STATUS,
+  JOB_MANUAL_STATUSES,
+  APPLICATION_STATUS,
+  TRAINING_DELIVERY_MODES,
+  INSTITUTION_TYPES,
+  CATALOG_PUBLISH_STATUS,
+} = require('../config/constants');
+const { passwordSchema } = require('./auth.validator');
 
 const listUsersQuerySchema = z.object({
   page: z.coerce.number().optional(),
@@ -44,7 +53,7 @@ const companyIdParamsSchema = z.object({
 
 const createUserBodySchema = z.object({
   email: z.string().email().max(255),
-  password: z.string().min(8).max(128),
+  password: passwordSchema,
   role: z.enum(Object.values(USER_ROLES)),
   isVerified: z.boolean().optional(),
   firstName: z.string().max(100).optional(),
@@ -55,6 +64,8 @@ const createUserBodySchema = z.object({
   companyName: z.string().max(255).optional(),
   companyIndustry: z.string().max(100).optional(),
   jobTitle: z.string().max(255).optional(),
+  providerName: z.string().max(255).optional(),
+  institutionType: z.enum(INSTITUTION_TYPES).optional(),
 });
 
 const updateUserBodySchema = z
@@ -64,11 +75,19 @@ const updateUserBodySchema = z
     isVerified: z.boolean().optional(),
     firstName: z.string().max(100).optional(),
     lastName: z.string().max(100).optional(),
+    professionalTitle: z.string().max(255).optional(),
+    phone: z.string().max(50).optional(),
+    jobTitle: z.string().max(255).optional(),
+    companyId: z.string().uuid().optional(),
+    companyName: z.string().max(255).optional(),
+    companyIndustry: z.string().max(100).optional(),
+    providerName: z.string().max(255).optional(),
+    institutionType: z.enum(INSTITUTION_TYPES).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, { message: 'At least one field required' });
 
 const setPasswordBodySchema = z.object({
-  password: z.string().min(8).max(128),
+  password: passwordSchema,
 });
 
 const banUserBodySchema = z.object({
@@ -76,7 +95,17 @@ const banUserBodySchema = z.object({
 });
 
 const updateJobStatusBodySchema = z.object({
-  status: z.enum(Object.values(JOB_STATUS)),
+  status: z.enum(JOB_MANUAL_STATUSES),
+});
+
+const updateSubscriptionPolicySchema = z.object({
+  mode: z.enum(['free_all', 'paid_required']),
+});
+
+const updateCompanySubscriptionSchema = z.object({
+  action: z.enum(['activate_manual', 'cancel']),
+  planType: z.string().trim().min(1).max(64).optional().default('manual_free'),
+  months: z.coerce.number().int().min(1).max(60).optional().default(12),
 });
 
 const listCatalogQuerySchema = z.object({
@@ -98,8 +127,6 @@ const listInstitutionOfferingsQuerySchema = z.object({
 const catalogIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
-
-const { TRAINING_DELIVERY_MODES, INSTITUTION_TYPES, CATALOG_PUBLISH_STATUS } = require('../config/constants');
 
 function emptyToNull(value) {
   if (value === undefined || value === null) return null;
@@ -171,6 +198,8 @@ module.exports = {
   setPasswordBodySchema,
   banUserBodySchema,
   updateJobStatusBodySchema,
+  updateSubscriptionPolicySchema,
+  updateCompanySubscriptionSchema,
   listCatalogQuerySchema,
   listInstitutionOfferingsQuerySchema,
   catalogIdParamsSchema,

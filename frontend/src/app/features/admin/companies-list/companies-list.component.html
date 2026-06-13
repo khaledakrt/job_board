@@ -12,6 +12,43 @@
     </div>
   </header>
 
+  <section class="subscription-global-card">
+    <div>
+      <p class="subscription-global-kicker">Règle globale de publication</p>
+      <h2>{{ policyLabel(subscriptionPolicy()?.mode) }}</h2>
+      <span class="subscription-global-db-state">
+        État enregistré : {{ subscriptionPolicy()?.mode || 'chargement...' }}
+      </span>
+      <p>
+        @if (subscriptionPolicy()?.mode === 'free_all') {
+          Toutes les entreprises peuvent publier sans abonnement. Tous les recruteurs rattachés à ces entreprises héritent de cet accès.
+        } @else {
+          Chaque entreprise doit avoir un abonnement actif ou un accès gratuit manuel pour que ses recruteurs publient des offres.
+        }
+      </p>
+    </div>
+    <div class="subscription-global-actions">
+      <button
+        type="button"
+        class="subscription-global-button subscription-global-button--free"
+        [class.subscription-global-button--active]="subscriptionPolicy()?.mode === 'free_all'"
+        [disabled]="policyLoading() || policyActionLoading() || subscriptionPolicy()?.mode === 'free_all'"
+        (click)="setGlobalPolicy('free_all')"
+      >
+        {{ subscriptionPolicy()?.mode === 'free_all' ? 'Gratuit global actif' : 'Rendre tout gratuit' }}
+      </button>
+      <button
+        type="button"
+        class="subscription-global-button subscription-global-button--paid"
+        [class.subscription-global-button--active]="subscriptionPolicy()?.mode === 'paid_required'"
+        [disabled]="policyLoading() || policyActionLoading() || subscriptionPolicy()?.mode === 'paid_required'"
+        (click)="setGlobalPolicy('paid_required')"
+      >
+        {{ subscriptionPolicy()?.mode === 'paid_required' ? 'Paiement actif' : 'Revenir au paiement' }}
+      </button>
+    </div>
+  </section>
+
   <form class="admin-filters admin-company-filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
     <div class="admin-field">
       <label for="companySearch">Recherche</label>
@@ -31,7 +68,7 @@
 
   <section class="admin-page-insights" aria-label="Résumé entreprises de la page">
     <article class="admin-insight-card">
-      <span>Page actuelle</span>
+      <span>Page affichée</span>
       <strong>{{ pageSummary().total }}</strong>
       <small>entreprises chargées</small>
     </article>
@@ -46,14 +83,17 @@
       <small>liées aux offres</small>
     </article>
     <article class="admin-insight-card">
-      <span>Recruteurs</span>
-      <strong>{{ pageSummary().recruiters }}</strong>
-      <small>comptes liés</small>
+      <span>Abonnements actifs</span>
+      <strong>{{ pageSummary().activeSubscriptions }}</strong>
+      <small>publication autorisée</small>
     </article>
   </section>
 
   @if (errorMessage()) {
     <div class="alert-error admin-alerts">{{ errorMessage() }}</div>
+  }
+  @if (message()) {
+    <div class="alert-success admin-alerts">{{ message() }}</div>
   }
 
   @if (pagination()) {
@@ -69,17 +109,18 @@
       <div class="admin-table-loading">Chargement…</div>
     }
     <div class="table-panel">
-      <table class="data-table">
+      <table class="data-table admin-companies-table">
         <thead>
           <tr>
             <th class="col-title">Entreprise</th>
-            <th>Secteur</th>
-            <th>Ville</th>
-            <th>Contact</th>
-            <th>Offres</th>
-            <th>Candidatures</th>
-            <th>Recruteurs</th>
-            <th>Créée le</th>
+            <th class="company-col-sector">Secteur</th>
+            <th class="company-col-city">Ville</th>
+            <th class="company-col-contact">Contact</th>
+            <th class="company-col-count">Offres</th>
+            <th class="company-col-subscription">Abonnement</th>
+            <th class="company-col-count">Candidatures</th>
+            <th class="company-col-count">Recruteurs</th>
+            <th class="company-col-created">Créée le</th>
             <th class="col-actions">Gestion</th>
           </tr>
         </thead>
@@ -92,28 +133,37 @@
                 </a>
                 <span class="company-id">{{ company.id }}</span>
               </td>
-              <td>{{ company.industry || '—' }}</td>
-              <td>{{ company.city || '—' }}</td>
-              <td>
+              <td class="company-col-sector">{{ company.industry || '—' }}</td>
+              <td class="company-col-city">{{ company.city || '—' }}</td>
+              <td class="company-col-contact">
                 <span class="company-contact">{{ company.contactEmail || company.website || '—' }}</span>
               </td>
-              <td>
+              <td class="company-col-count">
                 <span class="count-pill">{{ company.activeJobsCount }}/{{ company.jobsCount }}</span>
               </td>
-              <td>
+              <td class="company-col-subscription">
+                <span
+                  class="subscription-pill"
+                  [class.subscription-pill--active]="company.subscription?.isActive"
+                  [class.subscription-pill--canceled]="company.subscription?.status === 'canceled'"
+                >
+                  {{ subscriptionLabel(company) }}
+                </span>
+              </td>
+              <td class="company-col-count">
                 <span class="count-pill">{{ company.applicationsCount }}</span>
               </td>
-              <td>
+              <td class="company-col-count">
                 <span class="count-pill">{{ company.recruitersCount }}</span>
               </td>
-              <td>{{ company.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td class="company-col-created">{{ company.createdAt | date: 'dd/MM/yyyy' }}</td>
               <td class="actions-cell">
                 <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(company.id)" class="link-action">Détail →</a>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="9">
+              <td colspan="10">
                 <div class="admin-empty-state">Aucune entreprise ne correspond à vos critères.</div>
               </td>
             </tr>

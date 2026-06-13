@@ -63,6 +63,22 @@ Job.init(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    salary_min: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+    },
+    salary_max: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+    },
+    salary_currency: {
+      type: DataTypes.STRING(8),
+      allowNull: true,
+    },
+    salary_period: {
+      type: DataTypes.ENUM('month', 'year', 'day', 'hour'),
+      allowNull: true,
+    },
     experience_years: {
       type: DataTypes.SMALLINT.UNSIGNED,
       allowNull: true,

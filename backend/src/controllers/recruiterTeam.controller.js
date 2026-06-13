@@ -24,7 +24,7 @@ const inviteMember = asyncHandler(async (req, res) => {
     data: result.member,
     meta: {
       emailSent: result.emailSent,
-      ...(result.temporaryPassword ? { temporaryPassword: result.temporaryPassword } : {}),
+      ...(result.devSetPasswordUrl ? { devSetPasswordUrl: result.devSetPasswordUrl } : {}),
     },
   });
 });

@@ -27,8 +27,8 @@ export interface AdminUserListItem {
   bannedAt: string | null;
   lastLoginIp: string | null;
   createdAt: string;
-  candidateProfile: { id: string; firstName: string; lastName: string } | null;
-  recruiterProfile: { id: string; companyName?: string } | null;
+  candidateProfile: { id: string; firstName: string; lastName: string; avatarUrl?: string | null } | null;
+  recruiterProfile: { id: string; companyName?: string; companyLogoUrl?: string | null } | null;
 }
 
 export interface AdminUserDetail extends AdminUserListItem {
@@ -36,6 +36,7 @@ export interface AdminUserDetail extends AdminUserListItem {
     id: string;
     firstName: string;
     lastName: string;
+    avatarUrl?: string | null;
     professionalTitle?: string;
     phone?: string;
   } | null;
@@ -44,6 +45,7 @@ export interface AdminUserDetail extends AdminUserListItem {
     jobTitle?: string;
     companyId?: string;
     companyName?: string;
+    companyLogoUrl?: string | null;
   } | null;
 }
 
@@ -86,7 +88,22 @@ export interface AdminCompanyListItem {
   activeJobsCount: number;
   recruitersCount: number;
   applicationsCount: number;
+  subscription?: AdminCompanySubscription;
   createdAt: string;
+}
+
+export type SubscriptionPolicyMode = 'free_all' | 'paid_required';
+
+export interface AdminSubscriptionPolicy {
+  mode: SubscriptionPolicyMode;
+}
+
+export interface AdminCompanySubscription {
+  id: string | null;
+  planType: string | null;
+  status: 'active' | 'canceled' | 'missing';
+  currentPeriodEnd: string | null;
+  isActive: boolean;
 }
 
 export interface AdminApplicationListItem {
@@ -206,7 +223,10 @@ export interface CreateAdminUserRequest {
   firstName?: string;
   lastName?: string;
   companyName?: string;
+  companyIndustry?: string;
   jobTitle?: string;
+  providerName?: string;
+  institutionType?: InstitutionType;
 }
 
 export interface UpdateAdminUserRequest {
@@ -215,6 +235,14 @@ export interface UpdateAdminUserRequest {
   isVerified?: boolean;
   firstName?: string;
   lastName?: string;
+  professionalTitle?: string;
+  phone?: string;
+  jobTitle?: string;
+  companyId?: string;
+  companyName?: string;
+  companyIndustry?: string;
+  providerName?: string;
+  institutionType?: InstitutionType;
 }
 
 export type AdminPaginated<T> = { data: T; pagination: PaginationMeta };

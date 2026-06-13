@@ -1,6 +1,6 @@
 'use strict';
 
-const { RecruiterProfile, User, Company } = require('../models');
+const { RecruiterProfile, User, Company, Job, RefreshSession } = require('../models');
 const { env } = require('../config');
 const emailService = require('./email.service');
 const { COMPANY_ROLES, USER_ROLES } = require('../config/constants');
@@ -66,8 +66,11 @@ async function inviteTeamMember({ owner, payload }) {
     throw ApiError.badRequest('Cannot invite another owner. Transfer ownership is not supported yet.');
   }
 
-  const temporaryPassword = payload.password || tokenService.generateSecureToken(16);
-  const passwordHash = await hashPassword(temporaryPassword);
+  const initialPassword = tokenService.generateSecureToken(32);
+  const passwordHash = await hashPassword(initialPassword);
+  const setupToken = tokenService.generateSecureToken();
+  const resetExpires = new Date();
+  resetExpires.setHours(resetExpires.getHours() + env.PASSWORD_RESET_EXPIRES_HOURS);
 
   const transaction = await User.sequelize.transaction();
   let created;
@@ -87,8 +90,9 @@ async function inviteTeamMember({ owner, payload }) {
           role: USER_ROLES.RECRUITER,
           is_verified: true,
           verification_token: null,
-          reset_token: null,
-          reset_expires: null,
+          verification_expires: null,
+          reset_token: tokenService.hashSecureToken(setupToken),
+          reset_expires: resetExpires,
           created_at: new Date(),
         },
         { transaction }
@@ -132,7 +136,7 @@ async function inviteTeamMember({ owner, payload }) {
       to: userForInvite.email,
       companyName: company?.name || 'votre entreprise',
       inviterEmail: inviter?.email || env.SMTP_FROM_EMAIL,
-      temporaryPassword: isNewAccount && !payload.password ? temporaryPassword : undefined,
+      setupToken: isNewAccount ? setupToken : undefined,
       isNewAccount,
     });
     emailSent = true;
@@ -142,7 +146,10 @@ async function inviteTeamMember({ owner, payload }) {
 
   return {
     member: formatTeamMember(created),
-    temporaryPassword: payload.password ? undefined : temporaryPassword,
+    devSetPasswordUrl:
+      env.NODE_ENV === 'development' && isNewAccount
+        ? `${env.CLIENT_URL}/auth/reset-password?token=${encodeURIComponent(setupToken)}`
+        : undefined,
     emailSent,
   };
 }
@@ -208,10 +215,18 @@ async function removeTeamMember({ owner, memberId }) {
     throw ApiError.forbidden('You cannot remove yourself from the team');
   }
 
-  const userId = member.user_id;
+  const postedJobsCount = await Job.count({ where: { recruiter_id: member.id } });
+  if (postedJobsCount > 0) {
+    throw ApiError.badRequest(
+      'This recruiter has published job history. Disable their permissions instead of removing the account.'
+    );
+  }
 
   await member.destroy();
-  await User.destroy({ where: { id: userId } });
+  await RefreshSession.update(
+    { revoked_at: new Date() },
+    { where: { user_id: member.user_id, revoked_at: null } }
+  );
 
   return { message: 'Team member removed successfully' };
 }

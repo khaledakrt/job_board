@@ -13,7 +13,9 @@ npm ci --omit=dev
 
 log "Base de données"
 npm run db:setup
-npm run db:migrate 2>/dev/null || true
+source "$APP_ROOT/deploy/lib/update-common.sh"
+jb_backup_database
+npm run db:migrate
 if [[ "${RUN_SEED:-0}" == "1" ]]; then
   log "Seed de démonstration explicitement demandé"
   npm run db:seed

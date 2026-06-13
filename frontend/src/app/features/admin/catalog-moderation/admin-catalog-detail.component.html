@@ -45,6 +45,27 @@
       <div class="alert-success admin-alerts">{{ successMessage() }}</div>
     }
 
+    <section class="admin-catalog-command-card">
+      <div class="admin-catalog-command-media">
+        @if (item()!.logoUrl && mediaUrl(item()!.logoUrl); as logo) {
+          <img [src]="logo" alt="" />
+        } @else {
+          <span>{{ item()!.name.charAt(0) }}</span>
+        }
+      </div>
+      <div class="admin-catalog-command-main">
+        <p>{{ kind() === 'training-centers' ? 'Centre de formation' : 'Établissement privé' }}</p>
+        <h2>{{ item()!.name }}</h2>
+        <div class="admin-catalog-command-meta">
+          <span class="status-pill" [attr.data-status]="item()!.status">
+            {{ statusLabels[item()!.status] }}
+          </span>
+          <span>{{ item()!.ownerEmail || 'Sans compte propriétaire' }}</span>
+          <span>{{ item()!.city || 'Ville non renseignée' }}</span>
+        </div>
+      </div>
+    </section>
+
     @if (item()!.status === 'pending') {
       <p class="admin-hint-banner">
         {{ kind() === 'training-centers' ? 'Ce centre' : 'Cet établissement' }} n’apparaît pas sur
@@ -82,7 +103,7 @@
 
     <div class="admin-columns">
       <section class="admin-card">
-        <h2>Informations</h2>
+        <h2 class="admin-card-title">Informations</h2>
         <dl class="admin-dl">
           <dt>Créé le</dt>
           <dd>{{ item()!.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
@@ -107,12 +128,12 @@
         </dl>
 
         @if (item()!.description) {
-          <h3>Description</h3>
+          <h3 class="admin-card-subtitle">Description</h3>
           <p class="admin-pre-wrap">{{ item()!.description }}</p>
         }
 
         @if (item()!.brochures?.length) {
-          <h3>Brochures</h3>
+          <h3 class="admin-card-subtitle">Brochures</h3>
           <ul>
             @for (b of item()!.brochures!; track b; let i = $index) {
               <li>
@@ -125,7 +146,7 @@
         }
 
         @if (kind() === 'training-centers' && item()!.courses?.length) {
-          <h3>Formations ({{ item()!.courses!.length }})</h3>
+          <h3 class="admin-card-subtitle">Formations ({{ item()!.courses!.length }})</h3>
           <ul class="admin-list-plain">
             @for (c of item()!.courses!; track c.id) {
               <li>
@@ -142,7 +163,7 @@
         }
 
         @if (kind() === 'private-institutions' && item()!.programs?.length) {
-          <h3>Programmes historiques ({{ item()!.programs!.length }})</h3>
+          <h3 class="admin-card-subtitle">Programmes historiques ({{ item()!.programs!.length }})</h3>
           <ul class="admin-list-plain">
             @for (p of item()!.programs!; track p.title) {
               <li>
@@ -156,7 +177,7 @@
         }
 
         @if (kind() === 'private-institutions') {
-          <h3>Publications établissement ({{ item()!.institutionOfferings?.length || 0 }})</h3>
+          <h3 class="admin-card-subtitle">Publications établissement ({{ item()!.institutionOfferings?.length || 0 }})</h3>
           @if (!item()!.institutionOfferings?.length) {
             <p class="admin-muted">Aucune publication établissement enregistrée.</p>
           } @else {
@@ -228,7 +249,7 @@
       </section>
 
       <section class="admin-card admin-form-card">
-        <h2>Modifier la fiche</h2>
+        <h2 class="admin-card-title">Modifier la fiche</h2>
         <form [formGroup]="form" (ngSubmit)="save()">
           <div class="admin-form-grid">
             <div class="admin-form-section">

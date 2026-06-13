@@ -2,10 +2,14 @@
   <header class="admin-page-header">
     <div>
       <p class="admin-breadcrumb">Admin / Tableau de bord</p>
-      <h1>Tableau de bord</h1>
+      <h1>Console de pilotage</h1>
       <p class="admin-page-subtitle">
-        Vue d'ensemble : utilisateurs, offres, centres de formation et établissements privés.
+        Priorisez les validations, surveillez le recrutement et gardez le catalogue propre.
       </p>
+    </div>
+    <div class="dashboard-header-actions">
+      <a [routerLink]="routes.ADMIN.COMPANIES" class="btn-primary !w-auto px-5">Gérer abonnements</a>
+      <a [routerLink]="routes.ADMIN.USER_NEW" class="btn-secondary !w-auto px-5">Nouveau compte</a>
     </div>
   </header>
 
@@ -16,94 +20,115 @@
       }
     </div>
   } @else if (stats()) {
-    <section class="admin-stats" aria-label="Statistiques">
+    <section class="dashboard-command-center">
+      <article class="command-card command-card-primary">
+        <span class="command-kicker">À traiter</span>
+        <strong>{{ moderationQueue().length ? moderationQueue().length : 0 }}</strong>
+        <p>
+          @if (moderationQueue().length) {
+            Files d’attente nécessitant une action admin.
+          } @else {
+            Aucun blocage critique détecté dans les validations.
+          }
+        </p>
+      </article>
+
+      @for (item of platformHealth(); track item.label) {
+        <article class="command-card">
+          <span class="command-kicker">{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+          <p>{{ item.unit }}</p>
+        </article>
+      }
+    </section>
+
+    @if (moderationQueue().length) {
+      <section class="admin-card ops-queue-card">
+        <div class="ops-card-head">
+          <div>
+            <h2 class="admin-card-title">File d’attente admin</h2>
+            <p class="admin-empty-hint">Les actions qui doivent être traitées avant de laisser la plateforme dériver.</p>
+          </div>
+        </div>
+        <div class="ops-queue-list">
+          @for (item of moderationQueue(); track item.label) {
+            <a
+              [routerLink]="item.route"
+              [queryParams]="item.queryParams"
+              class="ops-queue-item"
+              [class.ops-queue-item-danger]="item.tone === 'danger'"
+            >
+              <span>{{ item.label }}</span>
+              <strong>{{ item.count }}</strong>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    <section class="admin-stats" aria-label="Statistiques globales">
       <a [routerLink]="routes.ADMIN.USERS" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">👥</span>
         <span class="admin-stat-label">Utilisateurs</span>
         <strong class="admin-stat-value">{{ stats()!.usersTotal }}</strong>
         <span class="admin-stat-meta">{{ stats()!.bannedUsers }} bannis</span>
       </a>
-      <a [routerLink]="routes.ADMIN.USERS" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">🎓</span>
+      <a [routerLink]="routes.ADMIN.USERS" [queryParams]="{ role: 'candidate' }" class="admin-stat admin-stat--link">
         <span class="admin-stat-label">Candidats</span>
         <strong class="admin-stat-value">{{ stats()!.candidates }}</strong>
       </a>
-      <a [routerLink]="routes.ADMIN.USERS" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">🏢</span>
+      <a [routerLink]="routes.ADMIN.USERS" [queryParams]="{ role: 'recruiter' }" class="admin-stat admin-stat--link">
         <span class="admin-stat-label">Recruteurs</span>
         <strong class="admin-stat-value">{{ stats()!.recruiters }}</strong>
       </a>
-      <div class="admin-stat">
-        <span class="admin-stat-icon">🛡️</span>
+      <a [routerLink]="routes.ADMIN.USERS" [queryParams]="{ role: 'admin' }" class="admin-stat admin-stat--link">
         <span class="admin-stat-label">Administrateurs</span>
         <strong class="admin-stat-value">{{ stats()!.admins }}</strong>
-      </div>
+      </a>
       <a [routerLink]="routes.ADMIN.JOBS" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">💼</span>
         <span class="admin-stat-label">Offres</span>
         <strong class="admin-stat-value">{{ stats()!.jobsTotal }}</strong>
       </a>
       <a [routerLink]="routes.ADMIN.APPLICATIONS" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">📋</span>
         <span class="admin-stat-label">Candidatures</span>
         <strong class="admin-stat-value">{{ stats()!.applicationsTotal }}</strong>
       </a>
       <a [routerLink]="routes.ADMIN.COMPANIES" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">🏭</span>
         <span class="admin-stat-label">Entreprises</span>
         <strong class="admin-stat-value">{{ stats()!.companiesTotal }}</strong>
       </a>
       <a [routerLink]="routes.ADMIN.TRAINING_CENTERS" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">📚</span>
         <span class="admin-stat-label">Centres formation</span>
         <strong class="admin-stat-value">{{ stats()!.trainingCentersTotal }}</strong>
         <span class="admin-stat-meta">{{ stats()!.trainingCentersPending }} en attente</span>
       </a>
       <a [routerLink]="routes.ADMIN.PRIVATE_INSTITUTIONS" class="admin-stat admin-stat--link">
-        <span class="admin-stat-icon">🏫</span>
         <span class="admin-stat-label">Établ. privés</span>
         <strong class="admin-stat-value">{{ stats()!.privateInstitutionsTotal }}</strong>
         <span class="admin-stat-meta">{{ stats()!.privateInstitutionsPending }} en attente</span>
       </a>
     </section>
 
-    <section class="admin-card">
-      <h2 class="admin-card-title">Actions rapides</h2>
-      <div class="admin-quick-actions">
-        <a [routerLink]="routes.ADMIN.USERS" class="btn-primary !w-auto px-5">Utilisateurs</a>
-        <a [routerLink]="routes.ADMIN.JOBS" class="btn-secondary !w-auto px-5">Offres</a>
-        <a [routerLink]="routes.ADMIN.USER_NEW" class="btn-secondary !w-auto px-5">Nouveau compte</a>
-        <a [routerLink]="routes.ADMIN.TRAINING_CENTER_NEW" class="btn-secondary !w-auto px-5">Nouveau centre</a>
-        <a [routerLink]="routes.ADMIN.PRIVATE_INSTITUTION_NEW" class="btn-secondary !w-auto px-5"
-          >Nouvel établissement</a
-        >
-      </div>
-    </section>
-
-    @if (stats()!.trainingCentersPending || stats()!.privateInstitutionsPending) {
-      <section class="admin-card admin-card--warn">
-        <h2 class="admin-card-title">Inscriptions à valider</h2>
+    <section class="dashboard-action-grid">
+      <article class="admin-card">
+        <h2 class="admin-card-title">Recrutement</h2>
+        <p class="admin-empty-hint">Contrôlez les entreprises, offres et candidatures.</p>
         <div class="admin-quick-actions">
-          @if (stats()!.trainingCentersPending) {
-            <a
-              [routerLink]="routes.ADMIN.TRAINING_CENTERS"
-              [queryParams]="{ status: 'pending' }"
-              class="btn-primary !w-auto px-5"
-            >
-              {{ stats()!.trainingCentersPending }} centre(s) en attente
-            </a>
-          }
-          @if (stats()!.privateInstitutionsPending) {
-            <a
-              [routerLink]="routes.ADMIN.PRIVATE_INSTITUTIONS"
-              [queryParams]="{ status: 'pending' }"
-              class="btn-primary !w-auto px-5"
-            >
-              {{ stats()!.privateInstitutionsPending }} établissement(s) en attente
-            </a>
-          }
+          <a [routerLink]="routes.ADMIN.COMPANIES" class="btn-primary !w-auto px-5">Entreprises</a>
+          <a [routerLink]="routes.ADMIN.JOBS" class="btn-secondary !w-auto px-5">Offres</a>
+          <a [routerLink]="routes.ADMIN.APPLICATIONS" class="btn-secondary !w-auto px-5">Candidatures</a>
         </div>
-      </section>
-    }
+      </article>
+
+      <article class="admin-card">
+        <h2 class="admin-card-title">Catalogue</h2>
+        <p class="admin-empty-hint">Validez les fiches publiques et les publications.</p>
+        <div class="admin-quick-actions">
+          <a [routerLink]="routes.ADMIN.TRAINING_CENTER_NEW" class="btn-secondary !w-auto px-5">Nouveau centre</a>
+          <a [routerLink]="routes.ADMIN.PRIVATE_INSTITUTION_NEW" class="btn-secondary !w-auto px-5">
+            Nouvel établissement
+          </a>
+        </div>
+      </article>
+    </section>
   }
 </div>

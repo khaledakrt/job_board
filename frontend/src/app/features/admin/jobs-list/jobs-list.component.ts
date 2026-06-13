@@ -8,7 +8,12 @@ import { PaginationMeta } from '../../../core/models/pagination.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { RouterLink } from '@angular/router';
-import { JOB_STATUSES, JOB_STATUS_LABELS, JobStatus } from '../../../core/constants/job.constant';
+import {
+  JOB_SELECTABLE_STATUSES,
+  JOB_STATUSES,
+  JOB_STATUS_LABELS,
+  JobStatus,
+} from '../../../core/constants/job.constant';
 import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { adminPageSummary } from '../shared/admin-pagination.util';
 
@@ -26,7 +31,8 @@ export class JobsListComponent implements OnInit {
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly fb = inject(FormBuilder);
   readonly routes = APP_ROUTES;
-  readonly statuses = JOB_STATUSES;
+  readonly filterStatuses = JOB_STATUSES;
+  readonly editableStatuses = JOB_SELECTABLE_STATUSES;
   readonly statusLabels = JOB_STATUS_LABELS;
   readonly pageSize = PAGE_SIZE;
 
@@ -134,7 +140,10 @@ export class JobsListComponent implements OnInit {
         });
         this.load(this.pagination()?.page || 1);
       },
-      error: () => this.statusUpdating.set(null),
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Changement de statut impossible.');
+        this.statusUpdating.set(null);
+      },
     });
   }
 

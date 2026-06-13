@@ -205,6 +205,50 @@
   color: #64748b;
 }
 
+.archive-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.archive-page-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.archive-page-btn,
+.archive-page-number {
+  min-height: 2.1rem;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #fff;
+  color: #1d4ed8;
+  cursor: pointer;
+  font-weight: 850;
+  padding: 0.35rem 0.75rem;
+}
+
+.archive-page-number {
+  min-width: 2.1rem;
+  padding-inline: 0.55rem;
+}
+
+.archive-page-number-active {
+  background: #0a66c2;
+  border-color: #0a66c2;
+  color: #fff;
+}
+
+.archive-page-btn:disabled,
+.archive-page-number:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (max-width: 920px) {
   .archive-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

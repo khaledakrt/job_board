@@ -6,6 +6,7 @@
 #   export PUBLIC_URL=https://tun-job-board.com
 #   export SERVER_NAME=tun-job-board.com
 #   export DB_PASSWORD='VotreMotDePasseDB'
+#   export SMTP_PASS='VotreMotDePasseSMTP'
 #   cd /var/www/jobboard   # ou clone d'abord dans ce dossier
 #   sudo -E bash deploy/deploy.sh
 #
@@ -20,6 +21,7 @@ export SITE_ROOT="${SITE_ROOT:-/var/www/jobboard/site}"
 USE_AAPANEL="${USE_AAPANEL:-no}"
 
 [[ -n "${DB_PASSWORD:-}" ]] || { echo "ERREUR: export DB_PASSWORD='...'"; exit 1; }
+[[ -n "${SMTP_PASS:-}" ]] || { echo "ERREUR: export SMTP_PASS='...'"; exit 1; }
 [[ -n "${PUBLIC_URL:-}" ]] || { echo "ERREUR: export PUBLIC_URL=https://VOTRE_DOMAINE"; exit 1; }
 [[ -n "${SERVER_NAME:-}" ]] || export SERVER_NAME="${PUBLIC_URL#http://}"; SERVER_NAME="${SERVER_NAME#https://}"; SERVER_NAME="${SERVER_NAME%%/*}"
 

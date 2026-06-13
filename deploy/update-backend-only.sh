@@ -17,6 +17,7 @@ source "$SCRIPT_DIR/lib/update-common.sh"
 jb_require_app_root
 jb_git_pull
 jb_backend_install
+jb_backup_database
 jb_db_migrate
 jb_pm2_restart
 jb_health_check

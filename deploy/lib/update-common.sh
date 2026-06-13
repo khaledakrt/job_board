@@ -9,6 +9,7 @@ APP_ROOT="${APP_ROOT:-/var/www/jobboard}"
 SITE_ROOT="${SITE_ROOT:-/var/www/jobboard/site}"
 PM2_APP_NAME="${PM2_APP_NAME:-jobboard-api}"
 API_HEALTH_URL="${API_HEALTH_URL:-http://127.0.0.1:3000/api/health}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/jobboard}"
 
 # Après update.sh : éviter un second git pull
 #   SKIP_GIT_PULL=1 sudo bash deploy/update_exemple.sh
@@ -35,6 +36,46 @@ jb_backend_install() {
   jb_log "Backend — dépendances"
   cd "$APP_ROOT/backend"
   npm ci --omit=dev
+}
+
+jb_env_value() {
+  local key="$1"
+  local env_file="$APP_ROOT/backend/.env"
+  local line
+  line="$(grep -E "^${key}=" "$env_file" | tail -n 1 || true)"
+  line="${line#*=}"
+  line="${line%\"}"
+  line="${line#\"}"
+  line="${line%\'}"
+  line="${line#\'}"
+  printf '%s' "$line"
+}
+
+jb_backup_database() {
+  [[ -f "$APP_ROOT/backend/.env" ]] || jb_die "backend/.env introuvable, backup DB impossible."
+
+  local db_host db_port db_user db_password db_name backup_file files_backup
+  db_host="$(jb_env_value DB_HOST)"
+  db_port="$(jb_env_value DB_PORT)"
+  db_user="$(jb_env_value DB_USER)"
+  db_password="$(jb_env_value DB_PASSWORD)"
+  db_name="$(jb_env_value DB_NAME)"
+
+  mkdir -p "$BACKUP_DIR"
+  backup_file="$BACKUP_DIR/${db_name:-job_board}-$(date +%F-%H%M%S).sql"
+  files_backup="$BACKUP_DIR/files-$(date +%F-%H%M%S).tar.gz"
+  jb_log "Backup DB: $backup_file"
+  mysqldump \
+    --single-transaction \
+    --routines \
+    --triggers \
+    -h "${db_host:-127.0.0.1}" \
+    -P "${db_port:-3306}" \
+    -u "${db_user:?DB_USER manquant}" \
+    "-p${db_password:?DB_PASSWORD manquant}" \
+    "${db_name:?DB_NAME manquant}" > "$backup_file"
+  jb_log "Backup fichiers: $files_backup"
+  tar -czf "$files_backup" -C "$APP_ROOT/backend" .env uploads 2>/dev/null || true
 }
 
 jb_db_migrate() {

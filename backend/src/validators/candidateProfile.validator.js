@@ -78,8 +78,8 @@ const generateLetterSchema = z.object({
 });
 
 const quizAnswerSchema = z.object({
-  questionIndex: z.number().int().min(0).max(1),
-  choiceIndex: z.number().int().min(0).max(2),
+  questionIndex: z.number().int().min(0).max(100),
+  choiceIndex: z.number().int().min(0).max(20),
 });
 
 const applyToJobSchema = z.object({
@@ -87,7 +87,7 @@ const applyToJobSchema = z.object({
     .union([z.string().trim().min(1).max(15000), z.literal(''), z.null()])
     .optional()
     .transform((val) => (val && String(val).trim().length > 0 ? String(val).trim() : null)),
-  quizAnswers: z.array(quizAnswerSchema).min(1).max(2).optional(),
+  quizAnswers: z.array(quizAnswerSchema).min(1).max(100).optional(),
 });
 
 module.exports = {

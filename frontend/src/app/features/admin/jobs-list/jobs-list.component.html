@@ -7,7 +7,7 @@
       </p>
       <h1>Offres d'emploi</h1>
       <p class="admin-page-subtitle">
-        Modérez toutes les annonces : statut, visibilité et suppression.
+        Modérez toutes les annonces : statut, visibilité et masquage sans suppression définitive.
       </p>
     </div>
   </header>
@@ -27,7 +27,7 @@
       <label for="jobStatus">Statut</label>
       <select id="jobStatus" formControlName="status" class="form-input">
         <option value="">Tous les statuts</option>
-        @for (s of statuses; track s) {
+        @for (s of filterStatuses; track s) {
           <option [value]="s">{{ statusLabels[s] }}</option>
         }
       </select>
@@ -40,7 +40,7 @@
 
   <section class="admin-page-insights" aria-label="Résumé offres de la page">
     <article class="admin-insight-card">
-      <span>Page actuelle</span>
+      <span>Page affichée</span>
       <strong>{{ pageSummary().total }}</strong>
       <small>offres chargées</small>
     </article>
@@ -114,7 +114,7 @@
                   [disabled]="statusUpdating() === j.id"
                   (change)="setPendingStatus(j, $any($event.target).value)"
                 >
-                  @for (s of statuses; track s) {
+                  @for (s of editableStatuses; track s) {
                     <option [value]="s">{{ statusLabels[s] }}</option>
                   }
                 </select>
@@ -155,7 +155,7 @@
                   [disabled]="statusUpdating() === j.id"
                   (click)="deleteJob(j)"
                 >
-                  Masquer
+                  Masquer l’offre
                 </button>
                 </div>
               </td>

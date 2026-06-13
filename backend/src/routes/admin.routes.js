@@ -20,6 +20,8 @@ const {
   setPasswordBodySchema,
   banUserBodySchema,
   updateJobStatusBodySchema,
+  updateSubscriptionPolicySchema,
+  updateCompanySubscriptionSchema,
   listCatalogQuerySchema,
   listInstitutionOfferingsQuerySchema,
   catalogIdParamsSchema,
@@ -42,6 +44,12 @@ router.use(authenticate);
 router.use(requireAdmin);
 
 router.get('/stats', adminController.getStats);
+router.get('/subscription-policy', adminController.getSubscriptionPolicy);
+router.patch(
+  '/subscription-policy',
+  validateBody(updateSubscriptionPolicySchema),
+  adminController.updateSubscriptionPolicy
+);
 
 router.get('/users', validateQuery(listUsersQuerySchema), adminController.listUsers);
 router.post('/users', validateBody(createUserBodySchema), adminController.createUser);
@@ -119,6 +127,12 @@ router.get(
   '/companies/:id',
   validateParams(companyIdParamsSchema),
   adminController.getCompany
+);
+router.patch(
+  '/companies/:id/subscription',
+  validateParams(companyIdParamsSchema),
+  validateBody(updateCompanySubscriptionSchema),
+  adminController.updateCompanySubscription
 );
 
 router.get(

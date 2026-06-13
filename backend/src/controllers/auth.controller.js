@@ -60,7 +60,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 const refresh = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies[tokenService.REFRESH_COOKIE_NAME];
 
-  const result = await authService.refreshSession(refreshToken);
+  const result = await authService.refreshSession(refreshToken, {
+    ipAddress: getClientIp(req),
+    userAgent: req.headers['user-agent'],
+  });
 
   tokenService.setRefreshTokenCookie(res, result.refreshToken);
 
@@ -71,6 +74,17 @@ const refresh = asyncHandler(async (req, res) => {
       user: result.user,
       accessToken: result.accessToken,
     },
+  });
+});
+
+const logout = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies[tokenService.REFRESH_COOKIE_NAME];
+  await authService.logout(refreshToken);
+  tokenService.clearRefreshTokenCookie(res);
+
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
   });
 });
 
@@ -137,6 +151,7 @@ module.exports = {
   register,
   login,
   refresh,
+  logout,
   forgotPassword,
   resetPassword,
   changePassword,

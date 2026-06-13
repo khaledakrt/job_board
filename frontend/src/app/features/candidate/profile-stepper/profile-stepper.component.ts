@@ -1,16 +1,6 @@
-import {
-  afterNextRender,
-  Component,
-  inject,
-  Injector,
-  OnInit,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TimeoutError, finalize, timeout } from 'rxjs';
-import { CvDropUploaderComponent } from '../../../shared/components/cv-drop-uploader/cv-drop-uploader.component';
 import { CircularAvatarUploaderComponent } from '../../../shared/components/circular-avatar-uploader/circular-avatar-uploader.component';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { CandidateProfileService } from '../services/candidate-profile.service';
@@ -19,20 +9,15 @@ import { RecruiterPreview } from '../services/candidate-dashboard.service';
 import {
   ExperienceBlock,
   EducationBlock,
-  ResumeParseResult,
 } from '../../../core/models/candidate-profile.model';
-import { resolveAuthenticatedUploadUrl } from '../../../core/utils/asset-url.util';
-import { AuthService } from '../../../core/services/auth.service';
-import { CvParsePreviewComponent } from './cv-parse-preview/cv-parse-preview.component';
+import { ProtectedFileService } from '../../../core/services/protected-file.service';
 
 @Component({
   selector: 'app-profile-stepper',
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    CvDropUploaderComponent,
     CircularAvatarUploaderComponent,
-    CvParsePreviewComponent,
   ],
   templateUrl: './profile-stepper.component.html',
   styleUrl: './profile-stepper.component.css',
@@ -41,16 +26,10 @@ export class ProfileStepperComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly profileService = inject(CandidateProfileService);
   private readonly confirmDialog = inject(ConfirmDialogService);
-  private readonly injector = inject(Injector);
-  private readonly authService = inject(AuthService);
+  private readonly protectedFileService = inject(ProtectedFileService);
   readonly context = inject(CandidateContextService);
 
-  private readonly cvPreview = viewChild(CvParsePreviewComponent);
-
   readonly currentStep = signal(1);
-  readonly parsing = signal(false);
-  readonly parseStatus = signal<string | null>(null);
-  private parseStatusTimer: ReturnType<typeof setInterval> | null = null;
   readonly saving = signal(false);
   readonly skills = signal<string[]>([]);
   readonly skillInput = signal('');
@@ -62,10 +41,6 @@ export class ProfileStepperComponent implements OnInit {
   readonly message = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly pendingAvatar = signal<File | null>(null);
-  readonly parsePreviewOpen = signal(false);
-  readonly parsePreviewData = signal<ResumeParseResult | null>(null);
-  /** import = PDF uploadé | manual = saisie puis PDF généré */
-  readonly cvMode = signal<'import' | 'manual'>('manual');
   readonly generatingPdf = signal(false);
 
   readonly identityForm = this.fb.nonNullable.group({
@@ -89,10 +64,6 @@ export class ProfileStepperComponent implements OnInit {
       next: () => this.hydrateFromProfile(),
       error: () => {},
     });
-  }
-
-  setCvMode(mode: 'import' | 'manual'): void {
-    this.cvMode.set(mode);
   }
 
   get experiencesArray(): FormArray {
@@ -150,125 +121,6 @@ export class ProfileStepperComponent implements OnInit {
     if (p.education?.length) {
       this.education.clear();
       p.education.forEach((e) => this.education.push(this.createEducationGroup(e)));
-    }
-    this.cvMode.set('manual');
-  }
-
-  onCvSelected(file: File): void {
-    this.parsing.set(true);
-    this.error.set(null);
-    this.message.set(null);
-    this.clearParseStatusTimer();
-
-    const started = Date.now();
-    this.parseStatus.set(
-      'Analyse IA locale (Ollama)… 30 s à 2 min la première fois, puis plus rapide.'
-    );
-    this.parseStatusTimer = setInterval(() => {
-      const sec = Math.floor((Date.now() - started) / 1000);
-      if (sec >= 15) {
-        this.parseStatus.set(`Analyse en cours… ${sec} s (normal avec Ollama, patientez).`);
-      }
-    }, 5000);
-
-    this.profileService
-      .parseResume(file)
-      .pipe(
-        timeout(180_000),
-        finalize(() => {
-          this.clearParseStatusTimer();
-          this.parsing.set(false);
-          this.parseStatus.set(null);
-        })
-      )
-      .subscribe({
-        next: (res) => {
-          const d = res.data;
-          if (d) {
-            this.parsePreviewData.set(d);
-            this.parsePreviewOpen.set(true);
-            afterNextRender(
-              () => {
-                const preview = this.cvPreview();
-                if (preview) {
-                  preview.hydrateFromData(d);
-                }
-              },
-              { injector: this.injector }
-            );
-            if (d.resumeSaved || d.savedToProfile) {
-              this.context.loadProfile().subscribe({
-                next: (r) => r.data && this.context.setProfile(r.data),
-              });
-            }
-          }
-        },
-        error: (err: HttpErrorResponse | TimeoutError) => {
-          if (err instanceof TimeoutError) {
-            this.error.set(
-              'Analyse trop longue (> 3 min). Vérifiez qu’Ollama tourne, réessayez, ou complétez le profil à la main.'
-            );
-            return;
-          }
-          this.error.set(err.error?.message || 'Échec de l\'analyse du CV.');
-        },
-      });
-  }
-
-  private clearParseStatusTimer(): void {
-    if (this.parseStatusTimer) {
-      clearInterval(this.parseStatusTimer);
-      this.parseStatusTimer = null;
-    }
-  }
-
-  closeParsePreview(): void {
-    this.parsePreviewOpen.set(false);
-    this.parsePreviewData.set(null);
-  }
-
-  applyParsedData(d: ResumeParseResult): void {
-    this.identityForm.patchValue({
-      firstName: d.first_name || '',
-      lastName: d.last_name || '',
-      phone: d.phone || '',
-      professionalTitle: d.professional_title || '',
-      bio: d.bio || '',
-    });
-    this.skills.set([...(d.skills || [])]);
-
-    this.experiences.clear();
-    if (d.experiences?.length) {
-      d.experiences.forEach((exp) =>
-        this.experiences.push(this.createExperienceGroup(exp))
-      );
-    } else {
-      this.experiences.push(this.createExperienceGroup());
-    }
-
-    this.education.clear();
-    if (d.education?.length) {
-      d.education.forEach((edu) =>
-        this.education.push(this.createEducationGroup(edu))
-      );
-    } else {
-      this.education.push(this.createEducationGroup());
-    }
-
-    const expCount = d.experiences?.length ?? 0;
-    const eduCount = d.education?.length ?? 0;
-    const modeLabel = d.parserMode === 'ai' ? 'IA' : 'automatique';
-    let msg = `Données appliquées (analyse ${modeLabel}).`;
-    if (expCount || eduCount) {
-      msg += ` ${expCount} expérience${expCount > 1 ? 's' : ''}, ${eduCount} formation${eduCount > 1 ? 's' : ''}.`;
-    }
-    this.message.set(msg);
-    this.closeParsePreview();
-
-    if (expCount > 0) {
-      this.currentStep.set(2);
-    } else if (eduCount > 0) {
-      this.currentStep.set(3);
     }
   }
 
@@ -431,10 +283,18 @@ export class ProfileStepperComponent implements OnInit {
   }
 
   resumeUrl(): string | null {
-    return resolveAuthenticatedUploadUrl(
-      this.context.profile()?.resumeUrl ?? null,
-      this.authService.accessToken()
-    );
+    return this.protectedFileService.resolveUrl(this.context.profile()?.resumeUrl ?? null);
+  }
+
+  openResume(event?: Event): void {
+    event?.preventDefault();
+    const url = this.resumeUrl();
+    if (!url) {
+      this.error.set('CV indisponible pour le moment.');
+      return;
+    }
+
+    this.protectedFileService.openFile(url, () => this.error.set('Impossible d’ouvrir le CV.'));
   }
 
   generateResumePdf(): void {
@@ -545,11 +405,7 @@ export class ProfileStepperComponent implements OnInit {
   }
 
   private afterProfileSaved(): void {
-    if (this.cvMode() === 'manual') {
-      this.generateResumePdfAfterSave();
-      return;
-    }
-    this.finishSave('Profil enregistré avec succès.');
+    this.generateResumePdfAfterSave();
   }
 
   private generateResumePdfAfterSave(): void {

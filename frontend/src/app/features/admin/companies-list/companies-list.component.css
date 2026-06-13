@@ -2,12 +2,110 @@
   grid-template-columns: minmax(260px, 420px) auto;
 }
 
+.subscription-global-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid #d8dee8;
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 1rem;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.045);
+}
+
+.subscription-global-kicker {
+  margin: 0 0 0.2rem;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.subscription-global-card h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.subscription-global-db-state {
+  display: inline-flex;
+  margin-top: 0.4rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.45rem;
+  background: #f8fafc;
+  color: #475569;
+  padding: 0.22rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.subscription-global-card p:last-child {
+  margin: 0.35rem 0 0;
+  max-width: 54rem;
+  color: #475569;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.subscription-global-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.subscription-global-button {
+  min-height: 2.45rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #334155;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.subscription-global-button:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.subscription-global-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.subscription-global-button--free {
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.subscription-global-button--paid {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.subscription-global-button--active {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
 .company-id {
   display: block;
   margin-top: 0.2rem;
+  max-width: 11rem;
+  overflow: hidden;
   color: #94a3b8;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .company-contact {
@@ -19,8 +117,116 @@
   white-space: nowrap;
 }
 
+.subscription-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.25rem 0.6rem;
+}
+
+.subscription-pill--active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.subscription-pill--canceled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-companies-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-companies-table .col-title {
+  width: 19%;
+}
+
+.admin-companies-table .company-col-sector {
+  width: 12%;
+}
+
+.admin-companies-table .company-col-city {
+  width: 9%;
+}
+
+.admin-companies-table .company-col-contact {
+  width: 18%;
+}
+
+.admin-companies-table .company-col-count {
+  width: 8%;
+  text-align: center;
+}
+
+.admin-companies-table .company-col-subscription {
+  width: 11%;
+}
+
+.admin-companies-table .company-col-created {
+  width: 9%;
+  white-space: nowrap;
+}
+
+.admin-companies-table .col-actions {
+  width: 8%;
+}
+
+.admin-companies-table td,
+.admin-companies-table th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-companies-table .actions-cell {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .admin-companies-table .company-col-created,
+  .admin-companies-table .company-col-sector {
+    display: none;
+  }
+
+  .admin-companies-table .col-title {
+    width: 24%;
+  }
+
+  .admin-companies-table .company-col-contact {
+    width: 23%;
+  }
+}
+
+@media (max-width: 960px) {
+  .admin-companies-table .company-col-city {
+    display: none;
+  }
+
+  .admin-companies-table .company-col-count {
+    width: 9%;
+  }
+}
+
 @media (max-width: 720px) {
   .admin-company-filters {
     grid-template-columns: 1fr;
+  }
+
+  .subscription-global-card {
+    grid-template-columns: 1fr;
+  }
+
+  .subscription-global-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-companies-table {
+    min-width: 760px;
   }
 }

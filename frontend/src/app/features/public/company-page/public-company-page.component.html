@@ -30,9 +30,6 @@
             }
             <div class="public-company-page-profile-copy">
               <h1>{{ co.name }}</h1>
-              @if (co.legalName && co.legalName !== co.name) {
-                <p class="public-company-page-legal-name">{{ co.legalName }}</p>
-              }
               @if (co.industry) {
                 <p class="public-company-page-industry">{{ co.industry }}</p>
               }
@@ -42,9 +39,6 @@
                 }
                 @if (co.foundedYear) {
                   <span>Fondée en {{ co.foundedYear }}</span>
-                }
-                @if (formatLegalForm(co.legalForm); as legalForm) {
-                  <span>{{ legalForm }}</span>
                 }
               </div>
               <div class="public-company-page-links">
@@ -59,10 +53,10 @@
           </div>
 
           <div class="public-company-page-details">
-            @if (co.addressLabel) {
+            @if (co.locationLabel) {
               <div class="public-company-detail-block">
-                <h2>Adresse</h2>
-                <p>{{ co.addressLabel }}</p>
+                <h2>Localisation</h2>
+                <p>{{ co.locationLabel }}</p>
               </div>
             }
 
@@ -85,39 +79,6 @@
                 </dl>
               </div>
             }
-
-            <div class="public-company-detail-block">
-              <h2>Informations légales</h2>
-              <dl class="public-company-dl">
-                @if (co.legalName) {
-                  <div class="public-company-dl-row">
-                    <dt>Raison sociale</dt>
-                    <dd>{{ co.legalName }}</dd>
-                  </div>
-                }
-                @if (formatLegalForm(co.legalForm); as lf) {
-                  <div class="public-company-dl-row">
-                    <dt>Forme juridique</dt>
-                    <dd>{{ lf }}</dd>
-                  </div>
-                }
-                @if (formatSiret(co.siret); as siret) {
-                  <div class="public-company-dl-row">
-                    <dt>SIRET</dt>
-                    <dd>{{ siret }}</dd>
-                  </div>
-                }
-                @if (co.vatNumber) {
-                  <div class="public-company-dl-row">
-                    <dt>N° TVA</dt>
-                    <dd>{{ co.vatNumber }}</dd>
-                  </div>
-                }
-                @if (!co.legalName && !co.legalForm && !co.siret && !co.vatNumber) {
-                  <p class="public-company-detail-empty">Non renseigné</p>
-                }
-              </dl>
-            </div>
 
             <div class="public-company-detail-block">
               <h2>Activité</h2>

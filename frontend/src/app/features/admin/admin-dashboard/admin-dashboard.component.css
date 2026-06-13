@@ -1,1 +1,133 @@
-/* Styles in admin-shared.css */
+.dashboard-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.dashboard-command-center {
+  display: grid;
+  grid-template-columns: 1.25fr repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.85rem;
+}
+
+.command-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.95rem;
+  background: #fff;
+  padding: 0.95rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+.command-card::after {
+  content: none;
+}
+
+.command-card-primary {
+  background: #111827;
+  color: #fff;
+}
+
+.command-card-primary::after {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.command-kicker {
+  display: block;
+  color: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  opacity: 0.72;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.command-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.command-card p {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.ops-queue-card {
+  margin-bottom: 0.85rem;
+  border-color: #fed7aa;
+  background: #fff;
+}
+
+.ops-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.ops-queue-list {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.ops-queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #fed7aa;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.82);
+  color: #9a3412;
+  font-weight: 800;
+  padding: 0.65rem 0.8rem;
+  text-decoration: none;
+}
+
+.ops-queue-item:hover {
+  background: #ffedd5;
+}
+
+.ops-queue-item-danger {
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.ops-queue-item strong {
+  display: inline-grid;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border-radius: 0.45rem;
+  background: currentColor;
+  color: #fff;
+}
+
+.dashboard-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-command-center {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-command-center,
+  .dashboard-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header-actions {
+    justify-content: flex-start;
+  }
+}

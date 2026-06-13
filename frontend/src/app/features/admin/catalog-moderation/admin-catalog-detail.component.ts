@@ -25,6 +25,7 @@ import {
   InstitutionOfferingType,
   InstitutionType,
 } from '../../../core/models/catalog.model';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-admin-catalog-detail',
@@ -38,6 +39,7 @@ export class AdminCatalogDetailComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   readonly routes = APP_ROUTES;
   readonly statusLabels = CATALOG_STATUS_LABELS;
@@ -136,9 +138,17 @@ export class AdminCatalogDetailComponent implements OnInit {
     return id ? catalogPublicRoute(this.kind(), id) : '/';
   }
 
-  setStatus(status: 'published' | 'rejected' | 'pending'): void {
+  async setStatus(status: 'published' | 'rejected' | 'pending'): Promise<void> {
     const id = this.item()?.id;
     if (!id) return;
+    const ok = await this.confirmDialog.confirm({
+      title: this.statusConfirmTitle(status),
+      message: this.statusConfirmMessage(status),
+      confirmLabel: this.statusConfirmLabel(status),
+      confirmDanger: status === 'rejected',
+    });
+    if (!ok) return;
+
     this.saving.set(true);
     this.errorMessage.set(null);
     const req =
@@ -184,10 +194,23 @@ export class AdminCatalogDetailComponent implements OnInit {
     return this.statusLabels[status as keyof typeof this.statusLabels] ?? status;
   }
 
-  setInstitutionOfferingStatus(
+  async setInstitutionOfferingStatus(
     publication: InstitutionOfferingItem,
     status: 'pending' | 'published' | 'rejected'
-  ): void {
+  ): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: this.statusConfirmTitle(status),
+      message:
+        status === 'published'
+          ? `La publication « ${publication.title} » deviendra visible publiquement. Confirmez-vous ?`
+          : status === 'rejected'
+            ? `La publication « ${publication.title} » sera rejetée. Confirmez-vous ?`
+            : `La publication « ${publication.title} » repassera en attente.`,
+      confirmLabel: this.statusConfirmLabel(status),
+      confirmDanger: status === 'rejected',
+    });
+    if (!ok) return;
+
     this.saving.set(true);
     this.errorMessage.set(null);
     this.successMessage.set(null);
@@ -244,5 +267,27 @@ export class AdminCatalogDetailComponent implements OnInit {
         this.saving.set(false);
       },
     });
+  }
+
+  private statusConfirmTitle(status: 'published' | 'rejected' | 'pending'): string {
+    if (status === 'published') return 'Publier';
+    if (status === 'rejected') return 'Rejeter';
+    return 'Mettre en attente';
+  }
+
+  private statusConfirmLabel(status: 'published' | 'rejected' | 'pending'): string {
+    if (status === 'published') return 'Publier';
+    if (status === 'rejected') return 'Rejeter';
+    return 'Mettre en attente';
+  }
+
+  private statusConfirmMessage(status: 'published' | 'rejected' | 'pending'): string {
+    if (status === 'published') {
+      return 'Cette fiche deviendra visible publiquement. Confirmez-vous la publication ?';
+    }
+    if (status === 'rejected') {
+      return 'Cette fiche sera rejetée et ne sera pas visible publiquement. Confirmez-vous ?';
+    }
+    return 'Cette fiche sera retirée de la visibilité publique en attendant une nouvelle validation.';
   }
 }

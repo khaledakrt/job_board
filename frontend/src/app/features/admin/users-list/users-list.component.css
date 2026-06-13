@@ -3,6 +3,44 @@
   color: #0f172a;
 }
 
+.user-identity-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 260px;
+}
+
+.user-identity-avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 0.55rem;
+  display: grid;
+  place-items: center;
+  background: #1f2937;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.user-identity-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-id-short {
+  display: block;
+  margin-top: 0.16rem;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
 .admin-badge--table {
   background: #e2e8f0;
   color: #334155;

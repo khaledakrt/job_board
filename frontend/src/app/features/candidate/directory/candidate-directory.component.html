@@ -497,6 +497,115 @@
   </div>
 }
 
+@if (applyOpen() && jobPopup(); as job) {
+  <div class="directory-modal-backdrop directory-modal-backdrop-top" (click)="closeApply()">
+    <article class="job-popup-card apply-letter-popup" (click)="$event.stopPropagation()">
+      <button type="button" class="job-popup-close" aria-label="Fermer" (click)="closeApply()">
+        ✕
+      </button>
+
+      @if (applyStep() === 'quiz' && jobQuiz(job); as quiz) {
+        <header class="apply-letter-header">
+          <p class="directory-kicker">Quiz de présélection</p>
+          <h2>{{ job.title }}</h2>
+          <p>{{ job.company?.name || 'Entreprise' }}</p>
+        </header>
+
+        <section class="job-popup-apply">
+          <h3>Répondez au quiz avant de postuler</h3>
+          <p>Votre candidature ne peut être envoyée qu’après avoir répondu à toutes les questions.</p>
+
+          <div class="directory-quiz-list">
+            @for (question of quiz.questions; track $index; let questionIndex = $index) {
+              <fieldset class="directory-quiz-question">
+                <legend>{{ questionIndex + 1 }}. {{ question.text }}</legend>
+                @for (choice of question.choices; track $index; let choiceIndex = $index) {
+                  <label class="directory-quiz-choice">
+                    <input
+                      type="radio"
+                      [name]="'directory-quiz-' + job.id + '-' + questionIndex"
+                      [checked]="quizAnswerFor(questionIndex) === choiceIndex"
+                      (change)="selectQuizAnswer(questionIndex, choiceIndex)"
+                    />
+                    <span>{{ choice.text }}</span>
+                  </label>
+                }
+              </fieldset>
+            }
+          </div>
+
+          <div class="job-popup-form-actions">
+            <button type="button" class="directory-btn directory-btn-ghost" (click)="closeApply()">
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="directory-btn directory-btn-primary"
+              [disabled]="!isQuizCompleteForJob(job)"
+              (click)="proceedToLetterStep(job)"
+            >
+              Continuer
+            </button>
+          </div>
+        </section>
+      } @else {
+        <header class="apply-letter-header">
+          <p class="directory-kicker">Candidature</p>
+          <h2>Lettre de motivation</h2>
+          <p>{{ job.title }} · {{ job.company?.name || 'Entreprise' }}</p>
+        </header>
+
+        <section class="job-popup-apply">
+          @if (isQuizEnabled(job)) {
+            <p class="job-popup-message job-popup-message-success">Quiz complété.</p>
+          }
+          <h3>Lettre de motivation</h3>
+          <p>Rédigez votre lettre ou utilisez l’assistant IA, puis envoyez votre candidature.</p>
+
+          <button type="button" class="ai-link" (click)="generateLetter()" [disabled]="generatingLetter()">
+            @if (generatingLetter()) {
+              Génération en cours...
+            } @else {
+              Assistant IA : générer une lettre personnalisée
+            }
+          </button>
+
+          <form [formGroup]="applyForm" (ngSubmit)="submitApplication(job)">
+            <label class="job-popup-label">Lettre de motivation</label>
+            <textarea
+              class="job-popup-textarea"
+              rows="10"
+              formControlName="coverLetter"
+              placeholder="Votre lettre de motivation..."
+            ></textarea>
+            <div class="job-popup-form-actions">
+              @if (isQuizEnabled(job)) {
+                <button type="button" class="directory-btn directory-btn-ghost" (click)="backToQuizStep()">
+                  Retour quiz
+                </button>
+              }
+              <button type="button" class="directory-btn directory-btn-ghost" (click)="closeApply()">
+                Annuler
+              </button>
+              <button type="submit" class="directory-btn directory-btn-primary" [disabled]="applying()">
+                @if (applying()) {
+                  Envoi...
+                } @else {
+                  Envoyer ma candidature
+                }
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+
+      @if (error()) {
+        <p class="job-popup-message job-popup-message-error">{{ error() }}</p>
+      }
+    </article>
+  </div>
+}
+
 @if (trainingPopupOpen() && trainingPopup(); as content) {
   <div class="directory-modal-backdrop" (click)="closeTrainingPopup()">
     <article class="training-popup-card" (click)="$event.stopPropagation()">
@@ -691,57 +800,3 @@
   </div>
 }
 
-@if (applyOpen() && jobPopup(); as job) {
-  <div class="directory-modal-backdrop directory-modal-backdrop-top" (click)="cancelApply()">
-    <article class="job-popup-card apply-letter-popup" (click)="$event.stopPropagation()">
-      <button type="button" class="job-popup-close" aria-label="Fermer" (click)="cancelApply()">
-        ✕
-      </button>
-
-      <header class="apply-letter-header">
-        <p class="directory-kicker">Candidature</p>
-        <h2>Postuler — {{ job.title }}</h2>
-        <p>{{ job.company?.name || 'Entreprise' }}</p>
-      </header>
-
-      <section class="job-popup-apply">
-        <h3>Lettre de motivation</h3>
-        <p>Ajoutez une lettre de motivation, ou générez une proposition personnalisée.</p>
-
-        <button type="button" class="ai-link" (click)="generateLetter()" [disabled]="generatingLetter()">
-          @if (generatingLetter()) {
-            Génération en cours...
-          } @else {
-            Assistant IA : générer une lettre personnalisée
-          }
-        </button>
-
-        <form [formGroup]="applyForm" (ngSubmit)="submitApplication()">
-          <label class="job-popup-label">Lettre de motivation</label>
-          <textarea
-            class="job-popup-textarea"
-            rows="10"
-            formControlName="coverLetter"
-            placeholder="Votre lettre de motivation..."
-          ></textarea>
-          <div class="job-popup-form-actions">
-            <button type="button" class="directory-btn directory-btn-ghost" (click)="cancelApply()">
-              Annuler
-            </button>
-            <button type="submit" class="directory-btn directory-btn-primary" [disabled]="applying()">
-              @if (applying()) {
-                Envoi...
-              } @else {
-                Envoyer ma candidature
-              }
-            </button>
-          </div>
-        </form>
-      </section>
-
-      @if (error()) {
-        <p class="job-popup-message job-popup-message-error">{{ error() }}</p>
-      }
-    </article>
-  </div>
-}

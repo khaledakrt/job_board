@@ -5,12 +5,14 @@ import { UserRole } from '../constants/roles.constant';
 import { AuthService } from '../services/auth.service';
 
 export const roleGuard = (allowedRoles: UserRole[]): CanActivateFn => {
-  return () => {
+  return (_route, state) => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
     if (!authService.isAuthenticated()) {
-      return router.createUrlTree([APP_ROUTES.AUTH.LOGIN]);
+      return router.createUrlTree([APP_ROUTES.AUTH.LOGIN], {
+        queryParams: { returnUrl: state.url },
+      });
     }
 
     const user = authService.user();

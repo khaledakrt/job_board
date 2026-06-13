@@ -470,11 +470,11 @@
         <section class="drawer-card cv-section">
           @if (resumeUrl(selected); as cvUrl) {
             <h3 class="drawer-card-title">CV du candidat</h3>
-            <p class="cv-hint">Fichier joint à cette candidature (snapshot ou CV actuel).</p>
+            <p class="cv-hint">CV soumis avec cette candidature.</p>
             <div class="cv-actions">
-              <a [href]="cvUrl" target="_blank" rel="noopener" class="btn-primary !w-auto px-5">
+              <button type="button" class="btn-primary !w-auto px-5" (click)="viewResume(selected)">
                 Ouvrir le PDF
-              </a>
+              </button>
               <button type="button" class="btn-secondary !w-auto px-4" (click)="viewResume(selected)">
                 Nouvel onglet
               </button>

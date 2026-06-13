@@ -7,6 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "db:setup": "node scripts/setup-database.js",
+    "db:check": "node scripts/check-db-compat.js",
     "db:migrate": "node scripts/run-migrations.js",
     "db:seed": "node scripts/seed-test-users.js",
     "db:seed:jobs": "node scripts/seed-jobs.js",

@@ -17,10 +17,33 @@ export function experienceDisplayLabel(
   return `${years} ans d'expérience minimum`;
 }
 
-/** Displays recruiter-provided salary text (amount or free wording). */
-export function salaryDisplayLabel(job: Pick<Job, 'salaryLabel'>): string | null {
+const SALARY_PERIOD_LABELS: Record<string, string> = {
+  month: 'mois',
+  year: 'an',
+  day: 'jour',
+  hour: 'heure',
+};
+
+/** Displays structured salary first, then recruiter-provided free text. */
+export function salaryDisplayLabel(
+  job: Pick<Job, 'salaryLabel' | 'salaryMin' | 'salaryMax' | 'salaryCurrency' | 'salaryPeriod'>
+): string | null {
   const label = job.salaryLabel?.trim();
-  return label || null;
+  if (label) return label;
+
+  const min = job.salaryMin;
+  const max = job.salaryMax;
+  if (min == null && max == null) return null;
+
+  const currency = job.salaryCurrency || 'TND';
+  const period = job.salaryPeriod ? ` / ${SALARY_PERIOD_LABELS[job.salaryPeriod] ?? job.salaryPeriod}` : '';
+  const format = (value: number) => new Intl.NumberFormat('fr-FR').format(value);
+
+  if (min != null && max != null && min !== max) {
+    return `${format(min)} - ${format(max)} ${currency}${period}`;
+  }
+
+  return `${format(max ?? min ?? 0)} ${currency}${period}`;
 }
 
 /** @deprecated Use salaryDisplayLabel */

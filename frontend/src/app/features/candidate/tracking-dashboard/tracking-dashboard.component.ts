@@ -29,6 +29,7 @@ import { SavedJobService } from '../services/saved-job.service';
 import { JobAlertService } from '../services/job-alert.service';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { salaryDisplayLabel } from '../../../core/utils/job-display.util';
+import { ProtectedFileService } from '../../../core/services/protected-file.service';
 @Component({
   selector: 'app-tracking-dashboard',
   standalone: true,
@@ -50,6 +51,7 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(CandidateDashboardService);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
+  private readonly protectedFileService = inject(ProtectedFileService);
   private searchDebounce: ReturnType<typeof setTimeout> | null = null;
 
   readonly routes = APP_ROUTES;
@@ -326,7 +328,15 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
   }
 
   resumeLink(url: string | null | undefined): string | null {
-    return resolveUploadUrl(url);
+    return this.protectedFileService.resolveUrl(url);
+  }
+
+  openResume(url: string | null | undefined, event?: Event): void {
+    event?.preventDefault();
+    const resolved = this.resumeLink(url);
+    if (!resolved) return;
+
+    this.protectedFileService.openFile(resolved);
   }
 
   chartMax(): number {

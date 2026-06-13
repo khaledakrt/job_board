@@ -18,4 +18,19 @@ test.describe('Public catalog pages', () => {
       await expect(page.locator('body')).toContainText(pageSpec.text);
     });
   }
+
+  test('catalog list items can open detail pages when published entries exist', async ({ page }) => {
+    for (const path of ['/centres-formation', '/etablissements-prives']) {
+      await page.goto(path);
+      await expectPageHealthy(page);
+
+      const detailLink = page.locator(`a[href^="${path}/"]:not([href$="/inscription"])`).first();
+      if (!(await detailLink.count())) continue;
+
+      await detailLink.click();
+      await expect(page).toHaveURL(new RegExp(`${path.replace(/\//g, '\\/')}/.+`));
+      await expectPageHealthy(page);
+      await expect(page.locator('body')).toContainText(/contact|description|formation|établissement|etablissement/i);
+    }
+  });
 });

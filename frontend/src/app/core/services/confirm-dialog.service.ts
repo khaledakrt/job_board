@@ -14,6 +14,7 @@ export interface ConfirmDialogState {
   confirmLabel: string;
   cancelLabel: string;
   confirmDanger: boolean;
+  mode: 'confirm' | 'alert';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,6 +36,25 @@ export class ConfirmDialogService {
         confirmLabel: options.confirmLabel ?? 'Confirmer',
         cancelLabel: options.cancelLabel ?? 'Annuler',
         confirmDanger: options.confirmDanger ?? false,
+        mode: 'confirm',
+      });
+    });
+  }
+
+  alert(options: Omit<ConfirmDialogOptions, 'cancelLabel' | 'confirmDanger'>): Promise<void> {
+    if (this.resolver) {
+      this.resolve(false);
+    }
+
+    return new Promise<void>((resolve) => {
+      this.resolver = () => resolve();
+      this.state.set({
+        title: options.title ?? 'Information',
+        message: options.message,
+        confirmLabel: options.confirmLabel ?? 'Compris',
+        cancelLabel: '',
+        confirmDanger: false,
+        mode: 'alert',
       });
     });
   }

@@ -291,6 +291,68 @@ async function listProviderParticipations(userId, query = {}) {
   }
 
   const participationWhere = participationType ? { participation_type: participationType } : {};
+
+  if ((offeringKind === 'formation' || offeringKind === 'event') && (query.page !== undefined || query.limit !== undefined)) {
+    const { page, limit, offset } = parsePagination(query);
+    const isFormation = offeringKind === 'formation';
+    const participationModel = isFormation ? FormationParticipation : EventParticipation;
+    const offeringModel = isFormation ? TrainingFormation : TrainingEvent;
+    const participationKey = isFormation ? 'formation_id' : 'event_id';
+    const offeringAlias = isFormation ? 'formation' : 'event';
+    const offeringWhere = { center_id: center.id };
+    if (offeringId) offeringWhere.id = offeringId;
+
+    const { rows, count } = await participationModel.findAndCountAll({
+      where: participationWhere,
+      include: [
+        userInclude,
+        {
+          model: offeringModel,
+          as: offeringAlias,
+          where: offeringWhere,
+          attributes: ['id', 'title'],
+          required: true,
+        },
+      ],
+      order: [['created_at', 'DESC']],
+      limit,
+      offset,
+      distinct: true,
+    });
+
+    const summaryWhere = { ...participationWhere };
+    if (offeringId) {
+      summaryWhere[participationKey] = offeringId;
+    }
+    const allScopedRows = await participationModel.findAll({
+      where: summaryWhere,
+      include: [
+        {
+          model: offeringModel,
+          as: offeringAlias,
+          where: offeringWhere,
+          attributes: ['id', 'title'],
+          required: true,
+        },
+      ],
+      attributes: ['id', 'participation_type', 'created_at'],
+    });
+    const summaryItems = allScopedRows.map((row) => ({
+      participationType: row.participation_type,
+      offeringKind,
+    }));
+
+    return {
+      ...buildPaginatedResponse({
+        rows: rows.map((r) => formatParticipationRow(r, offeringKind)),
+        count,
+        page,
+        limit,
+      }),
+      summary: summarizeItems(summaryItems),
+    };
+  }
+
   const items = [];
   const loadFormations = offeringKind !== 'event';
   const loadEvents = offeringKind !== 'formation';

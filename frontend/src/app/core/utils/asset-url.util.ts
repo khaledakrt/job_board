@@ -32,13 +32,14 @@ export function isSensitiveUploadUrl(url: string | null | undefined): boolean {
 
 export function resolveAuthenticatedUploadUrl(
   url: string | null | undefined,
-  accessToken: string | null | undefined
+  _accessToken?: string | null | undefined
 ): string | null {
   const resolved = resolveUploadUrl(url);
-  if (!resolved || !accessToken || !isSensitiveUploadUrl(resolved)) {
+  if (!resolved || !isSensitiveUploadUrl(resolved)) {
     return resolved;
   }
 
-  const separator = resolved.includes('?') ? '&' : '?';
-  return `${resolved}${separator}access_token=${encodeURIComponent(accessToken)}`;
+  const uploadsIdx = resolved.indexOf('/uploads/');
+  const uploadPath = resolved.slice(uploadsIdx + '/uploads'.length).split(/[?#]/)[0];
+  return `${environment.apiUrl}/uploads${uploadPath}`;
 }

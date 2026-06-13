@@ -17,7 +17,7 @@ import {
   resolveUploadUrl,
 } from '../../../core/utils/asset-url.util';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { ProtectedFileService } from '../../../core/services/protected-file.service';
 import { RecruiterApplicationService } from '../services/application.service';
 import { RecruiterJobService } from '../services/job.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
@@ -64,7 +64,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly applicationService = inject(RecruiterApplicationService);
   private readonly confirmDialog = inject(ConfirmDialogService);
-  private readonly authService = inject(AuthService);
+  private readonly protectedFileService = inject(ProtectedFileService);
   private readonly jobService = inject(RecruiterJobService);
   readonly context = inject(RecruiterContextService);
   readonly routes = APP_ROUTES;
@@ -389,14 +389,8 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
     this.cvPreviewLoading.set(true);
 
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        return response.blob();
-      })
-      .then((blob) => {
+    this.protectedFileService.fetchBlob(url).subscribe({
+      next: (blob) => {
         this.revokeCvObjectUrl();
         const typed =
           blob.type && blob.type !== 'application/octet-stream'
@@ -407,13 +401,14 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
           this.sanitizer.bypassSecurityTrustResourceUrl(this.cvObjectUrl)
         );
         this.cvPreviewLoading.set(false);
-      })
-      .catch(() => {
+      },
+      error: () => {
         this.cvPreviewLoading.set(false);
         this.cvPreviewError.set(
           'Aperçu indisponible dans le panneau. Utilisez « Ouvrir le PDF ».'
         );
-      });
+      },
+    });
   }
 
   onDrop(event: DragEvent, status: ApplicationStatus): void {
@@ -582,11 +577,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   }
 
   resumeUrl(application: Application | ApplicationDetail): string | null {
-    const token = this.authService.accessToken();
-    const snapshot = resolveAuthenticatedUploadUrl(application.resumeSnapshotUrl, token);
-    if (snapshot) return snapshot;
-    const current = resolveAuthenticatedUploadUrl(application.candidate?.resumeUrl ?? null, token);
-    return current;
+    return resolveAuthenticatedUploadUrl(application.resumeSnapshotUrl);
   }
 
   avatarUrl(application: Application | ApplicationDetail): string | null {
@@ -595,11 +586,14 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
   viewResume(application: Application | ApplicationDetail): void {
     const url = this.resumeUrl(application);
-    if (url) {
-      window.open(url, '_blank', 'noopener');
-    } else {
+    if (!url) {
       this.errorMessage.set('Aucun CV disponible pour ce candidat.');
+      return;
     }
+
+    this.protectedFileService.openFile(url, () =>
+      this.errorMessage.set('Impossible d’ouvrir le CV.')
+    );
   }
 
   async onRatingChange(rating: number): Promise<void> {
@@ -636,7 +630,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     this.statusChangeForm.reset({
       evaluationText: this.noteForm.controls.evaluationText.value || '',
       internalNote: '',
-      interviewAt: targetStatus === 'interview' ? this.defaultInterviewDateTimeLocal() : '',
+      interviewAt: '',
     });
     this.pendingStatusChange.set({ application, targetStatus, selectElement });
   }
@@ -659,6 +653,17 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       this.statusChangeError.set('Choisissez la date et l’heure de l’entretien.');
       return;
     }
+    if (pending.targetStatus === 'interview') {
+      const interviewDate = new Date(interviewAtLocal);
+      if (Number.isNaN(interviewDate.getTime())) {
+        this.statusChangeError.set('Date d’entretien invalide.');
+        return;
+      }
+      if (interviewDate.getTime() <= Date.now()) {
+        this.statusChangeError.set('La date d’entretien doit être dans le futur.');
+        return;
+      }
+    }
 
     const interviewAt =
       pending.targetStatus === 'interview' ? new Date(interviewAtLocal).toISOString() : undefined;
@@ -675,14 +680,6 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
   statusChangeMessage(app: Application, newStatus: ApplicationStatus): string {
     return `${this.candidateName(app)} : « ${this.statusLabels[app.status]} » → « ${this.statusLabels[newStatus]} »`;
-  }
-
-  private defaultInterviewDateTimeLocal(): string {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
-    date.setMinutes(0, 0, 0);
-    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-    return local.toISOString().slice(0, 16);
   }
 
   canMoveToStatus(currentStatus: ApplicationStatus, targetStatus: ApplicationStatus): boolean {

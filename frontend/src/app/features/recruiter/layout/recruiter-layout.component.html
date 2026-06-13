@@ -101,9 +101,22 @@
             <p class="topbar-kicker">Bienvenue</p>
             <strong>{{ context.profile()?.jobTitle || 'Recruteur' }} · {{ context.company()?.name || 'Mon entreprise' }}</strong>
           </div>
-          <div class="topbar-status">
-            <span class="topbar-status-dot"></span>
-            Espace actif
+          <div class="topbar-status-group">
+            <div class="topbar-status">
+              <span class="topbar-status-dot"></span>
+              Espace actif
+            </div>
+            @if (context.publicationAccess(); as access) {
+              @if (access.canPublish) {
+                <div class="topbar-publish-status topbar-publish-status--ok">
+                  Publication autorisée
+                </div>
+              } @else {
+                <div class="topbar-publish-status topbar-publish-status--blocked">
+                  Paiement requis
+                </div>
+              }
+            }
           </div>
           <app-recruiter-notification-bell />
         </header>

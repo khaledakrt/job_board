@@ -18,6 +18,7 @@ import {
 } from './admin-catalog.shared';
 import { institutionTypeLabel } from '../../public/shared/catalog.constants';
 import { InstitutionType } from '../../../core/models/catalog.model';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 const PAGE_SIZE = 15;
 
@@ -33,6 +34,7 @@ export class AdminCatalogModerationComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   readonly routes = APP_ROUTES;
   readonly statusLabels = CATALOG_STATUS_LABELS;
@@ -122,9 +124,21 @@ export class AdminCatalogModerationComponent implements OnInit {
     this.load(1);
   }
 
-  setStatus(id: string, status: 'published' | 'rejected' | 'pending', event?: Event): void {
+  async setStatus(
+    id: string,
+    status: 'published' | 'rejected' | 'pending',
+    event?: Event
+  ): Promise<void> {
     event?.stopPropagation();
     event?.preventDefault();
+    const ok = await this.confirmDialog.confirm({
+      title: this.statusConfirmTitle(status),
+      message: this.statusConfirmMessage(status),
+      confirmLabel: this.statusConfirmLabel(status),
+      confirmDanger: status === 'rejected',
+    });
+    if (!ok) return;
+
     this.actionLoading.set(id);
     const req =
       this.kind() === 'training-centers'
@@ -148,5 +162,27 @@ export class AdminCatalogModerationComponent implements OnInit {
 
   instLabel(type?: InstitutionType): string {
     return type ? institutionTypeLabel(type) : '—';
+  }
+
+  private statusConfirmTitle(status: 'published' | 'rejected' | 'pending'): string {
+    if (status === 'published') return 'Publier la fiche';
+    if (status === 'rejected') return 'Rejeter la fiche';
+    return 'Repasser en attente';
+  }
+
+  private statusConfirmLabel(status: 'published' | 'rejected' | 'pending'): string {
+    if (status === 'published') return 'Publier';
+    if (status === 'rejected') return 'Rejeter';
+    return 'Mettre en attente';
+  }
+
+  private statusConfirmMessage(status: 'published' | 'rejected' | 'pending'): string {
+    if (status === 'published') {
+      return 'Cette fiche deviendra visible publiquement. Confirmez-vous la publication ?';
+    }
+    if (status === 'rejected') {
+      return 'Cette fiche ne sera plus visible et le prestataire restera bloqué. Confirmez-vous le rejet ?';
+    }
+    return 'Cette fiche sera retirée de la visibilité publique en attendant une nouvelle validation.';
   }
 }

@@ -8,25 +8,12 @@ const { parsePagination, buildPaginatedResponse } = require('../utils/pagination
 const { expireDueJobs } = require('../utils/jobExpiration');
 const { formatPublicJob } = require('./publicJobSearch.service');
 
-function buildAddressLabel(company) {
-  const line1 = company.street_address?.trim();
-  const line2 = [company.postal_code, company.city].filter(Boolean).join(' ').trim();
-  const country = company.country?.trim();
-  const parts = [line1, line2, country].filter((p) => p && p.length);
-  return parts.length ? parts.join(', ') : null;
-}
-
 function formatPublicCompany(company) {
   const locationParts = [company.city, company.country].filter(Boolean);
-  const addressLabel = buildAddressLabel(company);
 
   return {
     id: company.id,
     name: company.name,
-    legalName: company.legal_name,
-    legalForm: company.legal_form,
-    siret: company.siret,
-    vatNumber: company.vat_number,
     logoUrl: company.logo_url,
     website: company.website,
     linkedinUrl: company.linkedin_url,
@@ -34,12 +21,9 @@ function formatPublicCompany(company) {
     industry: company.industry,
     scaleSize: company.scale_size,
     foundedYear: company.founded_year,
-    streetAddress: company.street_address,
-    postalCode: company.postal_code,
     city: company.city,
     country: company.country,
     locationLabel: locationParts.length ? locationParts.join(', ') : null,
-    addressLabel,
     contactEmail: company.contact_email_public ? company.contact_email : null,
     contactPhone: company.contact_phone_public ? company.contact_phone : null,
   };
@@ -59,6 +43,7 @@ async function getPublicCompanyProfile(companyId, query = {}) {
     where: {
       company_id: companyId,
       status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
+      expires_at: { [Op.gt]: new Date() },
     },
     include: [
       {
@@ -117,7 +102,10 @@ async function listPublicCompanies(query = {}) {
         model: Job,
         as: 'jobs',
         attributes: [],
-        where: { status: { [Op.in]: [...JOB_PUBLIC_STATUSES] } },
+        where: {
+          status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
+          expires_at: { [Op.gt]: new Date() },
+        },
         required: true,
       },
     ],
@@ -132,6 +120,7 @@ async function listPublicCompanies(query = {}) {
       const jobWhere = {
         company_id: company.id,
         status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
+        expires_at: { [Op.gt]: new Date() },
       };
       const [jobs, jobsCount] = await Promise.all([
         Job.findAll({

@@ -9,7 +9,7 @@ require_app_root
 
 apt-get install -y -qq nginx
 
-sed "s|5.189.190.131|${SERVER_NAME}|g; s|/var/www/jobboard/frontend|${SITE_ROOT}|g" \
+sed "s|__SERVER_NAME__|${SERVER_NAME}|g; s|/var/www/jobboard/site|${SITE_ROOT}|g" \
   "$APP_ROOT/deploy/nginx-jobboard.conf" > /etc/nginx/sites-available/jobboard
 
 ln -sf /etc/nginx/sites-available/jobboard /etc/nginx/sites-enabled/jobboard

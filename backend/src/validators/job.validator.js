@@ -68,7 +68,17 @@ function stringListSchema(maxItems, maxLen) {
   );
 }
 
-const jobBodySchema = z.object({
+function validateSalaryRange(data, ctx) {
+  if (data.salaryMin != null && data.salaryMax != null && data.salaryMax < data.salaryMin) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Le salaire maximum doit être supérieur ou égal au salaire minimum',
+      path: ['salaryMax'],
+    });
+  }
+}
+
+const jobBodyBaseSchema = z.object({
   title: z.string().trim().min(3).max(255),
   description: z
     .string()
@@ -95,13 +105,31 @@ const jobBodySchema = z.object({
     .optional()
     .nullable()
     .transform((v) => (v === '' ? null : v)),
+  salaryMin: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : val),
+    z.coerce.number().min(0).max(999999999).nullable().optional()
+  ),
+  salaryMax: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : val),
+    z.coerce.number().min(0).max(999999999).nullable().optional()
+  ),
+  salaryCurrency: z
+    .preprocess(
+      (val) => (val === '' || val === null || val === undefined ? null : String(val).trim().toUpperCase()),
+      z.enum(['TND', 'EUR', 'USD']).nullable().optional()
+    ),
+  salaryPeriod: z
+    .preprocess(
+      (val) => (val === '' || val === null || val === undefined ? null : val),
+      z.enum(['month', 'year', 'day', 'hour']).nullable().optional()
+    ),
   status: z.enum(JOB_MANUAL_STATUSES).optional(),
   expiresAt: z.coerce.date().optional(),
   quizEnabled: z.boolean().optional().default(false),
   quiz: quizSchema.optional().nullable(),
 });
 
-const createJobSchema = jobBodySchema
+const createJobSchema = jobBodyBaseSchema
   .extend({
     expiresAt: z.coerce
       .date()
@@ -111,6 +139,7 @@ const createJobSchema = jobBodySchema
       }),
   })
   .superRefine((data, ctx) => {
+    validateSalaryRange(data, ctx);
     if (data.quizEnabled && !data.quiz) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -120,7 +149,7 @@ const createJobSchema = jobBodySchema
     }
   });
 
-const updateJobSchema = jobBodySchema.partial();
+const updateJobSchema = jobBodyBaseSchema.partial().superRefine(validateSalaryRange);
 
 const updateJobStatusSchema = z.object({
   status: z.enum(JOB_MANUAL_STATUSES),

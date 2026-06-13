@@ -9,6 +9,7 @@ const {
   createGlobalRateLimiter,
   createStrictAuthRateLimiter,
   createModerateAuthRateLimiter,
+  createRefreshRateLimiter,
   createContactFormRateLimiter,
 } = require('./rateLimit');
 
@@ -18,6 +19,7 @@ const corsOptions = createCorsOptions(env.CLIENT_URL);
 const globalRateLimiter = createGlobalRateLimiter(env);
 const strictAuthRateLimiter = createStrictAuthRateLimiter(env);
 const moderateAuthRateLimiter = createModerateAuthRateLimiter(env);
+const refreshRateLimiter = createRefreshRateLimiter(env);
 const contactFormRateLimiter = createContactFormRateLimiter(env);
 
 module.exports = {
@@ -27,5 +29,6 @@ module.exports = {
   globalRateLimiter,
   strictAuthRateLimiter,
   moderateAuthRateLimiter,
+  refreshRateLimiter,
   contactFormRateLimiter,
 };

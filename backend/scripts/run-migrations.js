@@ -13,18 +13,6 @@ const {
   DB_PASSWORD = '',
 } = process.env;
 
-const DUPLICATE_PATTERNS = [
-  /duplicate column/i,
-  /duplicate key name/i,
-  /already exists/i,
-  /duplicate entry/i,
-];
-
-function isBenignMigrationError(err) {
-  const msg = err?.message || String(err);
-  return DUPLICATE_PATTERNS.some((re) => re.test(msg));
-}
-
 async function ensureMigrationsTable(conn) {
   await conn.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -47,6 +35,31 @@ async function markMigrationApplied(conn, name) {
   await conn.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
 }
 
+async function assertRegexpSubstrSupport(conn, file) {
+  if (file !== '029_job_salary_structured.sql') return;
+
+  try {
+    await conn.query("SELECT REGEXP_SUBSTR('salary 1200', '[0-9]+') AS value");
+  } catch (error) {
+    throw new Error(
+      `${file} requires MySQL 8+/REGEXP_SUBSTR support. DB check failed before applying migration: ${error.message}`
+    );
+  }
+}
+
+async function acquireMigrationLock(conn) {
+  const [rows] = await conn.query('SELECT GET_LOCK(?, 30) AS acquired', [
+    `${DB_NAME}:schema_migrations`,
+  ]);
+  if (rows[0]?.acquired !== 1) {
+    throw new Error('Could not acquire migration lock');
+  }
+}
+
+async function releaseMigrationLock(conn) {
+  await conn.query('SELECT RELEASE_LOCK(?)', [`${DB_NAME}:schema_migrations`]);
+}
+
 async function main() {
   const migrationsDir = path.join(__dirname, '..', 'migrations');
   const files = fs
@@ -63,33 +76,29 @@ async function main() {
     multipleStatements: true,
   });
 
-  await ensureMigrationsTable(conn);
+  try {
+    await acquireMigrationLock(conn);
+    await ensureMigrationsTable(conn);
 
-  for (const file of files) {
-    if (await isMigrationApplied(conn, file)) {
-      console.log(`Skip ${file} (already applied)`);
-      continue;
-    }
+    for (const file of files) {
+      if (await isMigrationApplied(conn, file)) {
+        console.log(`Skip ${file} (already applied)`);
+        continue;
+      }
 
-    console.log(`Applying ${file}...`);
-    const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+      console.log(`Applying ${file}...`);
+      const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
 
-    try {
+      await assertRegexpSubstrSupport(conn, file);
       await conn.query(sql);
       await markMigrationApplied(conn, file);
       console.log(`OK ${file}`);
-    } catch (err) {
-      if (isBenignMigrationError(err)) {
-        console.warn(`WARN ${file}: ${err.message} (marked as applied)`);
-        await markMigrationApplied(conn, file);
-        continue;
-      }
-      console.error(`FAILED ${file}:`, err.message);
-      process.exit(1);
     }
+  } finally {
+    await releaseMigrationLock(conn).catch(() => undefined);
+    await conn.end();
   }
 
-  await conn.end();
   console.log('Migrations complete.');
 }
 

@@ -25,24 +25,39 @@
       }
     </div>
 
-    <section class="admin-hero">
-      <div class="admin-hero-avatar">{{ userInitials(user()!) }}</div>
-      <div class="admin-hero-main">
-        <p class="admin-hero-email">{{ user()!.email }}</p>
-        <p class="admin-hero-sub">{{ userSubtitle(user()!) }}</p>
+    <section class="admin-identity-card">
+      <div class="admin-identity-media">
+        @if (userImageUrl(user()!); as imageUrl) {
+          <img [src]="imageUrl" alt="" />
+        } @else {
+          <span>{{ userInitials(user()!) }}</span>
+        }
       </div>
-      <div class="admin-hero-badges">
-        <span class="admin-badge admin-badge--role">{{ roleLabel(user()!.role) }}</span>
-        @if (user()!.isVerified) {
-          <span class="admin-badge admin-badge--ok">Vérifié</span>
-        } @else {
-          <span class="admin-badge admin-badge--warn">Non vérifié</span>
-        }
-        @if (user()!.isBanned) {
-          <span class="admin-badge admin-badge--danger">Banni</span>
-        } @else {
-          <span class="admin-badge admin-badge--ok">Actif</span>
-        }
+      <div class="admin-identity-main">
+        <div class="admin-identity-title-row">
+          <div>
+            <p class="admin-identity-kicker">{{ roleLabel(user()!.role) }}</p>
+            <h2>{{ userSubtitle(user()!) || user()!.email }}</h2>
+            <p>{{ user()!.email }}</p>
+          </div>
+          <div class="admin-identity-status">
+            <strong>{{ accountStateLabel(user()!) }}</strong>
+            <span>{{ user()!.lastLoginIp || 'Aucune connexion enregistrée' }}</span>
+          </div>
+        </div>
+        <div class="admin-identity-badges">
+          <span class="admin-badge admin-badge--role">{{ roleLabel(user()!.role) }}</span>
+          @if (user()!.isVerified) {
+            <span class="admin-badge admin-badge--ok">E-mail vérifié</span>
+          } @else {
+            <span class="admin-badge admin-badge--warn">E-mail non vérifié</span>
+          }
+          @if (user()!.isBanned) {
+            <span class="admin-badge admin-badge--danger">Accès bloqué</span>
+          } @else {
+            <span class="admin-badge admin-badge--ok">Accès actif</span>
+          }
+        </div>
       </div>
     </section>
 
@@ -65,6 +80,34 @@
           </div>
         </div>
 
+        @if (user()!.candidateProfile || user()!.recruiterProfile) {
+          <div class="admin-profile-summary">
+            <h3>Informations métier</h3>
+            <div class="admin-profile-summary-grid">
+              @if (user()!.candidateProfile) {
+                <div>
+                  <span>Profil</span>
+                  <strong>{{ user()!.candidateProfile?.professionalTitle || 'Non renseigné' }}</strong>
+                </div>
+                <div>
+                  <span>Téléphone</span>
+                  <strong>{{ user()!.candidateProfile?.phone || 'Non renseigné' }}</strong>
+                </div>
+              }
+              @if (user()!.recruiterProfile) {
+                <div>
+                  <span>Entreprise</span>
+                  <strong>{{ user()!.recruiterProfile?.companyName || 'Non rattaché' }}</strong>
+                </div>
+                <div>
+                  <span>Poste recruteur</span>
+                  <strong>{{ user()!.recruiterProfile?.jobTitle || 'Non renseigné' }}</strong>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
         <form [formGroup]="editForm" (ngSubmit)="saveProfile()" class="admin-form-grid">
           <div class="admin-field field-full">
             <label for="email">E-mail</label>
@@ -86,7 +129,7 @@
               Compte vérifié
             </label>
           </div>
-          @if (user()!.role === roles.CANDIDATE) {
+          @if (editForm.getRawValue().role === roles.CANDIDATE) {
             <div class="admin-field">
               <label for="firstName">Prénom</label>
               <input id="firstName" formControlName="firstName" class="form-input" />
@@ -94,6 +137,66 @@
             <div class="admin-field">
               <label for="lastName">Nom</label>
               <input id="lastName" formControlName="lastName" class="form-input" />
+            </div>
+            <div class="admin-field">
+              <label for="professionalTitle">Profil professionnel</label>
+              <input id="professionalTitle" formControlName="professionalTitle" class="form-input" />
+            </div>
+            <div class="admin-field">
+              <label for="phone">Téléphone</label>
+              <input id="phone" formControlName="phone" class="form-input" />
+            </div>
+          }
+          @if (editForm.getRawValue().role === roles.RECRUITER) {
+            <div class="admin-field">
+              <label for="jobTitle">Poste recruteur</label>
+              <input id="jobTitle" formControlName="jobTitle" class="form-input" />
+            </div>
+            <div class="admin-field">
+              <label for="companyName">Entreprise</label>
+              <input
+                id="companyName"
+                formControlName="companyName"
+                class="form-input"
+                placeholder="Obligatoire si nouveau recruteur"
+              />
+            </div>
+            <div class="admin-field field-full">
+              <label for="companyIndustry">Secteur entreprise</label>
+              <input id="companyIndustry" formControlName="companyIndustry" class="form-input" />
+            </div>
+          }
+          @if (editForm.getRawValue().role === roles.TRAINING_PROVIDER) {
+            <div class="admin-field field-full">
+              <label for="providerName">Nom du centre</label>
+              <input
+                id="providerName"
+                formControlName="providerName"
+                class="form-input"
+                placeholder="Créé automatiquement si vide"
+              />
+            </div>
+          }
+          @if (editForm.getRawValue().role === roles.INSTITUTION_PROVIDER) {
+            <div class="admin-field">
+              <label for="providerName">Nom de l’établissement</label>
+              <input
+                id="providerName"
+                formControlName="providerName"
+                class="form-input"
+                placeholder="Créé automatiquement si vide"
+              />
+            </div>
+            <div class="admin-field">
+              <label for="institutionType">Type établissement</label>
+              <select id="institutionType" formControlName="institutionType" class="form-input">
+                <option value="primary">Primaire</option>
+                <option value="college">Collège</option>
+                <option value="high_school">Lycée</option>
+                <option value="higher_institute">Institut supérieur</option>
+                <option value="university">Université</option>
+                <option value="academy">Académie</option>
+              </select>
             </div>
           }
           <div class="admin-form-actions">
@@ -119,7 +222,13 @@
               />
             </div>
             <div class="admin-form-actions">
-              <button type="submit" class="btn-secondary !w-auto px-4">Appliquer</button>
+              <button
+                type="submit"
+                class="btn-secondary !w-auto px-4"
+                [disabled]="actionLoading() === 'password'"
+              >
+                {{ actionLoading() === 'password' ? 'Application...' : 'Appliquer' }}
+              </button>
             </div>
           </form>
         </section>
@@ -133,22 +242,37 @@
                 <input id="banReason" formControlName="reason" class="form-input" />
               </div>
               <div class="admin-form-actions">
-                <button type="button" class="admin-btn-danger" (click)="ban()">
-                  Bannir l'utilisateur
+                <button
+                  type="button"
+                  class="admin-btn-danger"
+                  (click)="ban()"
+                  [disabled]="actionLoading() === 'ban'"
+                >
+                  {{ actionLoading() === 'ban' ? 'Bannissement...' : "Bannir l'utilisateur" }}
                 </button>
               </div>
             </form>
           }
           @if (user()!.isBanned) {
             <p class="admin-empty-hint">{{ user()!.banReason }}</p>
-            <button type="button" class="btn-secondary !w-auto px-4" (click)="unban()">
-              Lever le bannissement
+            <button
+              type="button"
+              class="btn-secondary !w-auto px-4"
+              (click)="unban()"
+              [disabled]="actionLoading() === 'unban'"
+            >
+              {{ actionLoading() === 'unban' ? 'Traitement...' : 'Lever le bannissement' }}
             </button>
           }
           @if (user()!.role !== roles.ADMIN) {
             <div class="admin-form-actions admin-form-actions--compact">
-              <button type="button" class="admin-btn-outline" (click)="deleteUser()">
-                Désactiver le compte
+              <button
+                type="button"
+                class="admin-btn-outline"
+                (click)="deleteUser()"
+                [disabled]="actionLoading() === 'delete'"
+              >
+                {{ actionLoading() === 'delete' ? 'Désactivation...' : 'Désactiver le compte' }}
               </button>
             </div>
           }

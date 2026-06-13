@@ -17,6 +17,16 @@ const {
   formatQuizForRecruiter,
 } = require('../utils/jobQuiz');
 const { generateJobQuiz } = require('../utils/quizGenerator');
+const subscriptionService = require('./subscription.service');
+
+async function assertCompanyCanPublish(companyId) {
+  const canPublish = await subscriptionService.verifyActiveSubscription(companyId);
+  if (!canPublish) {
+    throw ApiError.forbidden(
+      'An active company subscription is required to publish this job'
+    );
+  }
+}
 
 function formatJob(job) {
   return {
@@ -34,6 +44,10 @@ function formatJob(job) {
     remoteType: job.remote_type,
     contractType: job.contract_type,
     salaryLabel: job.salary_label,
+    salaryMin: job.salary_min != null ? Number(job.salary_min) : null,
+    salaryMax: job.salary_max != null ? Number(job.salary_max) : null,
+    salaryCurrency: job.salary_currency,
+    salaryPeriod: job.salary_period,
     status: job.status,
     expiresAt: job.expires_at,
     viewsCount: job.views_count,
@@ -76,11 +90,16 @@ async function listCompanyJobs(companyId, query = {}) {
   const where = { company_id: companyId, deleted_by_recruiter_at: null };
 
   if (query.archived === true || query.archived === 'true') {
-    where.status = { [Op.in]: [JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED] };
+    where[Op.or] = [
+      { archived_at: { [Op.ne]: null } },
+      { status: JOB_STATUS.EXPIRED },
+    ];
   } else if (query.status) {
     where.status = query.status;
+    where.archived_at = null;
   } else {
-    where.status = { [Op.notIn]: [JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED] };
+    where.archived_at = null;
+    where.status = { [Op.notIn]: [JOB_STATUS.EXPIRED] };
   }
 
   const { page, limit, offset } = parsePagination(query);
@@ -143,6 +162,11 @@ async function createJob({ recruiter, companyId, payload }) {
   }
 
   const quizFields = resolveQuizFields(payload);
+  const status = payload.status || JOB_STATUS.DRAFT;
+
+  if (status === JOB_STATUS.ACTIVE) {
+    await assertCompanyCanPublish(companyId);
+  }
 
   const job = await Job.create({
     id: generateUuid(),
@@ -159,7 +183,11 @@ async function createJob({ recruiter, companyId, payload }) {
     remote_type: payload.remoteType,
     contract_type: payload.contractType,
     salary_label: payload.salaryLabel ?? null,
-    status: payload.status || JOB_STATUS.DRAFT,
+    salary_min: payload.salaryMin ?? null,
+    salary_max: payload.salaryMax ?? null,
+    salary_currency: payload.salaryCurrency ?? null,
+    salary_period: payload.salaryPeriod ?? null,
+    status,
     expires_at: expiresAt,
     views_count: 0,
     applications_count: 0,
@@ -198,6 +226,11 @@ async function updateJob({ jobId, companyId, payload }) {
     throw ApiError.badRequest('Job expiration is automatic based on the expiration date');
   }
 
+  const nextStatus = payload.status ?? job.status;
+  if (nextStatus === JOB_STATUS.ACTIVE) {
+    await assertCompanyCanPublish(companyId);
+  }
+
   const quizUpdate = {};
   if (payload.quizEnabled !== undefined || payload.quiz !== undefined) {
     const quizPayload = {
@@ -222,6 +255,11 @@ async function updateJob({ jobId, companyId, payload }) {
     remote_type: payload.remoteType ?? job.remote_type,
     contract_type: payload.contractType ?? job.contract_type,
     salary_label: payload.salaryLabel !== undefined ? payload.salaryLabel : job.salary_label,
+    salary_min: payload.salaryMin !== undefined ? payload.salaryMin : job.salary_min,
+    salary_max: payload.salaryMax !== undefined ? payload.salaryMax : job.salary_max,
+    salary_currency:
+      payload.salaryCurrency !== undefined ? payload.salaryCurrency : job.salary_currency,
+    salary_period: payload.salaryPeriod !== undefined ? payload.salaryPeriod : job.salary_period,
     status: payload.status ?? job.status,
     expires_at:
       payload.expiresAt !== undefined && job.status !== JOB_STATUS.EXPIRED
@@ -249,27 +287,62 @@ async function updateJobStatus({ jobId, companyId, status, recruiterUserId }) {
     throw ApiError.badRequest('Job expiration is automatic based on the expiration date');
   }
 
-  const archiveFields =
-    status === JOB_STATUS.HIDDEN
-      ? {
-          archived_at: job.archived_at || new Date(),
-          archived_by: recruiterUserId || job.archived_by || null,
-        }
-      : {
-          archived_at: null,
-          archived_by: null,
-          deleted_by_recruiter_at: null,
-          deleted_by_recruiter_by: null,
-        };
+  if (status === JOB_STATUS.ACTIVE) {
+    await assertCompanyCanPublish(companyId);
+  }
+
+  const archiveFields = {
+    archived_at: null,
+    archived_by: null,
+    deleted_by_recruiter_at: null,
+    deleted_by_recruiter_by: null,
+  };
 
   await job.update({ status, ...archiveFields });
 
   return formatJob(job);
 }
 
+async function archiveJob({ jobId, companyId, recruiterUserId }) {
+  const job = await assertJobBelongsToCompany(jobId, companyId);
+
+  if (job.status === JOB_STATUS.EXPIRED) {
+    throw ApiError.badRequest('Expired jobs are already archived automatically');
+  }
+
+  await job.update({
+    status: JOB_STATUS.HIDDEN,
+    archived_at: job.archived_at || new Date(),
+    archived_by: recruiterUserId || job.archived_by || null,
+    deleted_by_recruiter_at: null,
+    deleted_by_recruiter_by: null,
+  });
+
+  return formatJob(job);
+}
+
+async function restoreArchivedJob({ jobId, companyId }) {
+  const job = await assertJobBelongsToCompany(jobId, companyId);
+
+  if (!job.archived_at && job.status !== JOB_STATUS.EXPIRED) {
+    throw ApiError.badRequest('Job is not archived');
+  }
+
+  await job.update({
+    status: JOB_STATUS.DRAFT,
+    expires_at: defaultExpiresAt(),
+    archived_at: null,
+    archived_by: null,
+    deleted_by_recruiter_at: null,
+    deleted_by_recruiter_by: null,
+  });
+
+  return formatJob(job);
+}
+
 async function deleteJob({ jobId, companyId, recruiterUserId }) {
   const job = await assertJobBelongsToCompany(jobId, companyId);
-  if (![JOB_STATUS.HIDDEN, JOB_STATUS.EXPIRED].includes(job.status)) {
+  if (!job.archived_at && job.status !== JOB_STATUS.EXPIRED) {
     throw ApiError.badRequest('Archive the job before deleting it from recruiter history');
   }
   await job.update({
@@ -287,6 +360,8 @@ module.exports = {
   createJob,
   updateJob,
   updateJobStatus,
+  archiveJob,
+  restoreArchivedJob,
   deleteJob,
   formatJob,
   generateQuizFromJobContent,

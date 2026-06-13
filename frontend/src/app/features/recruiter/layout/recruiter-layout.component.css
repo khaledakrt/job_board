@@ -217,8 +217,16 @@
   color: #64748b;
 }
 
-.topbar-status {
+.topbar-status-group {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.topbar-status {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -229,6 +237,28 @@
   color: #047857;
   font-size: 0.76rem;
   font-weight: 750;
+}
+
+.topbar-publish-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.topbar-publish-status--ok {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.topbar-publish-status--blocked {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .topbar-status-dot {

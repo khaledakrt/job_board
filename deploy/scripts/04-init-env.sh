@@ -16,6 +16,7 @@ fi
 
 [[ -n "$DB_PASSWORD" ]] || die "DB_PASSWORD requis pour générer .env"
 [[ -n "$PUBLIC_URL" ]] || die "PUBLIC_URL requis (ex: https://tun-job-board.com)"
+[[ -n "${SMTP_PASS:-}" ]] || die "SMTP_PASS requis en production (ou configurez un vrai SMTP avant de démarrer PM2)"
 
 JWT_ACCESS="${JWT_ACCESS:-$(openssl rand -hex 32)}"
 JWT_REFRESH="${JWT_REFRESH:-$(openssl rand -hex 32)}"
@@ -29,6 +30,11 @@ sed -i "s|^DB_USER=.*|DB_USER=${DB_USER}|" "$ENV_FILE"
 sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" "$ENV_FILE"
 sed -i "s|^JWT_ACCESS_SECRET=.*|JWT_ACCESS_SECRET=${JWT_ACCESS}|" "$ENV_FILE"
 sed -i "s|^JWT_REFRESH_SECRET=.*|JWT_REFRESH_SECRET=${JWT_REFRESH}|" "$ENV_FILE"
+sed -i "s|^SMTP_PASS=.*|SMTP_PASS=${SMTP_PASS}|" "$ENV_FILE"
+if [[ -n "${SMTP_USER:-}" ]]; then
+  sed -i "s|^SMTP_USER=.*|SMTP_USER=${SMTP_USER}|" "$ENV_FILE"
+  sed -i "s|^SMTP_FROM_EMAIL=.*|SMTP_FROM_EMAIL=${SMTP_USER}|" "$ENV_FILE"
+fi
 
 if [[ "$PUBLIC_URL" == https://* ]]; then
   sed -i 's|^COOKIE_SECURE=.*|COOKIE_SECURE=true|' "$ENV_FILE"
@@ -37,5 +43,5 @@ else
 fi
 
 echo "Fichier créé : $ENV_FILE"
-echo "Complétez SMTP (EMAIL_USER / EMAIL_PASS) si besoin : nano $ENV_FILE"
+echo "Vérifiez SMTP_FROM_NAME/SMTP_FROM_EMAIL si besoin : nano $ENV_FILE"
 echo "OK — Étape 4 terminée"

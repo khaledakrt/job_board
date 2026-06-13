@@ -22,6 +22,10 @@ function formatPublicJob(job) {
     remoteType: job.remote_type,
     contractType: job.contract_type,
     salaryLabel: job.salary_label,
+    salaryMin: job.salary_min != null ? Number(job.salary_min) : null,
+    salaryMax: job.salary_max != null ? Number(job.salary_max) : null,
+    salaryCurrency: job.salary_currency,
+    salaryPeriod: job.salary_period,
     status: job.status,
     viewsCount: job.views_count,
     applicationsCount: job.applications_count,
@@ -49,6 +53,7 @@ function formatPublicJob(job) {
 function buildSearchWhereClause(filters) {
   const where = {
     status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
+    expires_at: { [Op.gt]: new Date() },
   };
 
   if (filters.location) {
@@ -90,9 +95,15 @@ function buildSearchWhereClause(filters) {
   if (filters.minSalary != null && filters.minSalary > 0) {
     const min = Math.floor(filters.minSalary);
     const salaryCondition = {
-      salary_label: {
-        [Op.regexp]: `[0-9]`,
-      },
+      [Op.or]: [
+        { salary_max: { [Op.gte]: min } },
+        {
+          [Op.and]: [
+            { salary_max: null },
+            { salary_min: { [Op.gte]: min } },
+          ],
+        },
+      ],
     };
     if (where[Op.and]) {
       where[Op.and].push(salaryCondition);
@@ -174,8 +185,8 @@ async function searchJobs(query) {
   const order =
     query.sortBy === 'salary'
       ? [
-          [Sequelize.literal("salary_label REGEXP '[0-9]'"), 'DESC'],
-          ['salary_label', 'DESC'],
+          ['salary_max', 'DESC'],
+          ['salary_min', 'DESC'],
           ['created_at', 'DESC'],
         ]
       : query.sortBy === 'experience'
@@ -222,6 +233,7 @@ async function getPublicJobById(jobId) {
     where: {
       id: jobId,
       status: JOB_STATUS.ACTIVE,
+      expires_at: { [Op.gt]: new Date() },
     },
     include: [
       {
@@ -248,6 +260,7 @@ async function getPublicJobPreviewById(jobId) {
     where: {
       id: jobId,
       status: JOB_STATUS.ACTIVE,
+      expires_at: { [Op.gt]: new Date() },
     },
     include: [
       {

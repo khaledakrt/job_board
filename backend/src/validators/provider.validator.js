@@ -3,11 +3,7 @@
 const { z } = require('zod');
 const { TRAINING_DELIVERY_MODES, INSTITUTION_TYPES } = require('../config/constants');
 const { submitTrainingCenterSchema, submitPrivateInstitutionSchema } = require('./publicCatalog.validator');
-
-const passwordSchema = z
-  .string()
-  .min(8, 'Mot de passe : 8 caractères minimum')
-  .max(128);
+const { passwordSchema } = require('./auth.validator');
 
 const registerProviderSchema = z.object({
   providerType: z.enum(['training_center', 'private_institution']),

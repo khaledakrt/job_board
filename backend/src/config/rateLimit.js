@@ -66,6 +66,22 @@ function createModerateAuthRateLimiter(env) {
   });
 }
 
+function createRefreshRateLimiter(env) {
+  const max = isDevelopment(env) ? 120 : 60;
+  const windowMs = isDevelopment(env) ? 60_000 : env.AUTH_RATE_LIMIT_WINDOW_MS;
+
+  return rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      message: 'Trop de renouvellements de session. Réessayez dans quelques minutes.',
+    },
+  });
+}
+
 function createContactFormRateLimiter(env) {
   const max = isDevelopment(env) ? 30 : 5;
   const windowMs = isDevelopment(env) ? 60_000 : 900_000;
@@ -86,5 +102,6 @@ module.exports = {
   createGlobalRateLimiter,
   createStrictAuthRateLimiter,
   createModerateAuthRateLimiter,
+  createRefreshRateLimiter,
   createContactFormRateLimiter,
 };

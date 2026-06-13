@@ -65,6 +65,7 @@ const resendVerificationSchema = z.object({
 });
 
 module.exports = {
+  passwordSchema,
   registerSchema,
   loginSchema,
   forgotPasswordSchema,

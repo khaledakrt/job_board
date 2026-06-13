@@ -44,6 +44,7 @@ import { sanitizeRichHtml, stripHtml } from '../../../shared/utils/rich-text.uti
 
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { RecruiterJobService } from '../services/job.service';
+import { PublicationAccessDialogService } from '../services/publication-access-dialog.service';
 
 import { RecruiterContextService } from '../services/recruiter-context.service';
 
@@ -100,6 +101,7 @@ export class JobFormComponent implements OnInit {
 
   private readonly jobService = inject(RecruiterJobService);
   private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly publicationAccessDialog = inject(PublicationAccessDialogService);
 
   readonly context = inject(RecruiterContextService);
 
@@ -166,6 +168,10 @@ export class JobFormComponent implements OnInit {
     contractType: ['CDI' as ContractType, Validators.required],
 
     salaryLabel: ['', [Validators.maxLength(255)]],
+    salaryMin: [''],
+    salaryMax: [''],
+    salaryCurrency: ['TND' as 'TND' | 'EUR' | 'USD'],
+    salaryPeriod: ['month' as 'month' | 'year' | 'day' | 'hour'],
 
     experienceYears: [''],
 
@@ -221,6 +227,10 @@ export class JobFormComponent implements OnInit {
           contractType: job.contractType,
 
           salaryLabel: job.salaryLabel || '',
+          salaryMin: job.salaryMin != null ? String(job.salaryMin) : '',
+          salaryMax: job.salaryMax != null ? String(job.salaryMax) : '',
+          salaryCurrency: job.salaryCurrency || 'TND',
+          salaryPeriod: job.salaryPeriod || 'month',
 
           experienceYears:
 
@@ -432,9 +442,10 @@ export class JobFormComponent implements OnInit {
       message?: string;
       errors?: { field?: string; message?: string }[];
     } | null;
+    if (this.publicationAccessDialog.isPublishBlockedMessage(body?.message)) return '';
     const details = body?.errors
       ?.map((e) => {
-        const label = e.field === 'tags' ? 'Compétences' : e.field === 'languages' ? 'Langues' : e.field;
+        const label = this.formatErrorField(e.field);
         const field = label ? `${label}: ` : '';
         return `${field}${e.message ?? ''}`;
       })
@@ -443,6 +454,31 @@ export class JobFormComponent implements OnInit {
       return details.join(' · ');
     }
     return body?.message || 'Enregistrement impossible.';
+  }
+
+  private formatErrorField(field: string | undefined): string | undefined {
+    const labels: Record<string, string> = {
+      title: 'Titre',
+      description: 'Description',
+      requirements: 'Profil',
+      location: 'Lieu',
+      remoteType: 'Mode',
+      contractType: 'Contrat',
+      salaryLabel: 'Salaire',
+      salaryMin: 'Salaire min',
+      salaryMax: 'Salaire max',
+      salaryCurrency: 'Devise',
+      salaryPeriod: 'Période',
+      experienceYears: 'Expérience',
+      status: 'Statut',
+      expiresAt: 'Expiration',
+      tags: 'Compétences',
+      languages: 'Langues',
+      benefits: 'Avantages',
+      quiz: 'Quiz',
+    };
+
+    return field ? labels[field] || field : undefined;
   }
 
   /** Input type="number" yields number | null; edit mode may use string. */
@@ -455,6 +491,14 @@ export class JobFormComponent implements OnInit {
     const n =
       typeof value === 'number' ? value : Number.parseInt(String(value).trim(), 10);
     return Number.isNaN(n) ? null : n;
+  }
+
+  private parseSalaryAmount(value: string | number | null | undefined): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const n = typeof value === 'number' ? value : Number.parseFloat(String(value).replace(',', '.'));
+    return Number.isFinite(n) && n >= 0 ? n : null;
   }
 
   private addToList(
@@ -488,17 +532,40 @@ export class JobFormComponent implements OnInit {
 
     }
 
+    const raw = this.form.getRawValue();
+    const experienceYears = this.parseExperienceYears(raw.experienceYears);
+    const salaryMin = this.parseSalaryAmount(raw.salaryMin);
+    const salaryMax = this.parseSalaryAmount(raw.salaryMax);
+
+    if (salaryMin != null && salaryMax != null && salaryMax < salaryMin) {
+      this.errorMessage.set('Salaire max: le salaire maximum doit être supérieur ou égal au salaire minimum.');
+      return;
+    }
+
+    if (!this.isExpiredJob() && raw.expiresAt) {
+      const expiresAtEndOfDay = new Date(`${raw.expiresAt}T23:59:59`);
+      if (Number.isNaN(expiresAtEndOfDay.getTime()) || expiresAtEndOfDay.getTime() <= Date.now()) {
+        this.errorMessage.set('Expiration: choisissez une date d’expiration dans le futur.');
+        return;
+      }
+    }
+
+    if (!this.isExpiredJob() && raw.status === 'active' && !this.context.canPublishJobs()) {
+      await this.publicationAccessDialog.showPublishBlocked();
+      return;
+    }
+
     const ok = await this.confirmDialog.confirm({
 
-      title: this.isEditMode() ? 'Mettre à jour l\'offre' : 'Publier l\'offre',
+      title: this.isEditMode() ? 'Mettre à jour l\'offre' : raw.status === 'active' ? 'Publier l\'offre' : 'Enregistrer l\'offre',
 
       message: this.isEditMode()
 
         ? 'Enregistrer les modifications de cette offre ?'
 
-        : 'Publier cette offre d\'emploi ?',
+        : raw.status === 'active' ? 'Publier cette offre d\'emploi ?' : 'Conserver cette offre sans publication publique ?',
 
-      confirmLabel: this.isEditMode() ? 'Mettre à jour' : 'Publier',
+      confirmLabel: this.isEditMode() ? 'Mettre à jour' : raw.status === 'active' ? 'Publier' : 'Enregistrer',
 
     });
 
@@ -509,12 +576,6 @@ export class JobFormComponent implements OnInit {
       this.errorMessage.set(quizValidation);
       return;
     }
-
-    const raw = this.form.getRawValue();
-
-    const experienceYears = this.parseExperienceYears(raw.experienceYears);
-
-
 
     const payload: JobPayload = {
 
@@ -531,6 +592,10 @@ export class JobFormComponent implements OnInit {
       contractType: raw.contractType,
 
       salaryLabel: raw.salaryLabel?.trim() || null,
+      salaryMin,
+      salaryMax,
+      salaryCurrency: salaryMin != null || salaryMax != null ? raw.salaryCurrency : null,
+      salaryPeriod: salaryMin != null || salaryMax != null ? raw.salaryPeriod : null,
 
       experienceYears,
 
@@ -576,7 +641,12 @@ export class JobFormComponent implements OnInit {
       },
 
       error: (err: HttpErrorResponse) => {
-        this.errorMessage.set(this.formatSaveError(err));
+        if (this.publicationAccessDialog.isPublishBlockedMessage(err.error?.message)) {
+          void this.publicationAccessDialog.showPublishBlocked();
+          this.errorMessage.set(null);
+        } else {
+          this.errorMessage.set(this.formatSaveError(err));
+        }
         this.saving.set(false);
       },
 

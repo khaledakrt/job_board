@@ -4,7 +4,7 @@ const express = require('express');
 const authController = require('../controllers/auth.controller');
 const { validateBody } = require('../middleware/validate');
 const authenticate = require('../middleware/authenticate');
-const { strictAuthRateLimiter, moderateAuthRateLimiter } = require('../config');
+const { strictAuthRateLimiter, moderateAuthRateLimiter, refreshRateLimiter } = require('../config');
 const {
   registerSchema,
   loginSchema,
@@ -27,7 +27,9 @@ router.post(
 
 router.post('/login', strictAuthRateLimiter, validateBody(loginSchema), authController.login);
 
-router.post('/refresh', authController.refresh);
+router.post('/refresh', refreshRateLimiter, authController.refresh);
+
+router.post('/logout', refreshRateLimiter, authController.logout);
 
 router.post(
   '/verify-email',

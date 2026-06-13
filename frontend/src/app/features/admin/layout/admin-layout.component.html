@@ -9,74 +9,37 @@
     </div>
 
     <nav class="sidebar-nav">
-      <p class="nav-section-label">Vue d'ensemble</p>
-      <a
-        [routerLink]="routes.ADMIN.DASHBOARD"
-        routerLinkActive="nav-active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-link"
-      >
-        Tableau de bord
-      </a>
-
-      <p class="nav-section-label">Modération</p>
-      <a [routerLink]="routes.ADMIN.USERS" routerLinkActive="nav-active" class="nav-link">
-        Utilisateurs
-      </a>
-      <a [routerLink]="routes.ADMIN.JOBS" routerLinkActive="nav-active" class="nav-link">
-        Offres d'emploi
-      </a>
-      <a [routerLink]="routes.ADMIN.APPLICATIONS" routerLinkActive="nav-active" class="nav-link">
-        Candidatures
-      </a>
-      <a [routerLink]="routes.ADMIN.COMPANIES" routerLinkActive="nav-active" class="nav-link">
-        Entreprises
-      </a>
-
-      <p class="nav-section-label">Catalogue</p>
-      <a
-        [routerLink]="routes.ADMIN.TRAINING_CENTERS"
-        routerLinkActive="nav-active"
-        class="nav-link"
-      >
-        Centres de formation
-      </a>
-      <a
-        [routerLink]="routes.ADMIN.PRIVATE_INSTITUTIONS"
-        routerLinkActive="nav-active"
-        class="nav-link"
-      >
-        Établissements privés
-      </a>
-      <a
-        [routerLink]="routes.ADMIN.PRIVATE_INSTITUTION_OFFERINGS"
-        routerLinkActive="nav-active"
-        class="nav-link"
-      >
-        Publications établissements
-      </a>
-      <a
-        [routerLink]="routes.ADMIN.TRAINING_FORMATIONS"
-        routerLinkActive="nav-active"
-        class="nav-link"
-      >
-        Formations (modération)
-      </a>
-      <a
-        [routerLink]="routes.ADMIN.TRAINING_EVENTS"
-        routerLinkActive="nav-active"
-        class="nav-link"
-      >
-        Événements (modération)
-      </a>
+      @for (section of navSections; track section.label) {
+        <div class="nav-section">
+          <p class="nav-section-label">{{ section.label }}</p>
+          @for (item of section.items; track item.label) {
+            <a
+              [routerLink]="item.route"
+              [queryParams]="item.queryParams"
+              routerLinkActive="nav-active"
+              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+              class="nav-link"
+            >
+              <span class="nav-label">{{ item.label }}</span>
+              @if (item.badge) {
+                <span class="nav-badge">{{ item.badge }}</span>
+              }
+            </a>
+          }
+        </div>
+      }
     </nav>
 
     <div class="sidebar-footer">
       @if (authService.user()) {
         <p class="sidebar-user">{{ authService.user()!.email }}</p>
       }
-      <a [routerLink]="routes.HOME" class="nav-link">Accueil public</a>
-      <button type="button" class="nav-link logout-btn" (click)="logout()">Déconnexion</button>
+      <a [routerLink]="routes.HOME" class="nav-link">
+        <span class="nav-label">Accueil public</span>
+      </a>
+      <button type="button" class="nav-link logout-btn" (click)="logout()">
+        <span class="nav-label">Déconnexion</span>
+      </button>
     </div>
   </aside>
 

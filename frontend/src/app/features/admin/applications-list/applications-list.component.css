@@ -13,9 +13,27 @@
 }
 
 .application-flags {
-  color: #475569;
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  color: #0f172a;
   font-size: 0.85rem;
   white-space: nowrap;
+}
+
+.application-flags span {
+  border: 1px solid #dbeafe;
+  border-radius: 0.4rem;
+  background: #eff6ff;
+  padding: 0.15rem 0.4rem;
+  font-weight: 700;
+}
+
+.application-flags .application-flag-muted {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-weight: 600;
 }
 
 @media (max-width: 900px) {

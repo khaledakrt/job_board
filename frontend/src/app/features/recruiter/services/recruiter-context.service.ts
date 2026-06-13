@@ -27,6 +27,10 @@ export class RecruiterContextService {
   readonly canPostJob = computed(
     () => this.isOwner() || !!this.profileState()?.canPostJob
   );
+  readonly canPublishJobs = computed(
+    () => this.canPostJob() && this.profileState()?.publicationAccess?.canPublish !== false
+  );
+  readonly publicationAccess = computed(() => this.profileState()?.publicationAccess ?? null);
   readonly canDecideApplication = computed(
     () => this.isOwner() || !!this.profileState()?.canDecideApplication
   );
