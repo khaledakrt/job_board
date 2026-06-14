@@ -40,6 +40,10 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Check frontend i18n keys
+        working-directory: frontend
+        run: npm run check:i18n
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
