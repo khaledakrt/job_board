@@ -21,7 +21,6 @@ Cloudflare DNS records:
 
 The production mail server hosts these mailboxes:
 
-- `no-reply@tun-job-board.com`
 - `contact@tun-job-board.com`
 - `support@tun-job-board.com`
 - `info@tun-job-board.com`
@@ -37,10 +36,10 @@ Production backend mail settings:
 SMTP_HOST=mail.tun-job-board.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=no-reply@tun-job-board.com
+SMTP_USER=support@tun-job-board.com
 SMTP_PASS=CHANGE_ME
-SMTP_FROM_NAME=JobBoard TN
-SMTP_FROM_EMAIL=no-reply@tun-job-board.com
+SMTP_FROM_NAME=Support Tun Job
+SMTP_FROM_EMAIL=support@tun-job-board.com
 CONTACT_TO_EMAIL=contact@tun-job-board.com
 ```
 
