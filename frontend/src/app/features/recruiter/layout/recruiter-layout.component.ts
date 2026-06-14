@@ -7,6 +7,7 @@ import { RecruiterNotificationBellComponent } from '../shared/notification-bell/
 import type { RecruiterProfile } from '../../../core/models/recruiter.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 type PublicationAccess = NonNullable<RecruiterProfile['publicationAccess']>;
 
@@ -29,6 +30,7 @@ export class RecruiterLayoutComponent implements OnInit, OnDestroy {
   readonly context = inject(RecruiterContextService);
   readonly routes = APP_ROUTES;
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
   private refreshIntervalId: ReturnType<typeof window.setInterval> | null = null;
   private readonly handleWindowFocus = () => this.refreshContext(false);
 
@@ -76,12 +78,12 @@ export class RecruiterLayoutComponent implements OnInit, OnDestroy {
 
   publicationStatusTitle(access: PublicationAccess): string {
     if (access.reason === 'free_global') {
-      return 'Mode admin gratuit global: toutes les entreprises peuvent publier.';
+      return this.i18n.translate('recruiter.publication.freeGlobalTitle');
     }
     if (access.reason === 'company_subscription_active') {
-      return 'Cette entreprise a un abonnement ou accès gratuit actif.';
+      return this.i18n.translate('recruiter.publication.activeSubscriptionTitle');
     }
-    return 'Paiement obligatoire: cette entreprise doit avoir un abonnement actif pour publier.';
+    return this.i18n.translate('recruiter.publication.paymentRequiredTitle');
   }
 
   logout(): void {

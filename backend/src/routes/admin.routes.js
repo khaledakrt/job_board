@@ -37,6 +37,12 @@ const {
   offeringIdParamsSchema,
 } = require('../validators/catalogOfferings.validator');
 const catalogOfferingsController = require('../controllers/catalogOfferings.controller');
+const subscriptionPaymentController = require('../controllers/subscriptionPayment.controller');
+const {
+  listPaymentRequestsQuerySchema,
+  paymentRequestIdParamsSchema,
+  reviewPaymentRequestSchema,
+} = require('../validators/subscriptionPayment.validator');
 
 const router = express.Router();
 
@@ -49,6 +55,17 @@ router.patch(
   '/subscription-policy',
   validateBody(updateSubscriptionPolicySchema),
   adminController.updateSubscriptionPolicy
+);
+router.get(
+  '/subscription-payment-requests',
+  validateQuery(listPaymentRequestsQuerySchema),
+  subscriptionPaymentController.adminListPaymentRequests
+);
+router.patch(
+  '/subscription-payment-requests/:id',
+  validateParams(paymentRequestIdParamsSchema),
+  validateBody(reviewPaymentRequestSchema),
+  subscriptionPaymentController.adminReviewPaymentRequest
 );
 
 router.get('/users', validateQuery(listUsersQuerySchema), adminController.listUsers);

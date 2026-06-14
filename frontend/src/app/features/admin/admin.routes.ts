@@ -67,6 +67,13 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        path: 'subscription-payments',
+        loadComponent: () =>
+          import('./subscription-payments/admin-subscription-payments.component').then(
+            (m) => m.AdminSubscriptionPaymentsComponent
+          ),
+      },
+      {
         path: 'training-centers',
         children: [
           {

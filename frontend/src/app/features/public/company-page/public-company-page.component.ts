@@ -8,17 +8,20 @@ import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { remoteLabel, salaryDisplayLabel } from '../../../core/utils/job-display.util';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 import { COMPANY_SIZES } from '../../recruiter/company-onboarding/company-onboarding.constants';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-public-company-page',
   standalone: true,
-  imports: [RouterLink, SafeHtmlComponent],
+  imports: [RouterLink, SafeHtmlComponent, TranslatePipe],
   templateUrl: './public-company-page.component.html',
   styleUrl: './public-company-page.component.css',
 })
 export class PublicCompanyPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly companyService = inject(PublicCompanyService);
+  private readonly i18n = inject(I18nService);
 
   readonly routes = APP_ROUTES;
 
@@ -31,7 +34,7 @@ export class PublicCompanyPageComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
-      this.error.set('Entreprise introuvable.');
+      this.error.set(this.i18n.translate('public.company.notFound'));
       this.loading.set(false);
       return;
     }
@@ -40,7 +43,7 @@ export class PublicCompanyPageComponent implements OnInit {
       next: (res) => {
         const data = res.data;
         if (!data?.company) {
-          this.error.set('Cette entreprise n’existe pas.');
+          this.error.set(this.i18n.translate('public.company.unavailable'));
           this.loading.set(false);
           return;
         }
@@ -50,7 +53,7 @@ export class PublicCompanyPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Impossible de charger cette entreprise.');
+        this.error.set(this.i18n.translate('public.company.loadError'));
         this.loading.set(false);
       },
     });
@@ -81,6 +84,10 @@ export class PublicCompanyPageComponent implements OnInit {
     if (!value) return null;
     const match = COMPANY_SIZES.find((s) => s.value === value);
     return match && match.value ? match.label : value;
+  }
+
+  jobsCountLabel(count: number): string {
+    return count > 1 ? this.i18n.translate('public.company.jobsOnlinePlural') : this.i18n.translate('public.company.jobsOnlineSingular');
   }
 
 }

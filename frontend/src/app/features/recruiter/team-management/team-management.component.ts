@@ -5,21 +5,23 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 import { TeamService } from '../services/team.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { TeamMember, UpdateTeamMemberPayload } from '../../../core/models/recruiter.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const PERMISSION_META: {
   key: 'canPostJob' | 'canDecideApplication' | 'canEditCompany';
-  label: string;
+  labelKey: string;
 }[] = [
-  { key: 'canPostJob', label: 'Publier des offres' },
-  { key: 'canDecideApplication', label: 'Décider sur les candidatures' },
-  { key: 'canEditCompany', label: 'Modifier l\'entreprise' },
+  { key: 'canPostJob', labelKey: 'recruiter.team.permissionPostJob' },
+  { key: 'canDecideApplication', labelKey: 'recruiter.team.permissionDecideApplication' },
+  { key: 'canEditCompany', labelKey: 'recruiter.team.permissionEditCompany' },
 ];
 const TEAM_MEMBER_LIMIT = 10;
 
 @Component({
   selector: 'app-team-management',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './team-management.component.html',
   styleUrl: './team-management.component.css',
 })
@@ -27,6 +29,7 @@ export class TeamManagementComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly teamService = inject(TeamService);
   private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly i18n = inject(I18nService);
   readonly context = inject(RecruiterContextService);
 
   readonly permissionOptions = PERMISSION_META;
@@ -70,7 +73,7 @@ export class TeamManagementComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Impossible de charger l\'équipe.');
+        this.errorMessage.set(this.i18n.translate('recruiter.team.loadError'));
         this.loading.set(false);
       },
     });
@@ -86,7 +89,7 @@ export class TeamManagementComponent implements OnInit {
 
   openInviteModal(): void {
     if (this.members().length >= TEAM_MEMBER_LIMIT) {
-      this.errorMessage.set(`Limite atteinte : votre équipe ne peut pas dépasser ${TEAM_MEMBER_LIMIT} utilisateurs.`);
+      this.errorMessage.set(this.teamLimitMessage());
       return;
     }
 
@@ -125,7 +128,7 @@ export class TeamManagementComponent implements OnInit {
 
   async submitInvite(): Promise<void> {
     if (this.members().length >= TEAM_MEMBER_LIMIT) {
-      this.errorMessage.set(`Limite atteinte : votre équipe ne peut pas dépasser ${TEAM_MEMBER_LIMIT} utilisateurs.`);
+      this.errorMessage.set(this.teamLimitMessage());
       return;
     }
 
@@ -136,9 +139,9 @@ export class TeamManagementComponent implements OnInit {
 
     const email = this.inviteForm.controls.email.value;
     const ok = await this.confirmDialog.confirm({
-      title: 'Inviter un membre',
-      message: `Envoyer une invitation à ${email} ?`,
-      confirmLabel: 'Inviter',
+      title: this.i18n.translate('recruiter.team.inviteMember'),
+      message: `${this.i18n.translate('recruiter.team.inviteConfirmPrefix')} ${email} ?`,
+      confirmLabel: this.i18n.translate('recruiter.team.invite'),
     });
     if (!ok) return;
 
@@ -147,13 +150,13 @@ export class TeamManagementComponent implements OnInit {
 
     this.teamService.invite(this.inviteForm.getRawValue()).subscribe({
       next: () => {
-        this.successMessage.set('Membre invité avec succès.');
+        this.successMessage.set(this.i18n.translate('recruiter.team.inviteSuccess'));
         this.saving.set(false);
         this.closeModal();
         this.loadMembers();
       },
       error: (err: HttpErrorResponse) => {
-        this.errorMessage.set(err.error?.message || 'Échec de l\'invitation.');
+        this.errorMessage.set(err.error?.message || this.i18n.translate('recruiter.team.inviteFailed'));
         this.saving.set(false);
       },
     });
@@ -167,9 +170,9 @@ export class TeamManagementComponent implements OnInit {
     }
 
     const ok = await this.confirmDialog.confirm({
-      title: 'Enregistrer les modifications',
-      message: `Mettre à jour les droits de ${member.email} ?`,
-      confirmLabel: 'Enregistrer',
+      title: this.i18n.translate('recruiter.team.saveChanges'),
+      message: `${this.i18n.translate('recruiter.team.updateRightsPrefix')} ${member.email} ?`,
+      confirmLabel: this.i18n.translate('actions.save'),
     });
     if (!ok) return;
 
@@ -188,12 +191,12 @@ export class TeamManagementComponent implements OnInit {
     this.teamService.update(member.id, payload).subscribe({
       next: (res) => {
         this.patchMember(res.data);
-        this.successMessage.set('Permissions mises à jour.');
+        this.successMessage.set(this.i18n.translate('recruiter.team.permissionsUpdated'));
         this.saving.set(false);
         this.closeEditModal();
       },
       error: (err: HttpErrorResponse) => {
-        this.errorMessage.set(err.error?.message || 'Échec de la mise à jour.');
+        this.errorMessage.set(err.error?.message || this.i18n.translate('recruiter.team.updateFailed'));
         this.saving.set(false);
       },
     });
@@ -212,30 +215,34 @@ export class TeamManagementComponent implements OnInit {
     }
 
     const ok = await this.confirmDialog.confirm({
-      title: 'Retirer de l\'équipe',
-      message: `Retirer ${member.email} de l'équipe ?`,
-      confirmLabel: 'Retirer',
+      title: this.i18n.translate('recruiter.team.removeFromTeam'),
+      message: `${this.i18n.translate('recruiter.team.removeConfirmPrefix')} ${member.email} ${this.i18n.translate('recruiter.team.removeConfirmSuffix')}`,
+      confirmLabel: this.i18n.translate('recruiter.team.remove'),
       confirmDanger: true,
     });
     if (!ok) return;
 
     this.teamService.remove(member.id).subscribe({
       next: () => {
-        this.successMessage.set('Membre retiré de l\'équipe.');
+        this.successMessage.set(this.i18n.translate('recruiter.team.removeSuccess'));
         this.loadMembers();
       },
       error: (err: HttpErrorResponse) => {
-        this.errorMessage.set(err.error?.message || 'Échec de la suppression.');
+        this.errorMessage.set(err.error?.message || this.i18n.translate('recruiter.team.removeFailed'));
       },
     });
   }
 
   permissionLabel(member: TeamMember): string {
-    const perms = PERMISSION_META.filter((p) => member[p.key]).map((p) => p.label);
-    return perms.length ? perms.join(', ') : 'Aucune permission';
+    const perms = PERMISSION_META.filter((p) => member[p.key]).map((p) => this.i18n.translate(p.labelKey));
+    return perms.length ? perms.join(', ') : this.i18n.translate('recruiter.team.noPermission');
   }
 
   roleLabel(role: TeamMember['companyRole']): string {
-    return role === 'owner' ? 'Responsable RH' : 'Recruteur';
+    return role === 'owner' ? this.i18n.translate('recruiter.team.ownerRole') : this.i18n.translate('recruiter.team.recruiterRole');
+  }
+
+  private teamLimitMessage(): string {
+    return `${this.i18n.translate('recruiter.team.limitReachedPrefix')} ${TEAM_MEMBER_LIMIT} ${this.i18n.translate('recruiter.team.limitReachedSuffix')}`;
   }
 }

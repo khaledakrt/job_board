@@ -5,16 +5,19 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { PublicShellComponent } from '../../public/shared/public-shell.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent],
+  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent, TranslatePipe],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.css',
 })
 export class ForgotPasswordComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   readonly authService = inject(AuthService);
 
   readonly routes = APP_ROUTES;
@@ -39,17 +42,17 @@ export class ForgotPasswordComponent {
       next: (response) => {
         this.successMessage.set(
           response.message ||
-            'If an account with that email exists, a password reset link has been sent.'
+            this.i18n.translate('auth.forgot.success')
         );
         this.form.reset();
         this.submitted.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        let message = error.error?.message || 'Impossible de traiter la demande.';
+        let message = error.error?.message || this.i18n.translate('auth.forgot.failed');
         if (error.status === 429) {
           message =
             error.error?.message ||
-            'Trop de requêtes. Réessayez dans quelques minutes.';
+            this.i18n.translate('auth.tooManyRequests');
         }
         this.authService.setError(message);
       },

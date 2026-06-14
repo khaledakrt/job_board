@@ -95,6 +95,12 @@ const envSchema = z
   SMTP_FROM_EMAIL: z.string().email().default('noreply@jobboard.local'),
   CONTACT_TO_EMAIL: z.string().email().default('khaliid.akrout@gmail.com'),
 
+  KONNECT_API_BASE_URL: z.string().url().default('https://api.konnect.network/api/v2'),
+  KONNECT_API_KEY: z.string().optional(),
+  KONNECT_WALLET_ID: z.string().optional(),
+  KONNECT_ACCEPTED_METHODS: z.string().default('wallet,bank_card,e-DINAR,flouci'),
+  KONNECT_PAYMENT_LIFESPAN_MINUTES: z.coerce.number().int().positive().default(30),
+
   /** off = gratuit (heuristique) | ollama = gratuit local | openai = API payante */
   CV_LLM_PROVIDER: z.enum(['off', 'ollama', 'openai']).default('off'),
 

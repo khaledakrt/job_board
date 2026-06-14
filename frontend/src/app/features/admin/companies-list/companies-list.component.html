@@ -3,27 +3,27 @@
     <div>
       <p class="admin-breadcrumb">
         <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
-        <span> / Entreprises</span>
+        <span> / {{ 'admin.dashboard.companies' | t }}</span>
       </p>
-      <h1>Entreprises</h1>
+      <h1>{{ 'admin.dashboard.companies' | t }}</h1>
       <p class="admin-page-subtitle">
-        Consultez les entreprises recruteuses, repérez les doublons et préparez la gestion avancée des propriétaires.
+        {{ 'admin.companies.subtitle' | t }}
       </p>
     </div>
   </header>
 
   <section class="subscription-global-card">
     <div>
-      <p class="subscription-global-kicker">Règle globale de publication</p>
+      <p class="subscription-global-kicker">{{ 'admin.companies.globalRule' | t }}</p>
       <h2>{{ policyLabel(subscriptionPolicy()?.mode) }}</h2>
       <span class="subscription-global-db-state">
-        État enregistré : {{ subscriptionPolicy()?.mode || 'chargement...' }}
+        {{ 'admin.companies.savedState' | t }} {{ subscriptionPolicy()?.mode || ('common.loading' | t) }}
       </span>
       <p>
         @if (subscriptionPolicy()?.mode === 'free_all') {
-          Toutes les entreprises peuvent publier sans abonnement. Tous les recruteurs rattachés à ces entreprises héritent de cet accès.
+          {{ 'admin.companies.freeModeDescription' | t }}
         } @else {
-          Chaque entreprise doit avoir un abonnement actif ou un accès gratuit manuel pour que ses recruteurs publient des offres.
+          {{ 'admin.companies.paidModeDescription' | t }}
         }
       </p>
     </div>
@@ -35,7 +35,7 @@
         [disabled]="policyLoading() || policyActionLoading() || subscriptionPolicy()?.mode === 'free_all'"
         (click)="setGlobalPolicy('free_all')"
       >
-        {{ subscriptionPolicy()?.mode === 'free_all' ? 'Gratuit global actif' : 'Rendre tout gratuit' }}
+        {{ subscriptionPolicy()?.mode === 'free_all' ? ('admin.companies.freeGlobalActive' | t) : ('admin.companies.makeAllFree' | t) }}
       </button>
       <button
         type="button"
@@ -44,48 +44,48 @@
         [disabled]="policyLoading() || policyActionLoading() || subscriptionPolicy()?.mode === 'paid_required'"
         (click)="setGlobalPolicy('paid_required')"
       >
-        {{ subscriptionPolicy()?.mode === 'paid_required' ? 'Paiement actif' : 'Revenir au paiement' }}
+        {{ subscriptionPolicy()?.mode === 'paid_required' ? ('admin.companies.paymentActive' | t) : ('admin.companies.returnToPayment' | t) }}
       </button>
     </div>
   </section>
 
   <form class="admin-filters admin-company-filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
     <div class="admin-field">
-      <label for="companySearch">Recherche</label>
+      <label for="companySearch">{{ 'actions.search' | t }}</label>
       <input
         id="companySearch"
         type="search"
         formControlName="search"
         class="form-input"
-        placeholder="Nom de l’entreprise..."
+        [placeholder]="'admin.companies.searchPlaceholder' | t"
       />
     </div>
     <div class="admin-filter-actions">
-      <button type="button" class="admin-btn-ghost" (click)="resetFilters()">Réinitialiser</button>
-      <button type="submit" class="btn-primary !w-auto px-5">Filtrer</button>
+      <button type="button" class="admin-btn-ghost" (click)="resetFilters()">{{ 'actions.reset' | t }}</button>
+      <button type="submit" class="btn-primary !w-auto px-5">{{ 'admin.companies.filter' | t }}</button>
     </div>
   </form>
 
-  <section class="admin-page-insights" aria-label="Résumé entreprises de la page">
+  <section class="admin-page-insights" [attr.aria-label]="'admin.companies.pageSummaryAria' | t">
     <article class="admin-insight-card">
-      <span>Page affichée</span>
+      <span>{{ 'admin.companies.displayedPage' | t }}</span>
       <strong>{{ pageSummary().total }}</strong>
-      <small>entreprises chargées</small>
+      <small>{{ 'admin.companies.loadedCompanies' | t }}</small>
     </article>
     <article class="admin-insight-card">
-      <span>Offres actives</span>
+      <span>{{ 'admin.companies.activeJobs' | t }}</span>
       <strong>{{ pageSummary().activeJobs }}</strong>
-      <small>visibles candidats</small>
+      <small>{{ 'admin.companies.visibleCandidates' | t }}</small>
     </article>
     <article class="admin-insight-card">
-      <span>Candidatures</span>
+      <span>{{ 'admin.dashboard.applications' | t }}</span>
       <strong>{{ pageSummary().applications }}</strong>
-      <small>liées aux offres</small>
+      <small>{{ 'admin.companies.linkedToJobs' | t }}</small>
     </article>
     <article class="admin-insight-card">
-      <span>Abonnements actifs</span>
+      <span>{{ 'admin.companies.activeSubscriptions' | t }}</span>
       <strong>{{ pageSummary().activeSubscriptions }}</strong>
-      <small>publication autorisée</small>
+      <small>{{ 'admin.companies.publicationAllowed' | t }}</small>
     </article>
   </section>
 
@@ -100,28 +100,28 @@
     <div class="admin-toolbar">
       <span>{{ toolbarSummary() }}</span>
       <span class="admin-toolbar-sep">·</span>
-      <span>{{ pageSize }} par page</span>
+      <span>{{ pageSize }} {{ 'admin.companies.perPage' | t }}</span>
     </div>
   }
 
   <div class="admin-table-wrap" [class.admin-table-wrap--loading]="loading()">
     @if (loading()) {
-      <div class="admin-table-loading">Chargement…</div>
+      <div class="admin-table-loading">{{ 'common.loading' | t }}</div>
     }
     <div class="table-panel">
       <table class="data-table admin-companies-table">
         <thead>
           <tr>
-            <th class="col-title">Entreprise</th>
-            <th class="company-col-sector">Secteur</th>
-            <th class="company-col-city">Ville</th>
-            <th class="company-col-contact">Contact</th>
-            <th class="company-col-count">Offres</th>
-            <th class="company-col-subscription">Abonnement</th>
-            <th class="company-col-count">Candidatures</th>
-            <th class="company-col-count">Recruteurs</th>
-            <th class="company-col-created">Créée le</th>
-            <th class="col-actions">Gestion</th>
+            <th class="col-title">{{ 'forms.company' | t }}</th>
+            <th class="company-col-sector">{{ 'forms.sector' | t }}</th>
+            <th class="company-col-city">{{ 'forms.city' | t }}</th>
+            <th class="company-col-contact">{{ 'public.company.contact' | t }}</th>
+            <th class="company-col-count">{{ 'admin.dashboard.jobs' | t }}</th>
+            <th class="company-col-subscription">{{ 'admin.companies.subscription' | t }}</th>
+            <th class="company-col-count">{{ 'admin.dashboard.applications' | t }}</th>
+            <th class="company-col-count">{{ 'admin.dashboard.recruiters' | t }}</th>
+            <th class="company-col-created">{{ 'admin.companies.createdAt' | t }}</th>
+            <th class="col-actions">{{ 'admin.companies.management' | t }}</th>
           </tr>
         </thead>
         <tbody>
@@ -158,13 +158,13 @@
               </td>
               <td class="company-col-created">{{ company.createdAt | date: 'dd/MM/yyyy' }}</td>
               <td class="actions-cell">
-                <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(company.id)" class="link-action">Détail →</a>
+                <a [routerLink]="routes.ADMIN.COMPANY_DETAIL(company.id)" class="link-action">{{ 'actions.details' | t }} →</a>
               </td>
             </tr>
           } @empty {
             <tr>
               <td colspan="10">
-                <div class="admin-empty-state">Aucune entreprise ne correspond à vos critères.</div>
+                <div class="admin-empty-state">{{ 'admin.companies.empty' | t }}</div>
               </td>
             </tr>
           }

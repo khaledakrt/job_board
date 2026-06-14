@@ -1,0 +1,79 @@
+<section class="subscription-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">{{ 'recruiter.subscription.eyebrow' | t }}</p>
+      <h1>{{ 'recruiter.subscription.title' | t }}</h1>
+      <p>
+        {{ 'recruiter.subscription.subtitle' | t }}
+      </p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="state-card">{{ 'recruiter.subscription.loadingPlans' | t }}</div>
+  }
+
+  @if (error()) {
+    <div class="state-card state-card--error">{{ error() }}</div>
+  }
+
+  @if (overview(); as data) {
+    @if (data.mode === 'free_all') {
+      <div class="state-card state-card--ok">
+        {{ 'recruiter.subscription.freeAllActive' | t }}
+        <a [routerLink]="routes.RECRUITER.JOBS">{{ 'recruiter.subscription.backToJobs' | t }}</a>
+      </div>
+    } @else {
+      @if (data.canPublish) {
+        <div class="state-card state-card--ok">
+          {{ 'recruiter.subscription.activeSubscription' | t }}
+          @if (data.subscription.currentPeriodEnd) {
+            <span>{{ 'recruiter.subscription.validUntil' | t }} {{ data.subscription.currentPeriodEnd | date: 'mediumDate' }}.</span>
+          }
+        </div>
+      } @else {
+        @if (!data.onlinePaymentConfigured) {
+          <div class="state-card state-card--error">
+            {{ 'recruiter.subscription.onlinePaymentNotConfigured' | t }}
+          </div>
+        }
+
+        @if (data.latestPaymentRequest?.paymentUrl && data.latestPaymentRequest?.status === 'payment_pending') {
+          <div class="state-card">
+            {{ 'recruiter.subscription.pendingPayment' | t }}
+            <a [href]="data.latestPaymentRequest?.paymentUrl">{{ 'recruiter.subscription.continuePayment' | t }}</a>
+          </div>
+        }
+
+        <div class="plans-grid">
+          @for (plan of data.plans; track plan.id) {
+            <article class="plan-card" [class.plan-card--highlight]="plan.code === 'annual_500'">
+              @if (plan.code === 'annual_500') {
+                <span class="plan-badge">{{ 'recruiter.subscription.recommended' | t }}</span>
+              }
+              <h2>{{ plan.name }}</h2>
+              <p>{{ plan.description }}</p>
+              <div class="price">
+                <strong>{{ plan.priceTnd | number: '1.0-0' }} TND</strong>
+                <span>/ {{ periodLabel(plan.durationMonths) }}</span>
+              </div>
+              <ul>
+                <li>{{ 'recruiter.subscription.featurePublication' | t }} {{ plan.durationMonths }} {{ 'recruiter.subscription.months' | t }}</li>
+                <li>{{ 'recruiter.subscription.featureSecurePayment' | t }}</li>
+                <li>{{ 'recruiter.subscription.featureAutoActivation' | t }}</li>
+              </ul>
+              <button
+                type="button"
+                class="primary-btn"
+                [disabled]="submittingPlanId() === plan.id || !data.onlinePaymentConfigured"
+                (click)="choosePlan(plan)"
+              >
+                {{ submittingPlanId() === plan.id ? ('recruiter.subscription.creatingLink' | t) : ('recruiter.subscription.payNow' | t) }}
+              </button>
+            </article>
+          }
+        </div>
+      }
+    }
+  }
+</section>

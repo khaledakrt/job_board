@@ -7,17 +7,20 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { RegisterRole } from '../../../core/constants/roles.constant';
 import { passwordStrengthValidator } from '../../../shared/validators/password.validators';
 import { PublicShellComponent } from '../../public/shared/public-shell.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent],
+  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent, TranslatePipe],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })
 export class RegisterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
+  private readonly i18n = inject(I18nService);
   readonly authService = inject(AuthService);
 
   readonly routes = APP_ROUTES;
@@ -55,7 +58,7 @@ export class RegisterComponent implements OnInit {
     const { email, password, confirmPassword } = this.form.getRawValue();
 
     if (password !== confirmPassword) {
-      this.authService.setError('Passwords do not match.');
+      this.authService.setError(this.i18n.translate('auth.passwordMismatch'));
       return;
     }
 
@@ -69,13 +72,13 @@ export class RegisterComponent implements OnInit {
         next: (response) => {
           this.successMessage.set(
             response.message ||
-              'Inscription réussie. Un e-mail de vérification a été envoyé, vérifiez aussi vos spams.'
+              this.i18n.translate('auth.register.success')
           );
           this.form.reset();
           this.submitted.set(false);
         },
         error: (error: HttpErrorResponse) => {
-          const message = error.error?.message || 'Registration failed. Please try again.';
+          const message = error.error?.message || this.i18n.translate('auth.register.failed');
           this.authService.setError(message);
         },
       });
@@ -91,8 +94,10 @@ export class RegisterComponent implements OnInit {
     if (!errors?.['passwordStrength']) {
       return null;
     }
-    return typeof errors['passwordStrength'] === 'string'
-      ? errors['passwordStrength']
-      : 'Password does not meet security requirements.';
+    const message = typeof errors['passwordStrength'] === 'string' ? errors['passwordStrength'] : '';
+    if (message.includes('at least 8')) return this.i18n.translate('auth.passwordMin');
+    if (message.includes('not exceed')) return this.i18n.translate('auth.passwordMax');
+    if (message.includes('uppercase')) return this.i18n.translate('auth.passwordStrength');
+    return this.i18n.translate('auth.passwordStrength');
   }
 }

@@ -20,11 +20,13 @@ import {
   salaryDisplayLabel,
 } from '../../../core/utils/job-display.util';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-public-job-page',
   standalone: true,
-  imports: [RouterLink, SafeHtmlComponent, ReactiveFormsModule],
+  imports: [RouterLink, SafeHtmlComponent, ReactiveFormsModule, TranslatePipe],
   templateUrl: './public-job-page.component.html',
   styleUrl: './public-job-page.component.css',
 })
@@ -39,6 +41,7 @@ export class PublicJobPageComponent implements OnInit {
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
+  private readonly i18n = inject(I18nService);
 
   readonly routes = APP_ROUTES;
 
@@ -62,7 +65,7 @@ export class PublicJobPageComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
-      this.error.set('Offre introuvable.');
+      this.error.set(this.i18n.translate('public.job.notFound'));
       this.loading.set(false);
       return;
     }
@@ -72,7 +75,7 @@ export class PublicJobPageComponent implements OnInit {
         const job = res.data ?? null;
         this.selectedJob.set(job);
         if (!job) {
-          this.error.set('Cette offre n’existe pas ou n’est plus disponible.');
+          this.error.set(this.i18n.translate('public.job.unavailable'));
         } else {
           this.activeQuizJobId = job.id;
           this.updatePageMeta(job);
@@ -80,7 +83,7 @@ export class PublicJobPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Impossible de charger cette offre.');
+        this.error.set(this.i18n.translate('public.job.loadError'));
         this.loading.set(false);
       },
     });
@@ -128,7 +131,7 @@ export class PublicJobPageComponent implements OnInit {
     const companyName = job.company?.name || 'JobBoard';
     const pageTitle = `${job.title} - ${companyName}`;
     const description = this.truncate(
-      this.stripHtml(job.description) || 'Consultez cette offre sur JobBoard.',
+      this.stripHtml(job.description) || this.i18n.translate('public.job.metaDescription'),
       160
     );
     const imageUrl = this.companyLogo(job);
@@ -213,19 +216,19 @@ export class PublicJobPageComponent implements OnInit {
     this.applyError.set(null);
 
     if (this.hasApplied()) {
-      this.applyError.set('Vous avez déjà postulé à cette offre.');
+      this.applyError.set(this.i18n.translate('public.job.alreadyApplied'));
       return;
     }
 
     if (!this.candidateContext.profile()?.resumeUrl) {
       this.applyError.set(
-        'Ajoutez un CV dans Mon profil (étape Identité & CV) avant de postuler.'
+        this.i18n.translate('public.job.resumeRequired')
       );
       return;
     }
 
     if (this.isQuizEnabled(job) && !this.isQuizCompleteForJob(job)) {
-      this.applyError.set('Répondez à toutes les questions du quiz avant de postuler.');
+      this.applyError.set(this.i18n.translate('public.job.quizRequired'));
       return;
     }
 
@@ -249,7 +252,7 @@ export class PublicJobPageComponent implements OnInit {
         this.generatingLetter.set(false);
       },
       error: () => {
-        this.applyError.set('Impossible de générer la lettre de motivation.');
+        this.applyError.set(this.i18n.translate('public.job.generateLetterError'));
         this.generatingLetter.set(false);
       },
     });
@@ -271,9 +274,9 @@ export class PublicJobPageComponent implements OnInit {
     if (!job) return;
 
     const ok = await this.confirmDialog.confirm({
-      title: 'Envoyer la candidature',
-      message: `Envoyer votre candidature pour « ${job.title} » ?`,
-      confirmLabel: 'Envoyer',
+      title: this.i18n.translate('public.job.confirmTitle'),
+      message: `${this.i18n.translate('public.job.confirmMessagePrefix')} « ${job.title} » ?`,
+      confirmLabel: this.i18n.translate('public.job.confirmLabel'),
     });
     if (!ok) return;
 
@@ -293,17 +296,17 @@ export class PublicJobPageComponent implements OnInit {
     this.jobService.apply(job.id, payload).subscribe({
       next: () => {
         this.hasApplied.set(true);
-        this.success.set('Candidature envoyée avec succès.');
+        this.success.set(this.i18n.translate('public.job.applicationSuccess'));
         this.applying.set(false);
         this.closeApplyModal();
       },
       error: (err: HttpErrorResponse) => {
         const msg = (err.error as { message?: string })?.message;
         if (err.status === 409) {
-          this.applyError.set('Vous avez déjà postulé à cette offre.');
+          this.applyError.set(this.i18n.translate('public.job.alreadyApplied'));
           this.hasApplied.set(true);
         } else {
-          this.applyError.set(msg || 'Échec de l’envoi de la candidature.');
+          this.applyError.set(msg || this.i18n.translate('public.job.applicationFailed'));
         }
         this.applying.set(false);
       },

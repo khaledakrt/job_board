@@ -21,10 +21,10 @@ Cloudflare DNS records:
 
 The production mail server hosts these mailboxes:
 
-- `contact@tun-job-board.com`
-- `support@tun-job-board.com`
-- `info@tun-job-board.com`
-- `administration@tun-job-board.com`
+- `support@tun-job-board.com` — display name: `Support Tun Job` — technical support and user assistance
+- `administration@tun-job-board.com` — display name: `Administration Tun Job` — administrative and management requests
+- `info@tun-job-board.com` — display name: `Informations Tun Job` — general information requests
+- `contact@tun-job-board.com` — display name: `Relations Professionnelles Tun Job` — professional contact and partnerships
 
 Do not commit mailbox passwords. Store production secrets only in `/var/www/jobboard/backend/.env` or the server password manager.
 

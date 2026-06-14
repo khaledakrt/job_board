@@ -11,6 +11,8 @@ const CandidateNotification = require('./CandidateNotification');
 const RecruiterNotification = require('./RecruiterNotification');
 const RecruiterNotificationRead = require('./RecruiterNotificationRead');
 const Subscription = require('./Subscription');
+const SubscriptionPlan = require('./SubscriptionPlan');
+const SubscriptionPaymentRequest = require('./SubscriptionPaymentRequest');
 const SavedJob = require('./SavedJob');
 const JobAlert = require('./JobAlert');
 const UserLoginEvent = require('./UserLoginEvent');
@@ -47,6 +49,11 @@ RecruiterProfile.belongsTo(Company, { foreignKey: 'company_id', as: 'company' })
 
 Company.hasOne(Subscription, { foreignKey: 'company_id', as: 'subscription' });
 Subscription.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
+
+Company.hasMany(SubscriptionPaymentRequest, { foreignKey: 'company_id', as: 'subscriptionPayments' });
+SubscriptionPaymentRequest.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
+SubscriptionPlan.hasMany(SubscriptionPaymentRequest, { foreignKey: 'plan_id', as: 'paymentRequests' });
+SubscriptionPaymentRequest.belongsTo(SubscriptionPlan, { foreignKey: 'plan_id', as: 'plan' });
 
 Company.hasMany(Job, { foreignKey: 'company_id', as: 'jobs' });
 Job.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -166,6 +173,8 @@ module.exports = {
   RecruiterNotification,
   RecruiterNotificationRead,
   Subscription,
+  SubscriptionPlan,
+  SubscriptionPaymentRequest,
   SavedJob,
   JobAlert,
   UserLoginEvent,

@@ -10,13 +10,15 @@ import { AdminService } from '../services/admin.service';
 import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { adminPageSummary } from '../shared/admin-pagination.util';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const PAGE_SIZE = 15;
 
 @Component({
   selector: 'app-admin-companies-list',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, AdminPaginationComponent],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, AdminPaginationComponent, TranslatePipe],
   templateUrl: './companies-list.component.html',
   styleUrl: './companies-list.component.css',
 })
@@ -24,6 +26,7 @@ export class CompaniesListComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
 
   readonly routes = APP_ROUTES;
   readonly pageSize = PAGE_SIZE;
@@ -40,7 +43,10 @@ export class CompaniesListComponent implements OnInit {
     search: [''],
   });
 
-  readonly toolbarSummary = computed(() => adminPageSummary(this.pagination(), 'entreprise'));
+  readonly toolbarSummary = computed(() => {
+    this.i18n.language();
+    return adminPageSummary(this.pagination(), this.i18n.translate('admin.companies.itemLabel'));
+  });
   readonly pageSummary = computed(() => {
     const companies = this.companies();
     return {
@@ -53,9 +59,9 @@ export class CompaniesListComponent implements OnInit {
   });
 
   subscriptionLabel(company: AdminCompanyListItem): string {
-    if (company.subscription?.isActive) return 'Actif';
-    if (company.subscription?.status === 'canceled') return 'Annulé';
-    return 'Aucun';
+    if (company.subscription?.isActive) return this.i18n.translate('common.active');
+    if (company.subscription?.status === 'canceled') return this.i18n.translate('subscription.status.canceled');
+    return this.i18n.translate('admin.companies.noSubscription');
   }
 
   ngOnInit(): void {
@@ -81,13 +87,13 @@ export class CompaniesListComponent implements OnInit {
     const ok = await this.confirmDialog.confirm({
       title:
         mode === 'free_all'
-          ? 'Rendre la publication gratuite pour tous ?'
-          : 'Revenir au paiement par entreprise ?',
+          ? this.i18n.translate('admin.companies.confirmFreeTitle')
+          : this.i18n.translate('admin.companies.confirmPaidTitle'),
       message:
         mode === 'free_all'
-          ? 'Toutes les entreprises pourront publier des offres sans abonnement, pour tous leurs recruteurs.'
-          : 'Chaque entreprise devra avoir un abonnement actif ou un accès gratuit manuel pour que ses recruteurs publient.',
-      confirmLabel: mode === 'free_all' ? 'Activer gratuit global' : 'Revenir au paiement',
+          ? this.i18n.translate('admin.companies.confirmFreeMessage')
+          : this.i18n.translate('admin.companies.confirmPaidMessage'),
+      confirmLabel: mode === 'free_all' ? this.i18n.translate('admin.companies.activateFreeGlobal') : this.i18n.translate('admin.companies.returnToPayment'),
       confirmDanger: mode === 'paid_required',
     });
     if (!ok) return;
@@ -100,13 +106,13 @@ export class CompaniesListComponent implements OnInit {
         this.loadSubscriptionPolicy();
         this.message.set(
           mode === 'free_all'
-            ? 'Mode gratuit global activé: toutes les entreprises peuvent publier.'
-            : 'Mode paiement réactivé: les offres déjà publiées restent visibles; les nouvelles publications exigent un abonnement actif.'
+            ? this.i18n.translate('admin.companies.freeModeActivated')
+            : this.i18n.translate('admin.companies.paidModeActivated')
         );
         this.policyActionLoading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        this.errorMessage.set(err.error?.message || 'Impossible de modifier la règle globale.');
+        this.errorMessage.set(err.error?.message || this.i18n.translate('admin.companies.policyUpdateError'));
         this.policyActionLoading.set(false);
       },
     });
@@ -114,8 +120,8 @@ export class CompaniesListComponent implements OnInit {
 
   policyLabel(mode: AdminSubscriptionPolicy['mode'] | undefined): string {
     return mode === 'free_all'
-      ? 'Gratuit pour toutes les entreprises'
-      : 'Paiement obligatoire par entreprise';
+      ? this.i18n.translate('admin.companies.freeForAll')
+      : this.i18n.translate('admin.companies.paymentRequired');
   }
 
   load(page: number): void {
@@ -132,7 +138,7 @@ export class CompaniesListComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        this.errorMessage.set(err.error?.message || 'Impossible de charger les entreprises.');
+        this.errorMessage.set(err.error?.message || this.i18n.translate('admin.companies.loadError'));
         this.loading.set(false);
       },
     });

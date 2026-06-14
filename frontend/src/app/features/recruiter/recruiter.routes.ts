@@ -71,6 +71,14 @@ export const RECRUITER_ROUTES: Routes = [
           ),
       },
       {
+        path: 'subscription',
+        canActivate: [recruiterWorkspaceGuard],
+        loadComponent: () =>
+          import('./subscription/recruiter-subscription.component').then(
+            (m) => m.RecruiterSubscriptionComponent
+          ),
+      },
+      {
         path: 'settings',
         canActivate: [recruiterWorkspaceGuard],
         loadComponent: () =>

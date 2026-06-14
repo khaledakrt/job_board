@@ -61,6 +61,7 @@ export const APP_ROUTES = {
     JOBS_NEW: '/recruiter/jobs/new',
     ATS: '/recruiter/ats',
     ARCHIVES: '/recruiter/archives',
+    SUBSCRIPTION: '/recruiter/subscription',
     SETTINGS: '/recruiter/settings',
   },
   ADMIN: {
@@ -75,6 +76,7 @@ export const APP_ROUTES = {
     APPLICATION_DETAIL: (id: string) => `/admin/applications/${id}`,
     COMPANIES: '/admin/companies',
     COMPANY_DETAIL: (id: string) => `/admin/companies/${id}`,
+    SUBSCRIPTION_PAYMENTS: '/admin/subscription-payments',
     TRAINING_CENTERS: '/admin/training-centers',
     TRAINING_CENTER_NEW: '/admin/training-centers/new',
     TRAINING_CENTER_DETAIL: (id: string) => `/admin/training-centers/${id}`,

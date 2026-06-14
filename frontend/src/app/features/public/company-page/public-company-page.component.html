@@ -5,18 +5,18 @@
         <span class="public-company-page-logo-mark">JB</span>
         <span class="public-company-page-logo-text">JobBoard</span>
       </a>
-      <a routerLink="/" fragment="offres" class="public-company-page-back">← Retour aux offres</a>
+      <a routerLink="/" fragment="offres" class="public-company-page-back">← {{ 'public.job.backToJobs' | t }}</a>
     </div>
   </header>
 
   <main class="public-company-page-main">
     @if (loading()) {
-      <p class="public-company-page-status">Chargement de l’entreprise…</p>
+      <p class="public-company-page-status">{{ 'public.company.loading' | t }}</p>
     } @else if (error()) {
       <div class="public-company-page-card public-company-page-card-error">
         <p>{{ error() }}</p>
         <a routerLink="/" fragment="offres" class="public-company-page-btn public-company-page-btn-primary">
-          Voir toutes les offres
+          {{ 'public.job.viewAllJobs' | t }}
         </a>
       </div>
     } @else {
@@ -39,12 +39,12 @@
                   <span>{{ sizeLabel }}</span>
                 }
                 @if (co.foundedYear) {
-                  <span>Fondée en {{ co.foundedYear }}</span>
+                  <span>{{ 'public.company.foundedIn' | t }} {{ co.foundedYear }}</span>
                 }
               </div>
               <div class="public-company-page-links">
                 @if (co.website) {
-                  <a [href]="co.website" target="_blank" rel="noopener noreferrer">Site web</a>
+                  <a [href]="co.website" target="_blank" rel="noopener noreferrer">{{ 'forms.website' | t }}</a>
                 }
                 @if (co.linkedinUrl) {
                   <a [href]="co.linkedinUrl" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -56,24 +56,24 @@
           <div class="public-company-page-details">
             @if (co.locationLabel) {
               <div class="public-company-detail-block">
-                <h2>Localisation</h2>
+                <h2>{{ 'forms.location' | t }}</h2>
                 <p>{{ co.locationLabel }}</p>
               </div>
             }
 
             @if (co.contactEmail || co.contactPhone) {
               <div class="public-company-detail-block">
-                <h2>Contact</h2>
+                <h2>{{ 'public.company.contact' | t }}</h2>
                 <dl class="public-company-dl">
                   @if (co.contactEmail) {
                     <div class="public-company-dl-row">
-                      <dt>E-mail</dt>
+                      <dt>{{ 'forms.email' | t }}</dt>
                       <dd><a [href]="'mailto:' + co.contactEmail">{{ co.contactEmail }}</a></dd>
                     </div>
                   }
                   @if (co.contactPhone) {
                     <div class="public-company-dl-row">
-                      <dt>Téléphone</dt>
+                      <dt>{{ 'forms.phone' | t }}</dt>
                       <dd><a [href]="'tel:' + co.contactPhone">{{ co.contactPhone }}</a></dd>
                     </div>
                   }
@@ -82,23 +82,23 @@
             }
 
             <div class="public-company-detail-block">
-              <h2>Activité</h2>
+              <h2>{{ 'public.company.activity' | t }}</h2>
               <dl class="public-company-dl">
                 @if (co.industry) {
                   <div class="public-company-dl-row">
-                    <dt>Secteur</dt>
+                    <dt>{{ 'forms.sector' | t }}</dt>
                     <dd>{{ co.industry }}</dd>
                   </div>
                 }
                 @if (formatScaleSize(co.scaleSize); as sizeLabel) {
                   <div class="public-company-dl-row">
-                    <dt>Effectif</dt>
+                    <dt>{{ 'public.company.size' | t }}</dt>
                     <dd>{{ sizeLabel }}</dd>
                   </div>
                 }
                 @if (co.foundedYear) {
                   <div class="public-company-dl-row">
-                    <dt>Année de création</dt>
+                    <dt>{{ 'public.company.foundedYear' | t }}</dt>
                     <dd>{{ co.foundedYear }}</dd>
                   </div>
                 }
@@ -108,7 +108,7 @@
 
           @if (co.description) {
             <div class="public-company-page-description">
-              <h2>À propos</h2>
+              <h2>{{ 'public.company.about' | t }}</h2>
               <div class="public-company-page-rich">
                 <app-safe-html [content]="co.description" />
               </div>
@@ -118,12 +118,12 @@
 
         <section class="public-company-page-jobs">
           <div class="public-company-page-jobs-head">
-            <h2>Offres publiées</h2>
-            <p>{{ totalJobs() }} offre{{ totalJobs() > 1 ? 's' : '' }} en ligne</p>
+            <h2>{{ 'public.company.publishedJobs' | t }}</h2>
+            <p>{{ totalJobs() }} {{ jobsCountLabel(totalJobs()) }}</p>
           </div>
 
           @if (jobs().length === 0) {
-            <p class="public-company-page-status">Aucune offre active pour le moment.</p>
+            <p class="public-company-page-status">{{ 'public.company.noActiveJobs' | t }}</p>
           } @else {
             <div class="public-company-page-grid">
               @for (job of jobs(); track job.id) {
@@ -135,7 +135,7 @@
                     }
                   </div>
                   <p class="public-company-job-meta">
-                    {{ job.location || 'Lieu non précisé' }} · {{ job.contractType }}
+                    {{ job.location || ('public.company.locationNotSpecified' | t) }} · {{ job.contractType }}
                   </p>
                   <p class="public-company-job-remote">{{ formatRemote(job.remoteType) }}</p>
                   @if (formatSalary(job); as salary) {
@@ -148,7 +148,7 @@
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Voir l’offre
+                      {{ 'public.company.viewJob' | t }}
                     </a>
                   </div>
                 </article>

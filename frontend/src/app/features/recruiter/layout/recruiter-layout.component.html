@@ -75,6 +75,17 @@
           {{ 'recruiter.nav.archives' | t }}
         </a>
       }
+      @if (context.publicationAccess()?.mode === 'paid_required') {
+        <a
+          [routerLink]="routes.RECRUITER.SUBSCRIPTION"
+          routerLinkActive="nav-active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link"
+        >
+          <span class="nav-icon" aria-hidden="true">P</span>
+          {{ 'recruiter.nav.subscription' | t }}
+        </a>
+      }
       <p class="nav-section-label">{{ 'recruiter.section.account' | t }}</p>
       <a
         [routerLink]="routes.RECRUITER.SETTINGS"
@@ -139,7 +150,7 @@
       } @else if (isOnboardingRoute()) {
         <router-outlet />
       } @else if (!context.loading()) {
-        <div class="loading-bar">Recruiter workspace unavailable for this account.</div>
+        <div class="loading-bar">{{ 'recruiter.workspaceUnavailable' | t }}</div>
       }
     </div>
   </main>

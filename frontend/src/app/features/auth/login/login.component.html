@@ -5,16 +5,16 @@
       <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-xl font-bold text-white shadow-elevated">
         JB
       </div>
-      <h1 class="text-2xl font-bold text-surface-900">Connexion</h1>
+      <h1 class="text-2xl font-bold text-surface-900">{{ 'auth.login.title' | t }}</h1>
       <p class="mt-2 text-sm text-surface-600">
-        Accédez à votre espace personnel.
+        {{ 'auth.login.subtitle' | t }}
       </p>
     </div>
 
     <div class="auth-card">
-      @if (sessionNotice()) {
+      @if (sessionNoticeKey()) {
         <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          {{ sessionNotice() }}
+          {{ sessionNoticeKey()! | t }}
         </div>
       }
 
@@ -22,7 +22,7 @@
         <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
           {{ resendSuccess() }}
           @if (resendDevVerifyUrl()) {
-            <p class="mt-2 font-medium">Mode développement — lien de confirmation :</p>
+            <p class="mt-2 font-medium">{{ 'auth.login.devVerifyLink' | t }}</p>
             <a [href]="resendDevVerifyUrl()!" class="link-primary break-all">{{ resendDevVerifyUrl() }}</a>
           }
         </div>
@@ -36,21 +36,21 @@
 
       @if (showResendVerification()) {
         <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p class="mb-2">Votre e-mail n'est pas encore confirmé.</p>
+          <p class="mb-2">{{ 'auth.login.emailNotConfirmed' | t }}</p>
           <button
             type="button"
             class="btn-secondary !w-full text-sm"
             [disabled]="authService.loading()"
             (click)="resendVerificationEmail()"
           >
-            Renvoyer l'e-mail de confirmation
+            {{ 'auth.login.resendVerification' | t }}
           </button>
         </div>
       }
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
         <div class="mb-4">
-          <label class="form-label" for="email">Adresse e-mail</label>
+          <label class="form-label" for="email">{{ 'auth.email' | t }}</label>
           <input
             id="email"
             name="email"
@@ -59,21 +59,21 @@
             autocomplete="email"
             class="form-input"
             [class.form-input-error]="hasError('email')"
-            placeholder="vous@exemple.com"
+            [placeholder]="'auth.emailPlaceholder' | t"
           />
           @if (hasError('email')) {
             <p class="form-error">
               @if (form.controls.email.errors?.['required']) {
-                L'e-mail est obligatoire.
+                {{ 'auth.emailRequired' | t }}
               } @else {
-                Saisissez une adresse e-mail valide.
+                {{ 'auth.emailInvalid' | t }}
               }
             </p>
           }
         </div>
 
         <div class="mb-2">
-          <label class="form-label" for="password">Mot de passe</label>
+          <label class="form-label" for="password">{{ 'auth.password' | t }}</label>
           <input
             id="password"
             name="password"
@@ -82,31 +82,31 @@
             autocomplete="current-password"
             class="form-input"
             [class.form-input-error]="hasError('password')"
-            placeholder="Votre mot de passe"
+            [placeholder]="'auth.login.passwordPlaceholder' | t"
           />
           @if (hasError('password')) {
-            <p class="form-error">Le mot de passe est obligatoire.</p>
+            <p class="form-error">{{ 'auth.passwordRequired' | t }}</p>
           }
         </div>
 
         <div class="mb-6 text-right">
           <a [routerLink]="routes.AUTH.FORGOT_PASSWORD" class="link-primary text-sm">
-            Mot de passe oublié ?
+            {{ 'auth.login.forgotPassword' | t }}
           </a>
         </div>
 
         <button type="submit" class="btn-primary" [disabled]="authService.loading()">
           @if (authService.loading()) {
-            Connexion…
+            {{ 'auth.login.loading' | t }}
           } @else {
-            Se connecter
+            {{ 'auth.login.submit' | t }}
           }
         </button>
       </form>
 
       <p class="mt-6 text-center text-sm text-surface-600">
-        Pas encore de compte ?
-        <a [routerLink]="routes.AUTH.REGISTER" class="link-primary">Créer un compte</a>
+        {{ 'auth.login.noAccount' | t }}
+        <a [routerLink]="routes.AUTH.REGISTER" class="link-primary">{{ 'auth.createAccount' | t }}</a>
       </p>
     </div>
   </div>

@@ -1,6 +1,7 @@
 import { UserRole } from '../constants/roles.constant';
 import { InstitutionOfferingItem, InstitutionType, TrainingDeliveryMode } from './catalog.model';
 import { PaginationMeta } from './pagination.model';
+import { SubscriptionPaymentRequest } from './subscription-payment.model';
 
 export interface AdminStats {
   usersTotal: number;
@@ -98,6 +99,8 @@ export interface AdminSubscriptionPolicy {
   mode: SubscriptionPolicyMode;
   canceledManualAccessCount?: number;
 }
+
+export type AdminSubscriptionPaymentRequest = SubscriptionPaymentRequest;
 
 export interface AdminCompanySubscription {
   id: string | null;

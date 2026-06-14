@@ -11,6 +11,8 @@ const SUBSCRIPTION_MODES = Object.freeze({
   PAID_REQUIRED: 'paid_required',
 });
 const MANUAL_FREE_PLAN_TYPE = 'manual_free';
+const PAID_PLAN_TYPES = Object.freeze(['monthly_50', 'annual_500']);
+const PUBLISHABLE_PLAN_TYPES = Object.freeze([MANUAL_FREE_PLAN_TYPE, ...PAID_PLAN_TYPES]);
 
 async function getRecruiterSubscriptionMode() {
   const setting = await PlatformSetting.findByPk(SUBSCRIPTION_MODE_KEY);
@@ -62,7 +64,11 @@ function formatSubscription(subscription) {
   }
 
   const end = subscription.current_period_end;
-  const isActive = subscription.status === 'active' && end && new Date(end).getTime() > Date.now();
+  const isActive =
+    subscription.status === 'active' &&
+    PUBLISHABLE_PLAN_TYPES.includes(subscription.plan_type) &&
+    end &&
+    new Date(end).getTime() > Date.now();
   return {
     id: subscription.id,
     planType: subscription.plan_type,
@@ -85,6 +91,9 @@ async function verifyActiveSubscription(companyId) {
   const subscription = await Subscription.findOne({
     where: {
       company_id: companyId,
+      plan_type: {
+        [Op.in]: PUBLISHABLE_PLAN_TYPES,
+      },
       status: 'active',
       current_period_end: {
         [Op.gt]: new Date(),

@@ -76,6 +76,11 @@ export class AdminLayoutComponent {
           labelKey: 'admin.nav.companies',
           route: this.routes.ADMIN.COMPANIES,
         },
+        {
+          label: 'Paiements abonnements',
+          labelKey: 'admin.nav.subscriptionPayments',
+          route: this.routes.ADMIN.SUBSCRIPTION_PAYMENTS,
+        },
         { label: 'Offres d’emploi', labelKey: 'admin.nav.jobs', route: this.routes.ADMIN.JOBS },
         {
           label: 'Candidatures',

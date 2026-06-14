@@ -1,19 +1,23 @@
+<app-public-shell>
+<div class="auth-shell">
 <div class="auth-card panel-card">
-  <h1 class="auth-title">Confirmation de l'e-mail</h1>
+  <h1 class="auth-title">{{ 'auth.verify.title' | t }}</h1>
 
   @if (loading()) {
-    <p class="auth-sub">Validation de votre lien en cours…</p>
+    <p class="auth-sub">{{ 'auth.verify.loading' | t }}</p>
   } @else if (successMessage()) {
     <div class="alert alert-success">{{ successMessage() }}</div>
     @if (verifiedEmail()) {
-      <p class="auth-sub">Compte : <strong>{{ verifiedEmail() }}</strong></p>
+      <p class="auth-sub">{{ 'auth.verify.account' | t }} <strong>{{ verifiedEmail() }}</strong></p>
     }
-    <a [routerLink]="routes.AUTH.LOGIN" class="btn-primary auth-btn">Se connecter</a>
+    <a [routerLink]="routes.AUTH.LOGIN" class="btn-primary auth-btn">{{ 'auth.login.submit' | t }}</a>
   } @else {
     <div class="alert alert-error">{{ errorMessage() }}</div>
     <p class="auth-sub">
-      Le lien a peut-être expiré. Demandez un nouvel e-mail depuis la page de connexion.
+      {{ 'auth.verify.expiredHelp' | t }}
     </p>
-    <a [routerLink]="routes.AUTH.LOGIN" class="btn-secondary auth-btn">Retour à la connexion</a>
+    <a [routerLink]="routes.AUTH.LOGIN" class="btn-secondary auth-btn">{{ 'auth.backToSignIn' | t }}</a>
   }
 </div>
+</div>
+</app-public-shell>

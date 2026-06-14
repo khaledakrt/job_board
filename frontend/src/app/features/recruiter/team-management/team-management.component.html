@@ -1,11 +1,11 @@
 <div class="page-header row-between">
   <div>
-    <h1 class="page-title">Gestion de l'équipe</h1>
+    <h1 class="page-title">{{ 'recruiter.team.title' | t }}</h1>
     <p class="page-subtitle">
       @if (canManageTeam()) {
-        Invitez des recruteurs et gérez leurs permissions via « Modifier ».
+        {{ 'recruiter.team.ownerSubtitle' | t }}
       } @else {
-        Membres de votre espace recrutement.
+        {{ 'recruiter.team.memberSubtitle' | t }}
       }
     </p>
   </div>
@@ -16,7 +16,7 @@
       [disabled]="members().length >= teamLimit"
       (click)="openInviteModal()"
     >
-      @if (members().length >= teamLimit) { Limite atteinte } @else { Inviter un recruteur }
+      @if (members().length >= teamLimit) { {{ 'recruiter.team.limitReached' | t }} } @else { {{ 'recruiter.team.inviteRecruiter' | t }} }
     </button>
   }
 </div>
@@ -30,7 +30,7 @@
 
 <div class="table-panel">
   @if (loading()) {
-    <p class="table-loading">Chargement de l'équipe…</p>
+    <p class="table-loading">{{ 'recruiter.team.loading' | t }}</p>
   } @else {
     <div class="members-grid">
       @for (member of members(); track member.id) {
@@ -40,17 +40,17 @@
             <div class="member-head">
               <div>
                 <h2>{{ member.email }}</h2>
-                <p>{{ member.jobTitle || 'Poste non renseigné' }}</p>
+                <p>{{ member.jobTitle || ('recruiter.team.jobTitleMissing' | t) }}</p>
               </div>
             </div>
             <div class="permission-chips" aria-label="Permissions">
               @for (perm of permissionOptions; track perm.key) {
                 @if (member[perm.key]) {
-                  <span class="permission-chip">{{ perm.label }}</span>
+                  <span class="permission-chip">{{ perm.labelKey | t }}</span>
                 }
               }
               @if (!member.canPostJob && !member.canDecideApplication && !member.canEditCompany) {
-                <span class="permission-chip permission-chip-empty">Aucune permission</span>
+                <span class="permission-chip permission-chip-empty">{{ 'recruiter.team.noPermission' | t }}</span>
               }
             </div>
           </div>
@@ -61,17 +61,17 @@
             <div class="member-actions">
             @if (canEditMember(member)) {
               <button type="button" class="btn-text-link" (click)="openEditModal(member)">
-                Modifier
+                {{ 'actions.edit' | t }}
               </button>
               <button type="button" class="btn-text-danger" (click)="removeMember(member)">
-                Retirer
+                {{ 'recruiter.team.remove' | t }}
               </button>
             }
             </div>
           </div>
         </article>
       } @empty {
-        <p class="empty-cell">Aucun membre pour le moment.</p>
+        <p class="empty-cell">{{ 'recruiter.team.empty' | t }}</p>
       }
     </div>
   }
@@ -81,37 +81,37 @@
   <div class="modal-backdrop" (click)="closeModal()">
     <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="invite-member-title">
       <header class="modal-header">
-        <p>Équipe recruteur</p>
-        <h2 id="invite-member-title" class="modal-title">Inviter un membre</h2>
+        <p>{{ 'recruiter.team.modalKicker' | t }}</p>
+        <h2 id="invite-member-title" class="modal-title">{{ 'recruiter.team.inviteMember' | t }}</h2>
       </header>
       <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" class="modal-form">
         <div class="form-field">
-          <label class="form-label" for="email">E-mail</label>
+          <label class="form-label" for="email">{{ 'forms.email' | t }}</label>
           <input id="email" name="email" type="email" autocomplete="email" class="form-input" formControlName="email" />
         </div>
         <div class="form-field">
-          <label class="form-label" for="jobTitle">Poste</label>
+          <label class="form-label" for="jobTitle">{{ 'forms.job' | t }}</label>
           <input id="jobTitle" name="jobTitle" autocomplete="organization-title" class="form-input" formControlName="jobTitle" />
         </div>
         <div class="form-field">
-          <label class="form-label" for="phone">Téléphone</label>
+          <label class="form-label" for="phone">{{ 'forms.phone' | t }}</label>
           <input id="phone" name="phone" type="tel" autocomplete="tel" class="form-input" formControlName="phone" />
         </div>
 
         <fieldset class="permissions-fieldset">
-          <legend class="form-label">Permissions initiales</legend>
+          <legend class="form-label">{{ 'recruiter.team.initialPermissions' | t }}</legend>
           @for (perm of permissionOptions; track perm.key) {
             <label class="checkbox-row">
               <input type="checkbox" [formControlName]="perm.key" />
-              <span>{{ perm.label }}</span>
+              <span>{{ perm.labelKey | t }}</span>
             </label>
           }
         </fieldset>
 
         <div class="modal-actions">
-          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeModal()">Annuler</button>
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeModal()">{{ 'actions.cancel' | t }}</button>
           <button type="submit" class="btn-primary !w-auto px-4" [disabled]="saving()">
-            @if (saving()) { Envoi… } @else { Envoyer l'invitation }
+            @if (saving()) { {{ 'actions.sending' | t }} } @else { {{ 'recruiter.team.sendInvitation' | t }} }
           </button>
         </div>
       </form>
@@ -123,33 +123,33 @@
   <div class="modal-backdrop" (click)="closeEditModal()">
     <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="edit-member-title">
       <header class="modal-header">
-        <p>Permissions membre</p>
-        <h2 id="edit-member-title" class="modal-title">Modifier — {{ member.email }}</h2>
+        <p>{{ 'recruiter.team.memberPermissions' | t }}</p>
+        <h2 id="edit-member-title" class="modal-title">{{ 'actions.edit' | t }} — {{ member.email }}</h2>
       </header>
       <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="modal-form">
         <div class="form-field">
-          <label class="form-label" for="editJobTitle">Poste</label>
+          <label class="form-label" for="editJobTitle">{{ 'forms.job' | t }}</label>
           <input id="editJobTitle" class="form-input" formControlName="jobTitle" />
         </div>
         <div class="form-field">
-          <label class="form-label" for="editPhone">Téléphone</label>
+          <label class="form-label" for="editPhone">{{ 'forms.phone' | t }}</label>
           <input id="editPhone" class="form-input" formControlName="phone" />
         </div>
 
         <fieldset class="permissions-fieldset">
-          <legend class="form-label">Permissions</legend>
+          <legend class="form-label">{{ 'recruiter.team.permissions' | t }}</legend>
           @for (perm of permissionOptions; track perm.key) {
             <label class="checkbox-row">
               <input type="checkbox" [formControlName]="perm.key" />
-              <span>{{ perm.label }}</span>
+              <span>{{ perm.labelKey | t }}</span>
             </label>
           }
         </fieldset>
 
         <div class="modal-actions">
-          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeEditModal()">Annuler</button>
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeEditModal()">{{ 'actions.cancel' | t }}</button>
           <button type="submit" class="btn-primary !w-auto px-4" [disabled]="saving()">
-            @if (saving()) { Enregistrement… } @else { Enregistrer }
+            @if (saving()) { {{ 'actions.saving' | t }} } @else { {{ 'actions.save' | t }} }
           </button>
         </div>
       </form>

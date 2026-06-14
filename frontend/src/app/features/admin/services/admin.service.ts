@@ -15,6 +15,7 @@ import {
   AdminJobDetail,
   AdminJobListItem,
   AdminStats,
+  AdminSubscriptionPaymentRequest,
   AdminSubscriptionPolicy,
   AdminUserDetail,
   AdminUserListItem,
@@ -46,6 +47,23 @@ export class AdminService {
     return this.http.patch<ApiResponse<AdminSubscriptionPolicy>>(
       `${this.base}/subscription-policy`,
       { mode }
+    );
+  }
+
+  listSubscriptionPaymentRequests(): Observable<ApiResponse<AdminSubscriptionPaymentRequest[]>> {
+    return this.http.get<ApiResponse<AdminSubscriptionPaymentRequest[]>>(
+      `${this.base}/subscription-payment-requests`
+    );
+  }
+
+  reviewSubscriptionPaymentRequest(
+    id: string,
+    action: 'approve' | 'reject',
+    adminNote?: string
+  ): Observable<ApiResponse<unknown>> {
+    return this.http.patch<ApiResponse<unknown>>(
+      `${this.base}/subscription-payment-requests/${id}`,
+      { action, adminNote }
     );
   }
 

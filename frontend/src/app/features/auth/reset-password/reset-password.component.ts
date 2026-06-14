@@ -6,11 +6,13 @@ import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { passwordStrengthValidator } from '../../../shared/validators/password.validators';
 import { PublicShellComponent } from '../../public/shared/public-shell.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent],
+  imports: [ReactiveFormsModule, RouterLink, PublicShellComponent, TranslatePipe],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.css',
 })
@@ -18,6 +20,7 @@ export class ResetPasswordComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
   readonly authService = inject(AuthService);
 
   readonly routes = APP_ROUTES;
@@ -41,7 +44,7 @@ export class ResetPasswordComponent implements OnInit {
     this.successMessage.set(null);
 
     if (!this.resetToken()) {
-      this.authService.setError('Reset token is missing or invalid.');
+      this.authService.setError(this.i18n.translate('auth.reset.tokenMissing'));
       return;
     }
 
@@ -53,7 +56,7 @@ export class ResetPasswordComponent implements OnInit {
     const { password, confirmPassword } = this.form.getRawValue();
 
     if (password !== confirmPassword) {
-      this.authService.setError('Passwords do not match.');
+      this.authService.setError(this.i18n.translate('auth.passwordMismatch'));
       return;
     }
 
@@ -65,12 +68,12 @@ export class ResetPasswordComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.successMessage.set(
-            response.message || 'Password reset successfully. You can now sign in.'
+            response.message || this.i18n.translate('auth.reset.success')
           );
           void this.router.navigate([APP_ROUTES.AUTH.LOGIN]);
         },
         error: (error: HttpErrorResponse) => {
-          const message = error.error?.message || 'Unable to reset password.';
+          const message = error.error?.message || this.i18n.translate('auth.reset.failed');
           this.authService.setError(message);
         },
       });
@@ -86,8 +89,10 @@ export class ResetPasswordComponent implements OnInit {
     if (!errors?.['passwordStrength']) {
       return null;
     }
-    return typeof errors['passwordStrength'] === 'string'
-      ? errors['passwordStrength']
-      : 'Password does not meet security requirements.';
+    const message = typeof errors['passwordStrength'] === 'string' ? errors['passwordStrength'] : '';
+    if (message.includes('at least 8')) return this.i18n.translate('auth.passwordMin');
+    if (message.includes('not exceed')) return this.i18n.translate('auth.passwordMax');
+    if (message.includes('uppercase')) return this.i18n.translate('auth.passwordStrength');
+    return this.i18n.translate('auth.passwordStrength');
   }
 }

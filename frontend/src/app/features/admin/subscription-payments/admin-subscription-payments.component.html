@@ -1,0 +1,76 @@
+<section class="admin-payments-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">{{ 'admin.subscriptionPayments.eyebrow' | t }}</p>
+      <h1>{{ 'admin.subscriptionPayments.title' | t }}</h1>
+      <p>{{ 'admin.subscriptionPayments.subtitle' | t }}</p>
+    </div>
+    <button type="button" class="secondary-btn" (click)="load()">{{ 'actions.refresh' | t }}</button>
+  </div>
+
+  @if (loading()) {
+    <div class="state-card">{{ 'common.loading' | t }}</div>
+  }
+
+  @if (error()) {
+    <div class="state-card state-card--error">{{ error() }}</div>
+  }
+
+  <div class="table-panel">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{{ 'forms.company' | t }}</th>
+          <th>{{ 'admin.subscriptionPayments.plan' | t }}</th>
+          <th>{{ 'admin.subscriptionPayments.amount' | t }}</th>
+          <th>{{ 'forms.status' | t }}</th>
+          <th>{{ 'admin.subscriptionPayments.date' | t }}</th>
+          <th>{{ 'admin.subscriptionPayments.actions' | t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.id) {
+          <tr>
+            <td>
+              <strong>{{ row.companyName || ('forms.company' | t) }}</strong>
+              <span>{{ row.payerEmail || row.payerPhone || '-' }}</span>
+            </td>
+            <td>{{ row.plan?.name || '-' }}</td>
+            <td>{{ row.amountTnd | number: '1.0-3' }} {{ row.currency }}</td>
+            <td>
+              <span class="status-pill" [class.status-pill--paid]="row.status === 'paid'">
+                {{ statusLabel(row.status) }}
+              </span>
+            </td>
+            <td>{{ row.createdAt | date: 'short' }}</td>
+            <td class="actions-cell">
+              @if (row.paymentUrl) {
+                <a [href]="row.paymentUrl" target="_blank" rel="noopener">{{ 'admin.subscriptionPayments.paymentLink' | t }}</a>
+              }
+              <button
+                type="button"
+                class="approve-btn"
+                [disabled]="processingId() === row.id || row.status === 'paid'"
+                (click)="review(row, 'approve')"
+              >
+                {{ 'admin.subscriptionPayments.approve' | t }}
+              </button>
+              <button
+                type="button"
+                class="reject-btn"
+                [disabled]="processingId() === row.id || row.status === 'paid'"
+                (click)="review(row, 'reject')"
+              >
+                {{ 'admin.subscriptionPayments.reject' | t }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">{{ 'admin.subscriptionPayments.empty' | t }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
