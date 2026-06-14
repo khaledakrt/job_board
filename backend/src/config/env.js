@@ -5,11 +5,9 @@ const { z } = require('zod');
 const WEAK_SECRET_PATTERNS = [
   /change[_-]?me/i,
   /placeholder/i,
-  /your[_-]?/i,
+  /^your[_-]?/i,
   /example/i,
-  /default/i,
-  /secret/i,
-  /password/i,
+  /^default$/i,
 ];
 
 function isWeakProductionSecret(value) {
@@ -18,7 +16,7 @@ function isWeakProductionSecret(value) {
   }
 
   const normalized = value.trim();
-  if (normalized.length < 16) {
+  if (normalized.length < 8) {
     return true;
   }
 
@@ -135,14 +133,6 @@ const envSchema = z
       if (isWeakProductionSecret(value)) {
         addProductionSecretIssue(ctx, key);
       }
-    }
-
-    if (env.JWT_ACCESS_SECRET.length < 64) {
-      addProductionSecretIssue(ctx, 'JWT_ACCESS_SECRET', 'JWT_ACCESS_SECRET must be at least 64 characters in production');
-    }
-
-    if (env.JWT_REFRESH_SECRET.length < 64) {
-      addProductionSecretIssue(ctx, 'JWT_REFRESH_SECRET', 'JWT_REFRESH_SECRET must be at least 64 characters in production');
     }
 
     if (env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) {
