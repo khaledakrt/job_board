@@ -18,6 +18,10 @@ const ALLOWED_STATUS_TRANSITIONS = {
   rejected: new Set(['rejected']),
 };
 
+const APPLICATION_STATUS = {
+  INTERVIEW: 'interview',
+};
+
 function formatCandidate(candidate) {
   if (!candidate) return undefined;
 
@@ -38,6 +42,7 @@ function formatCandidate(candidate) {
 }
 
 function formatApplication(application) {
+  const isInterview = application.status === APPLICATION_STATUS.INTERVIEW;
   return {
     id: application.id,
     jobId: application.job_id,
@@ -46,7 +51,7 @@ function formatApplication(application) {
     coverLetter: application.cover_letter,
     resumeSnapshotUrl: application.resume_snapshot_url,
     rating: application.rating,
-    interviewAt: application.interview_at,
+    interviewAt: isInterview ? application.interview_at : null,
     archivedAt: application.archived_at,
     archivedBy: application.archived_by,
     deletedByRecruiterAt: application.deleted_by_recruiter_at,
@@ -144,6 +149,7 @@ async function updateApplicationStatus({
   } else if (application.archived_at) {
     updates.archived_at = null;
     updates.archived_by = null;
+    updates.candidate_archived_at = null;
   }
 
   if (status === 'interview' && !interviewAt && !application.interview_at) {
@@ -346,6 +352,7 @@ async function restoreApplication({ applicationId, companyId }) {
     archived_by: null,
     deleted_by_recruiter_at: null,
     deleted_by_recruiter_by: null,
+    candidate_archived_at: null,
     updated_at: new Date(),
   });
   await application.reload({

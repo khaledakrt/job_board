@@ -68,6 +68,10 @@ Application.init(
       type: DataTypes.CHAR(36),
       allowNull: true,
     },
+    candidate_archived_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

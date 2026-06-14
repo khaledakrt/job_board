@@ -43,6 +43,10 @@ export class CandidateApplicationsService {
     return this.http.get<ApiResponse<ApplicationDetail>>(`${this.base}/${id}`);
   }
 
+  archiveRejected(id: string): Observable<ApiResponse<Application>> {
+    return this.http.patch<ApiResponse<Application>>(`${this.base}/${id}/archive`, {});
+  }
+
   listAppliedJobIds(): Observable<ApiResponse<string[]>> {
     return this.http.get<ApiResponse<string[]>>(`${this.base}/applied-job-ids`);
   }

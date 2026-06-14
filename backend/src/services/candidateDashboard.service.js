@@ -16,6 +16,7 @@ function monthsAgo(months) {
 
 function isArchivedApplication(app) {
   if (app.status !== 'rejected') return false;
+  if (app.candidate_archived_at) return true;
   return new Date(app.updated_at) < monthsAgo(ARCHIVE_MONTHS);
 }
 
@@ -51,7 +52,7 @@ function scoreJobForCandidate(job, profile) {
 async function getDashboardSummary(candidateId) {
   const applications = await Application.findAll({
     where: { candidate_id: candidateId },
-    attributes: ['id', 'status', 'created_at', 'updated_at'],
+    attributes: ['id', 'status', 'candidate_archived_at', 'created_at', 'updated_at'],
     order: [['created_at', 'ASC']],
   });
 

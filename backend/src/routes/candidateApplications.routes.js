@@ -43,6 +43,12 @@ router.get(
   candidateApplicationController.getApplicationDetail
 );
 
+router.patch(
+  '/:id/archive',
+  validateParams(applicationIdSchema),
+  candidateApplicationController.archiveRejectedApplication
+);
+
 router.post(
   '/generate-letter',
   validateBody(generateLetterSchema),

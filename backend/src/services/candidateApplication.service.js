@@ -15,6 +15,7 @@ const { expireDueJobs } = require('../utils/jobExpiration');
 const logger = require('../utils/logger');
 
 function formatApplication(application) {
+  const isInterview = application.status === APPLICATION_STATUS.INTERVIEW;
   return {
     id: application.id,
     jobId: application.job_id,
@@ -23,7 +24,8 @@ function formatApplication(application) {
     coverLetter: application.cover_letter,
     resumeSnapshotUrl: application.resume_snapshot_url,
     rating: application.rating,
-    interviewAt: application.interview_at,
+    interviewAt: isInterview ? application.interview_at : null,
+    candidateArchivedAt: application.candidate_archived_at,
     createdAt: application.created_at,
     updatedAt: application.updated_at,
     job: application.job
@@ -55,13 +57,17 @@ async function listCandidateApplications(candidateId, filters = {}) {
   archiveCutoff.setMonth(archiveCutoff.getMonth() - ARCHIVE_MONTHS);
 
   if (scope === 'active') {
+    where.candidate_archived_at = null;
     where[Op.or] = [
       { status: { [Op.ne]: APPLICATION_STATUS.REJECTED } },
       { updated_at: { [Op.gte]: archiveCutoff } },
     ];
   } else if (scope === 'archived') {
     where.status = APPLICATION_STATUS.REJECTED;
-    where.updated_at = { [Op.lt]: archiveCutoff };
+    where[Op.or] = [
+      { updated_at: { [Op.lt]: archiveCutoff } },
+      { candidate_archived_at: { [Op.ne]: null } },
+    ];
   }
 
   if (filters.status) {
@@ -127,6 +133,26 @@ async function listAppliedJobIds(candidateId) {
     attributes: ['job_id'],
   });
   return applications.map((a) => a.job_id);
+}
+
+async function archiveRejectedApplication({ candidateId, applicationId }) {
+  const application = await Application.findOne({
+    where: { id: applicationId, candidate_id: candidateId },
+  });
+
+  if (!application) {
+    throw ApiError.notFound('Application not found');
+  }
+  if (application.status !== APPLICATION_STATUS.REJECTED) {
+    throw ApiError.badRequest('Seules les candidatures refusées peuvent être masquées.');
+  }
+
+  await application.update({
+    candidate_archived_at: application.candidate_archived_at || new Date(),
+    updated_at: new Date(),
+  });
+
+  return formatApplication(application);
 }
 
 async function applyToJob({ candidate, jobId, coverLetter, quizAnswers }) {
@@ -319,6 +345,7 @@ async function generateApplicationLetter({ candidate, jobId }) {
 module.exports = {
   listCandidateApplications,
   listAppliedJobIds,
+  archiveRejectedApplication,
   getCandidateApplicationDetail,
   applyToJob,
   generateApplicationLetter,

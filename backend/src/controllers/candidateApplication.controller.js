@@ -58,6 +58,19 @@ const getApplicationDetail = asyncHandler(async (req, res) => {
   });
 });
 
+const archiveRejectedApplication = asyncHandler(async (req, res) => {
+  const data = await candidateApplicationService.archiveRejectedApplication({
+    candidateId: req.candidate.id,
+    applicationId: req.validatedParams.id,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Application archived successfully',
+    data,
+  });
+});
+
 const listMyApplications = asyncHandler(async (req, res) => {
   if (!req.candidate) {
     return res.status(200).json({ success: true, data: [] });
@@ -80,6 +93,7 @@ const listMyApplications = asyncHandler(async (req, res) => {
 module.exports = {
   listMyApplications,
   getApplicationDetail,
+  archiveRejectedApplication,
   listAppliedJobIds,
   generateCoverLetter,
   applyToJob,

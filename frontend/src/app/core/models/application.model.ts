@@ -56,6 +56,7 @@ export interface Application {
   interviewAt: string | null;
   archivedAt?: string | null;
   archivedBy?: string | null;
+  candidateArchivedAt?: string | null;
   deletedByRecruiterAt?: string | null;
   createdAt: string;
   updatedAt: string;

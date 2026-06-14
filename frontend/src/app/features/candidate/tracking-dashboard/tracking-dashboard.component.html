@@ -139,7 +139,7 @@
               <td [attr.data-label]="'forms.company' | t">{{ companyName(app) }}</td>
               <td [attr.data-label]="'forms.status' | t">
                 <span class="status-pill status-pill-{{ app.status }}">{{ statusLabels[app.status] }}</span>
-                @if (app.interviewAt) {
+                @if (app.status === 'interview' && app.interviewAt) {
                   <span class="interview-date-chip">Entretien {{ app.interviewAt | date: 'dd/MM HH:mm' }}</span>
                 }
               </td>
@@ -331,7 +331,7 @@
           </p>
         }
 
-        @if (detail.interviewAt) {
+        @if (detail.status === 'interview' && detail.interviewAt) {
           <section class="app-detail-block">
             <h3 class="app-detail-subtitle">Entretien</h3>
             <p>Prévu le {{ detail.interviewAt | date: 'dd/MM/yyyy à HH:mm' }}</p>
@@ -376,6 +376,11 @@
             </a>
             <button type="button" class="btn-secondary !w-auto px-4" (click)="openPublicJob(jobId, $event)">
               Page publique
+            </button>
+          }
+          @if (detail.status === 'rejected') {
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="archiveRejectedApplication(detail)">
+              Masquer / Archiver
             </button>
           }
         </div>

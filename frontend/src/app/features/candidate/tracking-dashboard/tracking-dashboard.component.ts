@@ -277,6 +277,28 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  async archiveRejectedApplication(detail: ApplicationDetail): Promise<void> {
+    if (detail.status !== 'rejected') return;
+
+    const title = detail.job?.title || 'cette candidature';
+    const ok = await this.confirmDialog.confirm({
+      title: 'Masquer la candidature',
+      message: `Masquer « ${title} » de la liste active ? Elle restera disponible dans les archives.`,
+      confirmLabel: 'Masquer',
+    });
+    if (!ok) return;
+
+    this.applicationsService.archiveRejected(detail.id).subscribe({
+      next: () => {
+        this.closeDetail();
+        this.loadApplications();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.error.set(err.error?.message || 'Impossible de masquer la candidature.');
+      },
+    });
+  }
+
   companyName(app: Application): string {
     const job = app.job as { company?: { name?: string } } | undefined;
     return job?.company?.name || '—';

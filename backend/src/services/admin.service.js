@@ -132,11 +132,12 @@ function formatApplicationAdmin(application) {
   const candidateName = candidate
     ? `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim()
     : null;
+  const isInterview = application.status === 'interview';
   return {
     id: application.id,
     status: application.status,
     rating: application.rating,
-    interviewAt: application.interview_at ?? null,
+    interviewAt: isInterview ? application.interview_at ?? null : null,
     hasResume: Boolean(application.resume_snapshot_url),
     hasCoverLetter: Boolean(application.cover_letter),
     hasQuizAnswers: Boolean(application.quiz_answers),
@@ -1019,7 +1020,7 @@ async function getApplicationById(applicationId) {
     coverLetter: application.cover_letter,
     resumeSnapshotUrl: application.resume_snapshot_url,
     quizAnswers: application.quiz_answers ?? null,
-    interviewAt: application.interview_at,
+    interviewAt: application.status === 'interview' ? application.interview_at : null,
     job: application.job
       ? {
           id: application.job.id,
