@@ -30,6 +30,18 @@ app.set('trust proxy', parseTrustProxy(env.TRUST_PROXY));
 
 const clientOrigin = env.CLIENT_URL.replace(/\/$/, '');
 
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'frame-ancestors': ["'self'", clientOrigin],
+      },
+    },
+  })
+);
+
 function staticUploadOptions({ sensitive = false } = {}) {
   return {
     maxAge: sensitive ? 0 : '7d',
@@ -58,18 +70,6 @@ app.use('/uploads/catalog-images', express.static(getCatalogImageDirectory(), st
 app.use(['/uploads/resumes', '/uploads/snapshots'], (_req, res) => {
   res.status(404).json({ success: false, message: 'Protected upload route moved to API' });
 });
-
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: {
-      directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        'frame-ancestors': ["'self'", clientOrigin],
-      },
-    },
-  })
-);
 
 app.use(cors(corsOptions));
 

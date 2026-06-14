@@ -1,13 +1,13 @@
 <div class="provider-page provider-dashboard-page">
   @if (ctx.loading()) {
-    <p class="provider-muted">Chargement…</p>
+    <p class="provider-muted">{{ 'common.loading' | t }}</p>
   } @else if (ctx.error()) {
     <p class="provider-muted">{{ ctx.error() }}</p>
   } @else if (ctx.dashboard()) {
     @if (!ctx.dashboard()!.profileComplete) {
       <aside class="provider-alert">
-        <strong>Profil incomplet</strong>
-        <p>Complétez votre <a [routerLink]="[ctx.isTraining ? '/provider/centre' : '/provider/etablissement', 'profil']">page profil</a> pour publier.</p>
+        <strong>{{ 'provider.dashboard.profileIncomplete' | t }}</strong>
+        <p><a [routerLink]="[ctx.isTraining ? '/provider/centre' : '/provider/etablissement', 'profil']">{{ 'provider.dashboard.completeProfileToPublish' | t }}</a></p>
       </aside>
     }
 
@@ -15,31 +15,31 @@
       <div class="provider-stats">
         <div class="provider-stat-card">
           <span class="provider-stat-value">{{ stats.formationsTotal }}</span>
-          <span class="provider-stat-label">Formations</span>
+          <span class="provider-stat-label">{{ 'provider.dashboard.formations' | t }}</span>
           <span class="provider-stat-sub">{{ stats.formationsPublished }} publiée(s)</span>
         </div>
         <div class="provider-stat-card">
           <span class="provider-stat-value">{{ stats.eventsTotal }}</span>
-          <span class="provider-stat-label">Événements</span>
+          <span class="provider-stat-label">{{ 'provider.dashboard.events' | t }}</span>
           <span class="provider-stat-sub">{{ stats.eventsPublished }} publié(s)</span>
         </div>
         @if (stats.draftTotal) {
           <button type="button" class="provider-stat-card provider-stat-card--link provider-stat-card--accent" (click)="showDrafts()">
             <span class="provider-stat-value">{{ stats.draftTotal }}</span>
-            <span class="provider-stat-label">Brouillon(s)</span>
+            <span class="provider-stat-label">{{ 'provider.dashboard.drafts' | t }}</span>
             <span class="provider-stat-sub">À compléter avant validation</span>
           </button>
         }
         @if (stats.pendingTotal && ctx.dashboard()!.accountStatus === 'published' && ctx.dashboard()!.canPublishOfferings) {
           <button type="button" class="provider-stat-card provider-stat-card--link" (click)="showPendingPublications()">
             <span class="provider-stat-value">{{ stats.pendingTotal }}</span>
-            <span class="provider-stat-label">En validation</span>
+            <span class="provider-stat-label">{{ 'provider.dashboard.pendingReview' | t }}</span>
             <span class="provider-stat-sub">En attente administrateur</span>
           </button>
         } @else {
           <div class="provider-stat-card">
             <span class="provider-stat-value">{{ stats.pendingTotal }}</span>
-            <span class="provider-stat-label">En validation</span>
+            <span class="provider-stat-label">{{ 'provider.dashboard.pendingReview' | t }}</span>
             <span class="provider-stat-sub">Aucun contenu en attente</span>
           </div>
         }
@@ -65,8 +65,8 @@
       <section id="provider-publications-panel" class="provider-card">
         <div class="provider-card-head">
           <div>
-            <h2>Publications</h2>
-            <p>Choisissez le statut à consulter, puis le type de publication.</p>
+            <h2>{{ 'provider.dashboard.publications' | t }}</h2>
+            <p>{{ 'provider.dashboard.publicationsHint' | t }}</p>
           </div>
           <select
             class="provider-input provider-publication-kind"
@@ -74,8 +74,8 @@
             [ngModel]="trainingPublicationKind()"
             (ngModelChange)="setTrainingPublicationKind($event)"
           >
-            <option value="formation">Formations</option>
-            <option value="event">Événements</option>
+            <option value="formation">{{ 'provider.dashboard.formations' | t }}</option>
+            <option value="event">{{ 'provider.dashboard.events' | t }}</option>
           </select>
         </div>
         <div class="provider-publication-switch">
@@ -86,7 +86,7 @@
             [class.provider-btn--outline]="trainingPublicationView() !== 'published'"
             (click)="setTrainingPublicationView('published')"
           >
-            Publications validées
+            {{ 'provider.dashboard.publishedPublications' | t }}
           </button>
           <button
             type="button"
@@ -95,7 +95,7 @@
             [class.provider-btn--outline]="trainingPublicationView() !== 'pending'"
             (click)="setTrainingPublicationView('pending')"
           >
-            Publications en attente
+            {{ 'provider.dashboard.pendingPublications' | t }}
           </button>
         </div>
       </section>
@@ -103,14 +103,14 @@
       @if (trainingPublicationView() === 'pending') {
         <section id="provider-pending-review" class="provider-card">
           <div class="provider-card-head">
-            <h2>Envoyés en validation</h2>
-            <p>Contenus transmis à l’administrateur, non visibles publiquement.</p>
+            <h2>{{ 'provider.dashboard.sentForReview' | t }}</h2>
+            <p>{{ 'provider.dashboard.sentForReviewHint' | t }}</p>
           </div>
           @if (trainingPublicationKind() === 'formation') {
-            <div class="provider-list-head"><h3>Formations</h3></div>
+            <div class="provider-list-head"><h3>{{ 'provider.dashboard.formations' | t }}</h3></div>
             @if (!ctx.pendingFormations().length) {
               <div class="provider-empty">
-                <p>Aucune formation en attente de validation.</p>
+                <p>{{ 'provider.dashboard.noPendingFormation' | t }}</p>
               </div>
             } @else {
               <ul class="provider-offer-list">
@@ -119,8 +119,8 @@
                     <div class="provider-offer-main"><strong>{{ f.title }}</strong></div>
                     <span [class]="offeringStatusClass(f.status)">{{ offeringStatusLabel(f.status) }}</span>
                     <div class="provider-offer-actions">
-                      <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(f.id)" class="provider-btn provider-btn--outline provider-btn--sm">Modifier</a>
-                      <button type="button" class="provider-btn provider-btn--danger provider-btn--sm" (click)="deleteFormation(f.id)">Supprimer</button>
+                      <a [routerLink]="routes.PROVIDER.TRAINING_FORMATION_EDIT(f.id)" class="provider-btn provider-btn--outline provider-btn--sm">{{ 'actions.edit' | t }}</a>
+                      <button type="button" class="provider-btn provider-btn--danger provider-btn--sm" (click)="deleteFormation(f.id)">{{ 'actions.delete' | t }}</button>
                     </div>
                   </li>
                 }

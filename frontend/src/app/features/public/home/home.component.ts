@@ -5,23 +5,24 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
 import { PublicShellComponent } from '../shared/public-shell.component';
 import { PublicJobsBrowseComponent } from './public-jobs-browse/public-jobs-browse.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface LandingFeature {
   icon: string;
-  title: string;
-  text: string;
+  titleKey: string;
+  textKey: string;
 }
 
 interface LandingStep {
   num: string;
-  title: string;
-  text: string;
+  titleKey: string;
+  textKey: string;
 }
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, PublicShellComponent, PublicJobsBrowseComponent],
+  imports: [RouterLink, PublicShellComponent, PublicJobsBrowseComponent, TranslatePipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -48,66 +49,66 @@ export class HomeComponent {
   readonly candidateFeatures: LandingFeature[] = [
     {
       icon: '🔍',
-      title: 'Recherche intelligente',
-      text: 'Filtrez par lieu, contrat, télétravail et mots-clés pour trouver les offres qui vous correspondent.',
+      titleKey: 'home.candidate.feature.search.title',
+      textKey: 'home.candidate.feature.search.text',
     },
     {
       icon: '📝',
-      title: 'Candidature guidée',
-      text: 'Lettre de motivation, CV et quiz technique intégrés dans un parcours simple et rapide.',
+      titleKey: 'home.candidate.feature.apply.title',
+      textKey: 'home.candidate.feature.apply.text',
     },
     {
       icon: '🔔',
-      title: 'Alertes emploi',
-      text: 'Soyez prévenu des nouvelles offres correspondant à vos critères.',
+      titleKey: 'home.candidate.feature.alerts.title',
+      textKey: 'home.candidate.feature.alerts.text',
     },
     {
       icon: '📊',
-      title: 'Suivi en temps réel',
-      text: 'Visualisez l’état de vos candidatures : reçue, entretien, offre, refus…',
+      titleKey: 'home.candidate.feature.tracking.title',
+      textKey: 'home.candidate.feature.tracking.text',
     },
   ];
 
   readonly recruiterFeatures: LandingFeature[] = [
     {
       icon: '🏢',
-      title: 'Page employeur',
-      text: 'Présentez votre entreprise, logo, avantages et culture pour attirer les bons profils.',
+      titleKey: 'home.recruiter.feature.page.title',
+      textKey: 'home.recruiter.feature.page.text',
     },
     {
       icon: '✨',
-      title: 'Offres enrichies',
-      text: 'Description mise en forme, compétences, langues, salaire et avantages (tickets resto, télétravail…).',
+      titleKey: 'home.recruiter.feature.jobs.title',
+      textKey: 'home.recruiter.feature.jobs.text',
     },
     {
       icon: '🎯',
-      title: 'Quiz de présélection',
-      text: 'Posez 2 questions techniques : le candidat répond, vous voyez vert ou rouge dans l’ATS.',
+      titleKey: 'home.recruiter.feature.quiz.title',
+      textKey: 'home.recruiter.feature.quiz.text',
     },
     {
       icon: '👥',
-      title: 'ATS & équipe',
-      text: 'Pipeline candidatures, notes, statuts et collaboration RH avec droits par rôle.',
+      titleKey: 'home.recruiter.feature.team.title',
+      textKey: 'home.recruiter.feature.team.text',
     },
   ];
 
   readonly candidateSteps: LandingStep[] = [
-    { num: '1', title: 'Créez votre profil', text: 'CV, compétences et préférences en quelques minutes.' },
-    { num: '2', title: 'Explorez les offres', text: 'Parcourez, sauvegardez et postulez en un clic.' },
-    { num: '3', title: 'Suivez vos candidatures', text: 'Restez informé à chaque étape du processus.' },
+    { num: '1', titleKey: 'home.candidate.step.profile.title', textKey: 'home.candidate.step.profile.text' },
+    { num: '2', titleKey: 'home.candidate.step.jobs.title', textKey: 'home.candidate.step.jobs.text' },
+    { num: '3', titleKey: 'home.candidate.step.track.title', textKey: 'home.candidate.step.track.text' },
   ];
 
   readonly recruiterSteps: LandingStep[] = [
-    { num: '1', title: 'Inscrivez votre entreprise', text: 'Profil société complet pour inspirer confiance.' },
-    { num: '2', title: 'Publiez vos offres', text: 'Rédaction assistée, quiz optionnel, publication flexible.' },
-    { num: '3', title: 'Recrutez avec l’ATS', text: 'Triez, évaluez les quiz et pilotez vos embauches.' },
+    { num: '1', titleKey: 'home.recruiter.step.company.title', textKey: 'home.recruiter.step.company.text' },
+    { num: '2', titleKey: 'home.recruiter.step.publish.title', textKey: 'home.recruiter.step.publish.text' },
+    { num: '3', titleKey: 'home.recruiter.step.hire.title', textKey: 'home.recruiter.step.hire.text' },
   ];
 
   readonly highlights = [
-    'Profil entreprise avec barre de complétion',
-    'Éditeur riche pour les descriptions d’offre',
-    'Notifications recruteur en temps réel',
-    'E-mails transactionnels (candidature, équipe, alertes)',
+    'home.features.companyProfile',
+    'home.features.richEditor',
+    'home.features.notifications',
+    'home.features.emails',
   ];
 
 }

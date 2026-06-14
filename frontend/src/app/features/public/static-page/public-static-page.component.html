@@ -2,18 +2,18 @@
   <main class="static-page-main">
     <article class="static-page-panel">
       <header class="static-page-head">
-        <h1>{{ content.title }}</h1>
-        <p class="static-page-lead">{{ content.lead }}</p>
+        <h1>{{ content().title }}</h1>
+        <p class="static-page-lead">{{ content().lead }}</p>
       </header>
 
       @if (isContactPage) {
         <section class="static-page-block">
-          <h2 class="static-page-block-title">Formulaire de contact</h2>
+          <h2 class="static-page-block-title">{{ 'static.contact.formTitle' | t }}</h2>
           <p class="static-page-block-hint">
-            Votre message sera envoyé à notre équipe. Nous vous répondons en général sous 48 h ouvrées.
+            {{ 'static.contact.formHint' | t }}
           </p>
           <div class="static-contact-direct">
-            <span class="static-contact-direct-label">Adresse directe</span>
+            <span class="static-contact-direct-label">{{ 'static.contact.directAddress' | t }}</span>
             <a [href]="'mailto:' + contactEmail" class="static-contact-direct-link">{{ contactEmail }}</a>
           </div>
 
@@ -26,7 +26,7 @@
 
           <form class="static-contact-form" [formGroup]="contactForm" (ngSubmit)="submitContact()" novalidate>
             <div class="static-form-row">
-              <label class="static-form-label" for="contact-name">Nom</label>
+              <label class="static-form-label" for="contact-name">{{ 'forms.name' | t }}</label>
               <input
                 id="contact-name"
                 type="text"
@@ -40,7 +40,7 @@
             </div>
 
             <div class="static-form-row">
-              <label class="static-form-label" for="contact-email">E-mail</label>
+              <label class="static-form-label" for="contact-email">{{ 'forms.email' | t }}</label>
               <input
                 id="contact-email"
                 name="contact-email"
@@ -55,7 +55,7 @@
             </div>
 
             <div class="static-form-row">
-              <label class="static-form-label" for="contact-subject">Sujet</label>
+              <label class="static-form-label" for="contact-subject">{{ 'static.contact.subject' | t }}</label>
               <input id="contact-subject" type="text" class="static-form-input" formControlName="subject" />
               @if (fieldError('subject'); as err) {
                 <span class="static-form-error">{{ err }}</span>
@@ -63,7 +63,7 @@
             </div>
 
             <div class="static-form-row">
-              <label class="static-form-label" for="contact-message">Message</label>
+              <label class="static-form-label" for="contact-message">{{ 'static.contact.message' | t }}</label>
               <textarea
                 id="contact-message"
                 class="static-form-input static-form-textarea"
@@ -77,14 +77,14 @@
 
             <div class="static-form-actions">
               <button type="submit" class="static-form-submit" [disabled]="submitting()">
-                {{ submitting() ? 'Envoi en cours…' : 'Envoyer le message' }}
+                {{ (submitting() ? 'static.contact.sending' : 'static.contact.send') | t }}
               </button>
             </div>
           </form>
         </section>
       } @else {
         <div class="static-page-body">
-          @for (section of content.sections; track section.heading) {
+          @for (section of content().sections; track section.heading) {
             <section class="static-page-section">
               <h2>{{ section.heading }}</h2>
               @for (p of section.paragraphs; track p) {
@@ -96,7 +96,7 @@
       }
 
       <footer class="static-page-foot">
-        <a routerLink="/" class="static-page-back-link">← Retour à l’accueil</a>
+        <a routerLink="/" class="static-page-back-link">← {{ 'static.backHome' | t }}</a>
       </footer>
     </article>
   </main>

@@ -1,12 +1,12 @@
 <div class="page-header row-between">
   <div>
-    <h1 class="page-title">Offres d'emploi</h1>
+    <h1 class="page-title">{{ 'recruiter.jobs.title' | t }}</h1>
     <p class="page-subtitle">
-      Gérez vos annonces actives, brouillons et masquées. Les offres expirées sont rangées dans Archives.
+      {{ 'recruiter.jobs.subtitle' | t }}
     </p>
   </div>
   @if (context.canPostJob()) {
-    <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-4">Créer une offre</a>
+    <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-4">{{ 'recruiter.dashboard.createJob' | t }}</a>
   }
 </div>
 
@@ -19,14 +19,14 @@
 
 <div class="jobs-toolbar panel-card">
   <div class="toolbar-filter">
-    <label class="form-label" for="statusFilter">Filtrer par statut</label>
+    <label class="form-label" for="statusFilter">{{ 'recruiter.jobs.filterStatus' | t }}</label>
     <select
       id="statusFilter"
       class="form-input filter-select"
       [value]="statusFilter()"
       (change)="onStatusFilterChange($event)"
     >
-      <option value="">Toutes sauf expirées</option>
+      <option value="">{{ 'recruiter.jobs.allExceptExpired' | t }}</option>
       @for (s of statusOptions; track s) {
         <option [value]="s">{{ statusLabels[s] }}</option>
       }
@@ -38,7 +38,7 @@
 </div>
 
 @if (loading()) {
-  <p class="table-loading panel-card">Chargement des offres...</p>
+  <p class="table-loading panel-card">{{ 'recruiter.jobs.loading' | t }}</p>
 } @else {
   <div class="jobs-list">
     @for (job of jobs(); track job.id) {
@@ -50,7 +50,7 @@
             </h2>
             <p class="job-row-meta">
               <span>{{ job.contractType }}</span>
-              <span>{{ job.location || 'Lieu flexible' }}</span>
+              <span>{{ job.location || ('jobs.browse.flexibleLocation' | t) }}</span>
               <span>Expire le {{ job.expiresAt | date: 'dd/MM/yyyy' }}</span>
             </p>
           </div>
@@ -64,25 +64,25 @@
               [class.vis-public]="isPublic(job)"
               [class.vis-private]="!isPublic(job)"
             >
-              {{ isPublic(job) ? 'Visible candidats' : 'Interne' }}
+              {{ (isPublic(job) ? 'recruiter.jobs.visibleCandidates' : 'recruiter.jobs.internal') | t }}
             </span>
           </div>
         </section>
 
-        <section class="job-row-stats" aria-label="Indicateurs">
-          <span class="stat-chip" title="Vues">
-            <span class="stat-label">Vues</span>
+        <section class="job-row-stats" [attr.aria-label]="'recruiter.dashboard.recommendedPriorities' | t">
+          <span class="stat-chip" [attr.title]="'recruiter.jobs.views' | t">
+            <span class="stat-label">{{ 'recruiter.jobs.views' | t }}</span>
             <strong>{{ job.viewsCount }}</strong>
           </span>
-          <span class="stat-chip" title="Candidatures">
-            <span class="stat-label">Candidats</span>
+          <span class="stat-chip" [attr.title]="'recruiter.jobs.candidates' | t">
+            <span class="stat-label">{{ 'recruiter.jobs.candidates' | t }}</span>
             <strong>{{ job.applicationsCount }}</strong>
           </span>
           <span
             class="stat-chip stat-chip-expiry"
             [class.stat-chip-expired]="job.status === 'expired' || isPastExpiration(job)"
           >
-            <span class="stat-label">Expiration</span>
+            <span class="stat-label">{{ 'recruiter.jobs.expiration' | t }}</span>
             <strong>{{ expirationLabel(job) }}</strong>
           </span>
         </section>
@@ -90,7 +90,7 @@
         <section class="job-row-actions" aria-label="Actions">
           <div class="action-links">
               @if (context.canPostJob()) {
-                <a [routerLink]="['/recruiter/jobs', job.id, 'edit']" class="action-btn action-btn-edit">Modifier</a>
+                <a [routerLink]="['/recruiter/jobs', job.id, 'edit']" class="action-btn action-btn-edit">{{ 'actions.edit' | t }}</a>
               }
               @if (context.canDecideApplication()) {
                 <a
@@ -98,7 +98,7 @@
                   [queryParams]="{ jobId: job.id }"
                   class="action-btn action-btn-ats"
                 >
-                  Candidatures
+                  {{ 'recruiter.dashboard.viewApplications' | t }}
                   @if (job.applicationsCount > 0) {
                     <span class="count-badge">{{ job.applicationsCount }}</span>
                   }
@@ -111,7 +111,7 @@
                   [disabled]="statusUpdating() === job.id"
                   (click)="setStatus(job, 'active')"
                 >
-                  Publier
+                  {{ 'recruiter.jobs.publish' | t }}
                 </button>
               }
               @if (context.canPostJob() && canHide(job)) {
@@ -121,7 +121,7 @@
                   [disabled]="statusUpdating() === job.id"
                   (click)="setStatus(job, 'hidden')"
                 >
-                  Masquer
+                  {{ 'recruiter.jobs.hide' | t }}
                 </button>
               }
               @if (context.canPostJob() && job.status !== 'expired') {
@@ -131,7 +131,7 @@
                   [disabled]="statusUpdating() === job.id"
                   (click)="archiveJob(job)"
                 >
-                  Archiver
+                  {{ 'recruiter.jobs.archive' | t }}
                 </button>
               }
           </div>
@@ -139,25 +139,25 @@
       </article>
     } @empty {
       <div class="jobs-empty panel-card">
-        <span>Aucune offre</span>
-        <strong>Aucune offre ne correspond à vos critères.</strong>
-        <p>Changez le filtre de statut ou créez une nouvelle annonce pour démarrer le recrutement.</p>
+        <span>{{ 'recruiter.jobs.noJobs' | t }}</span>
+        <strong>{{ 'recruiter.jobs.noJobsCriteria' | t }}</strong>
+        <p>{{ 'recruiter.jobs.changeFilter' | t }}</p>
         @if (context.canPostJob()) {
-          <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-5">Créer une offre</a>
+          <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-5">{{ 'recruiter.dashboard.createJob' | t }}</a>
         }
       </div>
     }
   </div>
 
   @if (pagination(); as p) {
-    <nav class="pagination-bar panel-card" aria-label="Pagination des offres">
+    <nav class="pagination-bar panel-card" aria-label="Pagination">
       <button
         type="button"
         class="pagination-btn"
         [disabled]="!p.hasPreviousPage || loading()"
         (click)="goToPage(p.page - 1)"
       >
-        ← Précédent
+        ← {{ 'actions.previous' | t }}
       </button>
 
       <div class="pagination-pages">
@@ -180,7 +180,7 @@
         [disabled]="!p.hasNextPage || loading()"
         (click)="goToPage(p.page + 1)"
       >
-        Suivant →
+        {{ 'actions.next' | t }} →
       </button>
     </nav>
   }

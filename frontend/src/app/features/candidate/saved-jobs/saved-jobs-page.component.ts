@@ -10,11 +10,12 @@ import { SavedJobService } from '../services/saved-job.service';
 import { JobAlertService } from '../services/job-alert.service';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { salaryDisplayLabel } from '../../../core/utils/job-display.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-saved-jobs-page',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, DatePipe],
+  imports: [RouterLink, ReactiveFormsModule, DatePipe, TranslatePipe],
   templateUrl: './saved-jobs-page.component.html',
   styleUrl: './saved-jobs-page.component.css',
 })

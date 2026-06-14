@@ -8,10 +8,10 @@
         <div class="brand-mark">{{ initials() }}</div>
       }
       <div>
-        <p class="brand-title">Espace candidat</p>
+        <p class="brand-title">{{ 'candidate.space' | t }}</p>
         <p class="brand-sub">{{ displayName() }}</p>
         @if (context.hasProfile()) {
-          <p class="brand-progress">Profil {{ context.profileCompletion() }}%</p>
+          <p class="brand-progress">{{ 'candidate.profileProgress' | t }} {{ context.profileCompletion() }}%</p>
         }
       </div>
     </div>
@@ -23,7 +23,7 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
-        Suivi
+        {{ 'candidate.nav.tracking' | t }}
       </a>
       <a
         [routerLink]="routes.CANDIDATE.JOBS"
@@ -31,7 +31,7 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
-        Offres
+        {{ 'candidate.nav.jobs' | t }}
       </a>
       <a
         [routerLink]="routes.CANDIDATE.SAVED"
@@ -39,7 +39,7 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
-        Enregistrées
+        {{ 'candidate.nav.saved' | t }}
       </a>
       <a
         [routerLink]="routes.CANDIDATE.PROFILE"
@@ -47,7 +47,7 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
-        Profil
+        {{ 'candidate.nav.profile' | t }}
         @if (context.profileIncomplete()) {
           <span class="nav-badge">!</span>
         }
@@ -58,18 +58,18 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link"
       >
-        Paramètres
+        {{ 'common.settings' | t }}
       </a>
 
       <div class="sidebar-nav-separator" aria-hidden="true"></div>
-      <p class="sidebar-section-label">Annuaires</p>
+      <p class="sidebar-section-label">{{ 'candidate.nav.directories' | t }}</p>
       <a
         [routerLink]="routes.CANDIDATE.COMPANY_DIRECTORY"
         routerLinkActive="nav-active"
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link nav-link-directory"
       >
-        Annuaire sociétés
+        {{ 'candidate.nav.companyDirectory' | t }}
       </a>
       <a
         [routerLink]="routes.CANDIDATE.TRAINING_DIRECTORY"
@@ -77,7 +77,7 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link nav-link-directory"
       >
-        Annuaire formations
+        {{ 'candidate.nav.trainingDirectory' | t }}
       </a>
       <a
         [routerLink]="routes.CANDIDATE.INSTITUTION_DIRECTORY"
@@ -85,13 +85,14 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link nav-link-directory"
       >
-        Annuaire établissements
+        {{ 'candidate.nav.institutionDirectory' | t }}
       </a>
     </nav>
 
     <div class="sidebar-footer">
-      <a [routerLink]="routes.HOME" class="nav-link">Accueil</a>
-      <button type="button" class="nav-link logout-btn" (click)="logout()">Déconnexion</button>
+      <app-language-switcher />
+      <a [routerLink]="routes.HOME" class="nav-link">{{ 'common.home' | t }}</a>
+      <button type="button" class="nav-link logout-btn" (click)="logout()">{{ 'common.logout' | t }}</button>
     </div>
   </aside>
 
@@ -100,22 +101,22 @@
       <div class="candidate-page-shell candidate-topbar-inner">
         <div class="topbar-left">
           <p class="topbar-greeting">
-            Bonjour, {{ displayName() }}
-            @if (pageContextTitle(); as title) {
-              <span class="topbar-context">, {{ title }}</span>
+            {{ 'candidate.topbar.hello' | t }}, {{ displayName() }}
+            @if (pageContextTitleKey(); as titleKey) {
+              <span class="topbar-context">, {{ titleKey | t }}</span>
             }
           </p>
         </div>
         <div class="topbar-actions">
           @if (isJobsPage()) {
-            <div class="view-mode-toggle" role="group" aria-label="Mode d'affichage des offres">
+            <div class="view-mode-toggle" role="group" [attr.aria-label]="'candidate.viewMode.label' | t">
               <button
                 type="button"
                 class="view-mode-btn"
                 [class.view-mode-btn-active]="jobViewMode.mode() === 'linkedin'"
                 (click)="setJobViewMode('linkedin')"
               >
-                Vue liste
+                {{ 'candidate.viewMode.list' | t }}
               </button>
               <button
                 type="button"
@@ -123,7 +124,7 @@
                 [class.view-mode-btn-active]="jobViewMode.mode() === 'cards'"
                 (click)="setJobViewMode('cards')"
               >
-                Vue cartes
+                {{ 'candidate.viewMode.cards' | t }}
               </button>
             </div>
           }
@@ -136,19 +137,20 @@
       <div class="candidate-page-shell profile-banner-shell">
         <div class="profile-banner panel-card">
           <div class="profile-banner-text">
-            <p class="profile-banner-title">Complétez votre profil</p>
+            <p class="profile-banner-title">{{ 'candidate.banner.title' | t }}</p>
             <p class="profile-banner-hint">
               @if (!context.hasProfile()) {
-                Créez votre profil pour postuler, enregistrer des offres et recevoir des alertes.
+                {{ 'candidate.banner.noProfile' | t }}
               } @else if (!context.profile()?.resumeUrl) {
-                Ajoutez votre CV pour pouvoir postuler aux offres.
+                {{ 'candidate.banner.noResume' | t }}
               } @else {
-                Votre profil est complété à {{ context.profileCompletion() }}%. Enrichissez-le pour maximiser vos chances.
+                {{ 'candidate.banner.progressPrefix' | t }} {{ context.profileCompletion()
+                }}{{ 'candidate.banner.progressSuffix' | t }}
               }
             </p>
           </div>
           <a [routerLink]="routes.CANDIDATE.PROFILE" class="btn-primary !w-auto px-4 profile-banner-btn">
-            Compléter mon profil
+            {{ 'candidate.banner.cta' | t }}
           </a>
         </div>
       </div>
@@ -157,7 +159,7 @@
     <main class="candidate-main">
       @if (context.loading()) {
         <div class="candidate-page-shell">
-          <div class="loading-bar">Chargement de votre espace…</div>
+          <div class="loading-bar">{{ 'common.loadingWorkspace' | t }}</div>
         </div>
       }
       <div class="candidate-page-shell candidate-main-inner">

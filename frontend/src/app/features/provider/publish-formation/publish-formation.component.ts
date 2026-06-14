@@ -18,11 +18,12 @@ import {
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor.component';
 import { sanitizeRichHtml } from '../../../shared/utils/rich-text.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-publish-formation',
   standalone: true,
-  imports: [RouterLink, FormsModule, RichTextEditorComponent, DatePipe],
+  imports: [RouterLink, FormsModule, RichTextEditorComponent, DatePipe, TranslatePipe],
   templateUrl: './publish-formation.component.html',
   styleUrls: [
     './publish-formation.component.css',

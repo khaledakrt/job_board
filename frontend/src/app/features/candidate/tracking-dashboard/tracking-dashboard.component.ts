@@ -30,6 +30,7 @@ import { JobAlertService } from '../services/job-alert.service';
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { salaryDisplayLabel } from '../../../core/utils/job-display.util';
 import { ProtectedFileService } from '../../../core/services/protected-file.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 @Component({
   selector: 'app-tracking-dashboard',
   standalone: true,
@@ -39,6 +40,7 @@ import { ProtectedFileService } from '../../../core/services/protected-file.serv
     ApplicationTimelineComponent,
     ApplicationQuizReviewComponent,
     SafeHtmlComponent,
+    TranslatePipe,
   ],
   templateUrl: './tracking-dashboard.component.html',
   styleUrl: './tracking-dashboard.component.css',

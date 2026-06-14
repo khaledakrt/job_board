@@ -16,13 +16,14 @@ import { RecruiterJobService } from '../services/job.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { PublicationAccessDialogService } from '../services/publication-access-dialog.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-jobs-list',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, TranslatePipe],
   templateUrl: './jobs-list.component.html',
   styleUrl: './jobs-list.component.css',
 })

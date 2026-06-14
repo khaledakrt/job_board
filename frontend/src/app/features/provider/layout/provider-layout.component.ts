@@ -4,11 +4,13 @@ import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { ProviderContextService } from '../services/provider-context.service';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-provider-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LanguageSwitcherComponent],
   templateUrl: './provider-layout.component.html',
   styleUrls: ['./provider-layout.component.css', '../shared/provider-theme.css'],
   host: { class: 'provider-layout-host' },

@@ -1,16 +1,17 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface FooterLink {
-  label: string;
+  labelKey: string;
   route?: string;
   fragment?: string;
 }
 
 interface FooterContact {
   email: string;
-  role: string;
+  roleKey: string;
 }
 
 interface FooterSocial {
@@ -21,7 +22,7 @@ interface FooterSocial {
 @Component({
   selector: 'app-global-footer',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './global-footer.component.html',
   styleUrl: './global-footer.component.css',
 })
@@ -30,17 +31,17 @@ export class GlobalFooterComponent {
   readonly routes = APP_ROUTES;
 
   readonly navigationLinks: FooterLink[] = [
-    { label: 'Offres', route: '/', fragment: 'offres' },
-    { label: 'Candidats', route: '/', fragment: 'candidats' },
-    { label: 'Recruteurs', route: '/', fragment: 'recruteurs' },
-    { label: 'Centres de formation', route: APP_ROUTES.PUBLIC.TRAINING_CENTERS },
-    { label: 'Établissements privés', route: APP_ROUTES.PUBLIC.PRIVATE_INSTITUTIONS },
+    { labelKey: 'public.nav.jobs', route: '/', fragment: 'offres' },
+    { labelKey: 'public.nav.candidates', route: '/', fragment: 'candidats' },
+    { labelKey: 'public.nav.recruiters', route: '/', fragment: 'recruteurs' },
+    { labelKey: 'public.nav.trainingCenters', route: APP_ROUTES.PUBLIC.TRAINING_CENTERS },
+    { labelKey: 'public.nav.privateInstitutions', route: APP_ROUTES.PUBLIC.PRIVATE_INSTITUTIONS },
   ];
 
   readonly infoLinks: FooterLink[] = [
-    { label: 'Contact', route: APP_ROUTES.PUBLIC.CONTACT },
-    { label: 'Qui sommes-nous', route: APP_ROUTES.PUBLIC.ABOUT },
-    { label: 'Termes et conditions', route: APP_ROUTES.PUBLIC.TERMS },
+    { labelKey: 'public.nav.contact', route: APP_ROUTES.PUBLIC.CONTACT },
+    { labelKey: 'public.nav.about', route: APP_ROUTES.PUBLIC.ABOUT },
+    { labelKey: 'public.nav.terms', route: APP_ROUTES.PUBLIC.TERMS },
   ];
 
   readonly socialLinks: FooterSocial[] = [
@@ -51,19 +52,19 @@ export class GlobalFooterComponent {
   readonly contacts: FooterContact[] = [
     {
       email: 'support@tun-job-board.com',
-      role: 'Assistance technique et aide aux utilisateurs',
+      roleKey: 'footer.contact.support',
     },
     {
       email: 'administration@tun-job-board.com',
-      role: 'Requêtes administratives et de gestion',
+      roleKey: 'footer.contact.admin',
     },
     {
       email: 'info@tun-job-board.com',
-      role: 'Demandes d’informations générales',
+      roleKey: 'footer.contact.info',
     },
     {
       email: 'contact@tun-job-board.com',
-      role: 'Prises de contact professionnelles et partenariats',
+      roleKey: 'footer.contact.partnerships',
     },
   ];
 }

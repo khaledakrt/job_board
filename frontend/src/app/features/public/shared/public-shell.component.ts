@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 import {
   PUBLIC_MAIN_NAV_PRIMARY,
   PUBLIC_MAIN_NAV_SECONDARY,
@@ -11,7 +13,7 @@ import {
 @Component({
   selector: 'app-public-shell',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe, LanguageSwitcherComponent],
   templateUrl: './public-shell.component.html',
   styleUrl: './public-shell.component.css',
 })
@@ -23,11 +25,11 @@ export class PublicShellComponent {
 
   readonly workspaceLabel = computed(() => {
     const role = this.authService.user()?.role;
-    if (role === USER_ROLES.ADMIN) return 'Administration';
-    if (role === USER_ROLES.RECRUITER) return 'Espace recruteur';
-    if (role === USER_ROLES.TRAINING_PROVIDER) return 'Mon centre';
-    if (role === USER_ROLES.INSTITUTION_PROVIDER) return 'Mon établissement';
-    return 'Mon espace';
+    if (role === USER_ROLES.ADMIN) return 'workspace.admin';
+    if (role === USER_ROLES.RECRUITER) return 'workspace.recruiter';
+    if (role === USER_ROLES.TRAINING_PROVIDER) return 'workspace.trainingProvider';
+    if (role === USER_ROLES.INSTITUTION_PROVIDER) return 'workspace.institutionProvider';
+    return 'workspace.default';
   });
 
   readonly workspaceLink = computed(() => {

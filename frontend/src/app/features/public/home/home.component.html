@@ -3,18 +3,17 @@
   <section class="landing-hero">
     <div class="landing-container landing-hero-grid">
       <div class="landing-hero-copy">
-        <p class="landing-eyebrow">Plateforme de recrutement nouvelle génération</p>
+        <p class="landing-eyebrow">{{ 'home.hero.eyebrow' | t }}</p>
         <h1 class="landing-hero-title">
-          Recrutez mieux.<br />
-          <span class="landing-hero-accent">Postulez plus vite.</span>
+          {{ 'home.hero.titleLine1' | t }}<br />
+          <span class="landing-hero-accent">{{ 'home.hero.titleLine2' | t }}</span>
         </h1>
         <p class="landing-hero-lead">
-          Une seule plateforme pour les candidats qui cherchent leur prochain défi et les entreprises
-          qui veulent attirer, filtrer et embaucher les bons talents.
+          {{ 'home.hero.lead' | t }}
         </p>
         @if (authService.isAuthenticated()) {
           <a [routerLink]="workspaceLink()" class="landing-btn landing-btn-primary landing-btn-lg">
-            Accéder à mon espace
+            {{ 'home.hero.workspace' | t }}
           </a>
         } @else {
           <div class="landing-hero-ctas">
@@ -23,30 +22,30 @@
               [queryParams]="{ role: 'candidate' }"
               class="landing-btn landing-btn-primary landing-btn-lg"
             >
-              Je cherche un emploi
+              {{ 'home.hero.candidateCta' | t }}
             </a>
             <a
               [routerLink]="routes.AUTH.REGISTER"
               [queryParams]="{ role: 'recruiter' }"
               class="landing-btn landing-btn-outline landing-btn-lg"
             >
-              Je recrute
+              {{ 'home.hero.recruiterCta' | t }}
             </a>
           </div>
-          <p class="landing-hero-note">Gratuit pour commencer · Sans engagement</p>
+          <p class="landing-hero-note">{{ 'home.hero.note' | t }}</p>
         }
       </div>
       <div class="landing-hero-visual" aria-hidden="true">
         <div class="landing-hero-card landing-hero-card-a">
-          <span class="landing-card-label">Candidat</span>
-          <strong>Développeur Full Stack</strong>
-          <span class="landing-card-meta">Paris · CDI · Télétravail hybride</span>
-          <span class="landing-card-badge landing-card-badge-ok">Candidature envoyée</span>
+          <span class="landing-card-label">{{ 'home.hero.cardCandidate' | t }}</span>
+          <strong>{{ 'home.hero.cardJobTitle' | t }}</strong>
+          <span class="landing-card-meta">{{ 'home.hero.cardMeta' | t }}</span>
+          <span class="landing-card-badge landing-card-badge-ok">{{ 'home.hero.cardSent' | t }}</span>
         </div>
         <div class="landing-hero-card landing-hero-card-b">
-          <span class="landing-card-label">Recruteur — ATS</span>
-          <strong>12 candidatures</strong>
-          <span class="landing-card-meta">Quiz : 8 bonnes réponses · 4 à revoir</span>
+          <span class="landing-card-label">{{ 'home.hero.cardRecruiter' | t }}</span>
+          <strong>{{ 'home.hero.cardApplications' | t }}</strong>
+          <span class="landing-card-meta">{{ 'home.hero.cardQuiz' | t }}</span>
           <div class="landing-card-quiz">
             <span class="quiz-pill quiz-pill-ok">Q1 ✓</span>
             <span class="quiz-pill quiz-pill-warn">Q2 ✗</span>
@@ -62,19 +61,19 @@
     <div class="landing-container landing-stats-grid">
       <div class="landing-stat">
         <span class="landing-stat-value">2 min</span>
-        <span class="landing-stat-label">pour publier une offre</span>
+        <span class="landing-stat-label">{{ 'home.stats.publish' | t }}</span>
       </div>
       <div class="landing-stat">
         <span class="landing-stat-value">ATS</span>
-        <span class="landing-stat-label">pipeline candidatures intégré</span>
+        <span class="landing-stat-label">{{ 'home.stats.ats' | t }}</span>
       </div>
       <div class="landing-stat">
         <span class="landing-stat-value">Quiz</span>
-        <span class="landing-stat-label">présélection technique optionnelle</span>
+        <span class="landing-stat-label">{{ 'home.stats.quiz' | t }}</span>
       </div>
       <div class="landing-stat">
         <span class="landing-stat-value">100 %</span>
-        <span class="landing-stat-label">parcours en français</span>
+        <span class="landing-stat-label">{{ 'home.stats.language' | t }}</span>
       </div>
     </div>
   </section>
@@ -82,18 +81,18 @@
   <section id="candidats" class="landing-section landing-section-alt">
     <div class="landing-container">
       <div class="landing-section-head">
-        <p class="landing-eyebrow">Espace candidat</p>
-        <h2 class="landing-section-title">Trouvez l’offre qui vous ressemble</h2>
+        <p class="landing-eyebrow">{{ 'home.candidate.eyebrow' | t }}</p>
+        <h2 class="landing-section-title">{{ 'home.candidate.title' | t }}</h2>
         <p class="landing-section-lead">
-          Créez votre profil, explorez les opportunités et suivez chaque candidature depuis un seul tableau de bord.
+          {{ 'home.candidate.lead' | t }}
         </p>
       </div>
       <div class="landing-features">
-        @for (f of candidateFeatures; track f.title) {
+        @for (f of candidateFeatures; track f.titleKey) {
           <article class="landing-feature-card">
             <span class="landing-feature-icon">{{ f.icon }}</span>
-            <h3>{{ f.title }}</h3>
-            <p>{{ f.text }}</p>
+            <h3>{{ f.titleKey | t }}</h3>
+            <p>{{ f.textKey | t }}</p>
           </article>
         }
       </div>
@@ -102,8 +101,8 @@
           <div class="landing-step">
             <span class="landing-step-num">{{ s.num }}</span>
             <div>
-              <h4>{{ s.title }}</h4>
-              <p>{{ s.text }}</p>
+              <h4>{{ s.titleKey | t }}</h4>
+              <p>{{ s.textKey | t }}</p>
             </div>
           </div>
         }
@@ -115,9 +114,11 @@
             [queryParams]="{ role: 'candidate' }"
             class="landing-btn landing-btn-primary landing-btn-lg"
           >
-            Créer mon compte candidat
+            {{ 'home.candidate.createAccount' | t }}
           </a>
-          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">J’ai déjà un compte</a>
+          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">{{
+            'home.candidate.haveAccount' | t
+          }}</a>
         </div>
       }
     </div>
@@ -126,18 +127,18 @@
   <section id="recruteurs" class="landing-section">
     <div class="landing-container">
       <div class="landing-section-head">
-        <p class="landing-eyebrow landing-eyebrow-accent">Espace recruteur</p>
-        <h2 class="landing-section-title">Attirez et sélectionnez les meilleurs profils</h2>
+        <p class="landing-eyebrow landing-eyebrow-accent">{{ 'home.recruiter.eyebrow' | t }}</p>
+        <h2 class="landing-section-title">{{ 'home.recruiter.title' | t }}</h2>
         <p class="landing-section-lead">
-          Page employeur, offres détaillées, quiz technique et ATS : tout pour structurer votre recrutement.
+          {{ 'home.recruiter.lead' | t }}
         </p>
       </div>
       <div class="landing-features">
-        @for (f of recruiterFeatures; track f.title) {
+        @for (f of recruiterFeatures; track f.titleKey) {
           <article class="landing-feature-card landing-feature-card-recruiter">
             <span class="landing-feature-icon">{{ f.icon }}</span>
-            <h3>{{ f.title }}</h3>
-            <p>{{ f.text }}</p>
+            <h3>{{ f.titleKey | t }}</h3>
+            <p>{{ f.textKey | t }}</p>
           </article>
         }
       </div>
@@ -146,8 +147,8 @@
           <div class="landing-step">
             <span class="landing-step-num landing-step-num-accent">{{ s.num }}</span>
             <div>
-              <h4>{{ s.title }}</h4>
-              <p>{{ s.text }}</p>
+              <h4>{{ s.titleKey | t }}</h4>
+              <p>{{ s.textKey | t }}</p>
             </div>
           </div>
         }
@@ -159,9 +160,11 @@
             [queryParams]="{ role: 'recruiter' }"
             class="landing-btn landing-btn-accent landing-btn-lg"
           >
-            Inscrire mon entreprise
+            {{ 'home.recruiter.registerCompany' | t }}
           </a>
-          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">Connexion recruteur</a>
+          <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost">{{
+            'home.recruiter.login' | t
+          }}</a>
         </div>
       }
     </div>
@@ -170,34 +173,34 @@
   <section id="formations" class="landing-section landing-section-alt">
     <div class="landing-container">
       <div class="landing-section-head">
-        <p class="landing-eyebrow">Formation & éducation</p>
-        <h2 class="landing-section-title">Centres de formation et établissements privés</h2>
+        <p class="landing-eyebrow">{{ 'home.education.eyebrow' | t }}</p>
+        <h2 class="landing-section-title">{{ 'home.education.title' | t }}</h2>
         <p class="landing-section-lead">
-          Publiez votre organisme, présentez vos programmes et soyez visible par les visiteurs du site.
+          {{ 'home.education.lead' | t }}
         </p>
       </div>
       <div class="landing-audience-cards">
         <article class="landing-audience-card">
-          <h3>Centre de formation</h3>
-          <p>Liste des centres publiés, formations et brochures. Inscription soumise à validation admin.</p>
+          <h3>{{ 'provider.trainingCenter' | t }}</h3>
+          <p>{{ 'home.education.trainingText' | t }}</p>
           <div class="landing-section-cta landing-section-cta--compact">
             <a [routerLink]="routes.PUBLIC.TRAINING_CENTERS" class="landing-btn landing-btn-primary"
-              >Voir les centres</a
+              >{{ 'home.education.viewCenters' | t }}</a
             >
             <a [routerLink]="routes.PUBLIC.TRAINING_CENTER_REGISTER" class="landing-btn landing-btn-ghost"
-              >Inscrire mon centre</a
+              >{{ 'home.education.registerCenter' | t }}</a
             >
           </div>
         </article>
         <article class="landing-audience-card landing-audience-card-recruiter">
-          <h3>Établissement privé</h3>
-          <p>Écoles, collèges, lycées et instituts : fiche publique avec programmes et coordonnées.</p>
+          <h3>{{ 'provider.privateInstitution' | t }}</h3>
+          <p>{{ 'home.education.institutionText' | t }}</p>
           <div class="landing-section-cta landing-section-cta--compact">
             <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTIONS" class="landing-btn landing-btn-accent"
-              >Voir les établissements</a
+              >{{ 'home.education.viewInstitutions' | t }}</a
             >
             <a [routerLink]="routes.PUBLIC.PRIVATE_INSTITUTION_REGISTER" class="landing-btn landing-btn-ghost"
-              >Inscrire mon établissement</a
+              >{{ 'home.education.registerInstitution' | t }}</a
             >
           </div>
         </article>
@@ -208,33 +211,33 @@
   <section id="fonctionnalites" class="landing-section">
     <div class="landing-container">
       <div class="landing-section-head landing-section-head-center">
-        <p class="landing-eyebrow">Pourquoi JobBoard</p>
-        <h2 class="landing-section-title">Tout ce dont vous avez besoin, au même endroit</h2>
+        <p class="landing-eyebrow">{{ 'home.features.eyebrow' | t }}</p>
+        <h2 class="landing-section-title">{{ 'home.features.title' | t }}</h2>
       </div>
       <ul class="landing-highlights">
         @for (item of highlights; track item) {
           <li>
             <span class="landing-check" aria-hidden="true">✓</span>
-            {{ item }}
+            {{ item | t }}
           </li>
         }
       </ul>
       <div class="landing-audience-cards">
         <article class="landing-audience-card">
-          <h3>Vous êtes candidat ?</h3>
-          <p>Postulez avec confiance : CV, lettre et quiz en une seule candidature structurée.</p>
+          <h3>{{ 'home.audience.candidateTitle' | t }}</h3>
+          <p>{{ 'home.audience.candidateText' | t }}</p>
           @if (!authService.isAuthenticated()) {
             <a [routerLink]="routes.AUTH.REGISTER" [queryParams]="{ role: 'candidate' }" class="landing-link"
-              >Commencer →</a
+              >{{ 'home.audience.candidateLink' | t }}</a
             >
           }
         </article>
         <article class="landing-audience-card landing-audience-card-recruiter">
-          <h3>Vous recrutez ?</h3>
-          <p>Publiez, pré-sélectionnez avec le quiz et gérez votre pipeline sans outil externe.</p>
+          <h3>{{ 'home.audience.recruiterTitle' | t }}</h3>
+          <p>{{ 'home.audience.recruiterText' | t }}</p>
           @if (!authService.isAuthenticated()) {
             <a [routerLink]="routes.AUTH.REGISTER" [queryParams]="{ role: 'recruiter' }" class="landing-link"
-              >Publier une offre →</a
+              >{{ 'home.audience.recruiterLink' | t }}</a
             >
           }
         </article>
@@ -245,22 +248,22 @@
   @if (!authService.isAuthenticated()) {
     <section class="landing-cta-band">
       <div class="landing-container landing-cta-band-inner">
-        <h2>Prêt à rejoindre JobBoard ?</h2>
-        <p>Créez votre compte en quelques minutes et accédez à votre espace personnalisé.</p>
+        <h2>{{ 'home.cta.title' | t }}</h2>
+        <p>{{ 'home.cta.text' | t }}</p>
         <div class="landing-hero-ctas">
           <a
             [routerLink]="routes.AUTH.REGISTER"
             [queryParams]="{ role: 'candidate' }"
             class="landing-btn landing-btn-white landing-btn-lg"
           >
-            Compte candidat
+            {{ 'home.cta.candidate' | t }}
           </a>
           <a
             [routerLink]="routes.AUTH.REGISTER"
             [queryParams]="{ role: 'recruiter' }"
             class="landing-btn landing-btn-outline-white landing-btn-lg"
           >
-            Compte recruteur
+            {{ 'home.cta.recruiter' | t }}
           </a>
         </div>
       </div>

@@ -1,20 +1,20 @@
 <div class="page-header row-between">
   <div>
-    <h1 class="page-title">{{ isEditMode() ? 'Modifier l\'offre' : 'Créer une offre' }}</h1>
-    <p class="page-subtitle">Détail du poste, contrat et compétences.</p>
+    <h1 class="page-title">{{ (isEditMode() ? 'recruiter.jobForm.editTitle' : 'recruiter.jobForm.createTitle') | t }}</h1>
+    <p class="page-subtitle">{{ 'recruiter.jobForm.subtitle' | t }}</p>
   </div>
-  <a [routerLink]="routes.RECRUITER.JOBS" class="btn-secondary !w-auto">← Offres</a>
+  <a [routerLink]="routes.RECRUITER.JOBS" class="btn-secondary !w-auto">← {{ 'recruiter.jobForm.backJobs' | t }}</a>
 </div>
 
 @if (errorMessage()) {
   <div class="alert alert-error">{{ errorMessage() }}</div>
 }
 @if (loadingJob()) {
-  <p class="table-loading panel-card">Chargement de l’offre...</p>
+  <p class="table-loading panel-card">{{ 'recruiter.jobForm.loading' | t }}</p>
 }
 @if (!context.canPostJob()) {
   <div class="alert alert-info">
-    Consultation seule : vous pouvez lire cette offre, mais votre rôle ne permet pas de la créer ou de la modifier.
+    {{ 'recruiter.jobForm.readOnly' | t }}
   </div>
 }
 
@@ -23,19 +23,19 @@
   <fieldset class="form-fieldset" [disabled]="saving() || !context.canPostJob()">
   <div class="form-grid">
     <div class="form-field form-field-inline span-2">
-      <label class="form-label" for="title">Titre</label>
+      <label class="form-label" for="title">{{ 'forms.title' | t }}</label>
       <div class="form-field-body">
         <input
           id="title"
           class="form-input"
           formControlName="title"
-          placeholder="Ex. Développeur full stack"
+          [attr.placeholder]="'recruiter.jobForm.jobTitlePlaceholder' | t"
         />
       </div>
     </div>
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="contractType">Contrat</label>
+      <label class="form-label" for="contractType">{{ 'forms.contract' | t }}</label>
       <div class="form-field-body">
         <select id="contractType" class="form-input" formControlName="contractType">
           @for (type of contractTypes; track type) {
@@ -46,7 +46,7 @@
     </div>
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="remoteType">Mode</label>
+      <label class="form-label" for="remoteType">{{ 'recruiter.jobForm.mode' | t }}</label>
       <div class="form-field-body">
         <select id="remoteType" class="form-input" formControlName="remoteType">
           @for (type of remoteTypes; track type) {
@@ -57,27 +57,27 @@
     </div>
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="location">Lieu</label>
+      <label class="form-label" for="location">{{ 'recruiter.jobForm.location' | t }}</label>
       <div class="form-field-body">
         <input
           id="location"
           class="form-input"
           formControlName="location"
-          placeholder="Ex. Paris, Lyon…"
+          [attr.placeholder]="'recruiter.jobForm.locationPlaceholder' | t"
         />
       </div>
     </div>
 
     @if (isExpiredJob()) {
       <div class="form-field form-field-inline span-2">
-        <label class="form-label">Expiration</label>
+        <label class="form-label">{{ 'recruiter.jobForm.expiration' | t }}</label>
         <div class="form-field-body">
           <p class="field-readonly">Offre expirée le {{ form.controls.expiresAt.value | date: 'dd/MM/yyyy' }}</p>
         </div>
       </div>
     } @else {
       <div class="form-field form-field-inline">
-        <label class="form-label" for="expiresAt">Expiration</label>
+        <label class="form-label" for="expiresAt">{{ 'recruiter.jobForm.expiration' | t }}</label>
         <div class="form-field-body">
           <input id="expiresAt" type="date" class="form-input" formControlName="expiresAt" />
           <p class="field-hint">« Expirée » à 23h59 ce jour-là.</p>
@@ -85,7 +85,7 @@
       </div>
 
       <div class="form-field form-field-inline">
-        <label class="form-label" for="status">Statut</label>
+        <label class="form-label" for="status">{{ 'forms.status' | t }}</label>
         <div class="form-field-body">
           <select id="status" class="form-input" formControlName="status">
             @for (status of jobStatuses; track status) {
@@ -98,7 +98,7 @@
     }
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="experienceYears">Exp.</label>
+      <label class="form-label" for="experienceYears">{{ 'recruiter.jobForm.experienceShort' | t }}</label>
       <div class="form-field-body">
         <input
           id="experienceYears"
@@ -114,7 +114,7 @@
     </div>
 
     <div class="form-field form-field-inline">
-      <label class="form-label" for="salaryLabel" title="Salaire ou mention libre">Salaire</label>
+      <label class="form-label" for="salaryLabel" [attr.title]="'forms.salary' | t">{{ 'forms.salary' | t }}</label>
       <div class="form-field-body">
         <input
           id="salaryLabel"

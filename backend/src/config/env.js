@@ -2,6 +2,37 @@
 
 const { z } = require('zod');
 
+const WEAK_SECRET_PATTERNS = [
+  /change[_-]?me/i,
+  /placeholder/i,
+  /your[_-]?/i,
+  /example/i,
+  /default/i,
+  /secret/i,
+  /password/i,
+];
+
+function isWeakProductionSecret(value) {
+  if (!value || typeof value !== 'string') {
+    return true;
+  }
+
+  const normalized = value.trim();
+  if (normalized.length < 16) {
+    return true;
+  }
+
+  return WEAK_SECRET_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
+function addProductionSecretIssue(ctx, key, message = `${key} must be set to a real production value`) {
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: [key],
+    message,
+  });
+}
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -93,21 +124,29 @@ const envSchema = z
       return;
     }
 
-    const forbiddenPlaceholders = [
+    const requiredProductionSecrets = [
       ['DB_PASSWORD', env.DB_PASSWORD],
       ['JWT_ACCESS_SECRET', env.JWT_ACCESS_SECRET],
       ['JWT_REFRESH_SECRET', env.JWT_REFRESH_SECRET],
       ['SMTP_PASS', env.SMTP_PASS],
     ];
 
-    for (const [key, value] of forbiddenPlaceholders) {
-      if (!value || String(value).includes('CHANGE_ME')) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: [key],
-          message: `${key} must be set to a real production value`,
-        });
+    for (const [key, value] of requiredProductionSecrets) {
+      if (isWeakProductionSecret(value)) {
+        addProductionSecretIssue(ctx, key);
       }
+    }
+
+    if (env.JWT_ACCESS_SECRET.length < 64) {
+      addProductionSecretIssue(ctx, 'JWT_ACCESS_SECRET', 'JWT_ACCESS_SECRET must be at least 64 characters in production');
+    }
+
+    if (env.JWT_REFRESH_SECRET.length < 64) {
+      addProductionSecretIssue(ctx, 'JWT_REFRESH_SECRET', 'JWT_REFRESH_SECRET must be at least 64 characters in production');
+    }
+
+    if (env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) {
+      addProductionSecretIssue(ctx, 'JWT_REFRESH_SECRET', 'JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different');
     }
 
     if (!env.CLIENT_URL.startsWith('https://') || !env.API_PUBLIC_URL.startsWith('https://')) {

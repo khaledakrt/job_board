@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JobBoard - Acces rapides</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #dbe4ef;
+      --accent: #0a66c2;
+      --accent-dark: #084f96;
+      --ok: #0f766e;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --code: #eef3f8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 36px 24px 24px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 24px auto 48px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 30px;
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: 20px;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    a:hover {
+      color: var(--accent-dark);
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      padding: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .card p {
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .section {
+      margin-top: 24px;
+    }
+
+    .link-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .link-list li {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fbfdff;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    .tag.ok {
+      background: var(--ok);
+    }
+
+    .tag.warn {
+      background: var(--warn);
+    }
+
+    .tag.danger {
+      background: var(--danger);
+    }
+
+    code,
+    pre {
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      background: var(--code);
+      border-radius: 8px;
+    }
+
+    code {
+      padding: 2px 6px;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--border);
+      color: #0f172a;
+    }
+
+    .note {
+      padding: 14px 16px;
+      border-left: 4px solid var(--warn);
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #7c2d12;
+    }
+
+    .success {
+      padding: 14px 16px;
+      border-left: 4px solid var(--ok);
+      border-radius: 10px;
+      background: #f0fdfa;
+      color: #134e4a;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>JobBoard - Acces rapides</h1>
+    <p class="subtitle">Liens et commandes utiles pour administrer la production depuis ton PC local.</p>
+  </header>
+
+  <main>
+    <section class="grid">
+      <article class="card">
+        <h2>Application</h2>
+        <ul class="link-list">
+          <li><a href="https://tun-job-board.com" target="_blank" rel="noopener noreferrer">Site public</a> <span class="tag ok">prod</span></li>
+          <li><a href="https://tun-job-board.com/api/health" target="_blank" rel="noopener noreferrer">API health</a></li>
+          <li><a href="https://tun-job-board.com/offres" target="_blank" rel="noopener noreferrer">Page offres</a></li>
+          <li><a href="https://tun-job-board.com/admin" target="_blank" rel="noopener noreferrer">Espace admin</a></li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Base De Donnees</h2>
+        <ul class="link-list">
+          <li><a href="https://tun-job-board.com/db-admin/" target="_blank" rel="noopener noreferrer">phpMyAdmin</a> <span class="tag warn">login requis</span></li>
+          <li><a href="#database-tunnel">Acces MySQL via SSH tunnel</a> <span class="tag ok">recommande</span></li>
+        </ul>
+        <p>Le port MySQL public est ferme. Utilise phpMyAdmin ou un tunnel SSH.</p>
+      </article>
+
+      <article class="card">
+        <h2>Mail</h2>
+        <ul class="link-list">
+          <li><a href="https://mail.tun-job-board.com" target="_blank" rel="noopener noreferrer">Webmail Roundcube</a></li>
+          <li><a href="#mail-settings">Parametres client mail</a></li>
+        </ul>
+        <p>Utilise l'adresse complete comme username, par exemple <code>no-reply@tun-job-board.com</code>.</p>
+      </article>
+
+      <article class="card">
+        <h2>Monitoring</h2>
+        <ul class="link-list">
+          <li><a href="https://dashboard.uptimerobot.com/monitors" target="_blank" rel="noopener noreferrer">UptimeRobot monitors</a></li>
+          <li><a href="https://tun-job-board.com/api/health" target="_blank" rel="noopener noreferrer">Endpoint API a monitorer</a></li>
+        </ul>
+        <p>Monitors conseilles: site public et API health.</p>
+      </article>
+
+      <article class="card">
+        <h2>VPS / Services</h2>
+        <ul class="link-list">
+          <li><a href="#ssh-commands">Commandes SSH utiles</a></li>
+          <li><a href="#pm2-commands">Commandes PM2 jobboard</a></li>
+          <li><a href="#deploy-workflow">Workflow MAJ / Git / Prod</a> <span class="tag ok">important</span></li>
+        </ul>
+        <p>L'application Node tourne avec le user Linux <code>jobboard</code>, pas <code>root</code>.</p>
+      </article>
+
+      <article class="card">
+        <h2>Autres Liens</h2>
+        <ul class="link-list">
+          <li><a href="https://my.contabo.com" target="_blank" rel="noopener noreferrer">Contabo customer panel</a></li>
+          <li><a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer">Cloudflare dashboard</a></li>
+          <li><a href="https://github.com/khaledakrt/job_board" target="_blank" rel="noopener noreferrer">Depot GitHub</a></li>
+        </ul>
+        <p>Garde les mots de passe dans un gestionnaire de secrets, jamais dans cette page.</p>
+      </article>
+    </section>
+
+    <section class="section card" id="database-tunnel">
+      <h2>Acces Database Depuis Ton PC</h2>
+      <p>Ouvre ce tunnel dans PowerShell et laisse la fenetre ouverte:</p>
+      <pre><code>ssh -L 3307:127.0.0.1:3306 root@5.189.190.131</code></pre>
+      <p>Ensuite, dans MySQL Workbench, DBeaver ou TablePlus:</p>
+      <pre><code>Host: 127.0.0.1
+Port: 3307
+Database: job_board
+User: valeur DB_USER dans /var/www/jobboard/backend/.env
+Password: valeur DB_PASSWORD dans /var/www/jobboard/backend/.env</code></pre>
+      <div class="note">Ne rouvre pas le port public <code>3306</code>. Le tunnel SSH est plus securise.</div>
+    </section>
+
+    <section class="section card" id="mail-settings">
+      <h2>Parametres Boite Mail</h2>
+      <pre><code>Webmail: https://mail.tun-job-board.com
+IMAP host: mail.tun-job-board.com
+IMAP port: 993
+IMAP security: SSL/TLS
+SMTP host: mail.tun-job-board.com
+SMTP port: 587
+SMTP security: STARTTLS
+Username: adresse mail complete
+Password: mot de passe de la boite mail</code></pre>
+    </section>
+
+    <section class="section card" id="ssh-commands">
+      <h2>Commandes SSH Utiles</h2>
+      <pre><code>ssh root@5.189.190.131
+
+systemctl status nginx
+systemctl status mysql
+systemctl status pm2-jobboard
+df -h
+free -h</code></pre>
+    </section>
+
+    <section class="section card" id="pm2-commands">
+      <h2>Commandes App / PM2</h2>
+      <pre><code># Voir l'app Node
+runuser -u jobboard -- pm2 list
+
+# Logs backend
+runuser -u jobboard -- pm2 logs jobboard-api
+
+# Redemarrer proprement l'app
+systemctl restart pm2-jobboard
+
+# Tester localement depuis le VPS
+curl http://127.0.0.1:3001/api/health</code></pre>
+      <div class="success">Important: evite <code>pm2 start</code> en root pour cette app. Utilise <code>systemctl restart pm2-jobboard</code>.</div>
+    </section>
+
+    <section class="section card" id="deploy-workflow">
+      <h2>Workflow MAJ / Git / Prod</h2>
+      <p>Utilise ce flow quand tu fais une mise a jour du code: PC local vers GitHub, puis pull/update sur le VPS Contabo.</p>
+
+      <h3>1. Sur ton PC local</h3>
+      <pre><code>cd D:\khaled\Cursor
+git status
+git add .
+git commit -m "Message clair de la mise a jour"
+git push</code></pre>
+
+      <h3>2. Se connecter au VPS Contabo</h3>
+      <pre><code>ssh root@5.189.190.131
+cd /var/www/jobboard</code></pre>
+
+      <h3>3. Verifier avant update</h3>
+      <pre><code>git status --short
+systemctl status pm2-jobboard
+runuser -u jobboard -- pm2 list
+curl http://127.0.0.1:3001/api/health</code></pre>
+
+      <h3>4. Pull + update backend/frontend</h3>
+      <pre><code>cd /var/www/jobboard
+git pull
+
+# Backend
+cd /var/www/jobboard/backend
+npm ci --omit=dev
+npm run db:migrate
+
+# Frontend
+cd /var/www/jobboard/frontend
+npm ci
+npm run build
+
+# Copier le build Angular vers site/
+rm -rf /var/www/jobboard/site/*
+cp -r /var/www/jobboard/frontend/dist/job-board-frontend/browser/* /var/www/jobboard/site/</code></pre>
+
+      <h3>5. Redemarrer l'API correctement</h3>
+      <pre><code>systemctl restart pm2-jobboard
+systemctl status pm2-jobboard
+runuser -u jobboard -- pm2 list</code></pre>
+
+      <h3>6. Tests apres deploy</h3>
+      <pre><code>curl http://127.0.0.1:3001/api/health
+curl https://tun-job-board.com/api/health
+
+# Depuis ton PC local, tu peux aussi lancer:
+cd D:\khaled\Cursor
+npm run test:smoke:prod</code></pre>
+
+      <div class="note">
+        Attention: ne relance pas l'app avec <code>pm2 start</code> en root. Le service officiel est
+        <code>pm2-jobboard</code> et il lance l'API avec le user Linux <code>jobboard</code>.
+      </div>
+    </section>
+  </main>
+</body>
+</html>

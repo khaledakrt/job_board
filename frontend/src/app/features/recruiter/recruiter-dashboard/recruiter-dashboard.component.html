@@ -1,31 +1,31 @@
 <section class="dashboard-hero">
   <div class="hero-copy">
-    <span class="hero-kicker">Tableau de bord recruteur</span>
-    <h1>{{ context.company()?.name || 'Votre espace recrutement' }}</h1>
+    <span class="hero-kicker">{{ 'recruiter.dashboard.kicker' | t }}</span>
+    <h1>{{ context.company()?.name || ('recruiter.dashboard.workspaceFallback' | t) }}</h1>
     <p>
-      Pilotez vos offres, suivez les candidatures et gardez votre profil entreprise prêt pour les candidats.
+      {{ 'recruiter.dashboard.subtitle' | t }}
     </p>
     <div class="hero-actions">
       @if (context.canPostJob()) {
-        <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-5">Créer une offre</a>
+        <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="btn-primary !w-auto px-5">{{ 'recruiter.dashboard.createJob' | t }}</a>
       }
       @if (context.canDecideApplication()) {
-        <a [routerLink]="routes.RECRUITER.ATS" class="btn-secondary !w-auto px-5">Traiter les candidatures</a>
+        <a [routerLink]="routes.RECRUITER.ATS" class="btn-secondary !w-auto px-5">{{ 'recruiter.dashboard.processApplications' | t }}</a>
       }
     </div>
   </div>
   <aside class="hero-status-card">
-    <span class="status-label">Profil entreprise</span>
-    <strong>{{ context.hasCompany() ? 'Actif' : 'À compléter' }}</strong>
+    <span class="status-label">{{ 'recruiter.dashboard.companyProfile' | t }}</span>
+    <strong>{{ (context.hasCompany() ? 'recruiter.dashboard.active' : 'recruiter.dashboard.toComplete') | t }}</strong>
     <p>
       @if (context.hasCompany()) {
-        Votre société est prête à publier et recevoir des candidatures.
+        {{ 'recruiter.dashboard.companyReady' | t }}
       } @else {
-        Complétez la fiche entreprise pour débloquer l’espace recruteur.
+        {{ 'recruiter.dashboard.companyMissing' | t }}
       }
     </p>
     <a [routerLink]="routes.RECRUITER.ONBOARDING" class="link-primary">
-      {{ context.hasCompany() ? 'Voir le profil' : 'Compléter maintenant' }}
+      {{ (context.hasCompany() ? 'recruiter.dashboard.viewProfile' : 'recruiter.dashboard.completeNow') | t }}
     </a>
   </aside>
 </section>
@@ -46,22 +46,22 @@
 <div class="quick-actions">
   @if (context.canPostJob()) {
     <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">
-      <span>Publier</span>
-      <strong>Créer une offre</strong>
+      <span>{{ 'recruiter.dashboard.publish' | t }}</span>
+      <strong>{{ 'recruiter.dashboard.createJob' | t }}</strong>
       <small>Rédigez une annonce complète avec quiz optionnel.</small>
     </a>
   }
   @if (context.canDecideApplication()) {
     <a [routerLink]="routes.RECRUITER.ATS" class="quick-card quick-card-accent">
-      <span>Pipeline</span>
-      <strong>Voir les candidatures</strong>
+      <span>{{ 'recruiter.dashboard.pipeline' | t }}</span>
+      <strong>{{ 'recruiter.dashboard.viewApplications' | t }}</strong>
       <small>Suivez les profils par étape et par offre.</small>
     </a>
   }
   @if (context.isOwner()) {
     <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">
-      <span>Équipe</span>
-      <strong>Gérer l’équipe</strong>
+      <span>{{ 'recruiter.dashboard.team' | t }}</span>
+      <strong>{{ 'recruiter.dashboard.manageTeam' | t }}</strong>
       <small>Invitez des recruteurs et ajustez leurs droits.</small>
     </a>
   }
@@ -69,23 +69,23 @@
 
 <section class="next-actions panel-card">
   <div>
-    <p class="next-actions-kicker">Prochaines actions</p>
-    <h2>Priorités recommandées</h2>
+    <p class="next-actions-kicker">{{ 'recruiter.dashboard.nextActions' | t }}</p>
+    <h2>{{ 'recruiter.dashboard.recommendedPriorities' | t }}</h2>
   </div>
   <div class="next-actions-grid">
     <a [routerLink]="routes.RECRUITER.ONBOARDING" class="next-action-item">
-      <strong>Profil société</strong>
+      <strong>{{ 'recruiter.dashboard.companyShowcase' | t }}</strong>
       <span>Gardez votre vitrine employeur complète.</span>
     </a>
     @if (context.canPostJob()) {
       <a [routerLink]="routes.RECRUITER.JOBS" class="next-action-item">
-        <strong>Visibilité offres</strong>
+        <strong>{{ 'recruiter.dashboard.jobsVisibility' | t }}</strong>
         <span>Vérifiez les annonces actives et expirées.</span>
       </a>
     }
     @if (context.canDecideApplication()) {
       <a [routerLink]="routes.RECRUITER.ATS" class="next-action-item">
-        <strong>Candidatures</strong>
+        <strong>{{ 'recruiter.dashboard.viewApplications' | t }}</strong>
         <span>Avancez les profils en attente dans l’ATS.</span>
       </a>
     }
@@ -93,5 +93,5 @@
 </section>
 
 @if (loading()) {
-  <p class="table-loading">Actualisation des indicateurs...</p>
+  <p class="table-loading">{{ 'common.loading' | t }}</p>
 }

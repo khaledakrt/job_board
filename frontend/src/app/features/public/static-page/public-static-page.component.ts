@@ -1,9 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { PublicContactService } from '../services/public-contact.service';
 import { PublicShellComponent } from '../shared/public-shell.component';
+import { AppLanguage } from '../../../core/i18n/translations';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface StaticPageContent {
   title: string;
@@ -11,7 +14,7 @@ interface StaticPageContent {
   sections: { heading: string; paragraphs: string[] }[];
 }
 
-const STATIC_PAGES: Record<string, StaticPageContent> = {
+const STATIC_PAGES_FR: Record<string, StaticPageContent> = {
   contact: {
     title: 'Contact',
     lead: 'Une question sur JobBoard ? Envoyez-nous un message via le formulaire ci-dessous.',
@@ -136,10 +139,140 @@ const STATIC_PAGES: Record<string, StaticPageContent> = {
   },
 };
 
+const STATIC_PAGES_EN: Record<string, StaticPageContent> = {
+  contact: {
+    title: 'Contact',
+    lead: 'Have a question about JobBoard? Send us a message using the form below.',
+    sections: [],
+  },
+  terms: {
+    title: 'Terms and conditions',
+    lead: 'General terms of use for Tun Job Board, a platform dedicated to connecting talent, recruiters, training centers and institutions.',
+    sections: [
+      {
+        heading: '1. Purpose',
+        paragraphs: [
+          'Tun Job Board provides a digital space designed to simplify job search, job posting, application tracking, training discovery and connections with professional stakeholders.',
+          'Accessing the platform, creating an account or using its services implies full acceptance of these general terms of use.',
+        ],
+      },
+      {
+        heading: '2. Platform access and user accounts',
+        paragraphs: [
+          'Some services are freely accessible, including public page browsing. Other features require creating a candidate, recruiter, administrator or catalog provider account depending on the user profile.',
+          'Each user agrees to provide accurate, complete and up-to-date information. Users remain responsible for the confidentiality of their credentials, the activity carried out from their account and the information published on the platform.',
+          'Tun Job Board may suspend or restrict access to an account in case of abusive use, attempted fraud, misleading content publication or breach of these terms.',
+        ],
+      },
+      {
+        heading: '3. Candidate obligations',
+        paragraphs: [
+          'Candidates agree to publish a profile that faithfully reflects their background, skills and experience. Resumes, contact information, preferences and applications must only be used in a professional context.',
+          'Any application sent through the platform must correspond to a genuine intent to apply. Automated, repetitive behavior or attempts to disrupt the normal operation of the service are prohibited.',
+        ],
+      },
+      {
+        heading: '4. Recruiter and organization obligations',
+        paragraphs: [
+          'Recruiters, training centers and private institutions agree to publish accurate, lawful and sufficiently detailed information. Jobs, training programs, events or announcements must not contain discriminatory, misleading, fraudulent or unlawful content.',
+          'Information obtained through the platform, including applications and candidate contact details, must only be used for the intended professional purposes and with respect for confidentiality.',
+        ],
+      },
+      {
+        heading: '5. Personal data and confidentiality',
+        paragraphs: [
+          'Tun Job Board collects and processes the data required to operate the service: account management, profiles, applications, communications, security and user experience improvement.',
+          'Users may request access, correction or deletion of their data by contacting the team at contact@tun-job-board.com. Sensitive data such as resumes and application documents are protected by authenticated access when necessary.',
+        ],
+      },
+      {
+        heading: '6. Availability, security and service evolution',
+        paragraphs: [
+          'Tun Job Board makes reasonable efforts to ensure platform availability, security and performance. Temporary interruptions may occur for maintenance, updates or technical incidents.',
+          'Features, interfaces and operating rules may evolve to improve the service, strengthen security or meet user needs.',
+        ],
+      },
+      {
+        heading: '7. Liability',
+        paragraphs: [
+          'Tun Job Board acts as a connection and tooling platform. Decisions to recruit, apply, contact a profile or enter into a collaboration are solely the responsibility of the users concerned.',
+          'The platform does not guarantee obtaining a job, recruitment, registration or partnership. Each user remains responsible for their exchanges, decisions and professional commitments.',
+        ],
+      },
+      {
+        heading: '8. Contact and reporting',
+        paragraphs: [
+          'For any question about these terms, administrative request or report of problematic content, users may contact the team through the Contact page or by email at administration@tun-job-board.com.',
+          'Last update: June 2026.',
+        ],
+      },
+    ],
+  },
+  about: {
+    title: 'About us',
+    lead: 'Tun Job Board is a Tunisian platform designed to bring talent, recruiters and training stakeholders together through a simple, reliable and professional experience.',
+    sections: [
+      {
+        heading: 'Our mission',
+        paragraphs: [
+          'Our mission is to make access to professional opportunities clearer, faster and fairer. We want to give candidates a structured space to showcase their skills, track applications and discover relevant opportunities.',
+          'We also support recruiters with concrete tools to publish jobs, organize applications, preselect profiles and manage their recruitment process more efficiently.',
+        ],
+      },
+      {
+        heading: 'A platform for the Tunisian ecosystem',
+        paragraphs: [
+          'Tun Job Board is built for candidates, companies, recruitment agencies, training centers and private institutions. The platform centralizes jobs, applications, training programs, events and useful publications for professional growth.',
+          'Our goal is to create a reliable meeting point between market needs, available skills and training paths that help people progress.',
+        ],
+      },
+      {
+        heading: 'What we offer candidates',
+        paragraphs: [
+          'Candidates can create a profile, add a resume, search jobs, apply, save opportunities and track application progress from a dedicated dashboard.',
+          'The platform focuses on a clear candidate journey: transparent information, alerts, status tracking and access to useful training or guidance content.',
+        ],
+      },
+      {
+        heading: 'What we offer recruiters',
+        paragraphs: [
+          'Recruiters get a professional workspace to present their company, publish rich job posts, manage applications, collaborate with their team and structure their recruitment pipeline.',
+          'Features such as prescreening quizzes, internal notes, application statuses and notifications save time while improving follow-up quality.',
+        ],
+      },
+      {
+        heading: 'Training, institutions and guidance',
+        paragraphs: [
+          'Tun Job Board also includes training centers and private institutions to increase visibility for programs, courses, events, open days and important announcements.',
+          'This dimension connects employment, skills development and guidance, three essential elements for supporting employability and professional growth.',
+        ],
+      },
+      {
+        heading: 'Our commitments',
+        paragraphs: [
+          'We prioritize a simple, secure and professional experience. Sensitive information such as resumes and application data is handled carefully and protected by appropriate access rules.',
+          'We continuously improve the platform to provide a faster, clearer and more useful service while keeping a human approach to recruitment.',
+        ],
+      },
+      {
+        heading: 'Contact us',
+        paragraphs: [
+          'For a question, professional request, partnership or improvement suggestion, you can write to us through the Contact page or at contact@tun-job-board.com.',
+        ],
+      },
+    ],
+  },
+};
+
+const STATIC_PAGES: Record<AppLanguage, Record<string, StaticPageContent>> = {
+  fr: STATIC_PAGES_FR,
+  en: STATIC_PAGES_EN,
+};
+
 @Component({
   selector: 'app-public-static-page',
   standalone: true,
-  imports: [PublicShellComponent, RouterLink, ReactiveFormsModule],
+  imports: [PublicShellComponent, RouterLink, ReactiveFormsModule, TranslatePipe],
   templateUrl: './public-static-page.component.html',
   styleUrl: './public-static-page.component.css',
 })
@@ -147,10 +280,14 @@ export class PublicStaticPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly contactService = inject(PublicContactService);
+  private readonly i18n = inject(I18nService);
 
   readonly contactEmail = 'contact@tun-job-board.com';
   readonly pageId = this.route.snapshot.data['pageId'] as string;
-  readonly content = STATIC_PAGES[this.pageId] ?? STATIC_PAGES['contact'];
+  readonly content = computed(() => {
+    const pages = STATIC_PAGES[this.i18n.language()];
+    return pages[this.pageId] ?? pages['contact'];
+  });
   readonly isContactPage = this.pageId === 'contact';
 
   readonly submitting = signal(false);
@@ -170,20 +307,20 @@ export class PublicStaticPageComponent {
       return null;
     }
     if (control.errors['required']) {
-      return 'Ce champ est obligatoire.';
+      return this.i18n.translate('static.contact.error.required');
     }
     if (control.errors['email']) {
-      return 'Adresse e-mail invalide.';
+      return this.i18n.translate('static.contact.error.email');
     }
     if (control.errors['minlength']) {
       const min = control.errors['minlength'].requiredLength;
-      return `Minimum ${min} caractères.`;
+      return `${this.i18n.translate('static.contact.error.minimum')} ${min} ${this.i18n.translate('static.contact.error.characters')}.`;
     }
     if (control.errors['maxlength']) {
       const max = control.errors['maxlength'].requiredLength;
-      return `Maximum ${max} caractères.`;
+      return `${this.i18n.translate('static.contact.error.maximum')} ${max} ${this.i18n.translate('static.contact.error.characters')}.`;
     }
-    return 'Valeur invalide.';
+    return this.i18n.translate('static.contact.error.invalid');
   }
 
   submitContact(): void {
@@ -208,7 +345,7 @@ export class PublicStaticPageComponent {
           const msg =
             err?.error?.message ||
             err?.error?.errors?.[0]?.message ||
-            'Impossible d’envoyer le message. Réessayez plus tard.';
+            this.i18n.translate('static.contact.submitError');
           this.submitError.set(msg);
         },
       });

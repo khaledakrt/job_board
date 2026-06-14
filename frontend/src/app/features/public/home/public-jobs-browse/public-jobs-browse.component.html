@@ -1,14 +1,14 @@
 <ng-template #filtersPanel let-fieldPrefix="fieldPrefix">
   <div class="public-jobs-filters">
     <div class="public-jobs-filters-head">
-      <h3 class="public-jobs-filters-title">Recherche avancée</h3>
+      <h3 class="public-jobs-filters-title">{{ 'jobs.browse.filtersTitle' | t }}</h3>
       <div class="public-jobs-filters-actions">
         <button type="button" class="landing-btn landing-btn-primary" (click)="applyFilters()">
-          Rechercher
+          {{ 'jobs.browse.search' | t }}
         </button>
         @if (hasActiveFilters()) {
           <button type="button" class="landing-btn landing-btn-ghost" (click)="resetFilters()">
-            Réinitialiser
+            {{ 'jobs.browse.reset' | t }}
           </button>
         }
       </div>
@@ -16,55 +16,55 @@
 
     <div class="public-jobs-filters-grid">
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label" [for]="fieldPrefix + '-keywords'">Mots-clés</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-keywords'">{{ 'jobs.browse.keywords' | t }}</label>
         <input
           [id]="fieldPrefix + '-keywords'"
           [attr.name]="fieldPrefix + '-keywords'"
           class="public-jobs-input"
-          placeholder="Titre, compétence, technologie…"
+          [attr.placeholder]="'jobs.browse.keywordsPlaceholder' | t"
           [value]="filters().keywords"
           (input)="updateKeyword($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label" [for]="fieldPrefix + '-location'">Localisation</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-location'">{{ 'jobs.browse.location' | t }}</label>
         <input
           [id]="fieldPrefix + '-location'"
           [attr.name]="fieldPrefix + '-location'"
           class="public-jobs-input"
-          placeholder="Ville, région…"
+          [attr.placeholder]="'jobs.browse.locationPlaceholder' | t"
           [value]="filters().location"
           (input)="updateLocation($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label" [for]="fieldPrefix + '-company'">Entreprise</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-company'">{{ 'jobs.browse.company' | t }}</label>
         <input
           [id]="fieldPrefix + '-company'"
           [attr.name]="fieldPrefix + '-company'"
           class="public-jobs-input"
-          placeholder="Nom de l'employeur…"
+          [attr.placeholder]="'jobs.browse.companyPlaceholder' | t"
           [value]="filters().company"
           (input)="updateCompany($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label" [for]="fieldPrefix + '-industry'">Secteur</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-industry'">{{ 'jobs.browse.industry' | t }}</label>
         <input
           [id]="fieldPrefix + '-industry'"
           [attr.name]="fieldPrefix + '-industry'"
           class="public-jobs-input"
-          placeholder="Ex. Technology, Logistics…"
+          [attr.placeholder]="'jobs.browse.industryPlaceholder' | t"
           [value]="filters().industry"
           (input)="updateIndustry($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label" [for]="fieldPrefix + '-experience'">Expérience</label>
+        <label class="public-jobs-label" [for]="fieldPrefix + '-experience'">{{ 'jobs.browse.experience' | t }}</label>
         <select
           [id]="fieldPrefix + '-experience'"
           [attr.name]="fieldPrefix + '-experience'"
@@ -73,7 +73,7 @@
           (change)="setExperience($any($event.target).value)"
         >
           @for (opt of experienceOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
+            <option [value]="opt.value">{{ opt.labelKey | t }}</option>
           }
         </select>
       </div>
@@ -86,11 +86,11 @@
             [checked]="filters().quizOnly"
             (change)="toggleQuizOnly()"
           />
-          <span>Offres avec quiz technique uniquement</span>
+          <span>{{ 'jobs.browse.quizOnly' | t }}</span>
         </label>
       </div>
       <div class="public-jobs-filter-field public-jobs-filter-field-wide">
-        <p class="public-jobs-filter-label">Type de contrat</p>
+        <p class="public-jobs-filter-label">{{ 'jobs.browse.contractType' | t }}</p>
         <div class="public-jobs-pills">
           @for (type of contractTypes; track type) {
             <button
@@ -105,7 +105,7 @@
         </div>
       </div>
       <div class="public-jobs-filter-field public-jobs-filter-field-wide">
-        <p class="public-jobs-filter-label">Mode de travail</p>
+        <p class="public-jobs-filter-label">{{ 'jobs.browse.workMode' | t }}</p>
         <div class="public-jobs-pills">
           @for (type of remoteTypes; track type) {
             <button
@@ -125,10 +125,10 @@
 
 <ng-template #jobsGrid let-emptyMessage="emptyMessage" let-mode="mode">
   @if (loading()) {
-    <p class="public-jobs-status">Chargement des offres…</p>
+    <p class="public-jobs-status">{{ 'jobs.browse.loading' | t }}</p>
   } @else if (loadError()) {
     <p class="public-jobs-status public-jobs-status-warn">
-      Impossible de charger les offres. Vérifiez que le backend tourne sur le port 3000.
+      {{ 'jobs.browse.loadError' | t }}
     </p>
   } @else if ((mode === 'catalog' ? displayedCatalogJobs() : displayedPreviewJobs()).length === 0) {
     <p class="public-jobs-status">{{ emptyMessage }}</p>
@@ -163,7 +163,7 @@
               [routerLink]="publicCompanyLink(companyId)"
               target="_blank"
               rel="noopener noreferrer"
-              title="Voir le profil de l'entreprise dans un nouvel onglet"
+              [attr.title]="'jobs.browse.company' | t"
               (click)="$event.stopPropagation()"
             >
               {{ job.company?.name }}
@@ -175,7 +175,7 @@
             <p class="public-job-grid-industry">{{ industry }}</p>
           }
           <p class="public-job-grid-meta">
-            {{ job.location || 'Lieu non précisé' }} · {{ job.contractType }}
+            {{ job.location || ('jobs.browse.locationUnknown' | t) }} · {{ job.contractType }}
           </p>
           <p class="public-job-grid-remote">{{ formatRemote(job.remoteType) }}</p>
           @if (formatSalary(job); as salary) {
@@ -183,15 +183,15 @@
           }
           <div class="public-job-grid-actions" (click)="$event.stopPropagation()">
             <button type="button" class="public-job-grid-btn public-job-grid-btn-primary" (click)="openJobDetail(job)">
-              Voir l'offre
+              {{ 'jobs.browse.viewJob' | t }}
             </button>
             <button
               type="button"
               class="public-job-grid-btn public-job-grid-btn-outline"
-              title="Afficher dans un nouvel onglet pour consulter l'offre"
+              [attr.title]="'jobs.browse.newTab' | t"
               (click)="openJobInNewTab(job, $event)"
             >
-              Nouvel onglet
+              {{ 'jobs.browse.newTab' | t }}
             </button>
           </div>
         </article>
@@ -199,14 +199,14 @@
     </div>
 
     @if ((mode === 'catalog' ? catalogTotalPages() : previewTotalPages()) > 1) {
-      <nav class="public-jobs-pagination" aria-label="Pagination des offres">
+      <nav class="public-jobs-pagination" aria-label="Pagination">
         <button
           type="button"
           class="public-jobs-page-btn"
           [disabled]="(mode === 'catalog' ? catalogPage() : previewPage()) <= 1"
           (click)="goToPage((mode === 'catalog' ? catalogPage() : previewPage()) - 1, mode)"
         >
-          Précédent
+          {{ 'jobs.browse.prev' | t }}
         </button>
         <div class="public-jobs-page-numbers">
           @for (p of (mode === 'catalog' ? catalogPageNumbers() : previewPageNumbers()); track p) {
@@ -226,7 +226,7 @@
           [disabled]="(mode === 'catalog' ? catalogPage() : previewPage()) >= (mode === 'catalog' ? catalogTotalPages() : previewTotalPages())"
           (click)="goToPage((mode === 'catalog' ? catalogPage() : previewPage()) + 1, mode)"
         >
-          Suivant
+          {{ 'jobs.browse.next' | t }}
         </button>
       </nav>
     }
@@ -236,21 +236,22 @@
 <section id="offres" class="public-jobs">
   <div class="landing-container">
     <div class="public-jobs-head">
-      <p class="landing-eyebrow">Offres en ligne</p>
-      <h2 class="landing-section-title">Consultez les offres publiées</h2>
+      <p class="landing-eyebrow">{{ 'jobs.browse.eyebrow' | t }}</p>
+      <h2 class="landing-section-title">{{ 'jobs.browse.title' | t }}</h2>
       <p class="landing-section-lead">
-        Filtrez les opportunités, parcourez les cartes (3 par ligne) et ouvrez le catalogue complet.
+        {{ 'jobs.browse.lead' | t }}
       </p>
     </div>
 
     <div class="public-jobs-toolbar">
       <button type="button" class="landing-btn landing-btn-primary landing-btn-lg" (click)="openBrowseAll()">
-        Afficher toutes les offres
+        {{ 'jobs.browse.showAll' | t }}
       </button>
       <p class="public-jobs-toolbar-hint">
-        {{ totalItems() }} offre{{ totalItems() > 1 ? 's' : '' }} au total
+        {{ totalItems() }} {{ (totalItems() > 1 ? 'jobs.browse.jobPlural' : 'jobs.browse.jobSingular') | t }}
+        {{ 'jobs.browse.totalSuffix' | t }}
         @if (hasActiveFilters()) {
-          <span class="public-jobs-toolbar-filtered"> — filtres actifs</span>
+          <span class="public-jobs-toolbar-filtered"> — {{ 'jobs.browse.activeFilters' | t }}</span>
         }
       </p>
     </div>
@@ -258,13 +259,15 @@
     <ng-container *ngTemplateOutlet="filtersPanel; context: { fieldPrefix: 'landing-jobs' }" />
 
     <p class="public-jobs-count">
-      Page {{ previewPage() }} / {{ previewTotalPages() }} —
-      {{ displayedPreviewJobs().length }} offre{{ displayedPreviewJobs().length > 1 ? 's' : '' }} affichée{{ displayedPreviewJobs().length > 1 ? 's' : '' }}
-      sur {{ totalItems() }}
+      {{ 'jobs.browse.page' | t }} {{ previewPage() }} / {{ previewTotalPages() }} —
+      {{ displayedPreviewJobs().length }}
+      {{ (displayedPreviewJobs().length > 1 ? 'jobs.browse.jobPlural' : 'jobs.browse.jobSingular') | t }}
+      {{ (displayedPreviewJobs().length > 1 ? 'jobs.browse.displayedPlural' : 'jobs.browse.displayed') | t }}
+      {{ 'jobs.browse.on' | t }} {{ totalItems() }}
     </p>
 
     <ng-container
-      *ngTemplateOutlet="jobsGrid; context: { emptyMessage: 'Aucune offre ne correspond à vos critères.', mode: 'landing' }"
+      *ngTemplateOutlet="jobsGrid; context: { emptyMessage: 'jobs.browse.noCriteria' | t, mode: 'landing' }"
     />
   </div>
 </section>
@@ -280,12 +283,14 @@
     <div class="public-jobs-browse-all-modal">
     <header class="public-jobs-browse-all-header">
       <div>
-        <h3 id="browse-all-title">Toutes les offres</h3>
+        <h3 id="browse-all-title">{{ 'jobs.browse.allTitle' | t }}</h3>
         <p class="public-jobs-browse-all-sub">
-          {{ totalItems() }} résultat{{ totalItems() > 1 ? 's' : '' }} — utilisez les filtres pour affiner votre recherche
+          {{ totalItems() }}
+          {{ (totalItems() > 1 ? 'jobs.browse.resultPlural' : 'jobs.browse.resultSingular') | t }} —
+          {{ 'jobs.browse.refineFilters' | t }}
         </p>
       </div>
-      <button type="button" class="public-jobs-detail-close" aria-label="Fermer" (click)="closeBrowseAll()">
+      <button type="button" class="public-jobs-detail-close" [attr.aria-label]="'jobs.browse.close' | t" (click)="closeBrowseAll()">
         ✕
       </button>
     </header>
@@ -294,12 +299,13 @@
       <ng-container *ngTemplateOutlet="filtersPanel; context: { fieldPrefix: 'catalog-jobs' }" />
 
       <p class="public-jobs-count">
-        Page {{ catalogPage() }} / {{ catalogTotalPages() }} —
-        {{ displayedCatalogJobs().length }} sur {{ catalogTotalItems() }} offre{{ catalogTotalItems() > 1 ? 's' : '' }}
+        {{ 'jobs.browse.page' | t }} {{ catalogPage() }} / {{ catalogTotalPages() }} —
+        {{ displayedCatalogJobs().length }} {{ 'jobs.browse.on' | t }} {{ catalogTotalItems() }}
+        {{ (catalogTotalItems() > 1 ? 'jobs.browse.jobPlural' : 'jobs.browse.jobSingular') | t }}
       </p>
 
       <ng-container
-        *ngTemplateOutlet="jobsGrid; context: { emptyMessage: 'Aucune offre ne correspond à vos filtres.', mode: 'catalog' }"
+        *ngTemplateOutlet="jobsGrid; context: { emptyMessage: 'jobs.browse.noCriteria' | t, mode: 'catalog' }"
       />
     </div>
     </div>
@@ -315,7 +321,7 @@
     (close)="onDetailDialogClosed()"
   >
     <div class="public-jobs-detail-modal">
-    <button type="button" class="public-jobs-detail-close" aria-label="Fermer" (click)="closeDetailModal()">
+    <button type="button" class="public-jobs-detail-close" [attr.aria-label]="'jobs.browse.close' | t" (click)="closeDetailModal()">
       ✕
     </button>
 
@@ -334,28 +340,28 @@
               [routerLink]="publicCompanyLink(companyId)"
               target="_blank"
               rel="noopener noreferrer"
-              title="Voir le profil de l'entreprise dans un nouvel onglet"
+              [attr.title]="'jobs.browse.company' | t"
             >
-              {{ job.company?.name || 'Entreprise' }}
+              {{ job.company?.name || ('jobs.browse.company' | t) }}
             </a>
           } @else {
-            <p class="public-jobs-detail-co">{{ job.company?.name || 'Entreprise' }}</p>
+            <p class="public-jobs-detail-co">{{ job.company?.name || ('jobs.browse.company' | t) }}</p>
           }
           @if (job.company?.industry; as industry) {
             <p class="public-jobs-detail-industry">{{ industry }}</p>
           }
         </div>
       </div>
-      <button type="button" class="landing-btn landing-btn-primary" (click)="onApply()">Postuler</button>
+      <button type="button" class="landing-btn landing-btn-primary" (click)="onApply()">{{ 'jobs.browse.apply' | t }}</button>
     </header>
 
     <div class="public-jobs-detail-body">
       @if (isQuizEnabled(job)) {
-        <p class="public-jobs-quiz-hint">Quiz technique à compléter lors de la candidature</p>
+        <p class="public-jobs-quiz-hint">{{ 'jobs.browse.quizHint' | t }}</p>
       }
 
       <div class="public-jobs-detail-meta">
-        <span>{{ job.location || 'Lieu flexible' }}</span>
+        <span>{{ job.location || ('jobs.browse.flexibleLocation' | t) }}</span>
         <span>{{ job.contractType }}</span>
         <span>{{ formatRemote(job.remoteType) }}</span>
         @if (formatSalary(job); as salary) {
@@ -375,7 +381,7 @@
       }
 
       @if (job.benefits?.length) {
-        <h4 class="public-jobs-section-title">Avantages</h4>
+        <h4 class="public-jobs-section-title">{{ 'jobs.browse.benefits' | t }}</h4>
         <div class="public-jobs-tags public-jobs-tags-benefits">
           @for (benefit of job.benefits; track benefit) {
             <span class="public-jobs-tag public-jobs-tag-benefit">{{ benefit }}</span>
@@ -383,22 +389,22 @@
         </div>
       }
 
-      <h4 class="public-jobs-section-title">Description du poste</h4>
+      <h4 class="public-jobs-section-title">{{ 'jobs.browse.description' | t }}</h4>
       <div class="public-jobs-rich">
         <app-safe-html [content]="job.description" />
       </div>
 
       @if (job.requirements) {
-        <h4 class="public-jobs-section-title">Profil recherché</h4>
+        <h4 class="public-jobs-section-title">{{ 'jobs.browse.requirements' | t }}</h4>
         <div class="public-jobs-rich">
           <app-safe-html [content]="job.requirements" />
         </div>
       }
 
       @if (isQuizEnabled(job) && jobQuiz(job); as quiz) {
-        <h4 class="public-jobs-section-title">Quiz de présélection</h4>
+        <h4 class="public-jobs-section-title">{{ 'jobs.browse.quizTitle' | t }}</h4>
         <p class="public-jobs-quiz-intro">
-          Vous répondrez à ces questions après connexion, lors de l’envoi de votre candidature.
+          {{ 'jobs.browse.quizIntro' | t }}
         </p>
         @for (question of quiz.questions; track $index; let qi = $index) {
           <article class="public-jobs-quiz-card">
@@ -415,7 +421,7 @@
 
     <footer class="public-jobs-detail-footer">
       <button type="button" class="landing-btn landing-btn-primary landing-btn-lg" (click)="onApply()">
-        Postuler à cette offre
+        {{ 'jobs.browse.applyJob' | t }}
       </button>
     </footer>
     </div>
@@ -432,13 +438,13 @@
     (close)="onAuthDialogClosed()"
   >
     <div class="public-jobs-modal" role="alertdialog">
-    <h3 id="auth-prompt-title" class="public-jobs-modal-title">Connexion requise</h3>
+    <h3 id="auth-prompt-title" class="public-jobs-modal-title">{{ 'jobs.browse.authTitle' | t }}</h3>
     <p id="auth-prompt-desc" class="public-jobs-modal-text">
-      Pour postuler à cette offre, vous devez vous connecter ou créer un compte candidat gratuit.
+      {{ 'jobs.browse.authText' | t }}
     </p>
     <div class="public-jobs-modal-actions">
       <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-primary" (click)="closeAuthPrompt()">
-        Se connecter
+        {{ 'common.login' | t }}
       </a>
       <a
         [routerLink]="routes.AUTH.REGISTER"
@@ -446,10 +452,10 @@
         class="landing-btn landing-btn-outline"
         (click)="closeAuthPrompt()"
       >
-        Créer un compte
+        {{ 'jobs.browse.createAccount' | t }}
       </a>
       <button type="button" class="landing-btn landing-btn-ghost" (click)="closeAuthPrompt()">
-        Annuler
+        {{ 'jobs.browse.cancel' | t }}
       </button>
     </div>
     </div>

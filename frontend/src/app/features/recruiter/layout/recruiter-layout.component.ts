@@ -5,13 +5,22 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { RecruiterNotificationBellComponent } from '../shared/notification-bell/notification-bell.component';
 import type { RecruiterProfile } from '../../../core/models/recruiter.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 type PublicationAccess = NonNullable<RecruiterProfile['publicationAccess']>;
 
 @Component({
   selector: 'app-recruiter-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, RecruiterNotificationBellComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    RecruiterNotificationBellComponent,
+    TranslatePipe,
+    LanguageSwitcherComponent,
+  ],
   templateUrl: './recruiter-layout.component.html',
   styleUrl: './recruiter-layout.component.css',
 })
@@ -59,10 +68,10 @@ export class RecruiterLayoutComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith(APP_ROUTES.RECRUITER.ONBOARDING);
   }
 
-  publicationStatusLabel(access: PublicationAccess): string {
-    if (!access.canPublish) return 'Paiement requis';
-    if (access.reason === 'free_global') return 'Gratuit global';
-    return 'Abonnement actif';
+  publicationStatusLabelKey(access: PublicationAccess): string {
+    if (!access.canPublish) return 'recruiter.publication.paymentRequired';
+    if (access.reason === 'free_global') return 'recruiter.publication.freeGlobal';
+    return 'recruiter.publication.activeSubscription';
   }
 
   publicationStatusTitle(access: PublicationAccess): string {

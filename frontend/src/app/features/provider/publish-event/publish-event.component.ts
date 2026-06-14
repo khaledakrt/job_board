@@ -17,11 +17,12 @@ import {
 import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor.component';
 import { sanitizeRichHtml } from '../../../shared/utils/rich-text.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-publish-event',
   standalone: true,
-  imports: [RouterLink, FormsModule, RichTextEditorComponent, DatePipe],
+  imports: [RouterLink, FormsModule, RichTextEditorComponent, DatePipe, TranslatePipe],
   templateUrl: './publish-event.component.html',
   styleUrls: [
     './publish-event.component.css',

@@ -1,4 +1,4 @@
-<footer class="global-footer" aria-label="Pied de page global">
+<footer class="global-footer" [attr.aria-label]="'footer.aria' | t">
   <div class="global-footer-inner">
     <section class="global-footer-brand" aria-label="JobBoard">
       <div class="global-footer-logo">
@@ -6,9 +6,9 @@
         <span class="global-footer-logo-text">JobBoard</span>
       </div>
       <p class="global-footer-tagline">
-        Recrutement simplifié pour candidats, recruteurs, centres de formation et établissements.
+        {{ 'footer.tagline' | t }}
       </p>
-      <div class="global-footer-socials" aria-label="Réseaux sociaux">
+      <div class="global-footer-socials" [attr.aria-label]="'footer.socials' | t">
         @for (social of socialLinks; track social.label) {
           <a [href]="social.href" target="_blank" rel="noopener noreferrer" class="global-social-link">
             <span class="global-social-icon" aria-hidden="true">{{ social.label[0] }}</span>
@@ -18,40 +18,40 @@
       </div>
     </section>
 
-    <nav class="global-footer-col" aria-label="Navigation du site">
-      <h2 class="global-footer-title">Navigation</h2>
+    <nav class="global-footer-col" [attr.aria-label]="'footer.navigationAria' | t">
+      <h2 class="global-footer-title">{{ 'footer.navigation' | t }}</h2>
       <ul class="global-footer-list">
-        @for (item of navigationLinks; track item.label) {
+        @for (item of navigationLinks; track item.labelKey) {
           <li>
-            <a [routerLink]="item.route" [fragment]="item.fragment">{{ item.label }}</a>
+            <a [routerLink]="item.route" [fragment]="item.fragment">{{ item.labelKey | t }}</a>
           </li>
         }
       </ul>
     </nav>
 
-    <nav class="global-footer-col" aria-label="Informations">
-      <h2 class="global-footer-title">Informations</h2>
+    <nav class="global-footer-col" [attr.aria-label]="'footer.information' | t">
+      <h2 class="global-footer-title">{{ 'footer.information' | t }}</h2>
       <ul class="global-footer-list">
-        @for (item of infoLinks; track item.label) {
+        @for (item of infoLinks; track item.labelKey) {
           <li>
-            <a [routerLink]="item.route">{{ item.label }}</a>
+            <a [routerLink]="item.route">{{ item.labelKey | t }}</a>
           </li>
         }
       </ul>
     </nav>
 
-    <section class="global-footer-col global-footer-contact" aria-label="Contacts">
-      <h2 class="global-footer-title">Contacts</h2>
+    <section class="global-footer-col global-footer-contact" [attr.aria-label]="'footer.contacts' | t">
+      <h2 class="global-footer-title">{{ 'footer.contacts' | t }}</h2>
       <ul class="global-footer-contact-list">
         @for (contact of contacts; track contact.email) {
           <li>
             <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
-            <span>{{ contact.role }}</span>
+            <span>{{ contact.roleKey | t }}</span>
           </li>
         }
       </ul>
     </section>
 
-    <p class="global-footer-copy">© {{ year }} JobBoard. Tous droits réservés.</p>
+    <p class="global-footer-copy">© {{ year }} JobBoard. {{ 'footer.rights' | t }}</p>
   </div>
 </footer>

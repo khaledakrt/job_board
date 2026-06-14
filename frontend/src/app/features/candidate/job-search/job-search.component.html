@@ -2,8 +2,8 @@
   <div class="public-jobs-filters candidate-search-filters">
     <div class="public-jobs-filters-head">
       <div>
-        <p class="public-jobs-filters-kicker">Recherche emploi</p>
-        <h3 class="public-jobs-filters-title">Trouvez rapidement l’offre qui vous correspond</h3>
+        <p class="public-jobs-filters-kicker">{{ 'candidate.jobs.kicker' | t }}</p>
+        <h3 class="public-jobs-filters-title">{{ 'candidate.jobs.title' | t }}</h3>
       </div>
       <div class="public-jobs-filters-actions">
         <button
@@ -11,88 +11,88 @@
           class="landing-btn landing-btn-ghost"
           (click)="toggleAdvancedFilters()"
         >
-          {{ showAdvancedFilters() ? 'Masquer les filtres' : 'Filtres avancés' }}
+          {{ (showAdvancedFilters() ? 'candidate.jobs.hideFilters' : 'candidate.jobs.advancedFilters') | t }}
           @if (activeFiltersCount() > 0) {
             <span class="filter-count">{{ activeFiltersCount() }}</span>
           }
         </button>
         @if (hasActiveFilters()) {
           <button type="button" class="landing-btn landing-btn-ghost" (click)="resetFilters()">
-            Réinitialiser
+            {{ 'actions.reset' | t }}
           </button>
         }
         <button type="button" class="landing-btn landing-btn-outline" (click)="createAlert()">
-          Créer une alerte
+          {{ 'candidate.jobs.createAlert' | t }}
         </button>
       </div>
     </div>
 
     <div class="search-primary-row">
       <div class="public-jobs-filter-field search-primary-field">
-        <label class="public-jobs-label">Mots-clés</label>
+        <label class="public-jobs-label">{{ 'forms.keywords' | t }}</label>
         <input
           class="public-jobs-input"
-          placeholder="Titre, compétence, technologie…"
+          [attr.placeholder]="'jobs.browse.keywordsPlaceholder' | t"
           [value]="filters().keywords"
           (input)="updateKeyword($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <div class="public-jobs-filter-field search-primary-field">
-        <label class="public-jobs-label">Localisation</label>
+        <label class="public-jobs-label">{{ 'forms.location' | t }}</label>
         <input
           class="public-jobs-input"
-          placeholder="Ville, région…"
+          [attr.placeholder]="'jobs.browse.locationPlaceholder' | t"
           [value]="filters().location"
           (input)="updateLocation($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <div class="public-jobs-filter-field search-primary-field">
-        <label class="public-jobs-label">Secteur</label>
+        <label class="public-jobs-label">{{ 'forms.sector' | t }}</label>
         <input
           class="public-jobs-input"
-          placeholder="Ex. Technology, Logistics…"
+          [attr.placeholder]="'jobs.browse.industryPlaceholder' | t"
           [value]="filters().industry"
           (input)="updateIndustry($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <div class="public-jobs-filter-field search-primary-field">
-        <label class="public-jobs-label">Entreprise</label>
+        <label class="public-jobs-label">{{ 'forms.company' | t }}</label>
         <input
           class="public-jobs-input"
-          placeholder="Nom de l'employeur…"
+          [attr.placeholder]="'jobs.browse.companyPlaceholder' | t"
           [value]="filters().company"
           (input)="updateCompany($any($event.target).value)"
           (keydown.enter)="applyFilters()"
         />
       </div>
       <button type="button" class="search-primary-submit" (click)="applyFilters()">
-        Rechercher
+        {{ 'actions.search' | t }}
       </button>
     </div>
 
     @if (showAdvancedFilters()) {
     <div class="public-jobs-filters-grid advanced-filters-grid">
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Expérience</label>
+        <label class="public-jobs-label">{{ 'forms.experience' | t }}</label>
         <select
           class="public-jobs-select"
           [value]="filters().experience"
           (change)="setExperience($any($event.target).value)"
         >
           @for (opt of experienceOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
+            <option [value]="opt.value">{{ opt.labelKey | t }}</option>
           }
         </select>
       </div>
       <div class="public-jobs-filter-field">
-        <label class="public-jobs-label">Tri</label>
+        <label class="public-jobs-label">{{ 'candidate.jobs.sort' | t }}</label>
         <select class="public-jobs-select" [value]="filters().sortBy" (change)="setSortBy($any($event.target).value)">
-          <option value="date">Plus récentes</option>
-          <option value="salary">Salaire</option>
-          <option value="experience">Expérience</option>
+          <option value="date">{{ 'candidate.jobs.sortDate' | t }}</option>
+          <option value="salary">{{ 'candidate.jobs.sortSalary' | t }}</option>
+          <option value="experience">{{ 'candidate.jobs.sortExperience' | t }}</option>
         </select>
       </div>
       <div class="public-jobs-filter-field public-jobs-filter-field-check">
@@ -102,11 +102,11 @@
             [checked]="filters().quizOnly"
             (change)="toggleQuizOnly()"
           />
-          <span>Offres avec quiz technique uniquement</span>
+          <span>{{ 'jobs.browse.quizOnly' | t }}</span>
         </label>
       </div>
       <div class="public-jobs-filter-field public-jobs-filter-field-wide">
-        <p class="public-jobs-filter-label">Type de contrat</p>
+        <p class="public-jobs-filter-label">{{ 'jobs.browse.contractType' | t }}</p>
         <div class="public-jobs-pills">
           @for (type of contractTypes; track type) {
             <button
@@ -121,7 +121,7 @@
         </div>
       </div>
       <div class="public-jobs-filter-field public-jobs-filter-field-wide">
-        <p class="public-jobs-filter-label">Mode de travail</p>
+        <p class="public-jobs-filter-label">{{ 'jobs.browse.workMode' | t }}</p>
         <div class="public-jobs-pills">
           @for (type of remoteTypes; track type) {
             <button
@@ -156,12 +156,12 @@
             [routerLink]="publicCompanyLink(companyId)"
             target="_blank"
             rel="noopener noreferrer"
-            title="Voir le profil de l'entreprise dans un nouvel onglet"
+            [attr.title]="'jobs.browse.company' | t"
           >
-            {{ job.company?.name || 'Entreprise' }}
+            {{ job.company?.name || ('forms.company' | t) }}
           </a>
         } @else {
-          <p class="detail-co">{{ job.company?.name || 'Entreprise' }}</p>
+          <p class="detail-co">{{ job.company?.name || ('forms.company' | t) }}</p>
         }
         @if (job.company?.industry; as industry) {
           <p class="detail-industry">{{ industry }}</p>
@@ -172,19 +172,19 @@
       <button
         type="button"
         class="btn-secondary !w-auto px-3"
-        title="Ouvrir la page publique de l'offre dans un nouvel onglet"
+        [attr.title]="'actions.newTab' | t"
         (click)="openJobInNewTab(job, $event)"
       >
-        Nouvel onglet
+        {{ 'actions.newTab' | t }}
       </button>
-      <button type="button" class="btn-secondary !w-auto px-3" (click)="saveJob(job, $event)">Enregistrer</button>
+      <button type="button" class="btn-secondary !w-auto px-3" (click)="saveJob(job, $event)">{{ 'candidate.jobs.saved' | t }}</button>
       @if (hasApplied(job.id)) {
         <button type="button" class="btn-primary !w-auto px-4 btn-applied" disabled>
-          Déjà postulé
+          {{ 'candidate.jobs.applied' | t }}
         </button>
       } @else {
         <button type="button" class="btn-primary !w-auto px-4" (click)="postulerFromDetail(job, $event)">
-          Postuler
+          {{ 'actions.apply' | t }}
         </button>
       }
     </div>
@@ -192,13 +192,13 @@
 
   @if (showQuizBanner !== false && isQuizEnabled(job)) {
     <div class="detail-quiz-banner" role="note">
-      <strong>Cette offre contient un quiz de présélection.</strong>
-      Cliquez sur <em>Postuler</em> pour répondre au quiz, puis compléter votre lettre de motivation.
+      <strong>{{ 'candidate.jobs.quizBannerTitle' | t }}</strong>
+      {{ 'candidate.jobs.quizBannerText' | t }}
     </div>
   }
 
   <div class="detail-meta">
-    <span>{{ job.location || 'Lieu flexible' }}</span>
+    <span>{{ job.location || ('jobs.browse.flexibleLocation' | t) }}</span>
     <span>{{ job.contractType }}</span>
     <span>{{ formatRemote(job.remoteType) }}</span>
     @if (formatSalary(job); as salary) {
@@ -234,13 +234,13 @@
     </div>
   }
 
-  <h3 class="detail-section-title">Description du poste</h3>
+  <h3 class="detail-section-title">{{ 'jobs.browse.description' | t }}</h3>
   <div class="detail-text">
     <app-safe-html [content]="job.description" />
   </div>
 
   @if (job.requirements) {
-    <h3 class="detail-section-title">Profil recherché</h3>
+    <h3 class="detail-section-title">{{ 'jobs.browse.requirements' | t }}</h3>
     <div class="detail-text">
       <app-safe-html [content]="job.requirements" />
     </div>
@@ -258,7 +258,7 @@
       }
       <div>
         <h3 class="apply-modal-offer-title">{{ job.title }}</h3>
-        <p class="apply-modal-job-co">{{ job.company?.name || 'Entreprise' }}</p>
+        <p class="apply-modal-job-co">{{ job.company?.name || ('forms.company' | t) }}</p>
       </div>
     </div>
 
@@ -291,13 +291,13 @@
       </div>
     }
 
-    <h4 class="apply-modal-section-title">Description du poste</h4>
+    <h4 class="apply-modal-section-title">{{ 'jobs.browse.description' | t }}</h4>
     <div class="detail-text apply-modal-rich">
       <app-safe-html [content]="job.description" />
     </div>
 
     @if (job.requirements) {
-      <h4 class="apply-modal-section-title">Profil recherché</h4>
+      <h4 class="apply-modal-section-title">{{ 'jobs.browse.requirements' | t }}</h4>
       <div class="detail-text apply-modal-rich">
         <app-safe-html [content]="job.requirements" />
       </div>
@@ -623,7 +623,7 @@
 
         <div class="apply-modal-footer">
           <div class="modal-actions apply-modal-actions">
-            <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">Annuler</button>
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">{{ 'actions.cancel' | t }}</button>
             <button
               type="button"
               class="btn-primary !w-auto px-4"
@@ -642,7 +642,7 @@
     } @else {
       <div class="modal-card-lg apply-modal apply-modal-letter-shell" (click)="$event.stopPropagation()">
         <h2 class="modal-title">Lettre de motivation</h2>
-        <p class="apply-modal-letter-job">{{ job.title }} · {{ job.company?.name || 'Entreprise' }}</p>
+        <p class="apply-modal-letter-job">{{ job.title }} · {{ job.company?.name || ('forms.company' | t) }}</p>
         @if (isQuizEnabled(job)) {
           <p class="apply-step-badge">Quiz validé</p>
         }
@@ -670,7 +670,7 @@
                 ← Retour
               </button>
             }
-            <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">Annuler</button>
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="closeApplyModal()">{{ 'actions.cancel' | t }}</button>
             <button type="submit" class="btn-primary !w-auto px-4" [disabled]="applying()">
               @if (applying()) {
                 Envoi…

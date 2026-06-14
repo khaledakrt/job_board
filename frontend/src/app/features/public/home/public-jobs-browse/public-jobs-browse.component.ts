@@ -35,6 +35,7 @@ import {
   salaryDisplayLabel,
 } from '../../../../core/utils/job-display.util';
 import { SafeHtmlComponent } from '../../../../shared/components/safe-html/safe-html.component';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import {
   DEFAULT_JOB_SEARCH_FILTERS,
   ExperienceFilter,
@@ -63,7 +64,7 @@ const DEFAULT_FILTERS: PublicJobFilters = { ...DEFAULT_JOB_SEARCH_FILTERS };
 @Component({
   selector: 'app-public-jobs-browse',
   standalone: true,
-  imports: [RouterLink, SafeHtmlComponent, NgTemplateOutlet],
+  imports: [RouterLink, SafeHtmlComponent, NgTemplateOutlet, TranslatePipe],
   templateUrl: './public-jobs-browse.component.html',
   styleUrl: './public-jobs-browse.component.css',
 })
@@ -81,11 +82,11 @@ export class PublicJobsBrowseComponent implements OnInit, OnDestroy {
   readonly contractTypes = CONTRACT_TYPES;
   readonly remoteTypes = REMOTE_TYPES;
   readonly remoteLabels = REMOTE_TYPE_LABELS;
-  readonly experienceOptions: { value: ExperienceFilter; label: string }[] = [
-    { value: 'all', label: 'Toute expérience' },
-    { value: 'junior', label: 'Débutant (0–2 ans)' },
-    { value: 'mid', label: 'Confirmé (3–5 ans)' },
-    { value: 'senior', label: 'Senior (6+ ans)' },
+  readonly experienceOptions: { value: ExperienceFilter; labelKey: string }[] = [
+    { value: 'all', labelKey: 'jobs.experience.all' },
+    { value: 'junior', labelKey: 'jobs.experience.junior' },
+    { value: 'mid', labelKey: 'jobs.experience.mid' },
+    { value: 'senior', labelKey: 'jobs.experience.senior' },
   ];
 
   readonly filters = signal<PublicJobFilters>({ ...DEFAULT_FILTERS });

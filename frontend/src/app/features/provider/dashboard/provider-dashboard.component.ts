@@ -21,6 +21,7 @@ import {
   InstitutionOfferingType,
 } from '../../../core/models/catalog.model';
 import { PaginationMeta } from '../../../core/models/pagination.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type TrainingPublicationView = 'published' | 'pending';
 type TrainingPublicationKind = 'formation' | 'event';
@@ -28,7 +29,7 @@ type TrainingPublicationKind = 'formation' | 'event';
 @Component({
   selector: 'app-provider-dashboard',
   standalone: true,
-  imports: [RouterLink, FormsModule, ProviderListPaginationComponent],
+  imports: [RouterLink, FormsModule, ProviderListPaginationComponent, TranslatePipe],
   templateUrl: './provider-dashboard.component.html',
   styleUrls: ['../shared/provider-theme.css'],
 })

@@ -3,6 +3,7 @@ import { NavigationCancel, NavigationEnd, NavigationError, Router, RouterOutlet 
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
 import { GlobalFooterComponent } from './shared/components/global-footer/global-footer.component';
 import { AuthService } from './core/services/auth.service';
+import { AutoI18nService } from './core/i18n/auto-i18n.service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,7 @@ export class AppComponent {
   readonly title = 'JobBoard';
   readonly bootstrapped = signal(false);
   readonly authService = inject(AuthService);
+  private readonly autoI18n = inject(AutoI18nService);
 
   private readonly router = inject(Router);
 

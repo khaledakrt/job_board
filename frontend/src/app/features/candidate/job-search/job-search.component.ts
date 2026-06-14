@@ -43,13 +43,14 @@ import {
 } from '../services/candidate-job-view-mode.service';
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 import { stripHtml } from '../../../shared/utils/rich-text.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-job-search',
   standalone: true,
-  imports: [ReactiveFormsModule, SafeHtmlComponent, NgTemplateOutlet, RouterLink],
+  imports: [ReactiveFormsModule, SafeHtmlComponent, NgTemplateOutlet, RouterLink, TranslatePipe],
   templateUrl: './job-search.component.html',
   styleUrl: './job-search.component.css',
 })
@@ -72,11 +73,11 @@ export class JobSearchComponent implements OnInit {
   readonly contractTypes = CONTRACT_TYPES;
   readonly remoteTypes = REMOTE_TYPES;
   readonly remoteLabels = REMOTE_TYPE_LABELS;
-  readonly experienceOptions: { value: ExperienceFilter; label: string }[] = [
-    { value: 'all', label: 'Toute expérience' },
-    { value: 'junior', label: 'Débutant (0–2 ans)' },
-    { value: 'mid', label: 'Confirmé (3–5 ans)' },
-    { value: 'senior', label: 'Senior (6+ ans)' },
+  readonly experienceOptions: { value: ExperienceFilter; labelKey: string }[] = [
+    { value: 'all', labelKey: 'jobs.experience.all' },
+    { value: 'junior', labelKey: 'jobs.experience.junior' },
+    { value: 'mid', labelKey: 'jobs.experience.mid' },
+    { value: 'senior', labelKey: 'jobs.experience.senior' },
   ];
 
   readonly filters = signal<JobSearchFilters>({ ...DEFAULT_JOB_SEARCH_FILTERS });

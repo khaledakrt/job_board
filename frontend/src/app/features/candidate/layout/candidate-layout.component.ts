@@ -10,6 +10,8 @@ import {
   CandidateJobsViewMode,
   CandidateJobViewModeService,
 } from '../services/candidate-job-view-mode.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-candidate-layout',
@@ -20,6 +22,8 @@ import {
     RouterLinkActive,
     CandidateNotificationBellComponent,
     CandidateOnboardingComponent,
+    TranslatePipe,
+    LanguageSwitcherComponent,
   ],
   templateUrl: './candidate-layout.component.html',
   styleUrl: './candidate-layout.component.css',
@@ -43,16 +47,16 @@ export class CandidateLayoutComponent implements OnInit {
     return this.authService.user()?.email || 'Candidat';
   }
 
-  pageContextTitle(): string | null {
+  pageContextTitleKey(): string | null {
     const url = this.router.url.split('?')[0];
-    if (url === APP_ROUTES.CANDIDATE.JOBS) return 'Rechercher une offre';
-    if (url === APP_ROUTES.CANDIDATE.DASHBOARD) return 'Tableau de bord';
-    if (url === APP_ROUTES.CANDIDATE.SAVED) return 'Offres enregistrées';
-    if (url === APP_ROUTES.CANDIDATE.PROFILE) return 'Mon profil';
-    if (url === APP_ROUTES.CANDIDATE.SETTINGS) return 'Paramètres';
-    if (url === APP_ROUTES.CANDIDATE.COMPANY_DIRECTORY) return 'Annuaire sociétés';
-    if (url === APP_ROUTES.CANDIDATE.TRAINING_DIRECTORY) return 'Annuaire formations';
-    if (url === APP_ROUTES.CANDIDATE.INSTITUTION_DIRECTORY) return 'Annuaire établissements';
+    if (url === APP_ROUTES.CANDIDATE.JOBS) return 'candidate.page.jobs';
+    if (url === APP_ROUTES.CANDIDATE.DASHBOARD) return 'candidate.page.dashboard';
+    if (url === APP_ROUTES.CANDIDATE.SAVED) return 'candidate.page.saved';
+    if (url === APP_ROUTES.CANDIDATE.PROFILE) return 'candidate.page.profile';
+    if (url === APP_ROUTES.CANDIDATE.SETTINGS) return 'common.settings';
+    if (url === APP_ROUTES.CANDIDATE.COMPANY_DIRECTORY) return 'candidate.page.companyDirectory';
+    if (url === APP_ROUTES.CANDIDATE.TRAINING_DIRECTORY) return 'candidate.page.trainingDirectory';
+    if (url === APP_ROUTES.CANDIDATE.INSTITUTION_DIRECTORY) return 'candidate.page.institutionDirectory';
     return null;
   }
 

@@ -4,20 +4,20 @@
       <div class="brand-mark">TJ</div>
       <div>
         <p class="brand-title">Tun Job</p>
-        <p class="brand-sub">Console recruteur</p>
+        <p class="brand-sub">{{ 'recruiter.console' | t }}</p>
       </div>
     </div>
 
     @if (context.profile()) {
       <div class="sidebar-company-card">
-        <span class="company-card-kicker">Entreprise</span>
-        <strong>{{ context.company()?.name || 'Entreprise' }}</strong>
-        <span>{{ context.profile()?.jobTitle || 'Recruteur' }}</span>
+        <span class="company-card-kicker">{{ 'recruiter.company' | t }}</span>
+        <strong>{{ context.company()?.name || ('recruiter.company' | t) }}</strong>
+        <span>{{ context.profile()?.jobTitle || ('recruiter.roleFallback' | t) }}</span>
       </div>
     }
 
     <nav class="sidebar-nav">
-      <p class="nav-section-label">Pilotage</p>
+      <p class="nav-section-label">{{ 'recruiter.section.control' | t }}</p>
       <a
         [routerLink]="routes.RECRUITER.DASHBOARD"
         routerLinkActive="nav-active"
@@ -25,7 +25,7 @@
         class="nav-link"
       >
         <span class="nav-icon" aria-hidden="true">D</span>
-        Tableau de bord
+        {{ 'recruiter.nav.dashboard' | t }}
       </a>
       <a
         [routerLink]="routes.RECRUITER.ONBOARDING"
@@ -33,7 +33,7 @@
         class="nav-link"
       >
         <span class="nav-icon" aria-hidden="true">E</span>
-        Entreprise
+        {{ 'recruiter.nav.company' | t }}
       </a>
       @if (context.isOwner()) {
         <a
@@ -42,10 +42,10 @@
           class="nav-link"
         >
           <span class="nav-icon" aria-hidden="true">T</span>
-          Équipe
+          {{ 'recruiter.nav.team' | t }}
         </a>
       }
-      <p class="nav-section-label">Recrutement</p>
+      <p class="nav-section-label">{{ 'recruiter.section.recruitment' | t }}</p>
       <a
         [routerLink]="routes.RECRUITER.JOBS"
         routerLinkActive="nav-active"
@@ -53,7 +53,7 @@
         class="nav-link"
       >
         <span class="nav-icon" aria-hidden="true">O</span>
-        Offres
+        {{ 'recruiter.nav.jobs' | t }}
       </a>
       @if (context.canDecideApplication()) {
         <a
@@ -63,7 +63,7 @@
           class="nav-link"
         >
           <span class="nav-icon" aria-hidden="true">A</span>
-          Candidatures (ATS)
+          {{ 'recruiter.nav.applications' | t }}
         </a>
         <a
           [routerLink]="routes.RECRUITER.ARCHIVES"
@@ -72,10 +72,10 @@
           class="nav-link"
         >
           <span class="nav-icon" aria-hidden="true">R</span>
-          Archives
+          {{ 'recruiter.nav.archives' | t }}
         </a>
       }
-      <p class="nav-section-label">Compte</p>
+      <p class="nav-section-label">{{ 'recruiter.section.account' | t }}</p>
       <a
         [routerLink]="routes.RECRUITER.SETTINGS"
         routerLinkActive="nav-active"
@@ -83,13 +83,14 @@
         class="nav-link"
       >
         <span class="nav-icon" aria-hidden="true">P</span>
-        Paramètres
+        {{ 'common.settings' | t }}
       </a>
     </nav>
 
     <div class="sidebar-footer">
-      <a [routerLink]="routes.HOME" class="nav-link nav-link-muted">Accueil</a>
-      <button type="button" class="nav-link logout-btn" (click)="logout()">Déconnexion</button>
+      <app-language-switcher />
+      <a [routerLink]="routes.HOME" class="nav-link nav-link-muted">{{ 'common.home' | t }}</a>
+      <button type="button" class="nav-link logout-btn" (click)="logout()">{{ 'common.logout' | t }}</button>
     </div>
   </aside>
 
@@ -98,13 +99,16 @@
       @if (context.profile()) {
         <header class="recruiter-topbar">
           <div>
-            <p class="topbar-kicker">Bienvenue</p>
-            <strong>{{ context.profile()?.jobTitle || 'Recruteur' }} · {{ context.company()?.name || 'Mon entreprise' }}</strong>
+            <p class="topbar-kicker">{{ 'common.welcome' | t }}</p>
+            <strong>
+              {{ context.profile()?.jobTitle || ('recruiter.roleFallback' | t) }} ·
+              {{ context.company()?.name || ('recruiter.companyFallback' | t) }}
+            </strong>
           </div>
           <div class="topbar-status-group">
             <div class="topbar-status">
               <span class="topbar-status-dot"></span>
-              Espace actif
+              {{ 'common.activeWorkspace' | t }}
             </div>
             @if (context.publicationAccess(); as access) {
               @if (access.canPublish) {
@@ -112,14 +116,14 @@
                   class="topbar-publish-status topbar-publish-status--ok"
                   [title]="publicationStatusTitle(access)"
                 >
-                  {{ publicationStatusLabel(access) }}
+                  {{ publicationStatusLabelKey(access) | t }}
                 </div>
               } @else {
                 <div
                   class="topbar-publish-status topbar-publish-status--blocked"
                   [title]="publicationStatusTitle(access)"
                 >
-                  {{ publicationStatusLabel(access) }}
+                  {{ publicationStatusLabelKey(access) | t }}
                 </div>
               }
             }
@@ -128,14 +132,14 @@
         </header>
       }
       @if (context.loading()) {
-        <div class="loading-bar">Chargement...</div>
+        <div class="loading-bar">{{ 'common.loading' | t }}</div>
       }
       @if (context.profile()) {
         <router-outlet />
       } @else if (isOnboardingRoute()) {
         <router-outlet />
       } @else if (!context.loading()) {
-        <div class="loading-bar">Espace recruteur indisponible pour ce compte.</div>
+        <div class="loading-bar">Recruiter workspace unavailable for this account.</div>
       }
     </div>
   </main>

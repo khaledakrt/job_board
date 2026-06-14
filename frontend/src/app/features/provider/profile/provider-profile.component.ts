@@ -9,6 +9,7 @@ import { RichTextEditorComponent } from '../../../shared/components/rich-text-ed
 import { plainTextLength, sanitizeRichHtml } from '../../../shared/utils/rich-text.util';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const INSTITUTION_TYPE_OPTIONS: { value: InstitutionType; label: string }[] = [
   { value: 'primary', label: 'École primaire' },
@@ -22,7 +23,7 @@ const INSTITUTION_TYPE_OPTIONS: { value: InstitutionType; label: string }[] = [
 @Component({
   selector: 'app-provider-profile',
   standalone: true,
-  imports: [FormsModule, RichTextEditorComponent],
+  imports: [FormsModule, RichTextEditorComponent, TranslatePipe],
   templateUrl: './provider-profile.component.html',
   styleUrls: [
     '../shared/provider-theme.css',

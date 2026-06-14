@@ -5,22 +5,24 @@
         <span class="provider-sidebar-mark">JB</span>
         <span class="provider-sidebar-brand-text">JobBoard</span>
       </a>
-      <span class="provider-sidebar-type">{{ isTraining ? 'Centre de formation' : 'Établissement privé' }}</span>
-      <p class="provider-sidebar-org">{{ ctx.dashboard()?.organization?.name || 'Mon organisme' }}</p>
+      <span class="provider-sidebar-type">
+        {{ (isTraining ? 'provider.trainingCenter' : 'provider.privateInstitution') | t }}
+      </span>
+      <p class="provider-sidebar-org">{{ ctx.dashboard()?.organization?.name || ('provider.organizationFallback' | t) }}</p>
       @if (ctx.dashboard()?.organization?.city) {
         <p class="provider-sidebar-city">{{ ctx.dashboard()!.organization!.city }}</p>
       }
     </div>
 
     <nav class="provider-sidebar-nav">
-      <p class="provider-sidebar-label">Menu</p>
+      <p class="provider-sidebar-label">{{ 'common.menu' | t }}</p>
       <a
         [routerLink]="[basePath, 'dashboard']"
         routerLinkActive="provider-nav-active"
         class="provider-sidebar-link"
       >
         <span class="provider-sidebar-icon">⌁</span>
-        <span>Tableau de bord</span>
+        <span>{{ 'provider.nav.dashboard' | t }}</span>
       </a>
       <a
         [routerLink]="[basePath, 'profil']"
@@ -28,7 +30,7 @@
         class="provider-sidebar-link"
       >
         <span class="provider-sidebar-icon">◌</span>
-        <span>Profil & documents</span>
+        <span>{{ 'provider.nav.profileDocs' | t }}</span>
       </a>
       @if (isTraining) {
         <a
@@ -37,9 +39,9 @@
           class="provider-sidebar-link"
         >
           <span class="provider-sidebar-icon">◎</span>
-          <span>Participants</span>
+          <span>{{ 'provider.nav.participants' | t }}</span>
         </a>
-        <p class="provider-sidebar-label">Publier</p>
+        <p class="provider-sidebar-label">{{ 'provider.section.publish' | t }}</p>
         @if (ctx.dashboard()?.canPublishOfferings) {
           <a
             [routerLink]="routes.PROVIDER.TRAINING_FORMATION_NEW"
@@ -47,7 +49,7 @@
             class="provider-sidebar-link provider-sidebar-link--action"
           >
             <span class="provider-sidebar-icon">＋</span>
-            <span>Publier une formation</span>
+            <span>{{ 'provider.nav.publishFormation' | t }}</span>
           </a>
           <a
             [routerLink]="routes.PROVIDER.TRAINING_EVENT_NEW"
@@ -55,7 +57,7 @@
             class="provider-sidebar-link provider-sidebar-link--action"
           >
             <span class="provider-sidebar-icon">◆</span>
-            <span>Publier un événement</span>
+            <span>{{ 'provider.nav.publishEvent' | t }}</span>
           </a>
         } @else {
           <a
@@ -63,18 +65,18 @@
             class="provider-sidebar-link provider-sidebar-link--action"
           >
             <span class="provider-sidebar-icon">!</span>
-            <span>Compléter le profil</span>
+            <span>{{ 'provider.nav.completeProfile' | t }}</span>
           </a>
         }
       } @else {
-        <p class="provider-sidebar-label">Gérer</p>
+        <p class="provider-sidebar-label">{{ 'provider.section.manage' | t }}</p>
         <a
           [routerLink]="routes.PROVIDER.INSTITUTION_PROGRAMS"
           routerLinkActive="provider-nav-active"
           class="provider-sidebar-link"
         >
           <span class="provider-sidebar-icon">◌</span>
-          <span>Programmes</span>
+          <span>{{ 'provider.nav.programs' | t }}</span>
         </a>
         <a
           [routerLink]="routes.PROVIDER.INSTITUTION_EVENTS"
@@ -82,7 +84,7 @@
           class="provider-sidebar-link"
         >
           <span class="provider-sidebar-icon">◆</span>
-          <span>Événements</span>
+          <span>{{ 'provider.nav.events' | t }}</span>
         </a>
         <a
           [routerLink]="routes.PROVIDER.INSTITUTION_ANNOUNCEMENTS"
@@ -90,7 +92,7 @@
           class="provider-sidebar-link"
         >
           <span class="provider-sidebar-icon">✦</span>
-          <span>Actualités & annonces</span>
+          <span>{{ 'provider.nav.news' | t }}</span>
         </a>
         <a
           [routerLink]="[basePath, 'infos-personnelles']"
@@ -98,7 +100,7 @@
           class="provider-sidebar-link"
         >
           <span class="provider-sidebar-icon">◍</span>
-          <span>Modifier infos personnelles</span>
+          <span>{{ 'provider.nav.editPersonalInfo' | t }}</span>
         </a>
       }
     </nav>
@@ -107,17 +109,18 @@
       @if (ctx.dashboard()?.accountStatus === 'published') {
         <a [routerLink]="publicPageLink()" target="_blank" rel="noopener" class="provider-sidebar-link">
           <span class="provider-sidebar-icon">↗</span>
-          <span>Ma page publique</span>
+          <span>{{ 'provider.nav.publicPage' | t }}</span>
         </a>
       }
       <a routerLink="/" class="provider-sidebar-link">
         <span class="provider-sidebar-icon">⌂</span>
-        <span>Accueil site</span>
+        <span>{{ 'provider.nav.siteHome' | t }}</span>
       </a>
       <button type="button" class="provider-sidebar-link provider-sidebar-logout" (click)="logout()">
         <span class="provider-sidebar-icon">×</span>
-        <span>Déconnexion</span>
+        <span>{{ 'common.logout' | t }}</span>
       </button>
+      <app-language-switcher />
     </div>
   </aside>
 
@@ -125,9 +128,9 @@
     <header class="provider-topbar">
       <div class="provider-topbar-title">
         <span class="provider-topbar-role">
-          {{ isTraining ? 'Centre de formation' : 'Établissement privé' }}
+          {{ (isTraining ? 'provider.trainingCenter' : 'provider.privateInstitution') | t }}
         </span>
-        <strong>{{ ctx.dashboard()?.organization?.name || 'Espace prestataire' }}</strong>
+        <strong>{{ ctx.dashboard()?.organization?.name || ('provider.spaceFallback' | t) }}</strong>
       </div>
       @if (ctx.dashboard()) {
         <span
@@ -137,13 +140,13 @@
           [class.provider-pill--danger]="ctx.dashboard()!.accountStatus === 'rejected'"
         >
           @if (ctx.dashboard()!.accountStatus === 'published') {
-            Compte validé
+            {{ 'common.validatedAccount' | t }}
           } @else if (ctx.dashboard()!.accountStatus === 'pending') {
-            En attente
+            {{ 'common.pending' | t }}
           } @else if (ctx.dashboard()!.accountStatus === 'rejected') {
-            Refusé
+            {{ 'common.rejected' | t }}
           } @else {
-            Profil incomplet
+            {{ 'common.profileIncomplete' | t }}
           }
         </span>
       }

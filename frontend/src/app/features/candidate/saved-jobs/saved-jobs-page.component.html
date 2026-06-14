@@ -1,10 +1,10 @@
 <div class="saved-page">
   <header class="page-header">
     <div>
-      <h1 class="page-title">Offres enregistrées & alertes</h1>
-      <p class="page-subtitle">Retrouvez vos favoris et gérez vos alertes emploi.</p>
+      <h1 class="page-title">{{ 'candidate.saved.title' | t }}</h1>
+      <p class="page-subtitle">{{ 'candidate.saved.subtitle' | t }}</p>
     </div>
-    <a [routerLink]="routes.CANDIDATE.JOBS" class="btn-primary !w-auto px-4">Rechercher des offres</a>
+    <a [routerLink]="routes.CANDIDATE.JOBS" class="btn-primary !w-auto px-4">{{ 'candidate.saved.searchJobs' | t }}</a>
   </header>
 
   @if (error()) {
@@ -13,15 +13,15 @@
 
   <div class="saved-tabs">
     <button type="button" class="saved-tab" [class.saved-tab-active]="tab() === 'saved'" (click)="setTab('saved')">
-      Offres ({{ savedJobs().length }})
+      {{ 'candidate.saved.jobsTab' | t }} ({{ savedJobs().length }})
     </button>
     <button type="button" class="saved-tab" [class.saved-tab-active]="tab() === 'alerts'" (click)="setTab('alerts')">
-      Alertes ({{ alerts().length }})
+      {{ 'candidate.saved.alertsTab' | t }} ({{ alerts().length }})
     </button>
   </div>
 
   @if (loading()) {
-    <p class="table-loading">Chargement…</p>
+    <p class="table-loading">{{ 'common.loading' | t }}</p>
   } @else if (tab() === 'saved') {
     <div class="saved-grid">
       @for (item of pagedSavedJobs(); track item.id) {
@@ -34,25 +34,25 @@
                 <div class="saved-logo-ph">{{ item.job?.company?.name?.charAt(0) || 'J' }}</div>
               }
               <div class="saved-body">
-                <p class="saved-card-label">Offre enregistrée</p>
-                <h3>{{ item.job?.title || 'Offre' }}</h3>
-                <p class="saved-co">{{ item.job?.company?.name || 'Entreprise' }}</p>
+                <p class="saved-card-label">{{ 'candidate.saved.savedJob' | t }}</p>
+                <h3>{{ item.job?.title || ('candidate.saved.jobsTab' | t) }}</h3>
+                <p class="saved-co">{{ item.job?.company?.name || ('forms.company' | t) }}</p>
               </div>
             </div>
           </div>
 
           <div class="saved-card-info">
             <div class="saved-info-item">
-              <span>Lieu</span>
-              <strong>{{ item.job?.location || 'Flexible' }}</strong>
+              <span>{{ 'forms.location' | t }}</span>
+              <strong>{{ item.job?.location || ('forms.flexible' | t) }}</strong>
             </div>
             <div class="saved-info-item">
-              <span>Contrat</span>
-              <strong>{{ item.job?.contractType || 'Non précisé' }}</strong>
+              <span>{{ 'forms.contract' | t }}</span>
+              <strong>{{ item.job?.contractType || ('forms.notSpecified' | t) }}</strong>
             </div>
             <div class="saved-info-item">
-              <span>Salaire</span>
-              <strong>{{ salary(item) || 'Non précisé' }}</strong>
+              <span>{{ 'forms.salary' | t }}</span>
+              <strong>{{ salary(item) || ('forms.notSpecified' | t) }}</strong>
             </div>
           </div>
 
@@ -67,23 +67,23 @@
 
           <div class="saved-actions">
             <button type="button" class="btn-primary !w-auto px-3 text-xs" (click)="viewJob(item.jobId)">
-              Voir
+              {{ 'actions.view' | t }}
             </button>
-            <button type="button" class="saved-remove-btn" (click)="removeSaved(item)">Supprimer</button>
+            <button type="button" class="saved-remove-btn" (click)="removeSaved(item)">{{ 'actions.delete' | t }}</button>
           </div>
         </article>
       } @empty {
-        <p class="empty-cell">Aucune offre enregistrée.</p>
+        <p class="empty-cell">{{ 'candidate.saved.noSaved' | t }}</p>
       }
     </div>
     @if (savedJobs().length > pageSize) {
       <div class="saved-pagination">
         <button type="button" class="btn-secondary !w-auto px-3" [disabled]="savedPage() === 1" (click)="setSavedPage(savedPage() - 1)">
-          Précédent
+          {{ 'actions.previous' | t }}
         </button>
-        <span>Page {{ savedPage() }} / {{ savedTotalPages() }}</span>
+        <span>{{ 'jobs.browse.page' | t }} {{ savedPage() }} / {{ savedTotalPages() }}</span>
         <button type="button" class="btn-secondary !w-auto px-3" [disabled]="savedPage() === savedTotalPages()" (click)="setSavedPage(savedPage() + 1)">
-          Suivant
+          {{ 'actions.next' | t }}
         </button>
       </div>
     }
@@ -93,20 +93,20 @@
         <li class="alert-card panel-card">
           @if (editingAlertId() === alert.id) {
             <form class="alert-edit-form" [formGroup]="alertEditForm" (ngSubmit)="saveAlertEdit(alert)">
-              <label class="form-label">Nom de l'alerte</label>
+              <label class="form-label">{{ 'candidate.saved.alertName' | t }}</label>
               <input class="form-input" formControlName="label" placeholder="Ex. Dev Paris" />
-              <label class="form-label">Fréquence</label>
+              <label class="form-label">{{ 'candidate.saved.frequency' | t }}</label>
               <select class="form-input" formControlName="frequency">
-                <option value="weekly">Hebdomadaire - chaque dimanche</option>
-                <option value="monthly">Mensuelle - le 1er jour du mois</option>
+                <option value="weekly">{{ 'candidate.saved.weekly' | t }}</option>
+                <option value="monthly">{{ 'candidate.saved.monthly' | t }}</option>
               </select>
               <label class="form-check">
                 <input type="checkbox" formControlName="isActive" />
-                Alerte active
+                {{ 'candidate.saved.activeAlert' | t }}
               </label>
               <div class="alert-edit-actions">
-                <button type="submit" class="btn-primary !w-auto px-3">Enregistrer</button>
-                <button type="button" class="btn-secondary !w-auto px-3" (click)="cancelEditAlert()">Annuler</button>
+                <button type="submit" class="btn-primary !w-auto px-3">{{ 'actions.save' | t }}</button>
+                <button type="button" class="btn-secondary !w-auto px-3" (click)="cancelEditAlert()">{{ 'actions.cancel' | t }}</button>
               </div>
             </form>
           } @else {
@@ -114,18 +114,18 @@
               <div class="alert-title-row">
                 <div class="alert-icon">A</div>
                 <div class="alert-title-content">
-                  <p class="alert-card-label">Alerte recherche</p>
-                  <h3>{{ alert.label || 'Alerte emploi' }}</h3>
+                  <p class="alert-card-label">{{ 'candidate.saved.searchAlert' | t }}</p>
+                  <h3>{{ alert.label || ('candidate.saved.jobAlert' | t) }}</h3>
                 </div>
               </div>
               <span class="alert-status" [class.alert-status-paused]="!alert.isActive">
-                {{ alert.isActive ? 'Active' : 'En pause' }}
+                {{ (alert.isActive ? 'candidate.saved.active' : 'candidate.saved.paused') | t }}
               </span>
             </div>
 
             <div class="alert-card-meta">
               <span>{{ frequencyLabel(alert) }}</span>
-              <span>Créée le {{ alert.createdAt | date: 'mediumDate' }}</span>
+              <span>{{ 'candidate.saved.createdAt' | t }} {{ alert.createdAt | date: 'mediumDate' }}</span>
             </div>
 
             <div class="alert-filter-chips">
@@ -135,7 +135,7 @@
                   {{ part.value }}
                 </span>
               } @empty {
-                <span class="alert-filter-chip alert-filter-chip-muted">Critères larges</span>
+                <span class="alert-filter-chip alert-filter-chip-muted">{{ 'candidate.saved.broadCriteria' | t }}</span>
               }
             </div>
 
@@ -145,27 +145,27 @@
               </div>
               <div class="alert-full-actions">
                 <button type="button" class="btn-secondary !w-auto px-3 text-xs" (click)="startEditAlert(alert)">
-                  Modifier
+                  {{ 'actions.edit' | t }}
                 </button>
                 <button type="button" class="saved-remove-btn" (click)="removeAlert(alert)">
-                  Supprimer
+                  {{ 'actions.delete' | t }}
                 </button>
               </div>
             </div>
           }
         </li>
       } @empty {
-        <p class="empty-cell">Aucune alerte. Créez-en une depuis la recherche d'offres.</p>
+        <p class="empty-cell">{{ 'candidate.saved.noAlerts' | t }}</p>
       }
     </ul>
     @if (alerts().length > pageSize) {
       <div class="saved-pagination">
         <button type="button" class="btn-secondary !w-auto px-3" [disabled]="alertsPage() === 1" (click)="setAlertsPage(alertsPage() - 1)">
-          Précédent
+          {{ 'actions.previous' | t }}
         </button>
-        <span>Page {{ alertsPage() }} / {{ alertsTotalPages() }}</span>
+        <span>{{ 'jobs.browse.page' | t }} {{ alertsPage() }} / {{ alertsTotalPages() }}</span>
         <button type="button" class="btn-secondary !w-auto px-3" [disabled]="alertsPage() === alertsTotalPages()" (click)="setAlertsPage(alertsPage() + 1)">
-          Suivant
+          {{ 'actions.next' | t }}
         </button>
       </div>
     }

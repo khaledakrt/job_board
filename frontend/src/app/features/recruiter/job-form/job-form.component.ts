@@ -61,6 +61,7 @@ import {
   normalizeStringList,
   toNullableStringList,
 } from '../../../core/utils/string-list.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 
 
@@ -83,6 +84,7 @@ const MAX_BENEFITS = 20;
     DatePipe,
     JobQuizModalComponent,
     RichTextEditorComponent,
+    TranslatePipe,
   ],
 
   templateUrl: './job-form.component.html',

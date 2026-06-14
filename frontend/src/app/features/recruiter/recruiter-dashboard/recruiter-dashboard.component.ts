@@ -4,11 +4,12 @@ import { RecruiterAnalyticsSummary, RecruiterJobService } from '../services/job.
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { AnalyticsGridComponent } from '../analytics-grid/analytics-grid.component';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-recruiter-dashboard',
   standalone: true,
-  imports: [AnalyticsGridComponent, RouterLink],
+  imports: [AnalyticsGridComponent, RouterLink, TranslatePipe],
   templateUrl: './recruiter-dashboard.component.html',
   styleUrl: './recruiter-dashboard.component.css',
 })

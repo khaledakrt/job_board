@@ -3,7 +3,7 @@
     <div class="sidebar-brand">
       <div class="brand-mark">A</div>
       <div>
-        <p class="brand-title">Administration</p>
+        <p class="brand-title">{{ 'admin.brand' | t }}</p>
         <p class="brand-sub">Job Board</p>
       </div>
     </div>
@@ -11,7 +11,7 @@
     <nav class="sidebar-nav">
       @for (section of navSections; track section.label) {
         <div class="nav-section">
-          <p class="nav-section-label">{{ section.label }}</p>
+          <p class="nav-section-label">{{ section.labelKey | t }}</p>
           @for (item of section.items; track item.label) {
             <a
               [routerLink]="item.route"
@@ -20,7 +20,7 @@
               [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
               class="nav-link"
             >
-              <span class="nav-label">{{ item.label }}</span>
+              <span class="nav-label">{{ item.labelKey | t }}</span>
               @if (item.badge) {
                 <span class="nav-badge">{{ item.badge }}</span>
               }
@@ -34,11 +34,12 @@
       @if (authService.user()) {
         <p class="sidebar-user">{{ authService.user()!.email }}</p>
       }
+      <app-language-switcher />
       <a [routerLink]="routes.HOME" class="nav-link">
-        <span class="nav-label">Accueil public</span>
+        <span class="nav-label">{{ 'common.publicHome' | t }}</span>
       </a>
       <button type="button" class="nav-link logout-btn" (click)="logout()">
-        <span class="nav-label">Déconnexion</span>
+        <span class="nav-label">{{ 'common.logout' | t }}</span>
       </button>
     </div>
   </aside>

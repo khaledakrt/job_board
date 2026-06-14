@@ -14,28 +14,29 @@
                 routerLink="/"
                 [fragment]="item.homeFragment"
                 class="landing-nav-link-anchor"
-                >{{ item.label }}</a
+                >{{ item.labelKey | t }}</a
               >
             } @else if (item.route) {
-              <a [routerLink]="item.route" class="landing-nav-link-anchor">{{ item.label }}</a>
+              <a [routerLink]="item.route" class="landing-nav-link-anchor">{{ item.labelKey | t }}</a>
             }
           }
         </nav>
 
         <div class="landing-header-actions">
+          <app-language-switcher />
           @if (authService.isAuthenticated()) {
             <a [routerLink]="workspaceLink()" class="landing-btn landing-btn-primary landing-btn--compact">{{
-              workspaceLabel()
+              workspaceLabel() | t
             }}</a>
             <button type="button" class="landing-btn landing-btn-ghost landing-btn--compact" (click)="logout()">
-              Déconnexion
+              {{ 'common.logout' | t }}
             </button>
           } @else {
             <a [routerLink]="routes.AUTH.LOGIN" class="landing-btn landing-btn-ghost landing-btn--compact"
-              >Connexion</a
+              >{{ 'common.login' | t }}</a
             >
             <a [routerLink]="routes.AUTH.REGISTER" class="landing-btn landing-btn-primary landing-btn--compact"
-              >Inscription</a
+              >{{ 'common.register' | t }}</a
             >
           }
         </div>
@@ -43,7 +44,7 @@
         <nav class="landing-nav landing-nav-secondary" aria-label="Informations">
           @for (item of mainNavSecondary; track item.label) {
             @if (item.route) {
-              <a [routerLink]="item.route" class="landing-nav-link-anchor">{{ item.label }}</a>
+              <a [routerLink]="item.route" class="landing-nav-link-anchor">{{ item.labelKey | t }}</a>
             }
           }
         </nav>

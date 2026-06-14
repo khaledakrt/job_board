@@ -1,6 +1,6 @@
 <div class="provider-page provider-form-page provider-publish-page">
   @if (loading()) {
-    <p class="provider-muted">Chargement…</p>
+    <p class="provider-muted">{{ 'provider.publish.loading' | t }}</p>
   } @else {
     @if (error()) {
       <p class="publish-error">{{ error() }}</p>
@@ -57,31 +57,31 @@
 
     <form class="provider-card provider-form provider-publish-card" (ngSubmit)="prepareSubmitForReview()">
       <div class="provider-publish-card-head">
-        <h1>{{ formationId() ? 'Modifier la formation' : 'Publier une formation' }}</h1>
+        <h1>{{ (formationId() ? 'provider.publish.editFormation' : 'provider.publish.createFormation') | t }}</h1>
         @if (status()) {
           <span class="provider-pill">{{ statusLabel(status()!) }}</span>
         }
       </div>
 
       <section class="provider-form-section provider-form-section--identity">
-        <h2>Informations générales</h2>
+        <h2>{{ 'provider.publish.generalInfo' | t }}</h2>
         <div class="provider-fields">
           <div class="provider-field provider-field--title">
-            <label for="pf-title">Titre de la formation * <span class="provider-label-note">max. 255 caractères</span></label>
+            <label for="pf-title">{{ 'provider.publish.formationTitle' | t }} * <span class="provider-label-note">max. 255 caractères</span></label>
             <input id="pf-title" class="provider-input" [(ngModel)]="title" name="title" required placeholder="Ex. Développement web full-stack" />
             <p class="provider-field-hint">Nom visible dans le catalogue et sur la fiche publique.</p>
           </div>
           <div class="provider-field provider-field--category">
-            <label for="pf-cat">Catégorie <span class="provider-label-note">liste prédéfinie</span></label>
+            <label for="pf-cat">{{ 'provider.publish.category' | t }} <span class="provider-label-note">liste prédéfinie</span></label>
             <select id="pf-cat" class="provider-input" [(ngModel)]="category" name="category">
-              <option value="">— Choisir —</option>
+              <option value="">{{ 'provider.publish.choose' | t }}</option>
               @for (c of categories; track c) {
                 <option [value]="c">{{ c }}</option>
               }
             </select>
           </div>
           <div class="provider-field provider-field--duration">
-            <label for="pf-dur">Durée estimée <span class="provider-label-note">max. 120 caractères</span></label>
+            <label for="pf-dur">{{ 'provider.publish.duration' | t }} <span class="provider-label-note">max. 120 caractères</span></label>
             <input
               id="pf-dur"
               class="provider-input"
@@ -92,7 +92,7 @@
             <p class="provider-field-hint">Exemples : 40 h, 3 mois, 6 semaines.</p>
           </div>
           <div class="provider-field provider-field--short">
-            <label for="pf-short">Résumé commercial <span class="provider-label-note">max. 500 caractères</span></label>
+            <label for="pf-short">{{ 'provider.publish.summary' | t }} <span class="provider-label-note">max. 500 caractères</span></label>
             <textarea
               id="pf-short"
               class="provider-input"
@@ -108,9 +108,9 @@
       </section>
 
       <section class="provider-form-section provider-form-section--program">
-        <h2>Description détaillée</h2>
+        <h2>{{ 'provider.publish.detailedDescription' | t }}</h2>
         <div class="provider-field provider-field--rte provider-field--rte-compact">
-          <label for="pf-desc">Programme & contenu <span class="provider-label-note">max. 20 000 caractères</span></label>
+          <label for="pf-desc">{{ 'provider.publish.program' | t }} <span class="provider-label-note">max. 20 000 caractères</span></label>
           <div class="provider-field-body">
             <app-rich-text-editor
               editorId="formation-description"
@@ -124,22 +124,22 @@
       </section>
 
       <section class="provider-form-section provider-form-section--schedule">
-        <h2>Dates, lieu, places & tarif</h2>
+        <h2>{{ 'provider.publish.schedule' | t }}</h2>
         <div class="provider-fields">
           <div class="provider-field provider-field--date">
-            <label for="pf-start">Date de début <span class="provider-label-note">format date</span></label>
+            <label for="pf-start">{{ 'provider.publish.startDate' | t }} <span class="provider-label-note">format date</span></label>
             <input type="date" id="pf-start" class="provider-input" [(ngModel)]="startDate" name="startDate" />
           </div>
           <div class="provider-field provider-field--date">
-            <label for="pf-end">Date de fin <span class="provider-label-note">optionnel</span></label>
+            <label for="pf-end">{{ 'provider.publish.endDate' | t }} <span class="provider-label-note">optionnel</span></label>
             <input type="date" id="pf-end" class="provider-input" [(ngModel)]="endDate" name="endDate" />
           </div>
           <div class="provider-field provider-field--city">
-            <label for="pf-city">Ville <span class="provider-label-note">max. 120 caractères</span></label>
+            <label for="pf-city">{{ 'forms.city' | t }} <span class="provider-label-note">max. 120 caractères</span></label>
             <input id="pf-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
           </div>
           <div class="provider-field provider-field--mode">
-            <label for="pf-mode">Modalité <span class="provider-label-note">en ligne / présentiel / hybride</span></label>
+            <label for="pf-mode">{{ 'provider.publish.deliveryMode' | t }} <span class="provider-label-note">en ligne / présentiel / hybride</span></label>
             <select id="pf-mode" class="provider-input" [(ngModel)]="deliveryMode" name="deliveryMode">
               <option value="">—</option>
               @for (o of deliveryOptions; track o.value) {
@@ -148,44 +148,44 @@
             </select>
           </div>
           <div class="provider-field provider-field--address">
-            <label for="pf-addr">Adresse complète <span class="provider-label-note">max. 255 caractères</span></label>
+            <label for="pf-addr">{{ 'provider.publish.fullAddress' | t }} <span class="provider-label-note">max. 255 caractères</span></label>
             <input id="pf-addr" class="provider-input" [(ngModel)]="address" name="address" autocomplete="street-address" />
           </div>
           <div class="provider-field provider-field--price">
-            <label for="pf-price">Prix en TND <span class="provider-label-note">nombre positif</span></label>
+            <label for="pf-price">{{ 'provider.publish.price' | t }} <span class="provider-label-note">nombre positif</span></label>
             <input type="number" id="pf-price" min="0" step="0.01" class="provider-input" [(ngModel)]="price" name="price" />
           </div>
           <div class="provider-field provider-field--seats">
-            <label for="pf-seats">Nombre de places <span class="provider-label-note">0 à 9999</span></label>
+            <label for="pf-seats">{{ 'provider.publish.seats' | t }} <span class="provider-label-note">0 à 9999</span></label>
             <input type="number" id="pf-seats" min="0" max="9999" class="provider-input" [(ngModel)]="seats" name="seats" />
           </div>
         </div>
       </section>
 
       <section class="provider-form-section provider-form-section--business">
-        <h2>Contact & médias</h2>
+        <h2>{{ 'provider.publish.contactMedia' | t }}</h2>
         <div class="provider-fields">
           <div class="provider-field provider-field--phone">
-            <label for="pf-phone">Téléphone contact <span class="provider-label-note">max. 50 caractères</span></label>
+            <label for="pf-phone">{{ 'provider.publish.contactPhone' | t }} <span class="provider-label-note">max. 50 caractères</span></label>
             <input id="pf-phone" type="tel" class="provider-input" [(ngModel)]="phone" name="phone" inputmode="tel" autocomplete="tel" />
           </div>
           <div class="provider-field provider-field--email">
-            <label for="pf-email">E-mail contact <span class="provider-label-note">adresse valide</span></label>
+            <label for="pf-email">{{ 'provider.publish.contactEmail' | t }} <span class="provider-label-note">adresse valide</span></label>
             <input type="email" id="pf-email" class="provider-input" [(ngModel)]="email" name="email" autocomplete="email" />
           </div>
           <div class="provider-field provider-field--url">
-            <label for="pf-web">Lien web <span class="provider-label-note">https:// requis, max. 512 caractères</span></label>
+            <label for="pf-web">{{ 'provider.publish.webLink' | t }} <span class="provider-label-note">https:// requis, max. 512 caractères</span></label>
             <input id="pf-web" type="url" class="provider-input" [(ngModel)]="website" name="website" placeholder="https://…" />
           </div>
           <div class="provider-field provider-field--file">
-            <label>Image principale <span class="provider-label-note">JPG/PNG/WEBP, max. 2 Mo</span></label>
+            <label>{{ 'provider.publish.mainImage' | t }} <span class="provider-label-note">JPG/PNG/WEBP, max. 2 Mo</span></label>
             <input type="file" accept="image/*" (change)="onMainImage($event)" />
             @if (mediaUrl(mainImageUrl); as img) {
               <img [src]="img" alt="" class="publish-preview-img" />
             }
           </div>
           <div class="provider-field provider-field--file">
-            <label>Galerie <span class="provider-label-note">max. 7 images, 2 Mo/image</span></label>
+            <label>{{ 'provider.publish.gallery' | t }} <span class="provider-label-note">max. 7 images, 2 Mo/image</span></label>
             <input type="file" accept="image/*" multiple (change)="onGallery($event)" />
             <div class="publish-gallery">
               @for (g of gallery; track g) {
@@ -201,18 +201,18 @@
         </div>
         <label class="publish-check">
           <input type="checkbox" [(ngModel)]="certificateDelivered" name="certificateDelivered" />
-          Certificat délivré à l’issue de la formation
+          {{ 'provider.publish.certificate' | t }}
         </label>
       </section>
 
       <div class="provider-form-actions">
         <button type="button" class="provider-btn provider-btn--outline" [disabled]="saving()" (click)="prepareSaveDraft()">
-          Enregistrer le brouillon
+          {{ 'provider.publish.saveDraft' | t }}
         </button>
         <button type="submit" class="provider-btn provider-btn--primary" [disabled]="saving()">
-          Envoyer en validation
+          {{ 'provider.publish.submitReview' | t }}
         </button>
-        <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline">Annuler</a>
+        <a [routerLink]="routes.PROVIDER.TRAINING_DASHBOARD" class="provider-btn provider-btn--outline">{{ 'actions.cancel' | t }}</a>
       </div>
     </form>
 
@@ -223,10 +223,10 @@
           <p>{{ confirmMessage() }}</p>
           <div class="provider-confirm-actions">
             <button type="button" class="provider-btn provider-btn--outline" [disabled]="saving()" (click)="closeConfirm()">
-              Annuler
+              {{ 'actions.cancel' | t }}
             </button>
             <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving()" (click)="confirmSubmit()">
-              {{ saving() ? 'Enregistrement…' : 'Confirmer' }}
+              {{ (saving() ? 'actions.saving' : 'provider.publish.confirm') | t }}
             </button>
           </div>
         </section>

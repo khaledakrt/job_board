@@ -1,28 +1,28 @@
 <div class="provider-page provider-form-page provider-profile-page">
   <div class="page-header-row provider-page-hero provider-page-hero--profile">
     <div>
-      <p class="provider-hero-kicker">Fiche publique</p>
+      <p class="provider-hero-kicker">{{ 'provider.profile.kicker' | t }}</p>
       <h1 class="provider-page-title">
-        {{ accountOnly ? 'Modifier infos personnelles' : 'Profil & documents' }}
+        {{ (accountOnly ? 'provider.profile.accountTitle' : 'provider.profile.title') | t }}
       </h1>
       @if (accountOnly) {
         <p class="provider-page-sub">
-          Gérez l’e-mail de connexion et le mot de passe de votre compte.
+          {{ 'provider.profile.accountSubtitle' | t }}
         </p>
       } @else {
         <p class="provider-page-sub">
-          Construisez une fiche claire et crédible avec vos coordonnées, vos documents et une présentation qui inspire confiance.
+          {{ 'provider.profile.subtitle' | t }}
         </p>
       }
     </div>
   </div>
 
   @if (ctx.loading() && !ctx.dashboard()) {
-    <p class="provider-muted">Chargement…</p>
+    <p class="provider-muted">{{ 'common.loading' | t }}</p>
   } @else if (ctx.dashboard()) {
     @if (!accountOnly && !ctx.dashboard()!.profileComplete) {
       <aside class="provider-alert">
-        <strong>Profil à compléter</strong>
+        <strong>{{ 'provider.profile.toComplete' | t }}</strong>
         <ul class="provider-checklist">
           @for (item of profileChecklist(); track item.label) {
             <li [class.is-done]="item.done">{{ item.label }}</li>
@@ -43,10 +43,10 @@
       <div class="provider-profile-layout">
         <div class="provider-profile-aside">
           <div class="provider-upload-box provider-upload-box--logo">
-            <span class="provider-upload-label">Logo <span class="provider-label-note">JPG/PNG/WEBP, max. 2 Mo</span></span>
+            <span class="provider-upload-label">{{ 'provider.profile.logo' | t }} <span class="provider-label-note">JPG/PNG/WEBP, max. 2 Mo</span></span>
             <p class="provider-upload-hint">Ajoutez un logo carré ou horizontal, JPG/PNG/WEBP — 2 Mo max.</p>
             <label class="provider-file-btn">
-              Importer le logo
+              {{ 'provider.profile.uploadLogo' | t }}
               <input type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
             </label>
             @if (mediaUrl(ctx.dashboard()!.organization.logoUrl); as logo) {
@@ -54,10 +54,10 @@
             }
           </div>
           <div class="provider-upload-box provider-upload-box--document">
-            <span class="provider-upload-label">Brochure PDF <span class="provider-label-note">PDF, max. 10 Mo</span></span>
+            <span class="provider-upload-label">{{ 'provider.profile.brochure' | t }} <span class="provider-label-note">PDF, max. 10 Mo</span></span>
             <p class="provider-upload-hint">Ajoutez une plaquette officielle téléchargeable depuis votre fiche publique.</p>
             <label class="provider-file-btn provider-file-btn--secondary">
-              Importer une brochure
+              {{ 'provider.profile.uploadBrochure' | t }}
               <input type="file" accept="application/pdf" hidden (change)="onBrochureSelected($event)" />
             </label>
             @if (ctx.dashboard()!.organization.brochures?.length) {
@@ -74,9 +74,9 @@
 
         <div>
           <div class="provider-section-intro">
-            <span>Présentation</span>
+            <span>{{ 'provider.profile.presentation' | t }}</span>
             <strong>
-              {{ ctx.isTraining ? 'Présentez votre centre comme une marque de formation' : 'Présentez votre établissement avec une fiche claire et crédible' }}
+              {{ (ctx.isTraining ? 'provider.profile.trainingPresentationTitle' : 'provider.profile.institutionPresentationTitle') | t }}
             </strong>
             <p>
               {{
@@ -88,7 +88,7 @@
           </div>
           <div class="provider-field provider-field--rte provider-field--rte-block">
             <label for="prof-desc">
-              Description de {{ ctx.isTraining ? 'votre centre' : 'votre établissement' }} *
+              {{ (ctx.isTraining ? 'provider.profile.trainingDescriptionLabel' : 'provider.profile.institutionDescriptionLabel') | t }} *
               <span class="provider-label-note">20 à 20 000 caractères</span>
             </label>
             <div class="provider-field-body">
@@ -106,10 +106,10 @@
           </div>
 
           <div class="provider-fields">
-            <div class="provider-field-group-title">Coordonnées et identité</div>
+            <div class="provider-field-group-title">{{ 'provider.profile.identity' | t }}</div>
             <div class="provider-field provider-field--title">
               <label for="prof-name">
-                Nom de {{ ctx.isTraining ? 'votre centre' : 'votre établissement' }} *
+                {{ (ctx.isTraining ? 'provider.profile.trainingName' : 'provider.profile.institutionName') | t }} *
                 <span class="provider-label-note">max. 255 caractères</span>
               </label>
               <input
@@ -122,7 +122,7 @@
             </div>
             @if (!ctx.isTraining) {
               <div class="provider-field provider-field--domain">
-                <label for="prof-institution-type">Type d’établissement * <span class="provider-label-note">liste prédéfinie</span></label>
+                <label for="prof-institution-type">{{ 'provider.profile.institutionType' | t }} * <span class="provider-label-note">liste prédéfinie</span></label>
                 <select
                   id="prof-institution-type"
                   class="provider-input"
@@ -136,11 +136,11 @@
               </div>
             }
             <div class="provider-field provider-field--city">
-              <label for="prof-city">Ville * <span class="provider-label-note">max. 128 caractères</span></label>
+              <label for="prof-city">{{ 'forms.city' | t }} * <span class="provider-label-note">max. 128 caractères</span></label>
               <input id="prof-city" class="provider-input" [(ngModel)]="city" name="city" autocomplete="address-level2" />
             </div>
             <div class="provider-field provider-field--phone">
-              <label for="prof-phone">Téléphone <span class="provider-label-note">max. 64 caractères</span></label>
+              <label for="prof-phone">{{ 'forms.phone' | t }} <span class="provider-label-note">max. 64 caractères</span></label>
               <input
                 id="prof-phone"
                 type="tel"
@@ -153,20 +153,20 @@
               />
             </div>
             <div class="provider-field provider-field--email provider-field--credential">
-              <label for="prof-email">E-mail public <span class="provider-label-note">adresse valide</span></label>
+              <label for="prof-email">{{ 'provider.profile.publicEmail' | t }} <span class="provider-label-note">adresse valide</span></label>
               <input id="prof-email" type="email" class="provider-input" [(ngModel)]="email" name="email" autocomplete="email" />
             </div>
             <div class="provider-field provider-field--address">
-              <label for="prof-address">Adresse <span class="provider-label-note">max. 512 caractères</span></label>
+              <label for="prof-address">{{ 'provider.profile.address' | t }} <span class="provider-label-note">max. 512 caractères</span></label>
               <input id="prof-address" class="provider-input" [(ngModel)]="address" name="address" autocomplete="street-address" />
             </div>
             <div class="provider-field provider-field--url">
-              <label for="prof-web">Site web <span class="provider-label-note">https:// requis, max. 512 caractères</span></label>
+              <label for="prof-web">{{ 'provider.profile.website' | t }} <span class="provider-label-note">https:// requis, max. 512 caractères</span></label>
               <input id="prof-web" type="url" class="provider-input" [(ngModel)]="website" name="website" placeholder="https://…" />
             </div>
             @if (ctx.isTraining) {
               <div class="provider-field provider-field--domain">
-                <label for="prof-domain">Domaine de formation <span class="provider-label-note">max. 128 caractères</span></label>
+                <label for="prof-domain">{{ 'provider.profile.trainingDomain' | t }} <span class="provider-label-note">max. 128 caractères</span></label>
                 <input id="prof-domain" class="provider-input" [(ngModel)]="trainingDomain" name="trainingDomain" />
               </div>
             }
@@ -176,7 +176,7 @@
 
       <footer class="provider-card-foot provider-form-actions">
         <button type="button" class="provider-btn provider-btn--primary" [disabled]="saving" (click)="saveProfile()">
-          {{ saving ? 'Enregistrement…' : 'Enregistrer le profil' }}
+          {{ (saving ? 'actions.saving' : 'provider.profile.saveProfile') | t }}
         </button>
       </footer>
     </section>
