@@ -13,6 +13,8 @@ PM2_SERVICE="${PM2_SERVICE:-pm2-jobboard}"
 PM2_APP_NAME="${PM2_APP_NAME:-jobboard-api}"
 PM2_USER="${PM2_USER:-jobboard}"
 API_HEALTH_URL="${API_HEALTH_URL:-http://127.0.0.1:3001/api/health}"
+HEALTH_RETRIES="${HEALTH_RETRIES:-20}"
+HEALTH_SLEEP_SECONDS="${HEALTH_SLEEP_SECONDS:-2}"
 
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   echo "Ce script doit etre lance avec sudo/root pour redemarrer $PM2_SERVICE." >&2
@@ -50,6 +52,7 @@ backup_database() {
   echo ">>> Backup DB: $backup_file"
   mysqldump \
     --single-transaction \
+    --no-tablespaces \
     --routines \
     --triggers \
     -h "${db_host:-127.0.0.1}" \
@@ -59,6 +62,22 @@ backup_database() {
     "${db_name:?DB_NAME manquant}" > "$backup_file"
   echo ">>> Backup fichiers: $files_backup"
   tar -czf "$files_backup" -C "$APP_ROOT/backend" .env uploads 2>/dev/null || true
+}
+
+health_check() {
+  echo ">>> Health check: $API_HEALTH_URL"
+  for attempt in $(seq 1 "$HEALTH_RETRIES"); do
+    if curl -sf "$API_HEALTH_URL"; then
+      echo ""
+      return 0
+    fi
+
+    echo "Health check not ready yet ($attempt/$HEALTH_RETRIES)."
+    sleep "$HEALTH_SLEEP_SECONDS"
+  done
+
+  echo "Health check failed after $HEALTH_RETRIES attempts." >&2
+  return 1
 }
 
 cd "$APP_ROOT"
@@ -99,6 +118,5 @@ systemctl restart "$PM2_SERVICE"
 systemctl status "$PM2_SERVICE" --no-pager
 runuser -u "$PM2_USER" -- pm2 list
 
-curl -sf "$API_HEALTH_URL"
-echo ""
+health_check
 echo "Mise à jour terminée. Rollback code possible vers: $PREVIOUS_SHA"
