@@ -310,7 +310,89 @@
   }
 
   .sidebar-nav {
-    overflow: visible;
-    padding-right: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 0 0.35rem;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-nav-separator,
+  .sidebar-section-label {
+    display: none;
+  }
+
+  .sidebar-footer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .sidebar-footer .nav-link,
+  .logout-btn {
+    width: auto;
+  }
+
+  .candidate-topbar-inner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .candidate-main {
+    padding-block: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .candidate-sidebar {
+    padding: 0.75rem;
+  }
+
+  .sidebar-brand {
+    margin-bottom: 0.8rem;
+  }
+
+  .brand-title {
+    font-size: 0.88rem;
+  }
+
+  .brand-sub {
+    max-width: 13rem;
+  }
+
+  .nav-link {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .candidate-page-shell {
+    padding-inline: 0.75rem;
+  }
+
+  .profile-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-banner-btn {
+    width: 100% !important;
+  }
+
+  .view-mode-toggle {
+    width: 100%;
+  }
+
+  .view-mode-btn {
+    flex: 1;
   }
 }

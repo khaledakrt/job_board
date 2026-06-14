@@ -10,6 +10,7 @@
 
   body {
     @apply font-sans;
+    overflow-x: hidden;
   }
 
   body.ats-drawer-resizing {
@@ -156,11 +157,12 @@
 
   /* Recruiter & shared data tables */
   .table-panel {
-    @apply overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-card;
+    @apply overflow-x-auto overflow-y-hidden rounded-2xl border border-surface-200 bg-white shadow-card;
+    -webkit-overflow-scrolling: touch;
   }
 
   .data-table {
-    @apply w-full border-collapse text-sm;
+    @apply w-full min-w-[720px] border-collapse text-sm;
   }
 
   .data-table th {
@@ -229,6 +231,47 @@
 
   .btn-text-danger {
     @apply border-0 bg-transparent text-sm font-semibold text-danger-500 hover:text-danger-600 cursor-pointer;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-shell {
+    @apply px-3 py-6;
+  }
+
+  .auth-card,
+  .modal-card,
+  .modal-card-lg {
+    @apply p-4;
+  }
+
+  .page-title {
+    @apply text-xl;
+  }
+
+  .row-between {
+    @apply items-stretch;
+  }
+
+  .row-between > * {
+    min-width: 0;
+  }
+
+  .toast-fixed {
+    @apply bottom-3 left-3 right-3 max-w-none;
+  }
+
+  .data-table {
+    min-width: 640px;
+  }
+
+  .data-table th,
+  .data-table td {
+    @apply px-3 py-2;
+  }
+
+  .actions-cell {
+    @apply justify-start;
   }
 }
 

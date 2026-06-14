@@ -159,6 +159,52 @@
   }
 }
 
+@media (max-width: 640px) {
+  .admin-sidebar {
+    padding: 0.75rem;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.45rem;
+    padding-bottom: 0.35rem;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-section {
+    display: contents;
+  }
+
+  .nav-section-label {
+    display: none;
+  }
+
+  .nav-link {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: max-content;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .sidebar-footer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .sidebar-user {
+    width: 100%;
+  }
+
+  .admin-main {
+    padding: 0.75rem 0.75rem 1.5rem;
+  }
+}
+
 .sidebar-user {
   margin: 0 0 0.5rem;
   padding: 0.5rem 0.65rem;

@@ -618,3 +618,80 @@
   justify-content: center;
   margin-top: 0;
 }
+
+@media (max-width: 640px) {
+  .landing-container {
+    width: min(100% - 1rem, 1120px);
+  }
+
+  .landing-hero {
+    padding: 2rem 0 2.25rem;
+  }
+
+  .landing-hero-title {
+    font-size: clamp(1.75rem, 11vw, 2.35rem);
+  }
+
+  .landing-hero-lead,
+  .landing-section-lead,
+  .landing-cta-band p {
+    font-size: 0.94rem;
+  }
+
+  .landing-hero-ctas,
+  .landing-section-cta,
+  .landing-cta-band .landing-hero-ctas {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .landing-btn,
+  .landing-btn-lg {
+    width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .landing-hero-visual {
+    display: grid;
+    gap: 0.85rem;
+    min-height: 0;
+  }
+
+  .landing-hero-card {
+    position: static;
+    width: 100%;
+  }
+
+  .landing-card-quiz {
+    flex-wrap: wrap;
+  }
+
+  .landing-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .landing-stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+  }
+
+  .landing-section,
+  .landing-cta-band {
+    padding: 2.25rem 0;
+  }
+
+  .landing-section-head {
+    margin-bottom: 1.35rem;
+  }
+
+  .landing-feature-card,
+  .landing-audience-card,
+  .landing-job-card {
+    padding: 1rem;
+  }
+}

@@ -280,7 +280,7 @@ Password: mot de passe de la boite mail</code></pre>
 
 systemctl status nginx
 systemctl status mysql
-systemctl status pm2-jobboard
+systemctl status pm2-jobboard --no-pager
 df -h
 free -h</code></pre>
     </section>
@@ -290,15 +290,18 @@ free -h</code></pre>
       <pre><code># Voir l'app Node
 runuser -u jobboard -- pm2 list
 
+# Ne pas utiliser pour verifier l'app: pm2 status en root sera vide
+
 # Logs backend
 runuser -u jobboard -- pm2 logs jobboard-api
 
 # Redemarrer proprement l'app
 systemctl restart pm2-jobboard
+systemctl status pm2-jobboard --no-pager
 
 # Tester localement depuis le VPS
 curl http://127.0.0.1:3001/api/health</code></pre>
-      <div class="success">Important: evite <code>pm2 start</code> en root pour cette app. Utilise <code>systemctl restart pm2-jobboard</code>.</div>
+      <div class="success">Important: evite <code>pm2 start</code> en root pour cette app. Le PM2 de root peut etre vide: c'est normal. Utilise <code>runuser -u jobboard -- pm2 list</code> pour voir l'app.</div>
     </section>
 
     <section class="section card" id="deploy-workflow">
@@ -318,31 +321,18 @@ cd /var/www/jobboard</code></pre>
 
       <h3>3. Verifier avant update</h3>
       <pre><code>git status --short
-systemctl status pm2-jobboard
+systemctl status pm2-jobboard --no-pager
 runuser -u jobboard -- pm2 list
 curl http://127.0.0.1:3001/api/health</code></pre>
 
       <h3>4. Pull + update backend/frontend</h3>
       <pre><code>cd /var/www/jobboard
-git pull
-
-# Backend
-cd /var/www/jobboard/backend
-npm ci --omit=dev
-npm run db:migrate
-
-# Frontend
-cd /var/www/jobboard/frontend
-npm ci
-npm run build
-
-# Copier le build Angular vers site/
-rm -rf /var/www/jobboard/site/*
-cp -r /var/www/jobboard/frontend/dist/job-board-frontend/browser/* /var/www/jobboard/site/</code></pre>
+sudo bash deploy/update.sh</code></pre>
+      <div class="success">Le script fait automatiquement: <code>git pull --ff-only</code>, install backend/frontend, backup DB/fichiers, migrations, build Angular, publication vers <code>site/</code>, restart <code>pm2-jobboard</code> et health check.</div>
 
       <h3>5. Redemarrer l'API correctement</h3>
       <pre><code>systemctl restart pm2-jobboard
-systemctl status pm2-jobboard
+systemctl status pm2-jobboard --no-pager
 runuser -u jobboard -- pm2 list</code></pre>
 
       <h3>6. Tests apres deploy</h3>
