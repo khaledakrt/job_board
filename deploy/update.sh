@@ -9,6 +9,15 @@ set -euo pipefail
 APP_ROOT="${APP_ROOT:-/var/www/jobboard}"
 SITE_ROOT="${SITE_ROOT:-/var/www/jobboard/site}"
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/jobboard}"
+PM2_SERVICE="${PM2_SERVICE:-pm2-jobboard}"
+PM2_APP_NAME="${PM2_APP_NAME:-jobboard-api}"
+PM2_USER="${PM2_USER:-jobboard}"
+API_HEALTH_URL="${API_HEALTH_URL:-http://127.0.0.1:3001/api/health}"
+
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  echo "Ce script doit etre lance avec sudo/root pour redemarrer $PM2_SERVICE." >&2
+  exit 1
+fi
 
 backup_database() {
   if [[ ! -f "$APP_ROOT/backend/.env" ]]; then
@@ -86,8 +95,10 @@ rm -rf "$TMP_SITE"
 
 echo ">>> PM2"
 cd "$APP_ROOT"
-pm2 restart jobboard-api
+systemctl restart "$PM2_SERVICE"
+systemctl status "$PM2_SERVICE" --no-pager
+runuser -u "$PM2_USER" -- pm2 list
 
-curl -sf http://127.0.0.1:3000/api/health
+curl -sf "$API_HEALTH_URL"
 echo ""
 echo "Mise à jour terminée. Rollback code possible vers: $PREVIOUS_SHA"

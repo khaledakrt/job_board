@@ -7,13 +7,14 @@ const ApiError = require('../utils/ApiError');
 const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { expireDueJobs } = require('../utils/jobExpiration');
 const { formatQuizForCandidate } = require('../utils/jobQuiz');
+const { sanitizeRichText } = require('../utils/richText');
 
 function formatPublicJob(job) {
   return {
     id: job.id,
     title: job.title,
-    description: job.description,
-    requirements: job.requirements,
+    description: sanitizeRichText(job.description),
+    requirements: sanitizeRichText(job.requirements),
     tags: job.tags,
     languages: job.languages,
     benefits: job.benefits,

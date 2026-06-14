@@ -1,7 +1,7 @@
 'use strict';
 
 const { z } = require('zod');
-const { plainTextLength } = require('../utils/richText');
+const { plainTextLength, sanitizeRichText } = require('../utils/richText');
 const { parseExpiresAt } = require('../utils/jobExpiration');
 const {
   JOB_STATUS,
@@ -68,6 +68,29 @@ function stringListSchema(maxItems, maxLen) {
   );
 }
 
+function richTextSchema({ minPlainTextLength = 0 } = {}) {
+  let schema = z
+    .string()
+    .trim()
+    .max(50000)
+    .transform(sanitizeRichText);
+
+  if (minPlainTextLength > 0) {
+    schema = schema.refine((v) => plainTextLength(v) >= minPlainTextLength, {
+      message: `Description must be at least ${minPlainTextLength} characters`,
+    });
+  }
+
+  return schema;
+}
+
+function optionalRichTextSchema() {
+  return richTextSchema()
+    .optional()
+    .nullable()
+    .transform((v) => (v === '' ? null : v));
+}
+
 function validateSalaryRange(data, ctx) {
   if (data.salaryMin != null && data.salaryMax != null && data.salaryMax < data.salaryMin) {
     ctx.addIssue({
@@ -80,14 +103,8 @@ function validateSalaryRange(data, ctx) {
 
 const jobBodyBaseSchema = z.object({
   title: z.string().trim().min(3).max(255),
-  description: z
-    .string()
-    .trim()
-    .max(50000)
-    .refine((v) => plainTextLength(v) >= 20, {
-      message: 'Description must be at least 20 characters',
-    }),
-  requirements: z.string().trim().optional().nullable(),
+  description: richTextSchema({ minPlainTextLength: 20 }),
+  requirements: optionalRichTextSchema(),
   tags: stringListSchema(20, 50),
   languages: stringListSchema(15, 50),
   benefits: stringListSchema(20, 80),
@@ -159,14 +176,8 @@ const updateJobStatusSchema = z.object({
 const generateQuizSchema = z
   .object({
     title: z.string().trim().max(255).optional().default(''),
-    description: z.string().trim().max(50000).optional().default(''),
-    requirements: z
-      .string()
-      .trim()
-      .max(50000)
-      .optional()
-      .nullable()
-      .transform((v) => (v === '' ? null : v)),
+    description: richTextSchema().optional().default(''),
+    requirements: optionalRichTextSchema(),
     tags: stringListSchema(20, 50),
     languages: stringListSchema(15, 50),
     benefits: stringListSchema(20, 80),

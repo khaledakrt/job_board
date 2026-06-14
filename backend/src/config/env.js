@@ -72,6 +72,8 @@ const envSchema = z
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
   GLOBAL_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),
   GLOBAL_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  RATE_LIMIT_STORE: z.enum(['memory', 'redis']).default('memory'),
+  REDIS_URL: z.string().url().optional(),
 
   API_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
   UPLOAD_DIR: z.string().default('uploads'),
@@ -160,6 +162,14 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['SUBSCRIPTION_MOCK_BYPASS'],
         message: 'SUBSCRIPTION_MOCK_BYPASS must be false in production',
+      });
+    }
+
+    if (env.RATE_LIMIT_STORE === 'redis' && !env.REDIS_URL) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['REDIS_URL'],
+        message: 'REDIS_URL is required when RATE_LIMIT_STORE=redis',
       });
     }
   });

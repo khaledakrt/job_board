@@ -16,6 +16,7 @@ const {
   validateQuizForSave,
   formatQuizForRecruiter,
 } = require('../utils/jobQuiz');
+const { sanitizeRichText } = require('../utils/richText');
 const { generateJobQuiz } = require('../utils/quizGenerator');
 const subscriptionService = require('./subscription.service');
 
@@ -34,8 +35,8 @@ function formatJob(job) {
     companyId: job.company_id,
     recruiterId: job.recruiter_id,
     title: job.title,
-    description: job.description,
-    requirements: job.requirements,
+    description: sanitizeRichText(job.description),
+    requirements: sanitizeRichText(job.requirements),
     tags: job.tags,
     languages: job.languages,
     benefits: job.benefits,
