@@ -52,6 +52,27 @@ Application.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    interview_round: {
+      type: DataTypes.TINYINT.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    interview_response_status: {
+      type: DataTypes.ENUM('confirmed', 'reschedule_requested'),
+      allowNull: true,
+    },
+    interview_response_message: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    interview_response_availability: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    interview_responded_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     archived_at: {
       type: DataTypes.DATE,
       allowNull: true,

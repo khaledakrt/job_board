@@ -108,7 +108,6 @@ export class RecruiterNotificationBellComponent implements OnInit, OnDestroy {
     this.closeDetail();
     void this.router.navigate([this.routes.RECRUITER.ATS], {
       queryParams: {
-        jobId: notification.jobId,
         applicationId: notification.applicationId,
       },
     });

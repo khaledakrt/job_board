@@ -65,11 +65,14 @@
               <button
                 type="button"
                 class="primary-btn"
-                [disabled]="submittingPlanId() === plan.id || !data.onlinePaymentConfigured"
+                [disabled]="submittingPlanId() === plan.id || !data.onlinePaymentConfigured || !context.isOwner()"
                 (click)="choosePlan(plan)"
               >
                 {{ submittingPlanId() === plan.id ? ('recruiter.subscription.creatingLink' | t) : ('recruiter.subscription.payNow' | t) }}
               </button>
+              @if (!context.isOwner()) {
+                <p class="form-hint">{{ 'recruiter.subscription.ownerOnlyPayment' | t }}</p>
+              }
             </article>
           }
         </div>

@@ -14,6 +14,8 @@ const { ARCHIVE_MONTHS } = require('./candidateDashboard.service');
 const { expireDueJobs } = require('../utils/jobExpiration');
 const logger = require('../utils/logger');
 
+const MAX_INTERVIEW_ROUNDS = 3;
+
 function formatApplication(application) {
   const isInterview = application.status === APPLICATION_STATUS.INTERVIEW;
   return {
@@ -25,6 +27,12 @@ function formatApplication(application) {
     resumeSnapshotUrl: application.resume_snapshot_url,
     rating: application.rating,
     interviewAt: isInterview ? application.interview_at : null,
+    interviewRound: isInterview ? application.interview_round : 0,
+    maxInterviewRounds: MAX_INTERVIEW_ROUNDS,
+    interviewResponseStatus: isInterview ? application.interview_response_status : null,
+    interviewResponseMessage: isInterview ? application.interview_response_message : null,
+    interviewResponseAvailability: isInterview ? application.interview_response_availability : null,
+    interviewRespondedAt: isInterview ? application.interview_responded_at : null,
     candidateArchivedAt: application.candidate_archived_at,
     createdAt: application.created_at,
     updatedAt: application.updated_at,
@@ -151,6 +159,59 @@ async function archiveRejectedApplication({ candidateId, applicationId }) {
     candidate_archived_at: application.candidate_archived_at || new Date(),
     updated_at: new Date(),
   });
+
+  return formatApplication(application);
+}
+
+async function respondToInterview({ candidate, applicationId, status, message, proposedAvailability }) {
+  const application = await Application.findOne({
+    where: { id: applicationId, candidate_id: candidate.id },
+    include: [
+      {
+        model: Job,
+        as: 'job',
+        include: [{ model: Company, as: 'company' }],
+      },
+    ],
+  });
+
+  if (!application) {
+    throw ApiError.notFound('Application not found');
+  }
+  if (application.status !== APPLICATION_STATUS.INTERVIEW || !application.interview_at) {
+    throw ApiError.badRequest('Vous pouvez répondre uniquement à une proposition d’entretien.');
+  }
+  if (Number(application.interview_round || 0) >= MAX_INTERVIEW_ROUNDS && status === 'reschedule_requested') {
+    throw ApiError.badRequest(
+      'La limite d’échanges pour cet entretien est atteinte. Contactez directement le recruteur si nécessaire.'
+    );
+  }
+
+  const cleanMessage = message?.trim() || null;
+  const cleanAvailability = proposedAvailability?.trim() || null;
+  if (status === 'reschedule_requested' && !cleanMessage) {
+    throw ApiError.badRequest('Expliquez vos disponibilités ou la raison du changement demandé.');
+  }
+
+  await application.update({
+    interview_response_status: status,
+    interview_response_message: cleanMessage,
+    interview_response_availability: cleanAvailability,
+    interview_responded_at: new Date(),
+    updated_at: new Date(),
+  });
+
+  try {
+    await recruiterNotificationService.notifyInterviewResponse({
+      application,
+      job: application.job,
+      candidate,
+      responseStatus: status,
+      message: cleanMessage || cleanAvailability,
+    });
+  } catch (error) {
+    logger.warn(`[CandidateApplication] interview response notification failed: ${error.message}`);
+  }
 
   return formatApplication(application);
 }
@@ -346,6 +407,7 @@ module.exports = {
   listCandidateApplications,
   listAppliedJobIds,
   archiveRejectedApplication,
+  respondToInterview,
   getCandidateApplicationDetail,
   applyToJob,
   generateApplicationLetter,

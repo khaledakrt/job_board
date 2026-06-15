@@ -335,9 +335,54 @@
           <section class="app-detail-block">
             <h3 class="app-detail-subtitle">Entretien</h3>
             <p>Prévu le {{ detail.interviewAt | date: 'dd/MM/yyyy à HH:mm' }}</p>
-            <button type="button" class="btn-secondary !w-auto px-4" (click)="downloadInterviewIcs(detail)">
-              Ajouter au calendrier (.ics)
-            </button>
+            @if (detail.interviewResponseStatus === 'confirmed') {
+              <p class="app-detail-empty-notes">Vous avez confirmé votre présence au recruteur.</p>
+            } @else if (detail.interviewResponseStatus === 'reschedule_requested') {
+              <p class="app-detail-empty-notes">
+                Vous avez demandé un autre créneau au recruteur.
+              </p>
+              @if (detail.interviewResponseMessage) {
+                <p class="app-note-text">{{ detail.interviewResponseMessage }}</p>
+              }
+            } @else {
+              <div class="app-detail-actions">
+                <button type="button" class="btn-primary !w-auto px-4" (click)="confirmInterview(detail)">
+                  Confirmer ma présence
+                </button>
+                @if (!interviewExchangeLimitReached(detail)) {
+                  <button type="button" class="btn-secondary !w-auto px-4" (click)="requestInterviewReschedule(detail)">
+                    Demander un autre créneau
+                  </button>
+                } @else {
+                  <p class="app-detail-empty-notes">
+                    Limite d’échanges atteinte pour cet entretien. Vous pouvez confirmer ou contacter directement le recruteur.
+                  </p>
+                }
+              </div>
+              @if (rescheduleFormOpen()) {
+                <div class="interview-reschedule-card">
+                  <label class="app-detail-subtitle" for="interviewRescheduleMessage">
+                    Message au recruteur
+                  </label>
+                  <textarea
+                    id="interviewRescheduleMessage"
+                    class="form-input interview-reschedule-textarea"
+                    rows="4"
+                    [value]="rescheduleDraft()"
+                    (input)="updateRescheduleDraft($event)"
+                    placeholder="Expliquez pourquoi ce créneau ne convient pas et proposez vos disponibilités."
+                  ></textarea>
+                  <div class="interview-reschedule-actions">
+                    <button type="button" class="btn-primary !w-auto px-4" (click)="submitInterviewReschedule(detail)">
+                      Envoyer ma demande
+                    </button>
+                    <button type="button" class="btn-secondary !w-auto px-4" (click)="cancelInterviewReschedule()">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              }
+            }
           </section>
         }
 

@@ -95,6 +95,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   readonly cvPreviewError = signal<string | null>(null);
   readonly pendingStatusChange = signal<PendingStatusChange | null>(null);
   readonly statusChangeError = signal<string | null>(null);
+  readonly revealedPhoneApplicationId = signal<string | null>(null);
 
   private drawerResizeCleanup: (() => void) | null = null;
   private cvObjectUrl: string | null = null;
@@ -150,6 +151,11 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     const end = Math.min(this.notesPage() * NOTES_PAGE_SIZE, total);
     return `${start}–${end} sur ${total}`;
   });
+
+  readonly interviewResponseLabels = {
+    confirmed: 'Entretien confirmé par le candidat',
+    reschedule_requested: 'Le candidat demande un autre créneau',
+  } as const;
 
   readonly noteForm = this.fb.nonNullable.group({
     noteText: ['', [Validators.required, Validators.minLength(1)]],
@@ -457,6 +463,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.data) {
           this.selectedApplication.set(res.data);
+          this.revealedPhoneApplicationId.set(null);
           this.notesPage.set(1);
           this.noteForm.patchValue({ noteText: '', evaluationText: '' });
           this.panelOpen.set(true);
@@ -475,6 +482,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.data) {
           this.selectedApplication.set(res.data);
+          this.revealedPhoneApplicationId.set(null);
           this.notesPage.set(1);
           this.noteForm.patchValue({ noteText: '', evaluationText: '' });
           this.panelOpen.set(true);
@@ -490,6 +498,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   closePanel(): void {
     this.panelOpen.set(false);
     this.selectedApplication.set(null);
+    this.revealedPhoneApplicationId.set(null);
     this.notesPage.set(1);
     this.drawerTab.set('profile');
     this.coverLetterExpanded.set(false);
@@ -602,7 +611,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
     const ok = await this.confirmDialog.confirm({
       title: 'Modifier la note',
-      message: `Attribuer ${rating}★ à ${this.candidateName(selected)} ?`,
+      message: 'Attribuer cette note au candidat ?',
       confirmLabel: 'Enregistrer',
     });
     if (!ok) return;
@@ -627,12 +636,33 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     selectElement?: HTMLSelectElement
   ): void {
     this.statusChangeError.set(null);
+    const existingInterviewAt =
+      targetStatus === 'interview' && application.interviewAt
+        ? this.toDatetimeLocalValue(application.interviewAt)
+        : '';
     this.statusChangeForm.reset({
       evaluationText: this.noteForm.controls.evaluationText.value || '',
       internalNote: '',
-      interviewAt: '',
+      interviewAt: existingInterviewAt,
     });
     this.pendingStatusChange.set({ application, targetStatus, selectElement });
+  }
+
+  rescheduleInterview(application: Application): void {
+    if (!this.context.canDecideApplication()) return;
+    this.openStatusChangeModal(application, 'interview');
+  }
+
+  revealCandidatePhone(application: Application): void {
+    if (!application.candidate?.phone) return;
+    this.revealedPhoneApplicationId.set(application.id);
+  }
+
+  private toDatetimeLocalValue(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const offsetMs = date.getTimezoneOffset() * 60_000;
+    return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
   }
 
   cancelStatusChange(): void {
@@ -704,11 +734,10 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   ): void {
     this.saving.set(true);
     this.errorMessage.set(null);
-    const fallbackCandidateMessage = this.noteForm.controls.evaluationText.value?.trim() || undefined;
     const candidateMessage =
       options.evaluationText !== undefined
         ? options.evaluationText.trim() || undefined
-        : fallbackCandidateMessage;
+        : undefined;
     const internalNote = options.internalNote?.trim() || undefined;
 
     this.applicationService
@@ -731,7 +760,9 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
                 : 'Candidature mise à jour — message enregistré, e-mail non envoyé.'
               : 'Candidature mise à jour.'
           );
-          this.noteForm.controls.evaluationText.reset();
+          if (candidateMessage) {
+            this.noteForm.controls.evaluationText.reset();
+          }
           this.saving.set(false);
           if (archived) {
             this.closePanel();

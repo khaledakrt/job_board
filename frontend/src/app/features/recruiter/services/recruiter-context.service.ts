@@ -65,6 +65,8 @@ export class RecruiterContextService {
                   country: c.country ?? null,
                   contactEmail: c.contactEmail ?? null,
                   contactPhone: c.contactPhone ?? null,
+                  contactEmailPublic: Boolean(c.contactEmailPublic),
+                  contactPhonePublic: Boolean(c.contactPhonePublic),
                   logoUrl: c.logoUrl ?? null,
                   website: c.website ?? null,
                   linkedinUrl: c.linkedinUrl ?? null,
@@ -73,7 +75,12 @@ export class RecruiterContextService {
                   scaleSize: c.scaleSize ?? null,
                   foundedYear: c.foundedYear ?? null,
                 });
+              } else {
+                this.companyState.set(null);
               }
+            } else {
+              this.profileState.set(null);
+              this.companyState.set(null);
             }
             this.checkedState.set(true);
             this.loading.set(false);

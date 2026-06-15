@@ -496,6 +496,43 @@
 
       <section class="drawer-card drawer-card-actions">
         <h3 class="drawer-card-title">Évaluation & suivi</h3>
+        @if (selected.status === 'interview' && selected.interviewResponseStatus) {
+          <div class="alert alert-info interview-response-card">
+            <div class="interview-response-head">
+              <strong>{{ interviewResponseLabels[selected.interviewResponseStatus] }}</strong>
+              <span>
+                Échange {{ selected.interviewRound || 1 }}/{{ selected.maxInterviewRounds || 3 }}
+                @if (selected.interviewRespondedAt) {
+                  · {{ selected.interviewRespondedAt | date: 'dd/MM/yyyy HH:mm' }}
+                }
+              </span>
+            </div>
+            @if (selected.interviewResponseMessage) {
+              <p class="interview-response-message">{{ selected.interviewResponseMessage }}</p>
+            }
+            @if (selected.interviewResponseStatus === 'reschedule_requested') {
+              <div class="status-modal-actions interview-response-actions">
+                @if (selected.candidate?.email) {
+                  <a class="btn-secondary !w-auto px-4" [href]="'mailto:' + selected.candidate?.email">
+                    Contacter par e-mail
+                  </a>
+                }
+                @if (selected.candidate?.phone) {
+                  @if (revealedPhoneApplicationId() === selected.id) {
+                    <span class="candidate-phone-reveal">{{ selected.candidate?.phone }}</span>
+                  } @else {
+                    <button type="button" class="btn-secondary !w-auto px-4" (click)="revealCandidatePhone(selected)">
+                      Appeler le candidat
+                    </button>
+                  }
+                }
+                <button type="button" class="btn-primary !w-auto px-4" (click)="rescheduleInterview(selected)">
+                  Proposer une nouvelle date
+                </button>
+              </div>
+            }
+          </div>
+        }
         <div class="rating-row">
           <span class="rating-label">Note interne</span>
           <app-star-rating
@@ -528,9 +565,9 @@
             class="form-input drawer-textarea"
             rows="2"
             formControlName="evaluationText"
-            placeholder="Message optionnel envoyé lors du prochain changement d’étape ou de note…"
+            placeholder="Message optionnel envoyé lors du prochain changement d’étape…"
           ></textarea>
-          <p class="field-hint">Ce message part uniquement quand vous changez l’étape ou la note étoilée.</p>
+          <p class="field-hint">Ce message part uniquement quand vous changez l’étape depuis la modale.</p>
         </div>
 
         <div class="followup-block followup-block-internal">

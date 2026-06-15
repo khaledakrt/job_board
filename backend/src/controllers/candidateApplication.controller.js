@@ -71,6 +71,22 @@ const archiveRejectedApplication = asyncHandler(async (req, res) => {
   });
 });
 
+const respondToInterview = asyncHandler(async (req, res) => {
+  const data = await candidateApplicationService.respondToInterview({
+    candidate: req.candidate,
+    applicationId: req.validatedParams.id,
+    status: req.validatedBody.status,
+    message: req.validatedBody.message,
+    proposedAvailability: req.validatedBody.proposedAvailability,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Interview response saved successfully',
+    data,
+  });
+});
+
 const listMyApplications = asyncHandler(async (req, res) => {
   if (!req.candidate) {
     return res.status(200).json({ success: true, data: [] });
@@ -94,6 +110,7 @@ module.exports = {
   listMyApplications,
   getApplicationDetail,
   archiveRejectedApplication,
+  respondToInterview,
   listAppliedJobIds,
   generateCoverLetter,
   applyToJob,

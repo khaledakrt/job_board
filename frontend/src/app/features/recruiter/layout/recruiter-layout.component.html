@@ -139,7 +139,9 @@
               }
             }
           </div>
-          <app-recruiter-notification-bell />
+          @if (context.canDecideApplication()) {
+            <app-recruiter-notification-bell />
+          }
         </header>
       }
       @if (context.loading()) {

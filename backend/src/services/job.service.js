@@ -20,11 +20,33 @@ const { sanitizeRichText } = require('../utils/richText');
 const { generateJobQuiz } = require('../utils/quizGenerator');
 const subscriptionService = require('./subscription.service');
 
-async function assertCompanyCanPublish(companyId) {
-  const canPublish = await subscriptionService.verifyActiveSubscription(companyId);
-  if (!canPublish) {
+async function assertCompanyCanPublish(companyId, { excludeJobId } = {}) {
+  const publicationAccess = await subscriptionService.getActivePublishableSubscription(companyId);
+  if (!publicationAccess.unlimited && !publicationAccess.subscription) {
     throw ApiError.forbidden(
       'An active company subscription is required to publish this job'
+    );
+  }
+
+  const maxActiveJobs = publicationAccess.plan?.max_active_jobs;
+  if (maxActiveJobs == null) {
+    return;
+  }
+
+  const activeWhere = {
+    company_id: companyId,
+    status: JOB_STATUS.ACTIVE,
+    archived_at: null,
+    deleted_by_recruiter_at: null,
+  };
+  if (excludeJobId) {
+    activeWhere.id = { [Op.ne]: excludeJobId };
+  }
+
+  const activeJobs = await Job.count({ where: activeWhere });
+  if (activeJobs >= Number(maxActiveJobs)) {
+    throw ApiError.forbidden(
+      `Your subscription plan allows up to ${maxActiveJobs} active job${Number(maxActiveJobs) > 1 ? 's' : ''}`
     );
   }
 }
@@ -166,7 +188,7 @@ async function createJob({ recruiter, companyId, payload }) {
   const status = payload.status || JOB_STATUS.DRAFT;
 
   if (status === JOB_STATUS.ACTIVE) {
-    await assertCompanyCanPublish(companyId);
+    await assertCompanyCanPublish(companyId, { excludeJobId: job.id });
   }
 
   const job = await Job.create({
@@ -229,7 +251,7 @@ async function updateJob({ jobId, companyId, payload }) {
 
   const nextStatus = payload.status ?? job.status;
   if (nextStatus === JOB_STATUS.ACTIVE) {
-    await assertCompanyCanPublish(companyId);
+    await assertCompanyCanPublish(companyId, { excludeJobId: job.id });
   }
 
   const quizUpdate = {};

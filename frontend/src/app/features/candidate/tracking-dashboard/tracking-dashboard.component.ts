@@ -78,6 +78,8 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
   readonly error = signal<string | null>(null);
   readonly detailOpen = signal(false);
   readonly selectedApplication = signal<ApplicationDetail | null>(null);
+  readonly rescheduleFormOpen = signal(false);
+  readonly rescheduleDraft = signal('');
 
   readonly stats = computed(() => {
     const apps = this.applications();
@@ -221,6 +223,8 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
   closeDetail(): void {
     this.detailOpen.set(false);
     this.selectedApplication.set(null);
+    this.rescheduleFormOpen.set(false);
+    this.rescheduleDraft.set('');
   }
 
   openSavedJob(item: SavedJobItem): void {
@@ -299,6 +303,78 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  async confirmInterview(detail: ApplicationDetail): Promise<void> {
+    if (detail.status !== 'interview' || !detail.interviewAt) return;
+
+    const ok = await this.confirmDialog.confirm({
+      title: 'Confirmer l’entretien',
+      message: 'Confirmer votre présence à cet entretien ? Le recruteur sera notifié.',
+      confirmLabel: 'Confirmer ma présence',
+    });
+    if (!ok) return;
+
+    this.applicationsService.respondToInterview(detail.id, { status: 'confirmed' }).subscribe({
+      next: (res) => {
+        if (res.data) this.selectedApplication.update((current) => (current ? { ...current, ...res.data } : current));
+        this.loadApplications();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.error.set(err.error?.message || 'Impossible de confirmer l’entretien.');
+      },
+    });
+  }
+
+  requestInterviewReschedule(detail: ApplicationDetail): void {
+    if (detail.status !== 'interview' || !detail.interviewAt) return;
+    if (this.interviewExchangeLimitReached(detail)) {
+      this.error.set('La limite d’échanges pour cet entretien est atteinte.');
+      return;
+    }
+    this.rescheduleDraft.set(detail.interviewResponseMessage || '');
+    this.rescheduleFormOpen.set(true);
+  }
+
+  interviewExchangeLimitReached(detail: ApplicationDetail): boolean {
+    return Number(detail.interviewRound || 0) >= Number(detail.maxInterviewRounds || 3);
+  }
+
+  cancelInterviewReschedule(): void {
+    this.rescheduleFormOpen.set(false);
+    this.rescheduleDraft.set('');
+  }
+
+  updateRescheduleDraft(event: Event): void {
+    this.rescheduleDraft.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  submitInterviewReschedule(detail: ApplicationDetail): void {
+    if (detail.status !== 'interview' || !detail.interviewAt) return;
+
+    const cleanMessage = this.rescheduleDraft().trim();
+    if (!cleanMessage) {
+      this.error.set('Ajoutez un message pour demander un autre créneau.');
+      return;
+    }
+
+    this.applicationsService
+      .respondToInterview(detail.id, {
+        status: 'reschedule_requested',
+        message: cleanMessage,
+        proposedAvailability: cleanMessage,
+      })
+      .subscribe({
+        next: (res) => {
+          if (res.data) this.selectedApplication.update((current) => (current ? { ...current, ...res.data } : current));
+          this.rescheduleFormOpen.set(false);
+          this.rescheduleDraft.set('');
+          this.loadApplications();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.error.set(err.error?.message || 'Impossible d’envoyer votre demande.');
+        },
+      });
+  }
+
   companyName(app: Application): string {
     const job = app.job as { company?: { name?: string } } | undefined;
     return job?.company?.name || '—';
@@ -366,34 +442,6 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
   chartMax(): number {
     const months = this.dashboardSummary()?.monthlyApplications || [];
     return Math.max(1, ...months.map((m) => m.count));
-  }
-
-  downloadInterviewIcs(detail: ApplicationDetail): void {
-    if (!detail.interviewAt) return;
-    const start = new Date(detail.interviewAt);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
-    const fmt = (d: Date) =>
-      d
-        .toISOString()
-        .replace(/[-:]/g, '')
-        .replace(/\.\d{3}/, '');
-    const title = encodeURIComponent(`Entretien — ${detail.job?.title || 'JobBoard'}`);
-    const body = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'BEGIN:VEVENT',
-      `DTSTART:${fmt(start)}`,
-      `DTEND:${fmt(end)}`,
-      `SUMMARY:${title}`,
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-    const blob = new Blob([body], { type: 'text/calendar;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'entretien-jobboard.ics';
-    a.click();
-    URL.revokeObjectURL(a.href);
   }
 
   openRecommended(jobId: string): void {

@@ -94,6 +94,33 @@ async function notifyNewApplication({ application, job, candidate }) {
   return formatNotification(notification, []);
 }
 
+async function notifyInterviewResponse({ application, job, candidate, responseStatus, message }) {
+  const candidateName = formatCandidateDisplayName(candidate);
+  const jobTitle = job.title;
+  const isConfirmed = responseStatus === 'confirmed';
+  const title = isConfirmed ? 'Entretien confirmé' : 'Nouveau créneau demandé';
+  const messageText = isConfirmed
+    ? `${candidateName} a confirmé l’entretien pour « ${jobTitle} ».`
+    : `${candidateName} demande un autre créneau pour « ${jobTitle} »${message ? ` : ${message}` : '.'}`;
+
+  const notification = await RecruiterNotification.create({
+    id: generateUuid(),
+    company_id: job.company_id,
+    type: 'interview_response',
+    title,
+    message_text: messageText,
+    application_id: application.id,
+    job_id: job.id,
+    candidate_id: candidate.id,
+    candidate_name: candidateName,
+    candidate_avatar_url: candidate.avatar_url || null,
+    job_title: jobTitle,
+    created_at: new Date(),
+  });
+
+  return formatNotification(notification, []);
+}
+
 function normalizeLimit(limit) {
   const n = Number(limit);
   if (!Number.isInteger(n) || n < 1) return DEFAULT_LIMIT;
@@ -210,6 +237,7 @@ async function markAllAsRead({ companyId, recruiterId }) {
 
 module.exports = {
   notifyNewApplication,
+  notifyInterviewResponse,
   listForRecruiter,
   getUnreadCount,
   markAsRead,

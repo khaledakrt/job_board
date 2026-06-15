@@ -627,6 +627,53 @@
   padding-top: 0.2rem;
 }
 
+.interview-response-card {
+  display: grid;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.interview-response-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
+.interview-response-head span {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.interview-response-message {
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.8rem;
+  background: #ffffff;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+.interview-response-actions {
+  justify-content: flex-start;
+  padding-top: 0;
+}
+
+.candidate-phone-reveal {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.62rem 0.95rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.8rem;
+  background: #eff6ff;
+  color: #0f3f77;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(100%);

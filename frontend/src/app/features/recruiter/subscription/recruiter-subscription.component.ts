@@ -7,6 +7,7 @@ import {
   SubscriptionPlan,
 } from '../../../core/models/subscription-payment.model';
 import { SubscriptionPaymentService } from '../services/subscription-payment.service';
+import { RecruiterContextService } from '../services/recruiter-context.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
@@ -19,6 +20,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 })
 export class RecruiterSubscriptionComponent implements OnInit {
   private readonly subscriptionService = inject(SubscriptionPaymentService);
+  readonly context = inject(RecruiterContextService);
   private readonly i18n = inject(I18nService);
   readonly routes = APP_ROUTES;
 
@@ -47,6 +49,11 @@ export class RecruiterSubscriptionComponent implements OnInit {
   }
 
   choosePlan(plan: SubscriptionPlan): void {
+    if (!this.context.isOwner()) {
+      this.error.set(this.i18n.translate('recruiter.subscription.ownerOnlyPayment'));
+      return;
+    }
+
     this.submittingPlanId.set(plan.id);
     this.error.set(null);
     this.subscriptionService.createPaymentRequest(plan.id).subscribe({

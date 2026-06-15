@@ -36,6 +36,11 @@ router.get('/applied-job-ids', requireCandidate, candidateApplicationController.
 router.use(requireCandidateProfile);
 
 const applicationIdSchema = z.object({ id: z.string().uuid() });
+const interviewResponseSchema = z.object({
+  status: z.enum(['confirmed', 'reschedule_requested']),
+  message: z.string().trim().max(2000).optional().nullable(),
+  proposedAvailability: z.string().trim().max(500).optional().nullable(),
+});
 
 router.get(
   '/:id',
@@ -47,6 +52,13 @@ router.patch(
   '/:id/archive',
   validateParams(applicationIdSchema),
   candidateApplicationController.archiveRejectedApplication
+);
+
+router.patch(
+  '/:id/interview-response',
+  validateParams(applicationIdSchema),
+  validateBody(interviewResponseSchema),
+  candidateApplicationController.respondToInterview
 );
 
 router.post(

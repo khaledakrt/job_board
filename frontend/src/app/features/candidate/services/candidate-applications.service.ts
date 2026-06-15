@@ -3,7 +3,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { Application, ApplicationDetail } from '../../../core/models/application.model';
+import {
+  Application,
+  ApplicationDetail,
+  InterviewResponsePayload,
+} from '../../../core/models/application.model';
 
 export interface PaginationMeta {
   page: number;
@@ -45,6 +49,10 @@ export class CandidateApplicationsService {
 
   archiveRejected(id: string): Observable<ApiResponse<Application>> {
     return this.http.patch<ApiResponse<Application>>(`${this.base}/${id}/archive`, {});
+  }
+
+  respondToInterview(id: string, payload: InterviewResponsePayload): Observable<ApiResponse<Application>> {
+    return this.http.patch<ApiResponse<Application>>(`${this.base}/${id}/interview-response`, payload);
   }
 
   listAppliedJobIds(): Observable<ApiResponse<string[]>> {

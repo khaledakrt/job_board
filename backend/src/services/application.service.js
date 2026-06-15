@@ -21,6 +21,7 @@ const ALLOWED_STATUS_TRANSITIONS = {
 const APPLICATION_STATUS = {
   INTERVIEW: 'interview',
 };
+const MAX_INTERVIEW_ROUNDS = 3;
 
 function formatCandidate(candidate) {
   if (!candidate) return undefined;
@@ -52,6 +53,12 @@ function formatApplication(application) {
     resumeSnapshotUrl: application.resume_snapshot_url,
     rating: application.rating,
     interviewAt: isInterview ? application.interview_at : null,
+    interviewRound: isInterview ? application.interview_round : 0,
+    maxInterviewRounds: MAX_INTERVIEW_ROUNDS,
+    interviewResponseStatus: isInterview ? application.interview_response_status : null,
+    interviewResponseMessage: isInterview ? application.interview_response_message : null,
+    interviewResponseAvailability: isInterview ? application.interview_response_availability : null,
+    interviewRespondedAt: isInterview ? application.interview_responded_at : null,
     archivedAt: application.archived_at,
     archivedBy: application.archived_by,
     deletedByRecruiterAt: application.deleted_by_recruiter_at,
@@ -168,11 +175,34 @@ async function updateApplicationStatus({
       throw ApiError.badRequest('La date d’entretien doit être dans le futur.');
     }
     updates.interview_at = interviewDate;
+    const isNewInterviewDate =
+      status === 'interview' &&
+      interviewDate &&
+      (!application.interview_at || interviewDate.getTime() !== new Date(application.interview_at).getTime());
+
+    if (isNewInterviewDate) {
+      updates.interview_round = Math.min(Number(application.interview_round || 0) + 1, MAX_INTERVIEW_ROUNDS);
+      updates.interview_response_status = null;
+      updates.interview_response_message = null;
+      updates.interview_response_availability = null;
+      updates.interview_responded_at = null;
+    }
   }
 
   if (status !== 'interview') {
     updates.interview_at = null;
+    updates.interview_response_status = null;
+    updates.interview_response_message = null;
+    updates.interview_response_availability = null;
+    updates.interview_responded_at = null;
+    updates.interview_round = 0;
   }
+
+  const interviewAtChanged =
+    Object.prototype.hasOwnProperty.call(updates, 'interview_at') &&
+    ((application.interview_at && updates.interview_at
+      ? new Date(application.interview_at).getTime() !== new Date(updates.interview_at).getTime()
+      : application.interview_at !== updates.interview_at));
 
   await sequelize.transaction(async (transaction) => {
     await application.update(updates, { transaction });
@@ -220,7 +250,9 @@ async function updateApplicationStatus({
   });
 
   const shouldNotify =
-    previousStatus !== status || (evaluationText && evaluationText.trim().length > 0);
+    previousStatus !== status ||
+    interviewAtChanged ||
+    (evaluationText && evaluationText.trim().length > 0);
 
   let alertResult = null;
 
@@ -353,6 +385,11 @@ async function restoreApplication({ applicationId, companyId }) {
     deleted_by_recruiter_at: null,
     deleted_by_recruiter_by: null,
     candidate_archived_at: null,
+    interview_round: 0,
+    interview_response_status: null,
+    interview_response_message: null,
+    interview_response_availability: null,
+    interview_responded_at: null,
     updated_at: new Date(),
   });
   await application.reload({

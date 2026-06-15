@@ -1,4 +1,4 @@
-export type RecruiterNotificationType = 'application_received';
+export type RecruiterNotificationType = 'application_received' | 'interview_response';
 
 export interface RecruiterNotification {
   id: string;

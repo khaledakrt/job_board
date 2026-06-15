@@ -2,7 +2,7 @@
 
 const { Op } = require('sequelize');
 const { env } = require('../config');
-const { PlatformSetting, Subscription } = require('../models');
+const { PlatformSetting, Subscription, SubscriptionPlan } = require('../models');
 const { generateUuid } = require('../utils/uuid');
 
 const SUBSCRIPTION_MODE_KEY = 'recruiter_subscription_mode';
@@ -104,6 +104,40 @@ async function verifyActiveSubscription(companyId) {
   return Boolean(subscription);
 }
 
+async function getActivePublishableSubscription(companyId) {
+  if (env.SUBSCRIPTION_MOCK_BYPASS) {
+    return { subscription: null, plan: null, unlimited: true };
+  }
+
+  const mode = await getRecruiterSubscriptionMode();
+  if (mode === SUBSCRIPTION_MODES.FREE_ALL) {
+    return { subscription: null, plan: null, unlimited: true };
+  }
+
+  const subscription = await Subscription.findOne({
+    where: {
+      company_id: companyId,
+      plan_type: {
+        [Op.in]: PUBLISHABLE_PLAN_TYPES,
+      },
+      status: 'active',
+      current_period_end: {
+        [Op.gt]: new Date(),
+      },
+    },
+  });
+
+  if (!subscription) {
+    return { subscription: null, plan: null, unlimited: false };
+  }
+
+  const plan = await SubscriptionPlan.findOne({
+    where: { code: subscription.plan_type, is_active: true },
+  });
+
+  return { subscription, plan, unlimited: plan?.max_active_jobs == null };
+}
+
 async function getCompanySubscription(companyId) {
   const subscription = await Subscription.findOne({ where: { company_id: companyId } });
   return formatSubscription(subscription);
@@ -153,7 +187,7 @@ async function cancelCompanySubscription(companyId) {
   return formatSubscription(subscription);
 }
 
-async function createMockSubscription(companyId, planType = 'enterprise', options = {}) {
+async function createMockSubscription(companyId, planType = MANUAL_FREE_PLAN_TYPE, options = {}) {
   if (env.NODE_ENV === 'production') {
     throw new Error('Mock subscriptions cannot be created in production');
   }
@@ -186,6 +220,7 @@ module.exports = {
   cancelManualFreeSubscriptions,
   formatSubscription,
   verifyActiveSubscription,
+  getActivePublishableSubscription,
   getCompanySubscription,
   grantManualSubscription,
   cancelCompanySubscription,

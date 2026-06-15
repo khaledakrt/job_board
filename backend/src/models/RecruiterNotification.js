@@ -17,7 +17,7 @@ RecruiterNotification.init(
       allowNull: false,
     },
     type: {
-      type: DataTypes.ENUM('application_received'),
+      type: DataTypes.ENUM('application_received', 'interview_response'),
       allowNull: false,
       defaultValue: 'application_received',
     },

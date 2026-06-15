@@ -1,5 +1,7 @@
 import { ApplicationStatus } from '../constants/application-status.constant';
 
+export type InterviewResponseStatus = 'confirmed' | 'reschedule_requested';
+
 export interface ExperienceBlock {
   company?: string;
   title?: string;
@@ -54,6 +56,12 @@ export interface Application {
   resumeSnapshotUrl: string | null;
   rating: number | null;
   interviewAt: string | null;
+  interviewRound?: number;
+  maxInterviewRounds?: number;
+  interviewResponseStatus?: InterviewResponseStatus | null;
+  interviewResponseMessage?: string | null;
+  interviewResponseAvailability?: string | null;
+  interviewRespondedAt?: string | null;
   archivedAt?: string | null;
   archivedBy?: string | null;
   candidateArchivedAt?: string | null;
@@ -103,4 +111,10 @@ export interface UpdateApplicationStatusPayload {
   evaluationText?: string | null;
   internalNote?: string | null;
   interviewAt?: string | null;
+}
+
+export interface InterviewResponsePayload {
+  status: InterviewResponseStatus;
+  message?: string | null;
+  proposedAvailability?: string | null;
 }
