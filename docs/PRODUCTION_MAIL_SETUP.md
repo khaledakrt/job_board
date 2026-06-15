@@ -22,6 +22,7 @@ Cloudflare DNS records:
 The production mail server hosts these mailboxes:
 
 - `support@tun-job-board.com` — display name: `Support Tun Job` — technical support and user assistance
+- `no-reply@tun-job-board.com` — display name: `Tun Job` — automatic system emails such as verification and password reset
 - `administration@tun-job-board.com` — display name: `Administration Tun Job` — administrative and management requests
 - `info@tun-job-board.com` — display name: `Informations Tun Job` — general information requests
 - `contact@tun-job-board.com` — display name: `Relations Professionnelles Tun Job` — professional contact and partnerships
@@ -40,10 +41,12 @@ SMTP_USER=support@tun-job-board.com
 SMTP_PASS=CHANGE_ME
 SMTP_FROM_NAME=Support Tun Job
 SMTP_FROM_EMAIL=support@tun-job-board.com
+SYSTEM_EMAIL_FROM_NAME=Tun Job
+SYSTEM_EMAIL_FROM_EMAIL=no-reply@tun-job-board.com
 CONTACT_TO_EMAIL=contact@tun-job-board.com
 ```
 
-These settings are used for account verification, password reset, job alerts, recruiter team notifications, and the public contact form.
+`SMTP_FROM_*` is the default support identity. `SYSTEM_EMAIL_FROM_*` is used for account verification and password reset emails. The SMTP server must allow the authenticated mailbox to send as `no-reply@tun-job-board.com`, or `SMTP_USER` should be changed to `no-reply@tun-job-board.com` with its own mailbox password.
 
 ## Web Access
 

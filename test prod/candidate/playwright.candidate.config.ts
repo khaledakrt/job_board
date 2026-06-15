@@ -21,39 +21,27 @@ function loadEnvFile(filePath: string): void {
 
 loadEnvFile(resolve(process.cwd(), process.env.E2E_ENV_FILE || 'tests/e2e/prod.env'));
 
-const baseURL = process.env.E2E_BASE_URL || 'http://localhost:4200';
-
 export default defineConfig({
-  testDir: './tests/e2e',
-  timeout: 30_000,
-  expect: {
-    timeout: 7_500,
-  },
+  testDir: './e2e',
+  timeout: 45_000,
+  expect: { timeout: 10_000 },
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'test-results/playwright-report', open: 'never' }],
+    ['html', { outputFolder: '../../test-results/candidate-playwright-report', open: 'never' }],
   ],
   use: {
-    baseURL,
+    baseURL: process.env.E2E_BASE_URL || 'https://tun-job-board.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'candidate-prod-chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'prod-chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        baseURL: process.env.E2E_BASE_URL || 'https://tun-job-board.com',
-      },
-    },
   ],
-  outputDir: 'test-results/artifacts',
+  outputDir: '../../test-results/candidate-artifacts',
 });

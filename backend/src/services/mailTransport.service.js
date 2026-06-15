@@ -34,8 +34,19 @@ function getTransporter() {
   return transporter;
 }
 
+function formatFrom(name, email) {
+  return `"${name}" <${email}>`;
+}
+
 function defaultFrom() {
-  return `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`;
+  return formatFrom(env.SMTP_FROM_NAME, env.SMTP_FROM_EMAIL);
+}
+
+function systemFrom() {
+  return formatFrom(
+    env.SYSTEM_EMAIL_FROM_NAME || env.SMTP_FROM_NAME,
+    env.SYSTEM_EMAIL_FROM_EMAIL || env.SMTP_FROM_EMAIL
+  );
 }
 
 module.exports = {
@@ -43,4 +54,5 @@ module.exports = {
   canAttemptSmtp,
   getTransporter,
   defaultFrom,
+  systemFrom,
 };

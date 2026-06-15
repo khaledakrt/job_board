@@ -1,0 +1,17 @@
+E2E_BASE_URL=https://tun-job-board.com
+E2E_API_URL=https://tun-job-board.com/api
+
+# Existing verified candidate account for read-only workspace tests.
+TEST_CANDIDATE_EMAIL=
+TEST_CANDIDATE_PASSWORD=
+TEST_PASSWORD=
+
+# Real inbox used for candidate signup tests. Gmail aliases like
+# name+candidate-123@gmail.com will arrive in this inbox.
+TEST_CANDIDATE_SIGNUP_INBOX=
+
+# Mutating candidate tests stay disabled unless this is true.
+E2E_ALLOW_CANDIDATE_MUTATIONS=false
+
+# Optional: use only if you can extract the verification token from a test mailbox/backend logs.
+TEST_CANDIDATE_VERIFY_TOKEN=

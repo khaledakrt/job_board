@@ -93,6 +93,8 @@ const envSchema = z
   SMTP_PASS: z.string().optional(),
   SMTP_FROM_NAME: z.string().default('Job Board'),
   SMTP_FROM_EMAIL: z.string().email().default('noreply@jobboard.local'),
+  SYSTEM_EMAIL_FROM_NAME: z.string().optional(),
+  SYSTEM_EMAIL_FROM_EMAIL: z.string().email().optional(),
   CONTACT_TO_EMAIL: z.string().email().default('khaliid.akrout@gmail.com'),
 
   KONNECT_API_BASE_URL: z.string().url().default('https://api.konnect.network/api/v2'),

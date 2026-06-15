@@ -5,6 +5,7 @@ const logger = require('../utils/logger');
 const {
   getTransporter,
   defaultFrom,
+  systemFrom,
   canAttemptSmtp,
   isSmtpConfigured,
 } = require('./mailTransport.service');
@@ -29,13 +30,30 @@ function brandButton(href, label) {
   return `<a href="${escapeHtml(href)}" style="display:inline-block;background:#0a66c2;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">${escapeHtml(label)}</a>`;
 }
 
-function wrapEmailHtml({ title, bodyHtml, footer }) {
+function buildDefaultSignature() {
+  return `
+  <table role="presentation" width="100%" style="margin-top:28px;border-top:1px solid #e5e7eb;padding-top:18px;">
+    <tr>
+      <td style="font-size:14px;line-height:1.6;color:#374151;">
+        <strong style="color:#0a66c2;font-size:15px;">L'équipe Tun Job</strong><br />
+        Plateforme emploi, recrutement et formation en Tunisie<br />
+        <a href="${escapeHtml(env.CLIENT_URL)}" style="color:#0a66c2;text-decoration:none;">${escapeHtml(env.CLIENT_URL)}</a>
+      </td>
+    </tr>
+  </table>
+  <p style="font-size:12px;color:#6b7280;margin-top:14px;">
+    Ceci est un message automatique. Merci de ne pas répondre directement à cet e-mail.
+  </p>`;
+}
+
+function wrapEmailHtml({ title, bodyHtml, footer, signatureHtml }) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <body style="font-family:Arial,sans-serif;color:#1f2937;padding:24px;">
   <h2 style="color:#0a66c2;">${escapeHtml(title)}</h2>
   ${bodyHtml}
-  <p style="font-size:13px;color:#6b7280;margin-top:24px;">${escapeHtml(footer || 'Job Board')}</p>
+  ${signatureHtml === false ? '' : signatureHtml || buildDefaultSignature()}
+  ${footer ? `<p style="font-size:13px;color:#6b7280;margin-top:24px;">${escapeHtml(footer)}</p>` : ''}
 </body>
 </html>`;
 }
@@ -48,6 +66,7 @@ async function sendMail({
   subject,
   text,
   html,
+  from,
   replyTo,
   devLinkLabel,
   devLinkUrl,
@@ -68,7 +87,7 @@ async function sendMail({
 
   try {
     const info = await getTransporter().sendMail({
-      from: defaultFrom(),
+      from: from || defaultFrom(),
       to,
       replyTo: replyTo || undefined,
       subject,
@@ -90,17 +109,18 @@ async function sendVerificationEmail({ email, verificationToken, reason = 'regis
 
   const isEmailChange = reason === 'email_change';
   const subject = isEmailChange
-    ? 'Confirmez votre nouvelle adresse e-mail — Job Board'
-    : 'Confirmez votre compte Job Board';
+    ? 'Confirmez votre nouvelle adresse e-mail — Tun Job'
+    : 'Confirmez votre compte Tun Job';
 
   const intro = isEmailChange
     ? 'Vous avez modifié votre adresse e-mail. Cliquez sur le bouton ci-dessous pour confirmer cette adresse et accéder à la plateforme.'
-    : 'Merci de vous être inscrit sur Job Board. Cliquez sur le bouton ci-dessous pour activer votre compte.';
+    : 'Merci de vous être inscrit sur Tun Job. Cliquez sur le bouton ci-dessous pour activer votre compte.';
 
   const result = await sendMail({
+    from: systemFrom(),
     to: email,
     subject,
-    text: `${intro}\n\n${verifyUrl}\n\nCe lien est valable jusqu'à utilisation.`,
+    text: `${intro}\n\n${verifyUrl}\n\nCe lien est valable jusqu'à utilisation.\n\nL'équipe Tun Job\n${env.CLIENT_URL}\n\nCeci est un message automatique. Merci de ne pas répondre directement à cet e-mail.`,
     html: wrapEmailHtml({
       title: isEmailChange ? 'Confirmer votre nouvelle adresse' : 'Confirmer votre e-mail',
       bodyHtml: `<p>${escapeHtml(intro)}</p><p>${brandButton(verifyUrl, 'Confirmer mon e-mail')}</p><p style="font-size:13px;color:#6b7280;">Ou copiez ce lien : ${escapeHtml(verifyUrl)}</p>`,
@@ -121,9 +141,10 @@ async function sendPasswordResetEmail({ email, resetToken }) {
   const hours = env.PASSWORD_RESET_EXPIRES_HOURS;
 
   const result = await sendMail({
+    from: systemFrom(),
     to: email,
-    subject: 'Réinitialisation de votre mot de passe — Job Board',
-    text: `Vous avez demandé une réinitialisation. Ouvrez ce lien (${hours} h) :\n\n${resetUrl}`,
+    subject: 'Réinitialisation de votre mot de passe — Tun Job',
+    text: `Vous avez demandé une réinitialisation. Ouvrez ce lien (${hours} h) :\n\n${resetUrl}\n\nL'équipe Tun Job\n${env.CLIENT_URL}\n\nCeci est un message automatique. Merci de ne pas répondre directement à cet e-mail.`,
     html: wrapEmailHtml({
       title: 'Réinitialisation du mot de passe',
       bodyHtml: `<p>Cliquez ci-dessous pour choisir un nouveau mot de passe. Lien valable ${hours} h.</p><p>${brandButton(resetUrl, 'Réinitialiser')}</p><p style="font-size:13px;color:#6b7280;">Ou copiez : ${escapeHtml(resetUrl)}</p>`,

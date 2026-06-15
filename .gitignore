@@ -16,6 +16,7 @@ site/
 coverage/
 test-results/
 playwright-report/
+tests/e2e/prod.env
 
 # User uploads & logs
 uploads/
