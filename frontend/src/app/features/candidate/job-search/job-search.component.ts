@@ -14,6 +14,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Job } from '../../../core/models/job.model';
 import {
   PublicJobQuiz,
@@ -412,7 +413,7 @@ export class JobSearchComponent implements OnInit {
     this.applyForm.reset({ coverLetter: '' });
   }
 
-  private startApplyFlow(job: Job, options: { refresh?: boolean } = {}): void {
+  private async startApplyFlow(job: Job, options: { refresh?: boolean } = {}): Promise<void> {
     this.error.set(null);
     this.closeCardsDetail();
 
@@ -420,6 +421,8 @@ export class JobSearchComponent implements OnInit {
       this.error.set('Vous avez déjà postulé à cette offre.');
       return;
     }
+
+    await firstValueFrom(this.candidateContext.loadProfile());
 
     if (!this.candidateContext.profile()?.resumeUrl) {
       this.error.set(
@@ -524,7 +527,7 @@ export class JobSearchComponent implements OnInit {
         this.selectJob(job, options);
       }
       if (apply && !this.hasApplied(job.id)) {
-        afterNextRender(() => this.startApplyFlow(job, options), { injector: this.injector });
+        afterNextRender(() => void this.startApplyFlow(job, options), { injector: this.injector });
       }
       if (queryJobId) {
         this.clearJobQueryParams();

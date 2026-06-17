@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { roleGuard } from '../../core/guards/role.guard';
 
 import { USER_ROLES } from '../../core/constants/roles.constant';
+import { providerPublishGuard } from './guards/provider-publish.guard';
 
 
 
@@ -50,6 +51,8 @@ export const PROVIDER_ROUTES: Routes = [
 
         path: 'formations/nouveau',
 
+        canActivate: [providerPublishGuard],
+
         loadComponent: () =>
 
           import('./publish-formation/publish-formation.component').then(
@@ -77,6 +80,8 @@ export const PROVIDER_ROUTES: Routes = [
       {
 
         path: 'evenements/nouveau',
+
+        canActivate: [providerPublishGuard],
 
         loadComponent: () =>
 
@@ -174,6 +179,8 @@ export const PROVIDER_ROUTES: Routes = [
 
         path: 'programmes',
 
+        canActivate: [providerPublishGuard],
+
         loadComponent: () =>
 
           import('./institution-offerings/institution-offerings.component').then(
@@ -190,6 +197,8 @@ export const PROVIDER_ROUTES: Routes = [
 
         path: 'publications/:id',
 
+        canActivate: [providerPublishGuard],
+
         loadComponent: () =>
 
           import('./institution-offerings/institution-offerings.component').then(
@@ -203,6 +212,8 @@ export const PROVIDER_ROUTES: Routes = [
       {
 
         path: 'evenements',
+
+        canActivate: [providerPublishGuard],
 
         loadComponent: () =>
 
@@ -219,6 +230,8 @@ export const PROVIDER_ROUTES: Routes = [
       {
 
         path: 'annonces',
+
+        canActivate: [providerPublishGuard],
 
         loadComponent: () =>
 

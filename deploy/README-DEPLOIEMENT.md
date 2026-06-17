@@ -17,6 +17,7 @@ Dépôt : [github.com/khaledakrt/job_board](https://github.com/khaledakrt/job_bo
 | 7 | `scripts/07-start-pm2.sh` | API en arrière-plan |
 | 8 | `scripts/08-nginx-aapanel.sh` | Nginx aaPanel (VPS avec panel) |
 | 8b | `scripts/08-nginx-standalone.sh` | Nginx classique (sans aaPanel) |
+| 9 | `scripts/09-install-job-alert-cron.sh` | Alertes emploi chaque dimanche |
 
 **Tout-en-un :** `deploy/deploy.sh`  
 **Mise à jour :** `deploy/update.sh` — scripts complémentaires : voir `deploy/README-UPDATES.md`
@@ -175,6 +176,16 @@ Test public :
 ```bash
 curl http://5.189.190.131/api/health
 ```
+
+---
+
+### Étape 9 — Cron alertes emploi
+
+```bash
+sudo bash deploy/scripts/09-install-job-alert-cron.sh
+```
+
+Par défaut, le cron lance `npm run jobs:scheduled-alerts` chaque dimanche à 09:00 avec l’utilisateur `jobboard`.
 
 ---
 

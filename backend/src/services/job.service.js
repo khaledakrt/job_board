@@ -188,7 +188,7 @@ async function createJob({ recruiter, companyId, payload }) {
   const status = payload.status || JOB_STATUS.DRAFT;
 
   if (status === JOB_STATUS.ACTIVE) {
-    await assertCompanyCanPublish(companyId, { excludeJobId: job.id });
+    await assertCompanyCanPublish(companyId);
   }
 
   const job = await Job.create({

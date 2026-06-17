@@ -157,6 +157,10 @@ async function deleteAvatarFile(avatarUrl) {
   return deleteFileFromUrl(avatarUrl, AVATAR_UPLOAD.SUBDIRECTORY);
 }
 
+async function deleteSnapshotFile(snapshotUrl) {
+  return deleteFileFromUrl(snapshotUrl, CV_SNAPSHOT_UPLOAD.SUBDIRECTORY);
+}
+
 async function copyResumeToSnapshot(resumeUrl) {
   const sourcePath = resolveFilePathFromUrl(resumeUrl, RESUME_UPLOAD.SUBDIRECTORY);
 
@@ -222,6 +226,7 @@ module.exports = {
   deleteLogoFile,
   deleteResumeFile,
   deleteAvatarFile,
+  deleteSnapshotFile,
   deleteFileFromUrl,
   copyResumeToSnapshot,
   handleMulterError,

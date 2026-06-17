@@ -5,6 +5,7 @@ const { SavedJob, Job, Company } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
 const { CANDIDATE_LIMITS, JOB_PUBLIC_STATUSES } = require('../config/constants');
+const { expireDueJobs } = require('../utils/jobExpiration');
 
 function formatSavedJob(savedJob) {
   const job = savedJob.job;
@@ -52,10 +53,13 @@ async function listSavedJobs(candidateId) {
 }
 
 async function saveJob({ candidateId, jobId }) {
+  await expireDueJobs({ id: jobId }, { force: true });
+
   const job = await Job.findOne({
     where: {
       id: jobId,
       status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
+      expires_at: { [Op.gt]: new Date() },
     },
   });
   if (!job) {

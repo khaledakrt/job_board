@@ -12,7 +12,7 @@ BACKUP_DIR="${BACKUP_DIR:-/var/backups/jobboard}"
 PM2_SERVICE="${PM2_SERVICE:-pm2-jobboard}"
 PM2_APP_NAME="${PM2_APP_NAME:-jobboard-api}"
 PM2_USER="${PM2_USER:-jobboard}"
-API_HEALTH_URL="${API_HEALTH_URL:-http://127.0.0.1:3001/api/health}"
+API_HEALTH_URL="${API_HEALTH_URL:-}"
 HEALTH_RETRIES="${HEALTH_RETRIES:-20}"
 HEALTH_SLEEP_SECONDS="${HEALTH_SLEEP_SECONDS:-2}"
 
@@ -21,23 +21,23 @@ if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   exit 1
 fi
 
+env_value() {
+  local key="$1"
+  local line
+  line="$(grep -E "^${key}=" "$APP_ROOT/backend/.env" | tail -n 1 || true)"
+  line="${line#*=}"
+  line="${line%\"}"
+  line="${line#\"}"
+  line="${line%\'}"
+  line="${line#\'}"
+  printf '%s' "$line"
+}
+
 backup_database() {
   if [[ ! -f "$APP_ROOT/backend/.env" ]]; then
     echo "backend/.env introuvable, backup DB impossible." >&2
     exit 1
   fi
-
-  env_value() {
-    local key="$1"
-    local line
-    line="$(grep -E "^${key}=" "$APP_ROOT/backend/.env" | tail -n 1 || true)"
-    line="${line#*=}"
-    line="${line%\"}"
-    line="${line#\"}"
-    line="${line%\'}"
-    line="${line#\'}"
-    printf '%s' "$line"
-  }
 
   local db_host db_port db_user db_password db_name
   db_host="$(env_value DB_HOST)"
@@ -84,6 +84,11 @@ cd "$APP_ROOT"
 PREVIOUS_SHA="$(git rev-parse HEAD)"
 echo ">>> SHA actuel: $PREVIOUS_SHA"
 git pull --ff-only
+if [[ -z "$API_HEALTH_URL" ]]; then
+  API_PORT="$(env_value PORT)"
+  API_PREFIX="$(env_value API_PREFIX)"
+  API_HEALTH_URL="http://127.0.0.1:${API_PORT:-3000}${API_PREFIX:-/api}/health"
+fi
 
 echo ">>> Backend"
 cd backend

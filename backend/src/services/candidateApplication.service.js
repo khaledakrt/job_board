@@ -6,7 +6,7 @@ const sequelize = require('../database/sequelize');
 const ApiError = require('../utils/ApiError');
 const { JOB_STATUS, APPLICATION_STATUS } = require('../config/constants');
 const { generateUuid } = require('../utils/uuid');
-const { copyResumeToSnapshot } = require('../utils/fileStorage');
+const { copyResumeToSnapshot, deleteSnapshotFile } = require('../utils/fileStorage');
 const { generateCoverLetter } = require('../utils/coverLetterGenerator');
 const { validateQuizAnswers, buildQuizReview } = require('../utils/jobQuiz');
 const recruiterNotificationService = require('./recruiterNotification.service');
@@ -300,6 +300,9 @@ async function applyToJob({ candidate, jobId, coverLetter, quizAnswers }) {
       return created;
     });
   } catch (error) {
+    if (resumeSnapshotUrl) {
+      await deleteSnapshotFile(resumeSnapshotUrl);
+    }
     if (error.name === 'SequelizeUniqueConstraintError') {
       throw ApiError.conflict('Vous avez déjà postulé à cette offre');
     }

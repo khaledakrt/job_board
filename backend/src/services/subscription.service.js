@@ -143,7 +143,10 @@ async function getCompanySubscription(companyId) {
   return formatSubscription(subscription);
 }
 
-async function grantManualSubscription(companyId, { planType = MANUAL_FREE_PLAN_TYPE, months = 12 } = {}) {
+async function grantManualSubscription(
+  companyId,
+  { planType = MANUAL_FREE_PLAN_TYPE, months = 12, transaction } = {}
+) {
   const periodEnd = new Date();
   periodEnd.setMonth(periodEnd.getMonth() + Number(months || 12));
 
@@ -158,6 +161,7 @@ async function grantManualSubscription(companyId, { planType = MANUAL_FREE_PLAN_
       created_at: new Date(),
       updated_at: new Date(),
     },
+    transaction,
   });
 
   if (!created) {
@@ -166,7 +170,7 @@ async function grantManualSubscription(companyId, { planType = MANUAL_FREE_PLAN_
       status: 'active',
       current_period_end: periodEnd,
       updated_at: new Date(),
-    });
+    }, { transaction });
   }
 
   return formatSubscription(subscription);

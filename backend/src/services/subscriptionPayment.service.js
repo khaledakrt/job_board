@@ -1,6 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
+const sequelize = require('../database/sequelize');
 const { env } = require('../config');
 const {
   Company,
@@ -247,26 +248,45 @@ async function adminListPaymentRequests(query = {}) {
 }
 
 async function approvePaymentRequest(requestId, { adminId, adminNote } = {}) {
-  const request = await SubscriptionPaymentRequest.findByPk(requestId, {
-    include: includePaymentRequest(),
-  });
-  if (!request) throw ApiError.notFound('Payment request not found');
+  return sequelize.transaction(async (transaction) => {
+    const request = await SubscriptionPaymentRequest.findByPk(requestId, {
+      include: includePaymentRequest(),
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!request) throw ApiError.notFound('Payment request not found');
 
-  const subscription = await subscriptionService.grantManualSubscription(request.company_id, {
-    planType: request.plan.code,
-    months: request.plan.duration_months,
-  });
+    if (request.status === PAYMENT_STATUSES.PAID) {
+      return {
+        paymentRequest: formatPaymentRequest(request),
+        subscription: await subscriptionService.getCompanySubscription(request.company_id),
+      };
+    }
 
-  await request.update({
-    status: PAYMENT_STATUSES.PAID,
-    admin_note: adminNote || null,
-    paid_at: request.paid_at || new Date(),
-    reviewed_at: new Date(),
-    reviewed_by: adminId || null,
-    updated_at: new Date(),
-  });
+    if (![PAYMENT_STATUSES.PENDING, PAYMENT_STATUSES.PAYMENT_PENDING].includes(request.status)) {
+      throw ApiError.badRequest('Cette demande de paiement ne peut plus être approuvée.');
+    }
 
-  return { paymentRequest: formatPaymentRequest(await request.reload({ include: includePaymentRequest() })), subscription };
+    const subscription = await subscriptionService.grantManualSubscription(request.company_id, {
+      planType: request.plan.code,
+      months: request.plan.duration_months,
+      transaction,
+    });
+
+    await request.update({
+      status: PAYMENT_STATUSES.PAID,
+      admin_note: adminNote || null,
+      paid_at: request.paid_at || new Date(),
+      reviewed_at: new Date(),
+      reviewed_by: adminId || null,
+      updated_at: new Date(),
+    }, { transaction });
+
+    return {
+      paymentRequest: formatPaymentRequest(await request.reload({ include: includePaymentRequest(), transaction })),
+      subscription,
+    };
+  });
 }
 
 async function handleKonnectWebhook(paymentRef) {

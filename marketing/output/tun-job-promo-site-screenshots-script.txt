@@ -1,0 +1,6 @@
+01-home.png: Tun Job - La plateforme emploi pour recruter et trouver les bonnes opportunites en Tunisie
+02-jobs.png: Trouvez votre prochaine opportunite - Offres, entreprises, localisation et candidature dans une experience claire
+03-training.png: Developpez vos competences - Centres de formation, programmes et parcours pour avancer plus vite
+04-institutions.png: Explorez les etablissements - Un annuaire utile pour choisir les bons partenaires de formation
+05-login.png: Un espace pour chaque profil - Candidats, recruteurs, centres et etablissements gerent leurs actions simplement
+06-register.png: Rejoignez Tun Job maintenant - Creez votre compte gratuitement sur tun-job-board.com

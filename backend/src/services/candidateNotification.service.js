@@ -3,6 +3,13 @@
 const { CandidateNotification } = require('../models');
 
 const DEFAULT_LIMIT = 30;
+const MAX_LIMIT = 50;
+
+function normalizeLimit(limit) {
+  const n = Number(limit);
+  if (!Number.isInteger(n) || n < 1) return DEFAULT_LIMIT;
+  return Math.min(n, MAX_LIMIT);
+}
 
 function formatNotification(row) {
   return {
@@ -15,11 +22,12 @@ function formatNotification(row) {
 }
 
 async function listForCandidate({ candidateId, limit = DEFAULT_LIMIT }) {
+  const safeLimit = normalizeLimit(limit);
   const [rows, unreadCount] = await Promise.all([
     CandidateNotification.findAll({
       where: { candidate_id: candidateId },
       order: [['created_at', 'DESC']],
-      limit,
+      limit: safeLimit,
     }),
     getUnreadCount({ candidateId }),
   ]);

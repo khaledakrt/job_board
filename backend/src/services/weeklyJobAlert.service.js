@@ -200,6 +200,14 @@ async function claimAlertForToday(alert, now) {
   return updated === 1;
 }
 
+async function releaseAlertClaim(alert, previousLastSentAt) {
+  await JobAlert.update(
+    { last_sent_at: previousLastSentAt || null, updated_at: new Date() },
+    { where: { id: alert.id } }
+  );
+  alert.last_sent_at = previousLastSentAt || null;
+}
+
 function buildEmail({ candidateName, alert, jobs }) {
   const frequency = frequencyLabel(alert);
   const title = alert.label || `Votre alerte emploi ${frequency}`;
@@ -285,17 +293,24 @@ async function sendWeeklyJobAlerts({ now = new Date(), force = false } = {}) {
         continue;
       }
 
+      const previousLastSentAt = alert.last_sent_at;
+      let claimed = false;
+
       if (!force) {
-        const claimed = await claimAlertForToday(alert, now);
-        if (!claimed) {
+        const claimSucceeded = await claimAlertForToday(alert, now);
+        if (!claimSucceeded) {
           skipped += 1;
           continue;
         }
+        claimed = true;
         alert.last_sent_at = now;
       }
 
       const jobs = await findMatchingJobs(alert);
       if (!jobs.length) {
+        if (claimed) {
+          await releaseAlertClaim(alert, previousLastSentAt);
+        }
         skipped += 1;
         continue;
       }
@@ -305,12 +320,20 @@ async function sendWeeklyJobAlerts({ now = new Date(), force = false } = {}) {
         alert.candidate.user.email;
       const email = buildEmail({ candidateName, alert, jobs });
 
-      await sendMail({
+      const mailResult = await sendMail({
         to: alert.candidate.user.email,
         subject: email.subject,
         text: email.text,
         html: email.html,
       });
+
+      if (!mailResult.sent) {
+        if (claimed) {
+          await releaseAlertClaim(alert, previousLastSentAt);
+        }
+        skipped += 1;
+        continue;
+      }
 
       if (force) {
         await alert.update({ last_sent_at: now, updated_at: new Date() });

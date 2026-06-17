@@ -27,6 +27,7 @@ Utilisés **en plus** de `update.sh` quand une étape n’est pas couverte, ou *
 | `update-frontend-only.sh` | Uniquement Angular (build rapide) | Optionnel (`SKIP_GIT_PULL=1`) |
 | `update-backend-only.sh` | Uniquement API + migrations | Optionnel |
 | `update-nginx.sh` | Config Nginx / aaPanel modifiée dans git | `SKIP_GIT_PULL=1` |
+| `scripts/09-install-job-alert-cron.sh` | Installer/mettre à jour le cron des alertes emploi du dimanche | Après un premier déploiement ou changement de planification |
 
 Bibliothèque partagée : `deploy/lib/update-common.sh` (fonctions `jb_*`).
 
@@ -61,6 +62,7 @@ SKIP_GIT_PULL=1 sudo bash deploy/update-nginx.sh   # exemple Nginx
 | `.env` seulement | `nano backend/.env` puis `sudo bash deploy/update-env-restart.sh` |
 | Frontend seul | `sudo bash deploy/update-frontend-only.sh` |
 | Backend seul | `sudo bash deploy/update-backend-only.sh` |
+| Cron alertes emploi | `sudo bash deploy/scripts/09-install-job-alert-cron.sh` |
 
 ---
 

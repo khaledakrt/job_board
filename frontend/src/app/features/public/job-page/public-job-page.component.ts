@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Meta, Title } from '@angular/platform-browser';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
@@ -209,16 +210,18 @@ export class PublicJobPageComponent implements OnInit {
       return;
     }
 
-    this.tryOpenApply(job);
+    await this.tryOpenApply(job);
   }
 
-  tryOpenApply(job: Job): void {
+  async tryOpenApply(job: Job): Promise<void> {
     this.applyError.set(null);
 
     if (this.hasApplied()) {
       this.applyError.set(this.i18n.translate('public.job.alreadyApplied'));
       return;
     }
+
+    await firstValueFrom(this.candidateContext.loadProfile());
 
     if (!this.candidateContext.profile()?.resumeUrl) {
       this.applyError.set(

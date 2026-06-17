@@ -32,7 +32,8 @@ function shouldExpireSessionOnForbidden(error: HttpErrorResponse): boolean {
     message.includes('not verified') ||
     message.includes('candidate access required') ||
     message.includes('recruiter workspace access required') ||
-    message.includes('admin access required')
+    message.includes('admin access required') ||
+    message.includes('permission to access this resource')
   );
 }
 
