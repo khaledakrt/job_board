@@ -70,6 +70,11 @@
 
     @if (isExpiredJob()) {
       <div class="form-field form-field-inline span-2">
+        <p class="field-hint field-hint-warning">
+          Offre expirée — seuls la description, le profil recherché, les compétences, langues et avantages sont modifiables.
+        </p>
+      </div>
+      <div class="form-field form-field-inline span-2">
         <label class="form-label">{{ 'recruiter.jobForm.expiration' | t }}</label>
         <div class="form-field-body">
           <p class="field-readonly">Offre expirée le {{ form.controls.expiresAt.value | date: 'dd/MM/yyyy' }}</p>
@@ -322,6 +327,9 @@
             {{ quizConfigured() ? 'Modifier le quiz' : 'Configurer le quiz' }}
           </button>
         </div>
+        @if (quizAiHint()) {
+          <p class="field-hint">{{ quizAiHint() }}</p>
+        }
       }
     </section>
   </div>
@@ -329,7 +337,7 @@
 
   <div class="form-actions">
     <button type="submit" class="btn-primary !w-auto" [disabled]="saving() || !context.canPostJob()">
-      @if (saving()) { Enregistrement… } @else { {{ isEditMode() ? 'Mettre à jour' : 'Publier l\'offre' }} }
+      {{ submitButtonLabel() }}
     </button>
   </div>
 </form>

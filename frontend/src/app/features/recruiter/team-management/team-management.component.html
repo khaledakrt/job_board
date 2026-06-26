@@ -78,7 +78,14 @@
 </div>
 
 @if (modalOpen()) {
-  <div class="modal-backdrop" (click)="closeModal()">
+  <div
+    class="modal-backdrop"
+    appModalKeyboard
+    [appModalKeyboardOpen]="modalOpen()"
+    appModalFocusId="invite-member-title"
+    (appModalEscape)="closeModal()"
+    (click)="closeModal()"
+  >
     <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="invite-member-title">
       <header class="modal-header">
         <p>{{ 'recruiter.team.modalKicker' | t }}</p>
@@ -120,7 +127,14 @@
 }
 
 @if (editModalOpen() && editingMember(); as member) {
-  <div class="modal-backdrop" (click)="closeEditModal()">
+  <div
+    class="modal-backdrop"
+    appModalKeyboard
+    [appModalKeyboardOpen]="editModalOpen()"
+    appModalFocusId="edit-member-title"
+    (appModalEscape)="closeEditModal()"
+    (click)="closeEditModal()"
+  >
     <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="edit-member-title">
       <header class="modal-header">
         <p>{{ 'recruiter.team.memberPermissions' | t }}</p>

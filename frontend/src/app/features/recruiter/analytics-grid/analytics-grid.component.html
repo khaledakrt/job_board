@@ -10,7 +10,7 @@
     <span class="metric-icon">V</span>
     <p class="metric-label">Vues totales</p>
     <p class="metric-value">{{ summary().totalViews | number }}</p>
-    <p class="metric-foot">Toutes les offres</p>
+    <p class="metric-foot">Hors offres archivées / expirées</p>
   </article>
 
   <article class="metric-card metric-card-success">
@@ -22,7 +22,7 @@
 
   <article class="metric-card metric-card-dark">
     <span class="metric-icon">%</span>
-    <p class="metric-label">Conversion</p>
+    <p class="metric-label">Taux global</p>
     <p class="metric-value">
       @if (summary().totalViews > 0) {
         {{ (summary().totalApplicants / summary().totalViews * 100) | number:'1.1-1' }}%
@@ -30,6 +30,6 @@
         0%
       }
     </p>
-    <p class="metric-foot">Candidatures / vues</p>
+    <p class="metric-foot">Candidatures / vues (toutes offres actives)</p>
   </article>
 </div>

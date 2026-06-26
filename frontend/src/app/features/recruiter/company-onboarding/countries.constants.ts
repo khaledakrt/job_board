@@ -173,7 +173,7 @@ const COUNTRY_NAMES = [
   'Zimbabwe',
 ];
 
-const PRIORITY = ['France', 'Belgique', 'Luxembourg', 'Suisse', 'Canada', 'Maroc', 'Tunisie', "Côte d'Ivoire", 'Sénégal', 'Allemagne', 'Espagne', 'Italie', 'Royaume-Uni', 'Pays-Bas', 'États-Unis'];
+const PRIORITY = ['Tunisie', 'France', 'Belgique', 'Luxembourg', 'Suisse', 'Canada', 'Maroc', "Côte d'Ivoire", 'Sénégal', 'Allemagne', 'Espagne', 'Italie', 'Royaume-Uni', 'Pays-Bas', 'États-Unis'];
 
 const sorted = [...new Set(COUNTRY_NAMES)].sort((a, b) => a.localeCompare(b, 'fr'));
 const rest = sorted.filter((c) => !PRIORITY.includes(c));
@@ -183,4 +183,4 @@ export const COUNTRY_OPTIONS: { value: string; label: string; group?: string }[]
   ...rest.map((c) => ({ value: c, label: c, group: 'all' as const })),
 ];
 
-export const DEFAULT_COUNTRY = 'France';
+export const DEFAULT_COUNTRY = 'Tunisie';

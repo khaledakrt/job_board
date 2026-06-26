@@ -78,13 +78,13 @@
             </div>
           </div>
           <div class="archive-actions">
-            <a
-              [routerLink]="routes.RECRUITER.ATS"
-              [queryParams]="{ jobId: application.jobId, applicationId: application.id }"
+            <button
+              type="button"
               class="archive-action archive-action-view"
+              (click)="viewApplication(application)"
             >
               Voir détail
-            </a>
+            </button>
             <button
               type="button"
               class="archive-action archive-action-restore"
@@ -111,7 +111,7 @@
       }
     </section>
     @if (applicationsPagination(); as p) {
-      @if (p.totalPages > 1) {
+      @if (p.totalPages > 1 && p.totalItems > 0) {
         <nav class="archive-pagination panel-card" aria-label="Pagination candidatures archivées">
           <button
             type="button"
@@ -190,7 +190,7 @@
       }
     </section>
     @if (jobsPagination(); as p) {
-      @if (p.totalPages > 1) {
+      @if (p.totalPages > 1 && p.totalItems > 0) {
         <nav class="archive-pagination panel-card" aria-label="Pagination offres archivées">
           <button
             type="button"
@@ -226,3 +226,58 @@
     }
   }
 </div>
+
+@if (detailOpen()) {
+  <div
+    class="archive-detail-backdrop"
+    appModalKeyboard
+    [appModalKeyboardOpen]="detailOpen()"
+    appModalFocusId="archive-detail-title"
+    (appModalEscape)="closeApplicationDetail()"
+    (click)="closeApplicationDetail()"
+  >
+    <article class="archive-detail-card panel-card" (click)="$event.stopPropagation()">
+      <button type="button" class="archive-detail-close" aria-label="Fermer" (click)="closeApplicationDetail()">×</button>
+      @if (detailLoading()) {
+        <p class="table-loading">Chargement du détail…</p>
+      } @else {
+        @if (selectedApplication(); as detail) {
+        <header>
+          <p class="archive-type">Candidature archivée</p>
+          <h2 id="archive-detail-title">{{ candidateName(detail) }}</h2>
+          <p>{{ detail.job?.title || 'Offre' }}</p>
+        </header>
+        <div class="archive-meta">
+          <span class="archive-badge archive-badge-rejected">{{ applicationStatusLabels[detail.status] }}</span>
+          <span>Postulée le {{ detail.createdAt | date: 'dd/MM/yyyy' }}</span>
+          <span>Archivée le {{ detail.archivedAt ? (detail.archivedAt | date: 'dd/MM/yyyy') : '—' }}</span>
+        </div>
+        @if (detail.coverLetter) {
+          <section class="archive-detail-section">
+            <h3>Lettre de motivation</h3>
+            <p>{{ detail.coverLetter }}</p>
+          </section>
+        }
+        <div class="archive-actions">
+          <button
+            type="button"
+            class="archive-action archive-action-restore"
+            [disabled]="actionLoading() === detail.id"
+            (click)="restoreApplication(detail)"
+          >
+            Restaurer
+          </button>
+          <button
+            type="button"
+            class="archive-action archive-action-delete"
+            [disabled]="actionLoading() === detail.id"
+            (click)="deleteApplication(detail)"
+          >
+            Supprimer
+          </button>
+        </div>
+        }
+      }
+    </article>
+  </div>
+}

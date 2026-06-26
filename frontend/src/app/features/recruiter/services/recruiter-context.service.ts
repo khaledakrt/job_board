@@ -86,18 +86,21 @@ export class RecruiterContextService {
             this.loading.set(false);
           },
           error: () => {
-            this.error.set('Unable to load recruiter workspace context.');
+            this.error.set('Impossible de charger l’espace recruteur.');
             this.checkedState.set(true);
             this.loading.set(false);
           },
         }),
         catchError(() => {
-          this.profileState.set(null);
-          this.companyState.set(null);
-          this.error.set('Unable to load recruiter workspace context.');
+          this.error.set('Impossible de charger l’espace recruteur.');
           this.checkedState.set(true);
           this.loading.set(false);
-          return of({ success: false, message: 'Contexte recruteur indisponible.', data: null });
+          return of({
+            success: false,
+            message: 'Contexte recruteur indisponible.',
+            data: null,
+            failed: true as const,
+          });
         })
       );
   }

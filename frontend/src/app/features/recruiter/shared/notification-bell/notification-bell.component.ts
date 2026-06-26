@@ -103,12 +103,20 @@ export class RecruiterNotificationBellComponent implements OnInit, OnDestroy {
     this.selectedNotification.set(null);
   }
 
+  notificationDetailKicker(notification: RecruiterNotification): string {
+    if (notification.type === 'interview_response') {
+      return 'Réponse candidat — entretien';
+    }
+    return 'Nouvelle candidature';
+  }
+
   goToApplication(event: MouseEvent, notification: RecruiterNotification): void {
     event.stopPropagation();
     this.closeDetail();
     void this.router.navigate([this.routes.RECRUITER.ATS], {
       queryParams: {
         applicationId: notification.applicationId,
+        jobId: notification.jobId,
       },
     });
   }

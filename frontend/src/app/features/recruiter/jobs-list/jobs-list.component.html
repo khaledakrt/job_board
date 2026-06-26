@@ -150,6 +150,7 @@
   </div>
 
   @if (pagination(); as p) {
+    @if (p.totalPages > 1 && p.totalItems > 0) {
     <nav class="pagination-bar panel-card" aria-label="Pagination">
       <button
         type="button"
@@ -183,5 +184,6 @@
         {{ 'actions.next' | t }} →
       </button>
     </nav>
+    }
   }
 }

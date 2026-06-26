@@ -152,6 +152,7 @@ export class JobFormComponent implements OnInit {
   readonly quizModalOpen = signal(false);
   readonly quizGenerating = signal(false);
   readonly quizError = signal<string | null>(null);
+  readonly quizAiHint = signal<string | null>(null);
 
 
 
@@ -247,11 +248,9 @@ export class JobFormComponent implements OnInit {
         this.isExpiredJob.set(job.status === 'expired');
 
         if (job.status === 'expired') {
-
           this.form.controls.expiresAt.disable();
-
           this.form.controls.status.disable();
-
+          this.lockExpiredJobFields();
         }
 
         this.tags.set(normalizeStringList(job.tags));
@@ -289,6 +288,7 @@ export class JobFormComponent implements OnInit {
   openQuizModal(): void {
     this.quizError.set(null);
     this.quizModalOpen.set(true);
+    this.quizAiHint.set(null);
   }
 
   closeQuizModal(): void {
@@ -300,6 +300,7 @@ export class JobFormComponent implements OnInit {
     this.quizConfigured.set(true);
     this.quizModalOpen.set(false);
     this.quizError.set(null);
+    this.quizAiHint.set(null);
   }
 
   generateQuizAi(): void {
@@ -328,6 +329,7 @@ export class JobFormComponent implements OnInit {
         next: (res) => {
           if (res.data) {
             this.quiz.set(cloneQuiz(res.data));
+            this.quizAiHint.set('Quiz généré. Ouvrez la modale et cliquez sur « Enregistrer le quiz » pour l’activer.');
           }
           this.quizGenerating.set(false);
         },
@@ -573,64 +575,51 @@ export class JobFormComponent implements OnInit {
 
     if (!ok) return;
 
-    const quizValidation = this.validateQuizBeforeSubmit();
+    const quizValidation = this.isExpiredJob() ? null : this.validateQuizBeforeSubmit();
     if (quizValidation) {
       this.errorMessage.set(quizValidation);
       return;
     }
 
-    const payload: JobPayload = {
-
+    const fullPayload: JobPayload = {
       title: raw.title,
-
       description: sanitizeRichHtml(raw.description),
-
       requirements: sanitizeRichHtml(raw.requirements) || null,
-
       location: raw.location || null,
-
       remoteType: raw.remoteType,
-
       contractType: raw.contractType,
-
       salaryLabel: raw.salaryLabel?.trim() || null,
       salaryMin,
       salaryMax,
       salaryCurrency: salaryMin != null || salaryMax != null ? raw.salaryCurrency : null,
       salaryPeriod: salaryMin != null || salaryMax != null ? raw.salaryPeriod : null,
-
       experienceYears,
-
       tags: toNullableStringList(this.tags()),
-
       languages: toNullableStringList(this.languages()),
-
       benefits: toNullableStringList(this.benefits()),
-
-      ...(this.isExpiredJob()
-
-        ? {}
-
-        : { status: raw.status, expiresAt: raw.expiresAt }),
-
+      status: raw.status,
+      expiresAt: raw.expiresAt,
       quizEnabled: this.quizEnabled(),
       quiz: this.quizEnabled() ? this.quiz() : null,
-
     };
 
-
+    const expiredPayload: Partial<JobPayload> = {
+      description: fullPayload.description,
+      requirements: fullPayload.requirements,
+      tags: fullPayload.tags,
+      languages: fullPayload.languages,
+      benefits: fullPayload.benefits,
+    };
 
     this.saving.set(true);
-
     this.errorMessage.set(null);
 
-
-
     const request$ = this.isEditMode() && this.jobId()
-
-      ? this.jobService.update(this.jobId()!, payload)
-
-      : this.jobService.create(payload);
+      ? this.jobService.update(
+          this.jobId()!,
+          this.isExpiredJob() ? expiredPayload : fullPayload,
+        )
+      : this.jobService.create(fullPayload);
 
 
 
@@ -654,6 +643,34 @@ export class JobFormComponent implements OnInit {
 
     });
 
+  }
+
+  submitButtonLabel(): string {
+    if (this.saving()) return 'Enregistrement…';
+    if (this.isEditMode()) return 'Mettre à jour';
+    const status = this.form.controls.status.value;
+    if (status === 'active') return 'Publier l\'offre';
+    if (status === 'hidden') return 'Enregistrer masquée';
+    return 'Enregistrer le brouillon';
+  }
+
+  private lockExpiredJobFields(): void {
+    const locked = [
+      'title',
+      'location',
+      'remoteType',
+      'contractType',
+      'salaryLabel',
+      'salaryMin',
+      'salaryMax',
+      'salaryCurrency',
+      'salaryPeriod',
+      'experienceYears',
+    ] as const;
+    for (const key of locked) {
+      this.form.controls[key].disable({ emitEvent: false });
+    }
+    this.quizEnabled.set(false);
   }
 
 }

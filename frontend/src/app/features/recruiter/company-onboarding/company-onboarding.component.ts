@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -7,7 +7,7 @@ import { CircularLogoUploaderComponent } from '../shared/circular-logo-uploader/
 import { CompanyService } from '../services/company.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
-import { CompanyFormPayload } from '../../../core/models/company.model';
+import { Company, CompanyFormPayload } from '../../../core/models/company.model';
 import { COMPANY_SIZES, INDUSTRIES, LEGAL_FORMS } from './company-onboarding.constants';
 import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from './countries.constants';
 import { computeProfileProgress } from './company-profile-progress';
@@ -40,6 +40,7 @@ export class CompanyOnboardingComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly pendingLogoFile = signal<File | null>(null);
+  private readonly hydratedCompanyId = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
@@ -65,6 +66,18 @@ export class CompanyOnboardingComponent implements OnInit {
     ownerPhone: [''],
   });
 
+  constructor() {
+    effect(() => {
+      const company = this.context.company();
+      if (!company?.id || this.hydratedCompanyId() === company.id) return;
+      this.patchCompanyForm(company);
+      this.hydratedCompanyId.set(company.id);
+      if (this.context.hasCompany() && !this.context.canEditCompany()) {
+        this.form.disable();
+      }
+    });
+  }
+
   private readonly formValues = toSignal(
     this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
     { initialValue: this.form.getRawValue() }
@@ -84,32 +97,37 @@ export class CompanyOnboardingComponent implements OnInit {
   ngOnInit(): void {
     const company = this.context.company();
     if (company) {
-      this.form.patchValue({
-        name: company.name,
-        legalName: company.legalName || '',
-        legalForm: company.legalForm || '',
-        siret: company.siret || '',
-        vatNumber: company.vatNumber || '',
-        streetAddress: company.streetAddress || '',
-        postalCode: company.postalCode || '',
-        city: company.city || '',
-        country: this.resolveCountry(company.country),
-        contactEmail: company.contactEmail || '',
-        contactPhone: company.contactPhone || '',
-        contactEmailPublic: Boolean(company.contactEmailPublic),
-        contactPhonePublic: Boolean(company.contactPhonePublic),
-        website: company.website || '',
-        linkedinUrl: company.linkedinUrl || '',
-        industry: company.industry || '',
-        scaleSize: company.scaleSize || '',
-        foundedYear: company.foundedYear ? String(company.foundedYear) : '',
-        description: company.description || '',
-      });
+      this.patchCompanyForm(company);
+      this.hydratedCompanyId.set(company.id);
     }
 
     if (this.context.hasCompany() && !this.context.canEditCompany()) {
       this.form.disable();
     }
+  }
+
+  private patchCompanyForm(company: Company): void {
+    this.form.patchValue({
+      name: company.name,
+      legalName: company.legalName || '',
+      legalForm: company.legalForm || '',
+      siret: company.siret || '',
+      vatNumber: company.vatNumber || '',
+      streetAddress: company.streetAddress || '',
+      postalCode: company.postalCode || '',
+      city: company.city || '',
+      country: this.resolveCountry(company.country),
+      contactEmail: company.contactEmail || '',
+      contactPhone: company.contactPhone || '',
+      contactEmailPublic: Boolean(company.contactEmailPublic),
+      contactPhonePublic: Boolean(company.contactPhonePublic),
+      website: company.website || '',
+      linkedinUrl: company.linkedinUrl || '',
+      industry: company.industry || '',
+      scaleSize: company.scaleSize || '',
+      foundedYear: company.foundedYear ? String(company.foundedYear) : '',
+      description: company.description || '',
+    });
   }
 
   onLogoSelected(file: File): void {

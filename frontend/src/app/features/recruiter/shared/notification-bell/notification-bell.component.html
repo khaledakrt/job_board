@@ -94,7 +94,7 @@
           <span class="notif-detail-avatar-ph">{{ initials(n.candidateName) }}</span>
         }
         <div>
-          <p class="notif-detail-kicker">Nouvelle candidature</p>
+          <p class="notif-detail-kicker">{{ notificationDetailKicker(n) }}</p>
           <h3 id="notif-detail-title" class="notif-detail-name">{{ n.candidateName }}</h3>
           <p class="notif-detail-job">Offre : <strong>{{ n.jobTitle }}</strong></p>
         </div>

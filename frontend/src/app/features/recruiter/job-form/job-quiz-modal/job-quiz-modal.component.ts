@@ -1,4 +1,4 @@
-import { Component, effect, input, output, signal } from '@angular/core';
+import { Component, effect, HostListener, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { cloneQuiz, JobQuiz, JobQuizQuestion } from '../../../../core/models/job-quiz.model';
 
@@ -53,6 +53,11 @@ export class JobQuizModalComponent {
 
   onCancel(): void {
     this.cancel.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.onCancel();
   }
 
   onGenerateAi(): void {

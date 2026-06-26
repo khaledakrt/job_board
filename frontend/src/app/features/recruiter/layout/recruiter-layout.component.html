@@ -147,6 +147,14 @@
       @if (context.loading()) {
         <div class="loading-bar">{{ 'common.loading' | t }}</div>
       }
+      @if (context.error()) {
+        <div class="context-error panel-card">
+          <p>{{ context.error() }}</p>
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="retryContextLoad()">
+            {{ 'actions.refresh' | t }}
+          </button>
+        </div>
+      }
       @if (context.profile()) {
         <router-outlet />
       } @else if (isOnboardingRoute()) {

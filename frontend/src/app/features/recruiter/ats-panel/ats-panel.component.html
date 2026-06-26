@@ -34,6 +34,10 @@
   </div>
 </div>
 
+@if (archivedReadOnly()) {
+  <div class="alert alert-info">Candidature archivée — consultation depuis les archives.</div>
+}
+
 @if (errorMessage()) {
   <div class="alert alert-error">{{ errorMessage() }}</div>
 }
@@ -129,6 +133,11 @@
               <div class="card-actions" (click)="$event.stopPropagation()">
                 <button type="button" class="card-btn" (click)="openPanel(app, 'profile')">Profil</button>
                 <button type="button" class="card-btn card-btn-cv" (click)="openPanel(app, 'cv')">CV</button>
+                @if (context.canDecideApplication()) {
+                  <button type="button" class="card-btn card-btn-advance" (click)="advanceApplicationStatus(app)">
+                    Avancer
+                  </button>
+                }
               </div>
             </article>
           } @empty {
@@ -198,6 +207,11 @@
               <div class="list-actions">
                 <button type="button" class="card-btn" (click)="openPanel(app, 'profile')">Profil</button>
                 <button type="button" class="card-btn card-btn-cv" (click)="openPanel(app, 'cv')">CV</button>
+                @if (context.canDecideApplication()) {
+                  <button type="button" class="card-btn card-btn-advance" (click)="advanceApplicationStatus(app)">
+                    Avancer
+                  </button>
+                }
               </div>
             </td>
           </tr>
@@ -212,7 +226,7 @@
 }
 
 @if (pagination(); as p) {
-  @if (p.totalPages > 1) {
+  @if (p.totalPages > 1 && p.totalItems > 0) {
     <nav class="pagination-bar panel-card" aria-label="Pagination candidatures">
       <button
         type="button"
@@ -250,7 +264,14 @@
 }
 
 @if (panelOpen() && selectedApplication(); as selected) {
-  <div class="drawer-backdrop" (click)="closePanel()"></div>
+  <div
+    class="drawer-backdrop"
+    appModalKeyboard
+    [appModalKeyboardOpen]="panelOpen()"
+    appModalFocusId="drawer-candidate-name"
+    (appModalEscape)="closePanel()"
+    (click)="closePanel()"
+  ></div>
   <aside
     class="detail-drawer"
     role="dialog"
@@ -298,7 +319,7 @@
         @if (selected.candidate?.minSalary; as minSalary) {
           <span class="drawer-meta-item">
             <span class="drawer-meta-label">Salaire min.</span>
-            <span class="drawer-meta-value">{{ minSalary | number }} €</span>
+            <span class="drawer-meta-value">{{ minSalary | number }} TND</span>
           </span>
         }
       </div>
@@ -337,14 +358,28 @@
                 </span>
               </a>
             }
-            @if (selected.candidate?.phone; as phone) {
-              <a class="contact-item" [href]="'tel:' + phone">
-                <span class="contact-icon contact-icon-tel" aria-hidden="true">T</span>
-                <span>
-                  <span class="contact-label">Téléphone</span>
-                  <span class="contact-value">{{ phone }}</span>
-                </span>
-              </a>
+            @if (selected.candidate?.phone) {
+              @if (revealedPhoneApplicationId() === selected.id) {
+                <a class="contact-item" [href]="'tel:' + selected.candidate!.phone!">
+                  <span class="contact-icon contact-icon-tel" aria-hidden="true">T</span>
+                  <span>
+                    <span class="contact-label">Téléphone</span>
+                    <span class="contact-value">{{ selected.candidate!.phone }}</span>
+                  </span>
+                </a>
+              } @else {
+                <button
+                  type="button"
+                  class="contact-item contact-item-reveal"
+                  (click)="revealCandidatePhone(selected)"
+                >
+                  <span class="contact-icon contact-icon-tel" aria-hidden="true">T</span>
+                  <span>
+                    <span class="contact-label">Téléphone</span>
+                    <span class="contact-value">Afficher le numéro</span>
+                  </span>
+                </button>
+              }
             }
           </div>
         </section>
@@ -472,10 +507,10 @@
             <h3 class="drawer-card-title">CV du candidat</h3>
             <p class="cv-hint">CV soumis avec cette candidature.</p>
             <div class="cv-actions">
-              <button type="button" class="btn-primary !w-auto px-5" (click)="viewResume(selected)">
-                Ouvrir le PDF
+              <button type="button" class="btn-primary !w-auto px-5" (click)="openResumeInDrawer()">
+                Aperçu dans le panneau
               </button>
-              <button type="button" class="btn-secondary !w-auto px-4" (click)="viewResume(selected)">
+              <button type="button" class="btn-secondary !w-auto px-4" (click)="viewResumeInNewTab(selected)">
                 Nouvel onglet
               </button>
             </div>
@@ -519,7 +554,9 @@
                 }
                 @if (selected.candidate?.phone) {
                   @if (revealedPhoneApplicationId() === selected.id) {
-                    <span class="candidate-phone-reveal">{{ selected.candidate?.phone }}</span>
+                    <a class="btn-secondary !w-auto px-4" [href]="'tel:' + selected.candidate!.phone!">
+                      Appeler {{ selected.candidate!.phone }}
+                    </a>
                   } @else {
                     <button type="button" class="btn-secondary !w-auto px-4" (click)="revealCandidatePhone(selected)">
                       Appeler le candidat
@@ -632,7 +669,14 @@
 }
 
 @if (pendingStatusChange(); as pending) {
-  <div class="status-modal-backdrop" (click)="cancelStatusChange()"></div>
+  <div
+    class="status-modal-backdrop"
+    appModalKeyboard
+    [appModalKeyboardOpen]="!!pendingStatusChange()"
+    appModalFocusId="status-modal-title"
+    (appModalEscape)="cancelStatusChange()"
+    (click)="cancelStatusChange()"
+  ></div>
   <section
     class="status-modal"
     role="dialog"

@@ -53,10 +53,17 @@ export class RecruiterLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
+  retryContextLoad(): void {
+    this.refreshContext(false);
+  }
+
   private refreshContext(redirectIfMissing: boolean): void {
     if (this.context.loading()) return;
     this.context.loadContext().subscribe({
       next: (response) => {
+        if ('failed' in response && response.failed) {
+          return;
+        }
         if (redirectIfMissing && !response.data && !this.isOnboardingRoute()) {
           this.authService.logout(false);
           void this.router.navigate([APP_ROUTES.HOME]);

@@ -76,7 +76,7 @@ const getSummary = asyncHandler(async (req, res) => {
   const rows = await sequelize.query(
     `
       SELECT
-        (SELECT COUNT(*) FROM jobs WHERE company_id = :companyId) AS totalJobs,
+        (SELECT COUNT(*) FROM jobs WHERE company_id = :companyId AND deleted_by_recruiter_at IS NULL AND archived_at IS NULL AND status NOT IN (:expiredStatus)) AS totalJobs,
         (SELECT COALESCE(SUM(views_count), 0) FROM jobs WHERE company_id = :companyId) AS totalViews,
         (
           SELECT COUNT(*)
@@ -94,6 +94,7 @@ const getSummary = asyncHandler(async (req, res) => {
       replacements: {
         companyId: recruiter.company_id,
         activeStatus: JOB_STATUS.ACTIVE,
+        expiredStatus: JOB_STATUS.EXPIRED,
       },
       type: QueryTypes.SELECT,
     }

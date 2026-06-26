@@ -79,12 +79,12 @@ export class CircularLogoUploaderComponent {
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.type)) {
-      this.errorMessage.set('Only JPG, PNG, or WEBP images are allowed.');
+      this.errorMessage.set('Seuls les formats JPG, PNG ou WEBP sont acceptés.');
       return;
     }
 
     if (file.size > this.maxSizeMb() * 1024 * 1024) {
-      this.errorMessage.set(`Image must be smaller than ${this.maxSizeMb()}MB.`);
+      this.errorMessage.set(`L’image doit faire moins de ${this.maxSizeMb()} Mo.`);
       return;
     }
 

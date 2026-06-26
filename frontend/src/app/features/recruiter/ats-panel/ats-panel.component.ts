@@ -23,6 +23,7 @@ import { RecruiterJobService } from '../services/job.service';
 import { RecruiterContextService } from '../services/recruiter-context.service';
 import { StarRatingComponent } from '../shared/star-rating/star-rating.component';
 import { PaginationMeta } from '../../../core/models/pagination.model';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
 
 type DrawerTab = 'profile' | 'cv';
 type AtsViewMode = 'kanban' | 'list';
@@ -53,7 +54,7 @@ const ALLOWED_STATUS_TRANSITIONS: Record<ApplicationStatus, ReadonlySet<Applicat
 @Component({
   selector: 'app-ats-panel',
   standalone: true,
-  imports: [ReactiveFormsModule, StarRatingComponent, DatePipe, DecimalPipe, RouterLink],
+  imports: [ReactiveFormsModule, StarRatingComponent, DatePipe, DecimalPipe, RouterLink, ModalKeyboardDirective],
   templateUrl: './ats-panel.component.html',
   styleUrl: './ats-panel.component.css',
 })
@@ -100,6 +101,8 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
   private drawerResizeCleanup: (() => void) | null = null;
   private cvObjectUrl: string | null = null;
   private applicationsLoadToken = 0;
+  private panelLoadToken = 0;
+  readonly archivedReadOnly = signal(false);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -201,6 +204,7 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     this.route.queryParamMap.subscribe((params) => {
       this.selectedJobId.set(params.get('jobId') || '');
       const applicationId = params.get('applicationId') || '';
+      this.archivedReadOnly.set(params.get('archived') === '1');
       this.currentPage.set(1);
       this.loadApplications(1, applicationId || undefined);
     });
@@ -459,8 +463,10 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
 
   openPanelById(applicationId: string, tab: DrawerTab = 'profile'): void {
     this.drawerTab.set(tab);
+    const loadToken = ++this.panelLoadToken;
     this.applicationService.getById(applicationId).subscribe({
       next: (res) => {
+        if (loadToken !== this.panelLoadToken) return;
         if (res.data) {
           this.selectedApplication.set(res.data);
           this.revealedPhoneApplicationId.set(null);
@@ -472,14 +478,19 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
           }
         }
       },
-      error: () => this.errorMessage.set('Impossible de charger le profil candidat.'),
+      error: () => {
+        if (loadToken !== this.panelLoadToken) return;
+        this.errorMessage.set('Impossible de charger le profil candidat.');
+      },
     });
   }
 
   openPanel(application: Application, tab: DrawerTab = 'profile'): void {
     this.drawerTab.set(tab);
+    const loadToken = ++this.panelLoadToken;
     this.applicationService.getById(application.id).subscribe({
       next: (res) => {
+        if (loadToken !== this.panelLoadToken) return;
         if (res.data) {
           this.selectedApplication.set(res.data);
           this.revealedPhoneApplicationId.set(null);
@@ -491,11 +502,15 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
           }
         }
       },
-      error: () => this.errorMessage.set('Impossible de charger le profil candidat.'),
+      error: () => {
+        if (loadToken !== this.panelLoadToken) return;
+        this.errorMessage.set('Impossible de charger le profil candidat.');
+      },
     });
   }
 
   closePanel(): void {
+    this.panelLoadToken++;
     this.panelOpen.set(false);
     this.selectedApplication.set(null);
     this.revealedPhoneApplicationId.set(null);
@@ -593,7 +608,12 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     return resolveUploadUrl(application.candidate?.avatarUrl ?? null);
   }
 
-  viewResume(application: Application | ApplicationDetail): void {
+  openResumeInDrawer(): void {
+    this.drawerTab.set('cv');
+    this.loadCvPreview();
+  }
+
+  viewResumeInNewTab(application: Application | ApplicationDetail): void {
     const url = this.resumeUrl(application);
     if (!url) {
       this.errorMessage.set('Aucun CV disponible pour ce candidat.');
@@ -603,6 +623,15 @@ export class AtsPanelComponent implements OnInit, OnDestroy {
     this.protectedFileService.openFile(url, () =>
       this.errorMessage.set('Impossible d’ouvrir le CV.')
     );
+  }
+
+  advanceApplicationStatus(application: Application): void {
+    const transitions = ALLOWED_STATUS_TRANSITIONS[application.status];
+    const next = ACTIVE_APPLICATION_STATUSES.find(
+      (status) => status !== application.status && transitions.has(status)
+    );
+    if (!next) return;
+    this.openStatusChangeModal(application, next);
   }
 
   async onRatingChange(rating: number): Promise<void> {

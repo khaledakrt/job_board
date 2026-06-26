@@ -14,10 +14,6 @@ export class CompanyService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/companies`;
 
-  list(): Observable<ApiResponse<Company[]>> {
-    return this.http.get<ApiResponse<Company[]>>(this.apiUrl);
-  }
-
   create(payload: CreateCompanyPayload): Observable<ApiResponse<Company>> {
     return this.http.post<ApiResponse<Company>>(this.apiUrl, payload);
   }

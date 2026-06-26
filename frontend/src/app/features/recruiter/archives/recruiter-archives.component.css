@@ -268,3 +268,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+.archive-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.archive-detail-card {
+  width: min(560px, 100%);
+  padding: 1.5rem;
+  position: relative;
+}
+
+.archive-detail-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: 0;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.archive-detail-section {
+  margin-top: 1rem;
+}
+
+.archive-detail-section h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}

@@ -41,57 +41,57 @@
   <div class="alert alert-error">{{ errorMessage() }}</div>
 }
 
-<app-analytics-grid [summaryInput]="summary()" />
+@if (loading()) {
+  <p class="table-loading">{{ 'common.loading' | t }}</p>
+} @else {
+  <app-analytics-grid [summaryInput]="summary()" />
 
-<div class="quick-actions">
-  @if (context.canPostJob()) {
-    <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">
-      <span>{{ 'recruiter.dashboard.publish' | t }}</span>
-      <strong>{{ 'recruiter.dashboard.createJob' | t }}</strong>
-      <small>Rédigez une annonce complète avec quiz optionnel.</small>
-    </a>
-  }
-  @if (context.canDecideApplication()) {
-    <a [routerLink]="routes.RECRUITER.ATS" class="quick-card quick-card-accent">
-      <span>{{ 'recruiter.dashboard.pipeline' | t }}</span>
-      <strong>{{ 'recruiter.dashboard.viewApplications' | t }}</strong>
-      <small>Suivez les profils par étape et par offre.</small>
-    </a>
-  }
-  @if (context.isOwner()) {
-    <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">
-      <span>{{ 'recruiter.dashboard.team' | t }}</span>
-      <strong>{{ 'recruiter.dashboard.manageTeam' | t }}</strong>
-      <small>Invitez des recruteurs et ajustez leurs droits.</small>
-    </a>
-  }
-</div>
-
-<section class="next-actions panel-card">
-  <div>
-    <p class="next-actions-kicker">{{ 'recruiter.dashboard.nextActions' | t }}</p>
-    <h2>{{ 'recruiter.dashboard.recommendedPriorities' | t }}</h2>
-  </div>
-  <div class="next-actions-grid">
-    <a [routerLink]="routes.RECRUITER.ONBOARDING" class="next-action-item">
-      <strong>{{ 'recruiter.dashboard.companyShowcase' | t }}</strong>
-      <span>Gardez votre vitrine employeur complète.</span>
-    </a>
+  <div class="quick-actions">
     @if (context.canPostJob()) {
-      <a [routerLink]="routes.RECRUITER.JOBS" class="next-action-item">
-        <strong>{{ 'recruiter.dashboard.jobsVisibility' | t }}</strong>
-        <span>Vérifiez les annonces actives et expirées.</span>
+      <a [routerLink]="routes.RECRUITER.JOBS_NEW" class="quick-card">
+        <span>{{ 'recruiter.dashboard.publish' | t }}</span>
+        <strong>{{ 'recruiter.dashboard.createJob' | t }}</strong>
+        <small>Rédigez une annonce complète avec quiz optionnel.</small>
       </a>
     }
     @if (context.canDecideApplication()) {
-      <a [routerLink]="routes.RECRUITER.ATS" class="next-action-item">
+      <a [routerLink]="routes.RECRUITER.ATS" class="quick-card quick-card-accent">
+        <span>{{ 'recruiter.dashboard.pipeline' | t }}</span>
         <strong>{{ 'recruiter.dashboard.viewApplications' | t }}</strong>
-        <span>Avancez les profils en attente dans l’ATS.</span>
+        <small>Suivez les profils par étape et par offre.</small>
+      </a>
+    }
+    @if (context.isOwner()) {
+      <a [routerLink]="routes.RECRUITER.TEAM" class="quick-card">
+        <span>{{ 'recruiter.dashboard.team' | t }}</span>
+        <strong>{{ 'recruiter.dashboard.manageTeam' | t }}</strong>
+        <small>Invitez des recruteurs et ajustez leurs droits.</small>
       </a>
     }
   </div>
-</section>
 
-@if (loading()) {
-  <p class="table-loading">{{ 'common.loading' | t }}</p>
+  <section class="next-actions panel-card">
+    <div>
+      <p class="next-actions-kicker">{{ 'recruiter.dashboard.nextActions' | t }}</p>
+      <h2>{{ 'recruiter.dashboard.recommendedPriorities' | t }}</h2>
+    </div>
+    <div class="next-actions-grid">
+      <a [routerLink]="routes.RECRUITER.ONBOARDING" class="next-action-item">
+        <strong>{{ 'recruiter.dashboard.companyShowcase' | t }}</strong>
+        <span>Gardez votre vitrine employeur complète.</span>
+      </a>
+      @if (context.canPostJob()) {
+        <a [routerLink]="routes.RECRUITER.JOBS" class="next-action-item">
+          <strong>{{ 'recruiter.dashboard.jobsVisibility' | t }}</strong>
+          <span>Vérifiez les annonces actives et expirées.</span>
+        </a>
+      }
+      @if (context.canDecideApplication()) {
+        <a [routerLink]="routes.RECRUITER.ATS" class="next-action-item">
+          <strong>{{ 'recruiter.dashboard.viewApplications' | t }}</strong>
+          <span>Avancez les profils en attente dans l’ATS.</span>
+        </a>
+      }
+    </div>
+  </section>
 }

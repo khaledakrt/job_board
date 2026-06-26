@@ -5,13 +5,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { APPLICATION_STATUS_LABELS } from '../../../core/constants/application-status.constant';
 import { JOB_STATUS_LABELS } from '../../../core/constants/job.constant';
-import { Application } from '../../../core/models/application.model';
+import { Application, ApplicationDetail } from '../../../core/models/application.model';
 import { Job } from '../../../core/models/job.model';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PaginationMeta } from '../../../core/models/pagination.model';
 import { RecruiterApplicationService } from '../services/application.service';
 import { RecruiterJobService } from '../services/job.service';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
 
 type ArchiveTab = 'applications' | 'jobs';
 const ARCHIVE_PAGE_SIZE = 20;
@@ -19,7 +20,7 @@ const ARCHIVE_PAGE_SIZE = 20;
 @Component({
   selector: 'app-recruiter-archives',
   standalone: true,
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, ModalKeyboardDirective],
   templateUrl: './recruiter-archives.component.html',
   styleUrl: './recruiter-archives.component.css',
 })
@@ -42,12 +43,16 @@ export class RecruiterArchivesComponent implements OnInit {
   readonly actionLoading = signal<string | null>(null);
   readonly message = signal<string | null>(null);
   readonly error = signal<string | null>(null);
+  readonly detailOpen = signal(false);
+  readonly detailLoading = signal(false);
+  readonly selectedApplication = signal<ApplicationDetail | null>(null);
+  readonly jobBreakdown = signal({ expired: 0, manual: 0 });
 
   readonly summary = computed(() => ({
-    applications: this.applicationsPagination()?.totalItems ?? this.applications().length,
-    jobs: this.jobsPagination()?.totalItems ?? this.jobs().length,
-    expiredJobs: this.jobs().filter((job) => job.status === 'expired').length,
-    manualJobs: this.jobs().filter((job) => job.archivedAt).length,
+    applications: this.applicationsPagination()?.totalItems ?? 0,
+    jobs: this.jobsPagination()?.totalItems ?? 0,
+    expiredJobs: this.jobBreakdown().expired,
+    manualJobs: this.jobBreakdown().manual,
   }));
 
   readonly applicationPageNumbers = computed(() => this.pageNumbers(this.applicationsPagination()));
@@ -76,14 +81,20 @@ export class RecruiterArchivesComponent implements OnInit {
         page: this.jobsPage(),
         limit: ARCHIVE_PAGE_SIZE,
       }),
+      jobsBreakdown: this.jobService.list({ archived: true, page: 1, limit: 500 }),
     }).subscribe({
-      next: ({ applications, jobs }) => {
+      next: ({ applications, jobs, jobsBreakdown }) => {
         this.applications.set(applications.data || []);
         this.applicationsPagination.set(applications.pagination || null);
         this.applicationsPage.set(applications.pagination?.page || this.applicationsPage());
         this.jobs.set(jobs.data || []);
         this.jobsPagination.set(jobs.pagination || null);
         this.jobsPage.set(jobs.pagination?.page || this.jobsPage());
+        const breakdownItems = jobsBreakdown.data || [];
+        this.jobBreakdown.set({
+          expired: breakdownItems.filter((job) => job.status === 'expired').length,
+          manual: breakdownItems.filter((job) => job.archivedAt).length,
+        });
         this.loading.set(false);
       },
       error: () => {
@@ -135,15 +146,39 @@ export class RecruiterArchivesComponent implements OnInit {
     this.loadJobsArchive(page);
   }
 
+  viewApplication(application: Application): void {
+    this.detailLoading.set(true);
+    this.detailOpen.set(true);
+    this.selectedApplication.set(null);
+    this.applicationService.getById(application.id).subscribe({
+      next: (res) => {
+        this.selectedApplication.set(res.data || null);
+        this.detailLoading.set(false);
+      },
+      error: () => {
+        this.error.set('Impossible de charger le détail de la candidature.');
+        this.detailLoading.set(false);
+        this.detailOpen.set(false);
+      },
+    });
+  }
+
+  closeApplicationDetail(): void {
+    this.detailOpen.set(false);
+    this.selectedApplication.set(null);
+    this.detailLoading.set(false);
+  }
+
   private pageNumbers(pagination: PaginationMeta | null): number[] {
     if (!pagination) return [];
     return Array.from({ length: pagination.totalPages }, (_, i) => i + 1);
   }
 
   async restoreApplication(application: Application): Promise<void> {
+    const screeningLabel = APPLICATION_STATUS_LABELS.screening;
     const ok = await this.confirmDialog.confirm({
       title: 'Restaurer la candidature ?',
-      message: 'Elle réapparaîtra dans le tableau ATS en Présélection.',
+      message: `Elle réapparaîtra dans l’ATS en « ${screeningLabel} ».`,
       confirmLabel: 'Restaurer',
     });
     if (!ok) return;
@@ -151,8 +186,9 @@ export class RecruiterArchivesComponent implements OnInit {
     this.actionLoading.set(application.id);
     this.applicationService.restore(application.id).subscribe({
       next: () => {
-        this.message.set('Candidature restaurée dans l’ATS en Présélection.');
+        this.message.set(`Candidature restaurée en « ${screeningLabel} ».`);
         this.actionLoading.set(null);
+        this.closeApplicationDetail();
         this.loadArchives();
       },
       error: (err: HttpErrorResponse) => {
@@ -176,6 +212,7 @@ export class RecruiterArchivesComponent implements OnInit {
       next: () => {
         this.message.set('Candidature supprimée de l’archive recruteur.');
         this.actionLoading.set(null);
+        this.closeApplicationDetail();
         this.loadArchives();
       },
       error: (err: HttpErrorResponse) => {
@@ -231,7 +268,7 @@ export class RecruiterArchivesComponent implements OnInit {
     });
   }
 
-  candidateName(application: Application): string {
+  candidateName(application: Application | ApplicationDetail): string {
     return [application.candidate?.firstName, application.candidate?.lastName]
       .filter(Boolean)
       .join(' ')

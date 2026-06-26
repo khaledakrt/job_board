@@ -7,6 +7,7 @@ import { RecruiterContextService } from '../services/recruiter-context.service';
 import { TeamMember, UpdateTeamMemberPayload } from '../../../core/models/recruiter.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
 
 const PERMISSION_META: {
   key: 'canPostJob' | 'canDecideApplication' | 'canEditCompany';
@@ -21,7 +22,7 @@ const TEAM_MEMBER_LIMIT = 10;
 @Component({
   selector: 'app-team-management',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, ModalKeyboardDirective],
   templateUrl: './team-management.component.html',
   styleUrl: './team-management.component.css',
 })
