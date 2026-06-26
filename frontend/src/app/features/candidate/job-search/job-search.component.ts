@@ -45,13 +45,14 @@ import {
 import { SafeHtmlComponent } from '../../../shared/components/safe-html/safe-html.component';
 import { stripHtml } from '../../../shared/utils/rich-text.util';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
 
 const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-job-search',
   standalone: true,
-  imports: [ReactiveFormsModule, SafeHtmlComponent, NgTemplateOutlet, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, SafeHtmlComponent, NgTemplateOutlet, RouterLink, TranslatePipe, ModalKeyboardDirective],
   templateUrl: './job-search.component.html',
   styleUrl: './job-search.component.css',
 })
@@ -735,6 +736,7 @@ export class JobSearchComponent implements OnInit {
   async saveJob(job: Job, event?: Event): Promise<void> {
     event?.stopPropagation();
     event?.preventDefault();
+    if (this.isSaved(job.id)) return;
     if (!this.isSaved(job.id) && this.savedJobIds().size >= 10) {
       this.success.set(null);
       this.error.set('Vous ne pouvez pas enregistrer plus de 10 offres. Retirez une offre pour en ajouter une autre.');
@@ -760,7 +762,7 @@ export class JobSearchComponent implements OnInit {
   }
 
   async createAlert(): Promise<void> {
-    const searchFilters = { ...this.filters() };
+    const searchFilters = { ...this.appliedFilters() };
     if (!this.hasMeaningfulAlertFilters(searchFilters)) {
       this.error.set('Remplissez au moins un champ de recherche avant de créer une alerte.');
       this.success.set(null);

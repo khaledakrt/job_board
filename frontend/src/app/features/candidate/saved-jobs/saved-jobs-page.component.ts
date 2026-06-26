@@ -1,8 +1,9 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { JobAlertItem, SavedJobItem } from '../../../core/models/candidate-profile.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -24,6 +25,7 @@ export class SavedJobsPageComponent implements OnInit {
   private readonly alertService = inject(JobAlertService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
 
   readonly routes = APP_ROUTES;
@@ -56,21 +58,30 @@ export class SavedJobsPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      const tab = params.get('tab');
+      if (tab === 'alerts') this.tab.set('alerts');
+      else if (tab === 'saved') this.tab.set('saved');
+    });
     this.reload();
   }
 
   reload(): void {
     this.loading.set(true);
-    this.savedService.list().subscribe({
-      next: (res) => this.savedJobs.set(res.data || []),
-      error: () => this.error.set('Impossible de charger les offres enregistrées.'),
-    });
-    this.alertService.list().subscribe({
-      next: (res) => {
-        this.alerts.set(res.data || []);
+    this.error.set(null);
+    forkJoin({
+      saved: this.savedService.list(),
+      alerts: this.alertService.list(),
+    }).subscribe({
+      next: ({ saved, alerts }) => {
+        this.savedJobs.set(saved.data || []);
+        this.alerts.set(alerts.data || []);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.error.set('Impossible de charger vos offres et alertes.');
+        this.loading.set(false);
+      },
     });
   }
 
@@ -79,8 +90,7 @@ export class SavedJobsPageComponent implements OnInit {
   }
 
   viewJob(jobId: string): void {
-    const url = this.router.serializeUrl(this.router.createUrlTree(['/offres', jobId]));
-    window.open(url, '_blank', 'noopener,noreferrer');
+    void this.router.navigate([this.routes.CANDIDATE.JOBS], { queryParams: { jobId } });
   }
 
   logo(url: string | null | undefined): string | null {
@@ -180,6 +190,8 @@ export class SavedJobsPageComponent implements OnInit {
         this.savedJobs.update((l) => l.filter((s) => s.id !== item.id));
         this.setSavedPage(this.savedPage());
       },
+      error: (err: HttpErrorResponse) =>
+        this.error.set(err.error?.message || 'Impossible de retirer l\'offre.'),
     });
   }
 
@@ -196,6 +208,8 @@ export class SavedJobsPageComponent implements OnInit {
         this.alerts.update((l) => l.filter((a) => a.id !== alert.id));
         this.setAlertsPage(this.alertsPage());
       },
+      error: (err: HttpErrorResponse) =>
+        this.error.set(err.error?.message || 'Impossible de supprimer l\'alerte.'),
     });
   }
 

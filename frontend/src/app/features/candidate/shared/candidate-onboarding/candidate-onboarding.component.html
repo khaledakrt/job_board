@@ -1,40 +1,47 @@
 @if (visible()) {
-  <div class="onboarding-backdrop" role="dialog" aria-modal="true">
-    <article class="onboarding-card panel-card">
+  <div
+    class="onboarding-backdrop"
+    role="dialog"
+    aria-modal="true"
+    appModalKeyboard
+    [appModalKeyboardOpen]="visible()"
+    (appModalEscape)="dismissForNow()"
+  >
+    <article class="onboarding-card panel-card" (click)="$event.stopPropagation()">
       @if (needsProfileCreation()) {
-        <p class="onboarding-eyebrow">Première connexion</p>
-        <h2>Créez votre profil avant de commencer</h2>
-        <p>
-          Pour postuler, enregistrer des offres et recevoir des alertes, vous devez d’abord renseigner vos informations
-          candidat et préparer votre CV.
-        </p>
+        <p class="onboarding-eyebrow">{{ 'candidate.onboarding.firstLogin' | t }}</p>
+        <h2>{{ 'candidate.onboarding.createProfileTitle' | t }}</h2>
+        <p>{{ 'candidate.onboarding.createProfileLead' | t }}</p>
         <ul class="onboarding-checklist">
-          <li>Complétez votre identité et votre titre professionnel.</li>
-          <li>Ajoutez vos expériences, formations et compétences.</li>
-          <li>Importez un CV PDF ou générez-le depuis votre profil.</li>
+          <li>{{ 'candidate.onboarding.checklist.identity' | t }}</li>
+          <li>{{ 'candidate.onboarding.checklist.experience' | t }}</li>
+          <li>{{ 'candidate.onboarding.checklist.resume' | t }}</li>
         </ul>
         <div class="onboarding-actions">
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="dismissForNow()">
+            {{ 'candidate.onboarding.later' | t }}
+          </button>
           <a [routerLink]="routes.CANDIDATE.PROFILE" class="btn-primary !w-auto px-4">
-            Compléter mon profil maintenant
+            {{ 'candidate.onboarding.completeProfileNow' | t }}
           </a>
         </div>
       } @else {
-        <p class="onboarding-eyebrow">Bienvenue sur JobBoard</p>
+        <p class="onboarding-eyebrow">{{ 'candidate.onboarding.welcome' | t }}</p>
         @switch (step()) {
           @case (1) {
-            <h2>1. Complétez votre profil</h2>
-            <p>Ajoutez votre titre, expériences et compétences pour être visible des recruteurs.</p>
-            <a [routerLink]="routes.CANDIDATE.PROFILE" class="onboarding-link">Aller au profil →</a>
+            <h2>{{ 'candidate.onboarding.step1.title' | t }}</h2>
+            <p>{{ 'candidate.onboarding.step1.text' | t }}</p>
+            <a [routerLink]="routes.CANDIDATE.PROFILE" class="onboarding-link">{{ 'candidate.onboarding.step1.link' | t }}</a>
           }
           @case (2) {
-            <h2>2. Ajoutez votre CV</h2>
-            <p>Importez un PDF ou générez-le depuis votre profil — obligatoire pour postuler.</p>
-            <a [routerLink]="routes.CANDIDATE.PROFILE" class="onboarding-link">Ajouter mon CV →</a>
+            <h2>{{ 'candidate.onboarding.step2.title' | t }}</h2>
+            <p>{{ 'candidate.onboarding.step2.text' | t }}</p>
+            <a [routerLink]="routes.CANDIDATE.PROFILE" class="onboarding-link">{{ 'candidate.onboarding.step2.link' | t }}</a>
           }
           @case (3) {
-            <h2>3. Trouvez votre prochaine offre</h2>
-            <p>Recherchez, enregistrez des offres et créez des alertes emploi.</p>
-            <a [routerLink]="routes.CANDIDATE.JOBS" class="onboarding-link">Voir les offres →</a>
+            <h2>{{ 'candidate.onboarding.step3.title' | t }}</h2>
+            <p>{{ 'candidate.onboarding.step3.text' | t }}</p>
+            <a [routerLink]="routes.CANDIDATE.JOBS" class="onboarding-link">{{ 'candidate.onboarding.step3.link' | t }}</a>
           }
         }
         <div class="onboarding-dots">
@@ -42,12 +49,15 @@
             <span class="onboarding-dot" [class.onboarding-dot-active]="step() === s"></span>
           }
         </div>
+        @if (onboardingError()) {
+          <p class="onboarding-error">{{ onboardingError() }}</p>
+        }
         <div class="onboarding-actions">
           <button type="button" class="btn-secondary !w-auto px-4" (click)="skip()" [disabled]="saving()">
-            Passer
+            {{ 'candidate.onboarding.skip' | t }}
           </button>
           <button type="button" class="btn-primary !w-auto px-4" (click)="next()" [disabled]="saving()">
-            {{ step() === 3 ? 'Terminer' : 'Suivant' }}
+            {{ step() === 3 ? ('candidate.onboarding.finish' | t) : ('candidate.onboarding.next' | t) }}
           </button>
         </div>
       }

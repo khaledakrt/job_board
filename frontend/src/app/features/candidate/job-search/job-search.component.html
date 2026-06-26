@@ -177,7 +177,14 @@
       >
         {{ 'actions.newTab' | t }}
       </button>
-      <button type="button" class="btn-secondary !w-auto px-3" (click)="saveJob(job, $event)">{{ 'candidate.jobs.saved' | t }}</button>
+      <button
+        type="button"
+        class="btn-secondary !w-auto px-3"
+        (click)="saveJob(job, $event)"
+        [disabled]="isSaved(job.id)"
+      >
+        {{ isSaved(job.id) ? ('candidate.jobs.savedDone' | t) : ('candidate.jobs.saved' | t) }}
+      </button>
       @if (hasApplied(job.id)) {
         <button type="button" class="btn-primary !w-auto px-4 btn-applied" disabled>
           {{ 'candidate.jobs.applied' | t }}
@@ -334,7 +341,7 @@
         <div>
           <p class="results-summary-eyebrow">Résultats</p>
           <h2 class="results-summary-title">
-            {{ filteredJobs().length }} offre(s) trouvée(s)
+            {{ totalJobs() }} {{ 'candidate.jobs.resultsFoundSuffix' | t }}
           </h2>
         </div>
         @if (hasActiveFilters()) {
@@ -576,13 +583,20 @@
 }
 
 @if (applyFlowOpen() && applyJob(); as job) {
-  <div class="modal-backdrop apply-flow-backdrop" (click)="closeApplyModal()">
+  <div
+    class="modal-backdrop apply-flow-backdrop"
+    appModalKeyboard
+    [appModalKeyboardOpen]="applyFlowOpen()"
+    appModalFocusId="apply-modal-title"
+    (appModalEscape)="closeApplyModal()"
+    (click)="closeApplyModal()"
+  >
     @if (applyFlowStep() === 'offer') {
       <div
         class="modal-card-lg apply-modal apply-modal-shell apply-modal-wide"
         (click)="$event.stopPropagation()"
       >
-        <h2 class="modal-title apply-modal-shell-title">Postuler — {{ job.title }}</h2>
+        <h2 id="apply-modal-title" class="modal-title apply-modal-shell-title">Postuler — {{ job.title }}</h2>
 
         <div class="apply-modal-scroll-body">
           <ng-container *ngTemplateOutlet="applyModalOfferContent; context: { job }" />
@@ -641,7 +655,7 @@
       </div>
     } @else {
       <div class="modal-card-lg apply-modal apply-modal-letter-shell" (click)="$event.stopPropagation()">
-        <h2 class="modal-title">Lettre de motivation</h2>
+        <h2 id="apply-modal-title" class="modal-title">Lettre de motivation</h2>
         <p class="apply-modal-letter-job">{{ job.title }} · {{ job.company?.name || ('forms.company' | t) }}</p>
         @if (isQuizEnabled(job)) {
           <p class="apply-step-badge">Quiz validé</p>

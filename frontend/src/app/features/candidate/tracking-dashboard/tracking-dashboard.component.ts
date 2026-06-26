@@ -31,6 +31,7 @@ import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { salaryDisplayLabel } from '../../../core/utils/job-display.util';
 import { ProtectedFileService } from '../../../core/services/protected-file.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
 @Component({
   selector: 'app-tracking-dashboard',
   standalone: true,
@@ -41,6 +42,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
     ApplicationQuizReviewComponent,
     SafeHtmlComponent,
     TranslatePipe,
+    ModalKeyboardDirective,
   ],
   templateUrl: './tracking-dashboard.component.html',
   styleUrl: './tracking-dashboard.component.css',
@@ -74,6 +76,11 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
   readonly loadingApps = signal(true);
   readonly loadingSaved = signal(true);
   readonly loadingAlerts = signal(true);
+  readonly loadingSummary = signal(true);
+  readonly loadingRecommended = signal(true);
+  readonly summaryError = signal<string | null>(null);
+  readonly recommendedError = signal<string | null>(null);
+  readonly alertsError = signal<string | null>(null);
   readonly loadingDetail = signal(false);
   readonly error = signal<string | null>(null);
   readonly detailOpen = signal(false);
@@ -82,12 +89,20 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
   readonly rescheduleDraft = signal('');
 
   readonly stats = computed(() => {
-    const apps = this.applications();
+    const summary = this.dashboardSummary();
+    if (summary?.totals) {
+      return {
+        active: summary.totals.active ?? 0,
+        interview: summary.totals.interview ?? 0,
+        offer: summary.totals.offer ?? 0,
+        saved: this.savedJobs().length,
+        alerts: this.alerts().length,
+      };
+    }
     return {
-      total: apps.length,
-      active: apps.filter((a) => !['rejected'].includes(a.status)).length,
-      interview: apps.filter((a) => a.status === 'interview').length,
-      offer: apps.filter((a) => a.status === 'offer').length,
+      active: 0,
+      interview: 0,
+      offer: 0,
       saved: this.savedJobs().length,
       alerts: this.alerts().length,
     };
@@ -100,10 +115,24 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
     this.loadSavedJobs();
     this.loadAlerts();
     this.dashboardService.getSummary().subscribe({
-      next: (res) => this.dashboardSummary.set(res.data || null),
+      next: (res) => {
+        this.dashboardSummary.set(res.data || null);
+        this.loadingSummary.set(false);
+      },
+      error: () => {
+        this.summaryError.set('Impossible de charger les statistiques.');
+        this.loadingSummary.set(false);
+      },
     });
     this.dashboardService.getRecommendedJobs().subscribe({
-      next: (res) => this.recommendedJobs.set(res.data || []),
+      next: (res) => {
+        this.recommendedJobs.set(res.data || []);
+        this.loadingRecommended.set(false);
+      },
+      error: () => {
+        this.recommendedError.set('Impossible de charger les suggestions.');
+        this.loadingRecommended.set(false);
+      },
     });
   }
 
@@ -195,6 +224,7 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
         this.loadingAlerts.set(false);
       },
       error: () => {
+        this.alertsError.set('Impossible de charger les alertes.');
         this.loadingAlerts.set(false);
       },
     });

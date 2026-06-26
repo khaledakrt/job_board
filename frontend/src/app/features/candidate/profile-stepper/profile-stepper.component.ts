@@ -11,6 +11,8 @@ import {
   EducationBlock,
 } from '../../../core/models/candidate-profile.model';
 import { ProtectedFileService } from '../../../core/services/protected-file.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-profile-stepper',
@@ -18,6 +20,7 @@ import { ProtectedFileService } from '../../../core/services/protected-file.serv
   imports: [
     ReactiveFormsModule,
     CircularAvatarUploaderComponent,
+    TranslatePipe,
   ],
   templateUrl: './profile-stepper.component.html',
   styleUrl: './profile-stepper.component.css',
@@ -27,6 +30,7 @@ export class ProfileStepperComponent implements OnInit {
   private readonly profileService = inject(CandidateProfileService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly protectedFileService = inject(ProtectedFileService);
+  private readonly i18n = inject(I18nService);
   readonly context = inject(CandidateContextService);
 
   readonly currentStep = signal(1);
@@ -62,7 +66,7 @@ export class ProfileStepperComponent implements OnInit {
   ngOnInit(): void {
     this.context.loadProfile().subscribe({
       next: () => this.hydrateFromProfile(),
-      error: () => {},
+      error: () => this.error.set(this.i18n.translate('candidate.profile.loadError')),
     });
   }
 

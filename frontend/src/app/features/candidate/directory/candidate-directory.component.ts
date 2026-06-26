@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { Job } from '../../../core/models/job.model';
@@ -28,6 +29,8 @@ import {
   TRAINING_DELIVERY_OPTIONS,
   INSTITUTION_TYPE_OPTIONS,
 } from '../../public/shared/catalog.constants';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type DirectoryKind = 'companies' | 'training' | 'institutions';
 
@@ -38,7 +41,7 @@ type TrainingContent = TrainingFormationItem | TrainingEventItem;
 @Component({
   selector: 'app-candidate-directory',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, SafeHtmlComponent],
+  imports: [FormsModule, ReactiveFormsModule, SafeHtmlComponent, ModalKeyboardDirective, TranslatePipe],
   templateUrl: './candidate-directory.component.html',
   styleUrl: './candidate-directory.component.css',
 })
@@ -277,13 +280,15 @@ export class CandidateDirectoryComponent implements OnInit {
     this.closeApply(false);
   }
 
-  startApply(job: Job): void {
+  async startApply(job: Job): Promise<void> {
     this.error.set(null);
     this.success.set(null);
     if (this.hasApplied(job.id)) {
       this.error.set('Vous avez déjà postulé à cette offre.');
       return;
     }
+
+    await firstValueFrom(this.candidateContext.loadProfile());
 
     if (!this.candidateContext.profile()?.resumeUrl) {
       this.error.set('Ajoutez un CV dans Mon profil (étape Identité & CV) avant de postuler.');
@@ -546,7 +551,7 @@ export class CandidateDirectoryComponent implements OnInit {
       next: () => {
         this.institutionActionLoading.set(false);
         this.institutionActionMsg.set(this.institutionSuccessLabel(offering));
-        this.markInstitutionOfferingRegistered(offering.id);
+        this.markInstitutionOfferingParticipation(offering.id, participationType);
       },
       error: (err) => {
         this.institutionActionLoading.set(false);
@@ -748,12 +753,15 @@ export class CandidateDirectoryComponent implements OnInit {
     });
   }
 
-  private markInstitutionOfferingRegistered(offeringId: string): void {
+  private markInstitutionOfferingParticipation(
+    offeringId: string,
+    participationType: 'interested' | 'registered'
+  ): void {
     const mark = (item: InstitutionOfferingItem): InstitutionOfferingItem =>
       item.id === offeringId
         ? {
             ...item,
-            participationType: 'registered',
+            participationType,
             registrationsCount: (item.registrationsCount ?? 0) + 1,
           }
         : item;
