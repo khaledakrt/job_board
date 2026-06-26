@@ -97,19 +97,6 @@ async function listPublicCompanies(query = {}) {
 
   const { rows, count } = await Company.findAndCountAll({
     where: companyWhere,
-    include: [
-      {
-        model: Job,
-        as: 'jobs',
-        attributes: [],
-        where: {
-          status: { [Op.in]: [...JOB_PUBLIC_STATUSES] },
-          expires_at: { [Op.gt]: new Date() },
-        },
-        required: true,
-      },
-    ],
-    distinct: true,
     order: [['name', 'ASC']],
     limit,
     offset,
@@ -142,7 +129,7 @@ async function listPublicCompanies(query = {}) {
         ...formatPublicCompany(company),
         jobs: jobs.map(formatPublicJob),
         jobsCount,
-        cities: [...new Set(jobs.map((job) => job.location).filter(Boolean))],
+        cities: [...new Set([company.city, ...jobs.map((job) => job.location)].filter(Boolean))],
       };
     })
   );

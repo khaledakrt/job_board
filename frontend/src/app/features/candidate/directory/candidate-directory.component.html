@@ -114,7 +114,7 @@
 
           <aside class="company-side-info">
             <strong>{{ company.jobsCount }} offre(s) active(s)</strong>
-            <p>{{ company.cities.length ? company.cities.join(', ') : 'Ville non précisée' }}</p>
+            <p>{{ company.cities.length ? company.cities.join(', ') : (company.city || 'Ville non précisée') }}</p>
             @if (company.website) {
               <a [href]="company.website" target="_blank" rel="noopener noreferrer">
                 Site web
@@ -146,6 +146,8 @@
                 <em>Déjà postulé</em>
               }
             </button>
+          } @empty {
+            <p class="directory-state">Aucune offre active pour le moment.</p>
           }
         </div>
       </section>
@@ -320,7 +322,7 @@
             <div class="directory-card-body">
               <h2>{{ company.name }}</h2>
               <p>{{ company.industry || 'Secteur non précisé' }}</p>
-              <span>{{ company.cities.length ? company.cities.join(', ') : 'Ville non précisée' }}</span>
+              <span>{{ company.cities.length ? company.cities.join(', ') : (company.city || 'Ville non précisée') }}</span>
               <small>{{ company.jobsCount }} offre(s) active(s)</small>
             </div>
           </article>
