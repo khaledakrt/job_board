@@ -21,6 +21,7 @@ const {
   banUserBodySchema,
   updateJobStatusBodySchema,
   updateSubscriptionPolicySchema,
+  updateRecruiterPaymentOverrideSchema,
   updateCompanySubscriptionSchema,
   listCatalogQuerySchema,
   listInstitutionOfferingsQuerySchema,
@@ -71,6 +72,11 @@ router.patch(
 router.get('/users', validateQuery(listUsersQuerySchema), adminController.listUsers);
 router.post('/users', validateBody(createUserBodySchema), adminController.createUser);
 router.get(
+  '/users/:id/profile',
+  validateParams(userIdParamsSchema),
+  adminController.getUserProfileView
+);
+router.get(
   '/users/:id',
   validateParams(userIdParamsSchema),
   adminController.getUser
@@ -80,6 +86,12 @@ router.patch(
   validateParams(userIdParamsSchema),
   validateBody(updateUserBodySchema),
   adminController.updateUser
+);
+router.patch(
+  '/users/:id/payment-override',
+  validateParams(userIdParamsSchema),
+  validateBody(updateRecruiterPaymentOverrideSchema),
+  adminController.updateRecruiterPaymentOverride
 );
 router.post(
   '/users/:id/password',

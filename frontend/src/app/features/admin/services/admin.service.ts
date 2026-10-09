@@ -18,6 +18,7 @@ import {
   AdminSubscriptionPaymentRequest,
   AdminSubscriptionPolicy,
   AdminUserDetail,
+  AdminUserProfileView,
   AdminUserListItem,
   CatalogPublishStatus,
   CreateAdminUserRequest,
@@ -50,6 +51,16 @@ export class AdminService {
     );
   }
 
+  updateRecruiterPaymentOverride(
+    userId: string,
+    mode: 'inherit' | 'free' | 'required'
+  ): Observable<ApiResponse<AdminUserDetail>> {
+    return this.http.patch<ApiResponse<AdminUserDetail>>(
+      `${this.base}/users/${userId}/payment-override`,
+      { mode }
+    );
+  }
+
   listSubscriptionPaymentRequests(): Observable<ApiResponse<AdminSubscriptionPaymentRequest[]>> {
     return this.http.get<ApiResponse<AdminSubscriptionPaymentRequest[]>>(
       `${this.base}/subscription-payment-requests`
@@ -78,6 +89,10 @@ export class AdminService {
 
   getUser(id: string): Observable<ApiResponse<AdminUserDetail>> {
     return this.http.get<ApiResponse<AdminUserDetail>>(`${this.base}/users/${id}`);
+  }
+
+  getUserProfile(id: string): Observable<ApiResponse<AdminUserProfileView>> {
+    return this.http.get<ApiResponse<AdminUserProfileView>>(`${this.base}/users/${id}/profile`);
   }
 
   createUser(body: CreateAdminUserRequest): Observable<ApiResponse<AdminUserDetail>> {

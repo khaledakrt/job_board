@@ -33,6 +33,10 @@ export class I18nService {
     return current[key] ?? fallback[key] ?? key;
   }
 
+  text(french: string, english: string): string {
+    return this.currentLanguage() === 'en' ? english : french;
+  }
+
   private readInitialLanguage(): AppLanguage {
     if (typeof localStorage === 'undefined') return DEFAULT_LANGUAGE;
     const stored = localStorage.getItem(STORAGE_KEY);

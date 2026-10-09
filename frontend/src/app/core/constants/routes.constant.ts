@@ -70,6 +70,7 @@ export const APP_ROUTES = {
     USERS: '/admin/users',
     USER_NEW: '/admin/users/new',
     USER_DETAIL: (id: string) => `/admin/users/${id}`,
+    USER_PROFILE: (id: string) => `/admin/users/${id}/profile`,
     JOBS: '/admin/jobs',
     JOB_DETAIL: (id: string) => `/admin/jobs/${id}`,
     APPLICATIONS: '/admin/applications',

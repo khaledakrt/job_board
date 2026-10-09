@@ -20,8 +20,8 @@ const { sanitizeRichText } = require('../utils/richText');
 const { generateJobQuiz } = require('../utils/quizGenerator');
 const subscriptionService = require('./subscription.service');
 
-async function assertCompanyCanPublish(companyId, { excludeJobId } = {}) {
-  const publicationAccess = await subscriptionService.getActivePublishableSubscription(companyId);
+async function assertCompanyCanPublish(companyId, { excludeJobId, userId } = {}) {
+  const publicationAccess = await subscriptionService.getActivePublishableSubscription(companyId, userId);
   if (!publicationAccess.unlimited && !publicationAccess.subscription) {
     throw ApiError.forbidden(
       'An active company subscription is required to publish this job'
@@ -188,7 +188,7 @@ async function createJob({ recruiter, companyId, payload }) {
   const status = payload.status || JOB_STATUS.DRAFT;
 
   if (status === JOB_STATUS.ACTIVE) {
-    await assertCompanyCanPublish(companyId);
+    await assertCompanyCanPublish(companyId, { userId: recruiter?.user_id });
   }
 
   const job = await Job.create({
@@ -226,7 +226,7 @@ async function createJob({ recruiter, companyId, payload }) {
   return formatJob(full);
 }
 
-async function updateJob({ jobId, companyId, payload }) {
+async function updateJob({ jobId, companyId, payload, userId }) {
   const job = await assertJobBelongsToCompany(jobId, companyId);
 
   if (job.status === JOB_STATUS.EXPIRED) {
@@ -251,7 +251,7 @@ async function updateJob({ jobId, companyId, payload }) {
 
   const nextStatus = payload.status ?? job.status;
   if (nextStatus === JOB_STATUS.ACTIVE) {
-    await assertCompanyCanPublish(companyId, { excludeJobId: job.id });
+    await assertCompanyCanPublish(companyId, { excludeJobId: job.id, userId });
   }
 
   const quizUpdate = {};
@@ -311,7 +311,7 @@ async function updateJobStatus({ jobId, companyId, status, recruiterUserId }) {
   }
 
   if (status === JOB_STATUS.ACTIVE) {
-    await assertCompanyCanPublish(companyId);
+    await assertCompanyCanPublish(companyId, { userId: recruiterUserId });
   }
 
   const archiveFields = {

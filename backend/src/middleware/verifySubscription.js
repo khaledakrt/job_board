@@ -11,7 +11,7 @@ async function verifySubscription(req, res, next) {
       throw ApiError.badRequest('Company context is required for subscription verification');
     }
 
-    const isActive = await subscriptionService.verifyActiveSubscription(companyId);
+    const isActive = await subscriptionService.verifyActiveSubscription(companyId, req.user?.id);
 
     if (!isActive) {
       throw ApiError.forbidden(

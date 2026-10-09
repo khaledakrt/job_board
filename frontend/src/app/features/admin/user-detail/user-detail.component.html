@@ -46,6 +46,14 @@
           </div>
         </div>
         <div class="admin-identity-badges">
+          @if (user()!.role === roles.CANDIDATE || user()!.role === roles.RECRUITER) {
+            <a
+              class="btn-primary !w-auto profile-open-btn"
+              [routerLink]="routes.ADMIN.USER_PROFILE(user()!.id)"
+            >
+              Afficher le profil
+            </a>
+          }
           <span class="admin-badge admin-badge--role">{{ roleLabel(user()!.role) }}</span>
           @if (user()!.isVerified) {
             <span class="admin-badge admin-badge--ok">E-mail vérifié</span>
@@ -60,6 +68,51 @@
         </div>
       </div>
     </section>
+
+    @if (user()!.role === roles.RECRUITER && user()!.recruiterProfile) {
+      <section class="admin-card payment-user-card">
+        <h2 class="admin-card-title">Paiement de ce recruteur</h2>
+        <p class="admin-empty-hint">
+          Indépendant du mode du site. « Gratuit » laisse publier sans abonnement. « Paiement obligatoire » bloque la publication tant qu’il n’a pas payé.
+        </p>
+        <p class="payment-user-state">
+          État :
+          @if (user()!.recruiterProfile?.paymentOverride === 'free') {
+            <strong>paiement désactivé</strong>
+          } @else if (user()!.recruiterProfile?.paymentOverride === 'required') {
+            <strong>paiement obligatoire</strong>
+          } @else {
+            <strong>suit la règle du site</strong>
+          }
+        </p>
+        <div class="payment-user-actions">
+          <button
+            type="button"
+            class="payment-mode-button payment-mode-button--free"
+            [disabled]="actionLoading() === 'payment' || user()!.recruiterProfile?.paymentOverride === 'free'"
+            (click)="setPaymentOverride('free')"
+          >
+            Désactiver le paiement
+          </button>
+          <button
+            type="button"
+            class="payment-mode-button payment-mode-button--paid"
+            [disabled]="actionLoading() === 'payment' || user()!.recruiterProfile?.paymentOverride === 'required'"
+            (click)="setPaymentOverride('required')"
+          >
+            Activer le paiement
+          </button>
+          <button
+            type="button"
+            class="payment-mode-button"
+            [disabled]="actionLoading() === 'payment' || !user()!.recruiterProfile?.paymentOverride || user()!.recruiterProfile?.paymentOverride === 'inherit'"
+            (click)="setPaymentOverride('inherit')"
+          >
+            Suivre la règle du site
+          </button>
+        </div>
+      </section>
+    }
 
     <div class="admin-columns">
       <section class="admin-card">

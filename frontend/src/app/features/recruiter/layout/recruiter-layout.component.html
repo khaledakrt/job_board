@@ -106,7 +106,7 @@
   </aside>
 
   <main class="recruiter-main">
-    <div class="recruiter-page-shell">
+    <div class="recruiter-page-shell" [class.recruiter-page-narrow]="isJobFormRoute()">
       @if (context.profile()) {
         <header class="recruiter-topbar">
           <div>

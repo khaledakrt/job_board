@@ -1,4 +1,4 @@
-<div class="settings-page">
+<div class="settings-page" [class.settings-page-candidate]="isCandidate()">
   <header class="page-header">
     <h1 class="page-title">Paramètres</h1>
     <p class="page-subtitle">Gérez vos notifications, votre e-mail et votre mot de passe.</p>
@@ -46,25 +46,40 @@
       }
       <form [formGroup]="notifPrefs" (ngSubmit)="saveNotificationPrefs()">
         <div class="settings-notif-grid">
-          <label class="form-check">
+          <label class="form-check pref-row">
+            <span class="pref-copy">
+              <strong>E-mails</strong>
+              <small>Recevoir les messages importants par e-mail.</small>
+            </span>
             <input type="checkbox" formControlName="emailEnabled" />
-            <span>E-mails</span>
           </label>
-          <label class="form-check">
+          <label class="form-check pref-row">
+            <span class="pref-copy">
+              <strong>Dans l’application</strong>
+              <small>Afficher les alertes dans votre espace.</small>
+            </span>
             <input type="checkbox" formControlName="inAppEnabled" />
-            <span>Notifications in-app</span>
           </label>
-          <label class="form-check">
+          <label class="form-check pref-row">
+            <span class="pref-copy">
+              <strong>Statut de candidature</strong>
+              <small>Quand une candidature avance ou est refusée.</small>
+            </span>
             <input type="checkbox" formControlName="statusChange" />
-            <span>Statut candidature</span>
           </label>
-          <label class="form-check">
+          <label class="form-check pref-row">
+            <span class="pref-copy">
+              <strong>Message d’un recruteur</strong>
+              <small>Quand un recruteur vous écrit.</small>
+            </span>
             <input type="checkbox" formControlName="recruiterMessage" />
-            <span>Message recruteur</span>
           </label>
-          <label class="form-check">
+          <label class="form-check pref-row">
+            <span class="pref-copy">
+              <strong>Alertes emploi</strong>
+              <small>Nouvelles offres qui correspondent à votre profil.</small>
+            </span>
             <input type="checkbox" formControlName="jobAlert" />
-            <span>Alertes emploi</span>
           </label>
         </div>
         <div class="settings-form-actions">
@@ -77,8 +92,10 @@
     <div class="settings-auth-column">
     <section class="settings-card panel-card">
       <h2 class="settings-section-title">Adresse e-mail</h2>
-      <p class="settings-section-hint">
-        E-mail actuel : <strong class="settings-email-current">{{ userEmail }}</strong>
+      <p class="settings-section-hint">Utilisée pour la connexion et les messages.</p>
+      <p class="settings-current-email">
+        <span>Adresse actuelle</span>
+        <strong>{{ userEmail }}</strong>
       </p>
 
       @if (emailErrorMessage()) {
@@ -136,7 +153,7 @@
           }
         </div>
 
-        <div class="form-field settings-compact-field">
+        <div class="form-field settings-compact-field field-full">
           <label class="form-label" for="emailCurrentPassword">Mot de passe actuel</label>
           <input
             id="emailCurrentPassword"
@@ -173,8 +190,8 @@
     }
 
     <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" novalidate class="settings-form-grid settings-auth-form settings-password-form">
-      <div class="form-field settings-compact-field">
-        <label class="form-label" for="currentPassword">Actuel</label>
+      <div class="form-field settings-compact-field field-full">
+        <label class="form-label" for="currentPassword">Mot de passe actuel</label>
         <input
           id="currentPassword"
           name="currentPassword"
@@ -190,7 +207,7 @@
       </div>
 
       <div class="form-field settings-compact-field">
-        <label class="form-label" for="newPassword">Nouveau</label>
+        <label class="form-label" for="newPassword">Nouveau mot de passe</label>
         <input
           id="newPassword"
           name="newPassword"
@@ -209,7 +226,7 @@
       </div>
 
       <div class="form-field settings-compact-field">
-        <label class="form-label" for="confirmPassword">Confirmer</label>
+        <label class="form-label" for="confirmPassword">Confirmer le mot de passe</label>
         <input
           id="confirmPassword"
           name="confirmPassword"

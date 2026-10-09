@@ -19,11 +19,15 @@ const ALLOWED_TAGS = [
   'h3',
   'h4',
   'a',
+  'span',
 ];
 
 const ALLOWED_ATTRIBUTES = {
   a: ['href', 'title', 'target', 'rel'],
+  span: ['class'],
 };
+
+const ALLOWED_FONT_CLASSES = ['rte-font-arial', 'rte-font-serif', 'rte-font-default'];
 
 function sanitizeRichText(value) {
   if (value == null) return value;
@@ -32,6 +36,9 @@ function sanitizeRichText(value) {
   return sanitizeHtml(value, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: ALLOWED_ATTRIBUTES,
+    allowedClasses: {
+      span: ALLOWED_FONT_CLASSES,
+    },
     allowedSchemes: ['http', 'https', 'mailto', 'tel'],
     allowedSchemesByTag: {},
     allowProtocolRelative: false,

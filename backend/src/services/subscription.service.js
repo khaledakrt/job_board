@@ -2,13 +2,18 @@
 
 const { Op } = require('sequelize');
 const { env } = require('../config');
-const { PlatformSetting, Subscription, SubscriptionPlan } = require('../models');
+const { PlatformSetting, Subscription, SubscriptionPlan, RecruiterProfile } = require('../models');
 const { generateUuid } = require('../utils/uuid');
 
 const SUBSCRIPTION_MODE_KEY = 'recruiter_subscription_mode';
 const SUBSCRIPTION_MODES = Object.freeze({
   FREE_ALL: 'free_all',
   PAID_REQUIRED: 'paid_required',
+});
+const PAYMENT_OVERRIDES = Object.freeze({
+  INHERIT: 'inherit',
+  FREE: 'free',
+  REQUIRED: 'required',
 });
 const MANUAL_FREE_PLAN_TYPE = 'manual_free';
 const PAID_PLAN_TYPES = Object.freeze(['monthly_50', 'annual_500']);
@@ -78,43 +83,35 @@ function formatSubscription(subscription) {
   };
 }
 
-async function verifyActiveSubscription(companyId) {
-  if (env.SUBSCRIPTION_MOCK_BYPASS) {
-    return true;
-  }
-
-  const mode = await getRecruiterSubscriptionMode();
-  if (mode === SUBSCRIPTION_MODES.FREE_ALL) {
-    return true;
-  }
-
-  const subscription = await Subscription.findOne({
-    where: {
-      company_id: companyId,
-      plan_type: {
-        [Op.in]: PUBLISHABLE_PLAN_TYPES,
-      },
-      status: 'active',
-      current_period_end: {
-        [Op.gt]: new Date(),
-      },
-    },
+async function getRecruiterPaymentOverride(userId) {
+  if (!userId) return PAYMENT_OVERRIDES.INHERIT;
+  const profile = await RecruiterProfile.findOne({
+    where: { user_id: userId },
+    attributes: ['payment_override'],
   });
-
-  return Boolean(subscription);
+  const value = profile?.payment_override;
+  return Object.values(PAYMENT_OVERRIDES).includes(value) ? value : PAYMENT_OVERRIDES.INHERIT;
 }
 
-async function getActivePublishableSubscription(companyId) {
-  if (env.SUBSCRIPTION_MOCK_BYPASS) {
-    return { subscription: null, plan: null, unlimited: true };
+async function setRecruiterPaymentOverride(userId, mode) {
+  if (!Object.values(PAYMENT_OVERRIDES).includes(mode)) {
+    throw new Error('Invalid recruiter payment override');
   }
 
-  const mode = await getRecruiterSubscriptionMode();
-  if (mode === SUBSCRIPTION_MODES.FREE_ALL) {
-    return { subscription: null, plan: null, unlimited: true };
-  }
+  const profile = await RecruiterProfile.findOne({ where: { user_id: userId } });
+  if (!profile) return null;
 
-  const subscription = await Subscription.findOne({
+  await profile.update({
+    payment_override: mode,
+    updated_at: new Date(),
+  });
+
+  return mode;
+}
+
+async function findActivePublishableSubscription(companyId) {
+  if (!companyId) return null;
+  return Subscription.findOne({
     where: {
       company_id: companyId,
       plan_type: {
@@ -126,16 +123,77 @@ async function getActivePublishableSubscription(companyId) {
       },
     },
   });
+}
 
+async function resolvePublicationAccess(companyId, userId = null) {
+  const [mode, override] = await Promise.all([
+    getRecruiterSubscriptionMode(),
+    getRecruiterPaymentOverride(userId),
+  ]);
+
+  if (
+    override === PAYMENT_OVERRIDES.FREE ||
+    (override !== PAYMENT_OVERRIDES.REQUIRED && mode === SUBSCRIPTION_MODES.FREE_ALL)
+  ) {
+    return {
+      canPublish: true,
+      unlimited: true,
+      subscription: null,
+      plan: null,
+      mode,
+      override,
+      reason: override === PAYMENT_OVERRIDES.FREE ? 'user_free' : 'free_global',
+    };
+  }
+
+  const subscription = await findActivePublishableSubscription(companyId);
   if (!subscription) {
-    return { subscription: null, plan: null, unlimited: false };
+    return {
+      canPublish: false,
+      unlimited: false,
+      subscription: null,
+      plan: null,
+      mode,
+      override,
+      reason: 'company_subscription_required',
+    };
   }
 
   const plan = await SubscriptionPlan.findOne({
     where: { code: subscription.plan_type, is_active: true },
   });
 
-  return { subscription, plan, unlimited: plan?.max_active_jobs == null };
+  return {
+    canPublish: true,
+    unlimited: plan?.max_active_jobs == null,
+    subscription,
+    plan,
+    mode,
+    override,
+    reason: 'company_subscription_active',
+  };
+}
+
+async function verifyActiveSubscription(companyId, userId = null) {
+  if (env.SUBSCRIPTION_MOCK_BYPASS && !userId) {
+    return true;
+  }
+
+  const access = await resolvePublicationAccess(companyId, userId);
+  return access.canPublish;
+}
+
+async function getActivePublishableSubscription(companyId, userId = null) {
+  if (env.SUBSCRIPTION_MOCK_BYPASS && !userId) {
+    return { subscription: null, plan: null, unlimited: true };
+  }
+
+  const access = await resolvePublicationAccess(companyId, userId);
+  return {
+    subscription: access.subscription,
+    plan: access.plan,
+    unlimited: access.unlimited,
+  };
 }
 
 async function getCompanySubscription(companyId) {
@@ -218,9 +276,13 @@ async function createMockSubscription(companyId, planType = MANUAL_FREE_PLAN_TYP
 
 module.exports = {
   SUBSCRIPTION_MODES,
+  PAYMENT_OVERRIDES,
   MANUAL_FREE_PLAN_TYPE,
   getRecruiterSubscriptionMode,
   setRecruiterSubscriptionMode,
+  getRecruiterPaymentOverride,
+  setRecruiterPaymentOverride,
+  resolvePublicationAccess,
   cancelManualFreeSubscriptions,
   formatSubscription,
   verifyActiveSubscription,
@@ -230,3 +292,4 @@ module.exports = {
   cancelCompanySubscription,
   createMockSubscription,
 };
+

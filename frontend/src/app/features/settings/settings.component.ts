@@ -18,6 +18,7 @@ import { CandidateContextService } from '../candidate/services/candidate-context
 import { CandidateProfileService } from '../candidate/services/candidate-profile.service';
 import { RecruiterContextService } from '../recruiter/services/recruiter-context.service';
 import { NotificationPreferences } from '../../core/models/candidate-profile.model';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-settings',
@@ -33,6 +34,7 @@ export class SettingsComponent implements OnInit {
   private readonly candidateContext = inject(CandidateContextService);
   private readonly profileService = inject(CandidateProfileService);
   readonly recruiterContext = inject(RecruiterContextService);
+  private readonly i18n = inject(I18nService);
   readonly routes = APP_ROUTES;
 
   readonly passwordSubmitted = signal(false);
@@ -181,9 +183,12 @@ export class SettingsComponent implements OnInit {
     const normalizedNew = newEmail!.trim().toLowerCase();
 
     const ok = await this.confirmDialog.confirm({
-      title: 'Modifier l’adresse e-mail',
-      message: `Confirmer le changement vers ${normalizedNew} ? Un e-mail de confirmation sera envoyé à cette adresse.`,
-      confirmLabel: 'Confirmer',
+      title: this.i18n.text('Modifier l’adresse e-mail', 'Change email address'),
+      message: this.i18n.text(
+        `Confirmer le changement vers ${normalizedNew} ? Un e-mail de confirmation sera envoyé à cette adresse.`,
+        `Confirm the change to ${normalizedNew}? A confirmation email will be sent to this address.`
+      ),
+      confirmLabel: this.i18n.text('Confirmer', 'Confirm'),
     });
     if (!ok) return;
 

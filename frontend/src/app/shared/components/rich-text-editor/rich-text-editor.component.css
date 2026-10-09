@@ -63,6 +63,14 @@
   padding: 0;
 }
 
+.rte-btn-link {
+  width: auto;
+  min-width: 2.6rem;
+  padding: 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 .rte-font-btn:hover:not(:disabled),
 .rte-btn:hover:not(:disabled) {
   border-color: #94a3b8;
@@ -179,7 +187,7 @@
 }
 
 .rte-editor:empty::before,
-.rte-editor[data-placeholder='true']::before {
+.rte-editor[data-empty='true']::before {
   color: #94a3b8;
   content: attr(data-placeholder);
   pointer-events: none;
@@ -250,5 +258,5 @@
 .rte-editor .rte-font-comic,
 .rte-editor .rte-font-mono,
 .rte-editor .rte-font-modern {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive !important;
+  font-family: Arial, Helvetica, sans-serif !important;
 }

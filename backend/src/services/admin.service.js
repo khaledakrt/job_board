@@ -24,6 +24,8 @@ const { generateUuid } = require('../utils/uuid');
 const { hashPassword } = require('../utils/password');
 const tokenService = require('./token.service');
 const subscriptionService = require('./subscription.service');
+const candidateProfileService = require('./candidateProfile.service');
+const { formatCompany } = require('./company.service');
 const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { formatStoredIpAddress, normalizeIpAddress } = require('../utils/clientIp');
 const { expireDueJobs } = require('../utils/jobExpiration');
@@ -102,6 +104,7 @@ function formatUserDetail(user) {
           companyId: user.recruiterProfile.company_id,
           companyName: user.recruiterProfile.company?.name,
           companyLogoUrl: user.recruiterProfile.company?.logo_url,
+          paymentOverride: user.recruiterProfile.payment_override || 'inherit',
         }
       : null,
   };
@@ -322,7 +325,7 @@ async function getUserById(userId) {
       {
         model: RecruiterProfile,
         as: 'recruiterProfile',
-        attributes: ['id', 'company_id', 'job_title'],
+        attributes: ['id', 'company_id', 'job_title', 'payment_override'],
         required: false,
         include: [{ model: Company, as: 'company', attributes: ['id', 'name', 'logo_url'] }],
       },
@@ -334,6 +337,50 @@ async function getUserById(userId) {
   }
 
   return formatUserDetail(user);
+}
+
+async function getUserProfileView(userId) {
+  const user = await User.findByPk(userId, {
+    attributes: ['id', 'email', 'role', 'is_verified', 'is_banned', 'created_at'],
+    include: [
+      { model: CandidateProfile, as: 'candidateProfile', required: false },
+      {
+        model: RecruiterProfile,
+        as: 'recruiterProfile',
+        required: false,
+        include: [{ model: Company, as: 'company' }],
+      },
+    ],
+  });
+
+  if (!user) {
+    throw ApiError.notFound('User not found');
+  }
+
+  const candidate = user.candidateProfile;
+  if (candidate) {
+    candidate.user = user;
+  }
+
+  const recruiter = user.recruiterProfile;
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    isVerified: Boolean(user.is_verified),
+    isBanned: Boolean(user.is_banned),
+    createdAt: user.created_at,
+    candidate: candidate ? candidateProfileService.formatProfile(candidate) : null,
+    recruiter: recruiter
+      ? {
+          id: recruiter.id,
+          jobTitle: recruiter.job_title,
+          phone: recruiter.phone,
+          companyRole: recruiter.company_role,
+          company: recruiter.company ? formatCompany(recruiter.company) : null,
+        }
+      : null,
+  };
 }
 
 async function listUserLoginEvents(userId, query = {}) {
@@ -890,7 +937,13 @@ async function updateJobStatus(jobId, status, actingAdminId) {
     if (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
       throw ApiError.badRequest('Active jobs require a future expiration date');
     }
-    const canPublish = await subscriptionService.verifyActiveSubscription(job.company_id);
+    const recruiter = job.recruiter_id
+      ? await RecruiterProfile.findByPk(job.recruiter_id, { attributes: ['user_id'] })
+      : null;
+    const canPublish = await subscriptionService.verifyActiveSubscription(
+      job.company_id,
+      recruiter?.user_id
+    );
     if (!canPublish) {
       throw ApiError.forbidden('An active company subscription is required to publish this job');
     }
@@ -1200,6 +1253,30 @@ async function getCompanyById(companyId) {
   };
 }
 
+async function setRecruiterPaymentOverride(userId, mode, actingAdminId) {
+  const user = await User.findByPk(userId, {
+    include: [{ model: RecruiterProfile, as: 'recruiterProfile', required: false }],
+  });
+  if (!user) {
+    throw ApiError.notFound('User not found');
+  }
+  if (!user.recruiterProfile) {
+    throw ApiError.badRequest('Payment mode can only be changed for a recruiter');
+  }
+
+  const previous = user.recruiterProfile.payment_override || 'inherit';
+  const next = await subscriptionService.setRecruiterPaymentOverride(userId, mode);
+  await logAdminAction({
+    actorId: actingAdminId,
+    action: 'recruiter.payment_override.update',
+    targetType: 'user',
+    targetId: userId,
+    metadata: { previous, mode: next },
+  });
+
+  return getUserById(userId);
+}
+
 async function getSubscriptionPolicy() {
   const mode = await subscriptionService.getRecruiterSubscriptionMode();
   return { mode };
@@ -1257,6 +1334,7 @@ module.exports = {
   getStats,
   listUsers,
   getUserById,
+  getUserProfileView,
   listUserLoginEvents,
   createUser,
   updateUser,
@@ -1272,6 +1350,7 @@ module.exports = {
   getApplicationById,
   listCompanies,
   getCompanyById,
+  setRecruiterPaymentOverride,
   getSubscriptionPolicy,
   updateSubscriptionPolicy,
   updateCompanySubscription,

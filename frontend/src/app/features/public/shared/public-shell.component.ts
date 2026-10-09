@@ -5,10 +5,7 @@ import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { USER_ROLES } from '../../../core/constants/roles.constant';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
-import {
-  PUBLIC_MAIN_NAV_PRIMARY,
-  PUBLIC_MAIN_NAV_SECONDARY,
-} from './public-nav.constant';
+import { PUBLIC_MAIN_NAV_PRIMARY } from './public-nav.constant';
 
 @Component({
   selector: 'app-public-shell',
@@ -21,7 +18,6 @@ export class PublicShellComponent {
   readonly authService = inject(AuthService);
   readonly routes = APP_ROUTES;
   readonly mainNavPrimary = PUBLIC_MAIN_NAV_PRIMARY;
-  readonly mainNavSecondary = PUBLIC_MAIN_NAV_SECONDARY;
 
   readonly workspaceLabel = computed(() => {
     const role = this.authService.user()?.role;

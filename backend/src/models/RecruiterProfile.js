@@ -50,6 +50,11 @@ RecruiterProfile.init(
       allowNull: false,
       defaultValue: false,
     },
+    payment_override: {
+      type: DataTypes.ENUM('inherit', 'free', 'required'),
+      allowNull: false,
+      defaultValue: 'inherit',
+    },
     updated_at: {
       type: DataTypes.DATE,
       allowNull: false,

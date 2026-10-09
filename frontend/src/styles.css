@@ -306,7 +306,7 @@
 .safe-html .rte-font-mono,
 .rte-editor .rte-font-modern,
 .safe-html .rte-font-modern {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive !important;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 /* Espace prestataire : éditeur riche pleine largeur */

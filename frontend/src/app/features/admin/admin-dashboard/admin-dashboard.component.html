@@ -13,6 +13,46 @@
     </div>
   </header>
 
+  <section class="payment-mode-card">
+    <div>
+      <p class="payment-mode-kicker">Publication des offres</p>
+      <h2>{{ policyLabel(subscriptionPolicy()?.mode) }}</h2>
+      <p>
+        @if (subscriptionPolicy()?.mode === 'free_all') {
+          Le site est gratuit : tous les recruteurs peuvent publier. Vous pourrez activer le paiement plus tard.
+        } @else {
+          Le paiement est obligatoire. Un recruteur publie seulement s’il a un abonnement, ou si vous désactivez le paiement pour lui.
+        }
+      </p>
+      @if (policyMessage()) {
+        <p class="payment-mode-feedback">{{ policyMessage() }}</p>
+      }
+      @if (policyError()) {
+        <p class="payment-mode-feedback payment-mode-feedback--error">{{ policyError() }}</p>
+      }
+    </div>
+    <div class="payment-mode-actions">
+      <button
+        type="button"
+        class="payment-mode-button payment-mode-button--free"
+        [class.payment-mode-button--active]="subscriptionPolicy()?.mode === 'free_all'"
+        [disabled]="policyLoading() || subscriptionPolicy()?.mode === 'free_all'"
+        (click)="setGlobalPolicy('free_all')"
+      >
+        Désactiver le paiement
+      </button>
+      <button
+        type="button"
+        class="payment-mode-button payment-mode-button--paid"
+        [class.payment-mode-button--active]="subscriptionPolicy()?.mode === 'paid_required'"
+        [disabled]="policyLoading() || subscriptionPolicy()?.mode === 'paid_required'"
+        (click)="setGlobalPolicy('paid_required')"
+      >
+        Activer le paiement
+      </button>
+    </div>
+  </section>
+
   @if (loading()) {
     <div class="admin-skeleton-grid">
       @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track i) {

@@ -18,6 +18,9 @@ test-results/
 playwright-report/
 tests/e2e/prod.env
 
+# Local MySQL data directory (dev only)
+.local-mysql/
+
 # User uploads & logs
 uploads/
 backend/uploads/

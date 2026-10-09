@@ -33,6 +33,18 @@ test('sanitizeRichText drops dangerous links and normalizes safe links', () => {
   );
 });
 
+test('sanitizeRichText keeps bold, safe links and the allowed fonts', () => {
+  const sanitized = sanitizeRichText(
+    '<p><strong>Acme</strong> recrute. <a href="https://acme.tn">Voir le site</a> <span class="rte-font-serif extra" style="font-family: Georgia, serif">Georgia</span></p>'
+  );
+
+  assert.match(sanitized, /<strong>Acme<\/strong>/);
+  assert.match(sanitized, /href="https:\/\/acme\.tn"/);
+  assert.match(sanitized, /class="rte-font-serif"/);
+  assert.doesNotMatch(sanitized, /font-family/i);
+  assert.doesNotMatch(sanitized, /\bextra\b/);
+});
+
 test('plainTextLength counts sanitized readable content', () => {
   const sanitized = sanitizeRichText('<p>Senior developer&nbsp;&amp; team lead</p>');
 

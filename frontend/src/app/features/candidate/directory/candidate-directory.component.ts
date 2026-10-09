@@ -30,6 +30,7 @@ import {
   INSTITUTION_TYPE_OPTIONS,
 } from '../../public/shared/catalog.constants';
 import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type DirectoryKind = 'companies' | 'training' | 'institutions';
@@ -53,6 +54,7 @@ export class CandidateDirectoryComponent implements OnInit {
   private readonly applications = inject(CandidateApplicationsService);
   private readonly candidateContext = inject(CandidateContextService);
   private readonly catalog = inject(PublicCatalogService);
+  private readonly i18n = inject(I18nService);
 
   readonly routes = APP_ROUTES;
   readonly deliveryOptions = TRAINING_DELIVERY_OPTIONS;
@@ -108,24 +110,35 @@ export class CandidateDirectoryComponent implements OnInit {
   institutionType = '';
 
   readonly title = computed(() => {
+    this.i18n.language();
     switch (this.kind()) {
       case 'training':
-        return 'Formations professionnelles';
+        return this.i18n.text('Formations professionnelles', 'Professional training');
       case 'institutions':
-        return 'Annuaire établissements';
+        return this.i18n.text('Annuaire établissements', 'Institution directory');
       default:
-        return 'Annuaire sociétés';
+        return this.i18n.text('Annuaire sociétés', 'Company directory');
     }
   });
 
   readonly subtitle = computed(() => {
+    this.i18n.language();
     switch (this.kind()) {
       case 'training':
-        return 'Découvrez des centres validés, comparez leurs formations et inscrivez-vous en quelques clics.';
+        return this.i18n.text(
+          'Découvrez des centres validés, comparez leurs formations et inscrivez-vous en quelques clics.',
+          'Discover approved centers, compare their training programs and register in a few clicks.'
+        );
       case 'institutions':
-        return 'Explorez les établissements privés référencés.';
+        return this.i18n.text(
+          'Explorez les établissements privés référencés.',
+          'Explore listed private institutions.'
+        );
       default:
-        return 'Découvrez les sociétés qui publient des offres actives.';
+        return this.i18n.text(
+          'Découvrez les sociétés qui publient des offres actives.',
+          'Discover companies publishing active jobs.'
+        );
     }
   });
 
@@ -390,10 +403,13 @@ export class CandidateDirectoryComponent implements OnInit {
     }
 
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Envoyer la candidature',
-      message: `Envoyer votre candidature pour « ${job.title} » ?`,
-      confirmLabel: 'Envoyer',
-      cancelLabel: 'Annuler',
+      title: this.i18n.text('Envoyer la candidature', 'Send application'),
+      message: this.i18n.text(
+        `Envoyer votre candidature pour « ${job.title} » ?`,
+        `Send your application for “${job.title}”?`
+      ),
+      confirmLabel: this.i18n.text('Envoyer', 'Send'),
+      cancelLabel: this.i18n.text('Annuler', 'Cancel'),
     });
     if (!confirmed) return;
 
@@ -467,12 +483,17 @@ export class CandidateDirectoryComponent implements OnInit {
   async registerTrainingContent(content: TrainingContent): Promise<void> {
     if (content.participationType || this.trainingActionLoading()) return;
 
-    const kindLabel = this.isEvent(content) ? 'cet événement' : 'cette formation';
+    const kindLabel = this.isEvent(content)
+      ? this.i18n.text('cet événement', 'this event')
+      : this.i18n.text('cette formation', 'this training program');
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Confirmer l’inscription',
-      message: `Voulez-vous vous inscrire à ${kindLabel} : "${content.title}" ?`,
-      confirmLabel: 'Confirmer',
-      cancelLabel: 'Annuler',
+      title: this.i18n.text('Confirmer l’inscription', 'Confirm registration'),
+      message: this.i18n.text(
+        `Voulez-vous vous inscrire à ${kindLabel} : "${content.title}" ?`,
+        `Do you want to register for ${kindLabel}: "${content.title}"?`
+      ),
+      confirmLabel: this.i18n.text('Confirmer', 'Confirm'),
+      cancelLabel: this.i18n.text('Annuler', 'Cancel'),
     });
     if (!confirmed) return;
 
@@ -538,9 +559,12 @@ export class CandidateDirectoryComponent implements OnInit {
 
     const confirmed = await this.confirmDialog.confirm({
       title: this.institutionActionTitle(offering),
-      message: `Confirmer votre action pour "${offering.title}" ?`,
+      message: this.i18n.text(
+        `Confirmer votre action pour "${offering.title}" ?`,
+        `Confirm your action for "${offering.title}"?`
+      ),
       confirmLabel: this.institutionActionLabel(offering),
-      cancelLabel: 'Annuler',
+      cancelLabel: this.i18n.text('Annuler', 'Cancel'),
     });
     if (!confirmed) return;
 

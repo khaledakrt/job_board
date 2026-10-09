@@ -19,6 +19,11 @@ const getUser = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data });
 });
 
+const getUserProfileView = asyncHandler(async (req, res) => {
+  const data = await adminService.getUserProfileView(req.validatedParams.id);
+  res.status(200).json({ success: true, data });
+});
+
 const listUserLoginEvents = asyncHandler(async (req, res) => {
   const result = await adminService.listUserLoginEvents(
     req.validatedParams.id,
@@ -118,6 +123,15 @@ const updateSubscriptionPolicy = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Politique abonnement mise à jour', data });
 });
 
+const updateRecruiterPaymentOverride = asyncHandler(async (req, res) => {
+  const data = await adminService.setRecruiterPaymentOverride(
+    req.validatedParams.id,
+    req.validatedBody.mode,
+    req.user.id
+  );
+  res.status(200).json({ success: true, message: 'Mode de paiement du recruteur mis à jour', data });
+});
+
 const updateCompanySubscription = asyncHandler(async (req, res) => {
   const data = await adminService.updateCompanySubscription(
     req.validatedParams.id,
@@ -207,6 +221,7 @@ module.exports = {
   getStats,
   listUsers,
   getUser,
+  getUserProfileView,
   listUserLoginEvents,
   createUser,
   updateUser,
@@ -224,6 +239,7 @@ module.exports = {
   getCompany,
   getSubscriptionPolicy,
   updateSubscriptionPolicy,
+  updateRecruiterPaymentOverride,
   updateCompanySubscription,
   listTrainingCenters,
   getTrainingCenter,

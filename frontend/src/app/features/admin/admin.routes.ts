@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+
 export const ADMIN_ROUTES: Routes = [
   {
     path: '',
@@ -22,6 +23,13 @@ export const ADMIN_ROUTES: Routes = [
         path: 'users/new',
         loadComponent: () =>
           import('./user-form/user-form.component').then((m) => m.UserFormComponent),
+      },
+      {
+        path: 'users/:id/profile',
+        loadComponent: () =>
+          import('./user-profile-view/user-profile-view.component').then(
+            (m) => m.UserProfileViewComponent
+          ),
       },
       {
         path: 'users/:id',

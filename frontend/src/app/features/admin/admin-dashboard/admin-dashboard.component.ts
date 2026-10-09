@@ -1,10 +1,12 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../services/admin.service';
-import { AdminStats } from '../../../core/models/admin.model';
+import { AdminStats, AdminSubscriptionPolicy } from '../../../core/models/admin.model';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -16,10 +18,15 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly i18n = inject(I18nService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   readonly routes = APP_ROUTES;
 
   readonly stats = signal<AdminStats | null>(null);
   readonly loading = signal(true);
+  readonly subscriptionPolicy = signal<AdminSubscriptionPolicy | null>(null);
+  readonly policyLoading = signal(false);
+  readonly policyMessage = signal<string | null>(null);
+  readonly policyError = signal<string | null>(null);
 
   readonly moderationQueue = computed(() => {
     this.i18n.language();
@@ -74,12 +81,68 @@ export class AdminDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.loadSubscriptionPolicy();
     this.adminService.getStats().subscribe({
       next: (res) => {
         this.stats.set(res.data || null);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+  }
+
+  loadSubscriptionPolicy(): void {
+    this.policyLoading.set(true);
+    this.adminService.getSubscriptionPolicy().subscribe({
+      next: (res) => {
+        this.subscriptionPolicy.set(res.data ?? null);
+        this.policyLoading.set(false);
+      },
+      error: () => this.policyLoading.set(false),
+    });
+  }
+
+  policyLabel(mode: AdminSubscriptionPolicy['mode'] | undefined): string {
+    return mode === 'free_all'
+      ? this.i18n.translate('admin.companies.freeForAll')
+      : this.i18n.translate('admin.companies.paymentRequired');
+  }
+
+  async setGlobalPolicy(mode: AdminSubscriptionPolicy['mode']): Promise<void> {
+    if (this.subscriptionPolicy()?.mode === mode || this.policyLoading()) return;
+    const ok = await this.confirmDialog.confirm({
+      title:
+        mode === 'free_all'
+          ? this.i18n.translate('admin.companies.confirmFreeTitle')
+          : this.i18n.translate('admin.companies.confirmPaidTitle'),
+      message:
+        mode === 'free_all'
+          ? this.i18n.translate('admin.companies.confirmFreeMessage')
+          : this.i18n.translate('admin.companies.confirmPaidMessage'),
+      confirmLabel:
+        mode === 'free_all'
+          ? this.i18n.translate('admin.companies.activateFreeGlobal')
+          : this.i18n.translate('admin.companies.returnToPayment'),
+      confirmDanger: mode === 'paid_required',
+    });
+    if (!ok) return;
+
+    this.policyLoading.set(true);
+    this.policyMessage.set(null);
+    this.policyError.set(null);
+    this.adminService.updateSubscriptionPolicy(mode).subscribe({
+      next: () => {
+        this.policyMessage.set(
+          mode === 'free_all'
+            ? this.i18n.translate('admin.companies.freeModeActivated')
+            : this.i18n.translate('admin.companies.paidModeActivated')
+        );
+        this.loadSubscriptionPolicy();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.policyError.set(err.error?.message || this.i18n.translate('admin.companies.policyUpdateError'));
+        this.policyLoading.set(false);
+      },
     });
   }
 }

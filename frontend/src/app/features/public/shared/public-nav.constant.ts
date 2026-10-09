@@ -10,9 +10,6 @@ export interface PublicNavItem {
 /** Liens avant Connexion / Inscription */
 export const PUBLIC_MAIN_NAV_PRIMARY: PublicNavItem[] = [
   { label: 'Offres', labelKey: 'public.nav.jobs', homeFragment: 'offres' },
-  { label: 'Candidats', labelKey: 'public.nav.candidates', homeFragment: 'candidats' },
-  { label: 'Recruteurs', labelKey: 'public.nav.recruiters', homeFragment: 'recruteurs' },
-  { label: 'Fonctionnalités', labelKey: 'public.nav.features', homeFragment: 'fonctionnalites' },
   {
     label: 'Centres de formation',
     labelKey: 'public.nav.trainingCenters',

@@ -1,0 +1,217 @@
+<div class="admin-page profile-view">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / </span>
+        <a [routerLink]="routes.ADMIN.USERS">Utilisateurs</a>
+        @if (profile()) {
+          <span> / </span>
+          <a [routerLink]="routes.ADMIN.USER_DETAIL(profile()!.id)">Compte</a>
+        }
+        <span> / Profil</span>
+      </p>
+      <h1>Profil</h1>
+    </div>
+    @if (profile()) {
+      <a [routerLink]="routes.ADMIN.USER_DETAIL(profile()!.id)" class="btn-secondary !w-auto px-4">← Retour au compte</a>
+    }
+  </header>
+
+  @if (profile(); as p) {
+    <section class="profile-hero">
+      <div class="profile-photo">
+        @if (photoUrl(p); as src) {
+          <img [src]="src" [alt]="displayName(p)" />
+        } @else {
+          <span>{{ initials(p) }}</span>
+        }
+      </div>
+      <div>
+        <p class="profile-kicker">{{ roleLabel(p.role) }}</p>
+        <h2>{{ displayName(p) }}</h2>
+        <p>{{ p.email }}</p>
+        @if (p.candidate?.professionalTitle) {
+          <p class="profile-title">{{ p.candidate?.professionalTitle }}</p>
+        } @else if (p.recruiter?.jobTitle) {
+          <p class="profile-title">{{ p.recruiter?.jobTitle }}</p>
+        }
+      </div>
+    </section>
+
+    @if (p.candidate; as c) {
+      <section class="profile-card">
+        <h3>Coordonnées</h3>
+        <dl class="profile-facts">
+          <div><dt>Téléphone</dt><dd>{{ c.phone || '—' }}</dd></div>
+          <div><dt>E-mail</dt><dd>{{ p.email }}</dd></div>
+          <div><dt>Salaire minimum</dt><dd>{{ salaryLabel(c.minSalary) }}</dd></div>
+          <div>
+            <dt>LinkedIn</dt>
+            <dd>
+              @if (c.linkedinUrl) {
+                <a [href]="c.linkedinUrl" target="_blank" rel="noopener">{{ c.linkedinUrl }}</a>
+              } @else { — }
+            </dd>
+          </div>
+          <div>
+            <dt>Portfolio</dt>
+            <dd>
+              @if (c.portfolioUrl) {
+                <a [href]="c.portfolioUrl" target="_blank" rel="noopener">{{ c.portfolioUrl }}</a>
+              } @else { — }
+            </dd>
+          </div>
+          <div>
+            <dt>CV</dt>
+            <dd>
+              @if (c.resumeUrl) {
+                <button type="button" class="profile-link" (click)="openResume(c.resumeUrl)">Ouvrir le CV</button>
+              } @else { — }
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="profile-card">
+        <h3>Présentation</h3>
+        <p class="profile-text">{{ c.bio || 'Aucune présentation.' }}</p>
+      </section>
+
+      <section class="profile-card">
+        <h3>Compétences, langues, certifications</h3>
+        <p class="profile-label">Compétences</p>
+        <div class="profile-chips">
+          @for (skill of c.skills || []; track skill) {
+            <span>{{ skill }}</span>
+          } @empty { <span class="profile-empty">Aucune</span> }
+        </div>
+        <p class="profile-label">Langues</p>
+        <div class="profile-chips">
+          @for (lang of c.languages || []; track lang) {
+            <span>{{ lang }}</span>
+          } @empty { <span class="profile-empty">Aucune</span> }
+        </div>
+        <p class="profile-label">Certifications</p>
+        <div class="profile-chips">
+          @for (item of c.certifications || []; track item) {
+            <span>{{ item }}</span>
+          } @empty { <span class="profile-empty">Aucune</span> }
+        </div>
+      </section>
+
+      <section class="profile-card">
+        <h3>Expérience</h3>
+        @for (item of c.experiences || []; track $index) {
+          <article class="profile-entry">
+            <strong>{{ item.title || 'Poste' }}</strong>
+            <p>{{ item.company || '—' }} · {{ item.city || '—' }}</p>
+            <p>{{ period(item.startDate, item.endDate, item.current) }}</p>
+            @if (item.description) {
+              <p class="profile-text">{{ item.description }}</p>
+            }
+          </article>
+        } @empty {
+          <p class="profile-text">Aucune expérience.</p>
+        }
+      </section>
+
+      <section class="profile-card">
+        <h3>Formation</h3>
+        @for (item of c.education || []; track $index) {
+          <article class="profile-entry">
+            <strong>{{ item.degree || 'Diplôme' }}</strong>
+            <p>{{ item.institution || '—' }} · {{ item.city || '—' }}</p>
+            <p>{{ period(item.startDate, item.endDate) }}</p>
+          </article>
+        } @empty {
+          <p class="profile-text">Aucune formation.</p>
+        }
+      </section>
+
+      @if (c.jobPreferences) {
+        <section class="profile-card">
+          <h3>Préférences</h3>
+          <dl class="profile-facts">
+            <div><dt>Contrats</dt><dd>{{ joinPreferences(c.jobPreferences.contractTypes) }}</dd></div>
+            <div><dt>Modes</dt><dd>{{ joinPreferences(c.jobPreferences.remoteTypes) }}</dd></div>
+            <div><dt>Lieux</dt><dd>{{ c.jobPreferences.preferredLocations?.join(', ') || '—' }}</dd></div>
+            <div><dt>Mobilité</dt><dd>{{ c.jobPreferences.mobility || '—' }}</dd></div>
+          </dl>
+        </section>
+      }
+    }
+
+    @if (p.recruiter; as r) {
+      <section class="profile-card">
+        <h3>Recruteur</h3>
+        <dl class="profile-facts">
+          <div><dt>Poste</dt><dd>{{ r.jobTitle || '—' }}</dd></div>
+          <div><dt>Téléphone</dt><dd>{{ r.phone || '—' }}</dd></div>
+          <div><dt>Rôle dans l’entreprise</dt><dd>{{ r.companyRole === 'owner' ? 'Propriétaire' : 'Recruteur' }}</dd></div>
+          <div><dt>E-mail du compte</dt><dd>{{ p.email }}</dd></div>
+        </dl>
+      </section>
+
+      @if (r.company; as company) {
+        <section class="profile-card">
+          <h3>Entreprise</h3>
+          <dl class="profile-facts">
+            <div><dt>Nom</dt><dd>{{ company.name }}</dd></div>
+            <div><dt>Raison sociale</dt><dd>{{ company.legalName || '—' }}</dd></div>
+            <div><dt>Forme juridique</dt><dd>{{ company.legalForm || '—' }}</dd></div>
+            <div><dt>SIRET</dt><dd>{{ company.siret || '—' }}</dd></div>
+            <div><dt>TVA</dt><dd>{{ company.vatNumber || '—' }}</dd></div>
+            <div><dt>Secteur</dt><dd>{{ company.industry || '—' }}</dd></div>
+            <div><dt>Taille</dt><dd>{{ company.scaleSize || '—' }}</dd></div>
+            <div><dt>Création</dt><dd>{{ company.foundedYear || '—' }}</dd></div>
+            <div>
+              <dt>Adresse</dt>
+              <dd>{{ company.streetAddress || '—' }} {{ company.postalCode }} {{ company.city }} {{ company.country }}</dd>
+            </div>
+            <div><dt>E-mail</dt><dd>{{ company.contactEmail || '—' }}</dd></div>
+            <div><dt>Téléphone</dt><dd>{{ company.contactPhone || '—' }}</dd></div>
+            <div>
+              <dt>Site web</dt>
+              <dd>
+                @if (company.website) {
+                  <a [href]="company.website" target="_blank" rel="noopener">{{ company.website }}</a>
+                } @else { — }
+              </dd>
+            </div>
+            <div>
+              <dt>LinkedIn</dt>
+              <dd>
+                @if (company.linkedinUrl) {
+                  <a [href]="company.linkedinUrl" target="_blank" rel="noopener">{{ company.linkedinUrl }}</a>
+                } @else { — }
+              </dd>
+            </div>
+          </dl>
+          <h4>Description</h4>
+          @if (company.description) {
+            <app-safe-html [content]="company.description" />
+          } @else {
+            <p class="profile-text">Aucune description.</p>
+          }
+        </section>
+      } @else {
+        <section class="profile-card">
+          <p class="profile-text">Aucune entreprise n’est rattachée à ce recruteur.</p>
+        </section>
+      }
+    }
+
+    @if (!p.candidate && !p.recruiter) {
+      <section class="profile-card">
+        <p class="profile-text">Ce compte n’a pas encore de profil candidat ou recruteur.</p>
+      </section>
+    }
+
+    <p class="profile-meta">Compte créé le {{ p.createdAt | date: 'dd/MM/yyyy' }}</p>
+  } @else if (loading()) {
+    <p class="table-loading">Chargement...</p>
+  } @else if (errorMessage()) {
+    <div class="alert-error">{{ errorMessage() }}</div>
+  }
+</div>

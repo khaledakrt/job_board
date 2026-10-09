@@ -572,7 +572,98 @@ const STATIC_TEXT_TRANSLATIONS: Record<string, string> = {
   'Demandes d’informations générales': 'General information requests',
   'Prises de contact professionnelles et partenariats': 'Professional contact and partnerships',
   'Tous droits réservés.': 'All rights reserved.',
+  '← Retour à l’annuaire': '← Back to directory',
+  'Aucune notification pour le moment.': 'No notifications yet.',
+  'Aucune offre active pour le moment.': 'No active jobs at the moment.',
+  'Notifications candidat': 'Candidate notifications',
+  'Voir mes candidatures': 'View my applications',
+  'Voir mon suivi →': 'View my tracking →',
+  'Ex. AWS, PMP': 'E.g. AWS, PMP',
+  'Ex. Tunis, Paris, Remote': 'E.g. Tunis, Paris, Remote',
+  'Ex. Tunis, Sousse, Paris': 'E.g. Tunis, Sousse, Paris',
+  'https://…': 'https://...',
+  'https://linkedin.com/in/…': 'https://linkedin.com/in/...',
+  'Ajoutez au moins quelques compétences clés.': 'Add at least a few key skills.',
+  'Ajoutez un CV dans Mon profil (étape Identité & CV) avant de postuler.': 'Add a resume in My profile (Identity & resume step) before applying.',
+  'Ajoutez un lien LinkedIn si vous en avez un.': 'Add a LinkedIn link if you have one.',
+  'Ajoutez une expérience professionnelle, même courte.': 'Add a professional experience, even a short one.',
+  'Ajoutez une photo pour rendre le profil plus crédible.': 'Add a photo to make the profile more credible.',
+  'Candidature envoyée avec succès.': 'Application sent successfully.',
+  'Centre introuvable.': 'Center not found.',
+  'Cette adresse e-mail est déjà utilisée par un autre compte (ex. compte recruteur ou candidat existant).': 'This email address is already used by another account (for example an existing recruiter or candidate account).',
+  'Complétez le prénom, le nom et le titre professionnel avant d’enregistrer.': 'Complete the first name, last name and professional title before saving.',
+  'Confirmer le changement de mot de passe ? Vous devrez vous reconnecter.': 'Confirm the password change? You will need to sign in again.',
+  'Créer le profil': 'Create profile',
+  'Créer votre profil candidat ?': 'Create your candidate profile?',
+  'CV indisponible pour le moment.': 'Resume is unavailable at the moment.',
+  'CV PDF généré. Les recruteurs peuvent le télécharger depuis vos candidatures.': 'PDF resume generated. Recruiters can download it from your applications.',
+  'E-mail modifié. Ouvrez le lien de confirmation envoyé à votre nouvelle adresse avant de vous reconnecter.': 'Email updated. Open the confirmation link sent to your new address before signing in again.',
+  'Échec de l’envoi de la candidature.': 'Failed to send the application.',
+  'Enregistrer les modifications de votre profil candidat ?': 'Save the changes to your candidate profile?',
+  'Enregistrez le profil pour générer votre CV PDF.': 'Save the profile to generate your PDF resume.',
+  'Envoyer': 'Send',
+  'Envoyer la candidature': 'Send application',
+  'Excellent profil, vous maximisez vos chances.': 'Excellent profile, you are maximizing your chances.',
+  'Génération PDF impossible.': 'Unable to generate the PDF.',
+  'Impossible d’enregistrer la photo.': 'Unable to save the photo.',
+  'Impossible d’enregistrer le profil.': 'Unable to save the profile.',
+  'Impossible d’enregistrer vos préférences de notification.': 'Unable to save your notification preferences.',
+  'Impossible d’ouvrir le CV.': 'Unable to open the resume.',
+  'Impossible de charger l’annuaire des établissements.': 'Unable to load the institution directory.',
+  'Impossible de charger l’annuaire des formations.': 'Unable to load the training directory.',
+  'Impossible de charger l’annuaire des sociétés.': 'Unable to load the company directory.',
+  'Impossible de charger les détails de l’établissement.': 'Unable to load the institution details.',
+  'Impossible de charger les détails du centre.': 'Unable to load the center details.',
+  'Impossible de générer la lettre de motivation.': 'Unable to generate the cover letter.',
+  'Impossible de générer le CV PDF.': 'Unable to generate the PDF resume.',
+  'Impossible de modifier l’adresse e-mail.': 'Unable to change the email address.',
+  'Impossible de modifier le mot de passe.': 'Unable to change the password.',
+  'Indiquez les langues que vous maîtrisez.': 'Add the languages you speak.',
+  'Inscription impossible.': 'Unable to register.',
+  'Action impossible.': 'Unable to complete this action.',
+  'Établissement introuvable.': 'Institution not found.',
+  'Champ invalide': 'Invalid field',
+  'Le mot de passe ne respecte pas les critères de sécurité.': 'The password does not meet the security requirements.',
+  'Marquer tout comme lu': 'Mark all as read',
+  'Marquer toutes les notifications comme lues ?': 'Mark all notifications as read?',
+  'Mettre à jour le profil': 'Update profile',
+  'Modifier l’adresse e-mail': 'Change email address',
+  'Modifier le mot de passe': 'Change password',
+  'Mot de passe actuel incorrect.': 'Current password is incorrect.',
+  'Mot de passe modifié. Reconnectez-vous.': 'Password updated. Sign in again.',
+  'Profil enregistré et CV PDF généré pour les recruteurs.': 'Profile saved and PDF resume generated for recruiters.',
+  'Profil enregistré, mais la génération du CV PDF a échoué.': 'Profile saved, but PDF resume generation failed.',
+  'Rédigez un résumé de 2 à 3 phrases.': 'Write a 2 to 3 sentence summary.',
+  'Répondez à toutes les questions du quiz avant d’envoyer votre candidature.': 'Answer all quiz questions before sending your application.',
+  'Répondez à toutes les questions du quiz avant de continuer.': 'Answer all quiz questions before continuing.',
+  'Vous avez déjà postulé à cette offre.': 'You have already applied to this job.',
+  'Tous les modes': 'All modes',
+  'En ligne': 'Online',
+  'Présentiel': 'On-site',
+  'Hybride': 'Hybrid',
+  'École primaire': 'Primary school',
+  'Collège': 'Middle school',
+  'Lycée': 'High school',
+  'Institut supérieur': 'Higher institute',
+  'Université': 'University',
+  'Académie': 'Academy',
+  'Sur site': 'On-site',
+  'Télétravail': 'Remote',
+  'cet événement': 'this event',
+  'cette formation': 'this training program',
 };
+
+function foldApostrophes(value: string): string {
+  return value.replace(/[\u2019\u2018\u02BC]/g, "'");
+}
+
+const TRANSLATION_BY_FOLDED_KEY = new Map<string, string>(
+  Object.entries(STATIC_TEXT_TRANSLATIONS).map(([key, value]) => [foldApostrophes(key), value])
+);
+
+function lookupStatic(value: string): string | undefined {
+  return TRANSLATION_BY_FOLDED_KEY.get(foldApostrophes(value));
+}
 
 type PatternTranslation = {
   pattern: RegExp;
@@ -591,11 +682,12 @@ const PATTERN_TRANSLATIONS: PatternTranslation[] = [
   { pattern: /^(\d+) inscrit\(s\)$/, replace: (m) => `${m[1]} registrant(s)` },
   { pattern: /^(\d+) réponse\(s\)$/, replace: (m) => `${m[1]} response(s)` },
   { pattern: /^(.+) sélectionné\(e\)$/, replace: (m) => `${translateStatic(m[1])} selected` },
-  { pattern: /^(.+) an\(s\) d’expérience$/, replace: (m) => `${m[1]} year(s) experience` },
+  { pattern: /^(.+) an\(s\) d'expérience$/, replace: (m) => `${m[1]} year(s) experience` },
+  { pattern: /^Aperçu recruteur \((\d+)%\)$/, replace: (m) => `Recruiter preview (${m[1]}%)` },
 ];
 
 function translateStatic(value: string): string {
-  return STATIC_TEXT_TRANSLATIONS[value] ?? value;
+  return lookupStatic(value) ?? value;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -641,12 +733,19 @@ export class AutoI18nService {
   }
 
   private scheduleApply(): void {
+    const run = () => {
+      this.apply();
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => this.apply());
+      }
+    };
+
     if (typeof queueMicrotask === 'function') {
-      queueMicrotask(() => this.apply());
+      queueMicrotask(run);
       return;
     }
 
-    setTimeout(() => this.apply());
+    setTimeout(run);
   }
 
   private apply(): void {
@@ -725,17 +824,20 @@ export class AutoI18nService {
       return this.hasAutoTranslation(normalized) ? value : currentValue;
     }
 
-    const translated = STATIC_TEXT_TRANSLATIONS[normalized] ?? this.translatePattern(normalized);
+    const folded = foldApostrophes(normalized);
+    const translated = lookupStatic(folded) ?? this.translatePattern(folded);
     return translated ? `${leading}${translated}${trailing}` : currentValue;
   }
 
   private hasAutoTranslation(value: string): boolean {
-    return Boolean(STATIC_TEXT_TRANSLATIONS[value] ?? this.translatePattern(value));
+    const folded = foldApostrophes(value);
+    return Boolean(lookupStatic(folded) ?? this.translatePattern(folded));
   }
 
   private translatePattern(value: string): string | null {
+    const folded = foldApostrophes(value);
     for (const item of PATTERN_TRANSLATIONS) {
-      const match = value.match(item.pattern);
+      const match = folded.match(item.pattern);
       if (match) {
         return item.replace(match);
       }

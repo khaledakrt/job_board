@@ -1,3 +1,45 @@
+.payment-user-card {
+  margin-bottom: 1rem;
+}
+
+.payment-user-state {
+  margin: 0.75rem 0;
+  color: #0f172a;
+}
+
+.payment-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.payment-mode-button {
+  min-height: 2.4rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #334155;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.payment-mode-button--free {
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.payment-mode-button--paid {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.payment-mode-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 .ua-cell {
   max-width: 320px;
   overflow: hidden;
@@ -96,9 +138,16 @@
   font-size: 0.78rem;
 }
 
+.profile-open-btn {
+  margin-right: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+}
+
 .admin-identity-badges {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.45rem;
   margin-top: 0.75rem;
 }

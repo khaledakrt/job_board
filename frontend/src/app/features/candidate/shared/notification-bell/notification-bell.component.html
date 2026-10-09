@@ -44,7 +44,7 @@
                 <span class="notif-body">
                   <span class="notif-title">{{ n.title }}</span>
                   <span class="notif-msg">{{ n.messageText }}</span>
-                  <span class="notif-time">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="notif-time">{{ n.createdAt | date: 'dd/MM/yyyy, HH:mm' }}</span>
                 </span>
                 @if (!n.isRead) {
                   <span class="notif-dot" aria-hidden="true"></span>
@@ -83,7 +83,7 @@
 
       <header class="notif-detail-header">
         <h3 id="cand-notif-detail-title" class="notif-detail-title">{{ n.title }}</h3>
-        <p class="notif-detail-time">{{ n.createdAt | date: 'dd/MM/yyyy à HH:mm' }}</p>
+        <p class="notif-detail-time">{{ n.createdAt | date: 'dd/MM/yyyy, HH:mm' }}</p>
       </header>
 
       <p class="notif-detail-message">{{ n.messageText }}</p>

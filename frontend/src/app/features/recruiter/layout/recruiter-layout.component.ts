@@ -77,15 +77,24 @@ export class RecruiterLayoutComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith(APP_ROUTES.RECRUITER.ONBOARDING);
   }
 
+  isJobFormRoute(): boolean {
+    const url = this.router.url.split('?')[0];
+    return url === APP_ROUTES.RECRUITER.JOBS_NEW || /\/recruiter\/jobs\/[^/]+\/edit$/.test(url);
+  }
+
   publicationStatusLabelKey(access: PublicationAccess): string {
     if (!access.canPublish) return 'recruiter.publication.paymentRequired';
     if (access.reason === 'free_global') return 'recruiter.publication.freeGlobal';
+    if (access.reason === 'user_free') return 'recruiter.publication.userFree';
     return 'recruiter.publication.activeSubscription';
   }
 
   publicationStatusTitle(access: PublicationAccess): string {
     if (access.reason === 'free_global') {
       return this.i18n.translate('recruiter.publication.freeGlobalTitle');
+    }
+    if (access.reason === 'user_free') {
+      return this.i18n.translate('recruiter.publication.userFreeTitle');
     }
     if (access.reason === 'company_subscription_active') {
       return this.i18n.translate('recruiter.publication.activeSubscriptionTitle');

@@ -12,10 +12,11 @@ export interface RecruiterProfile {
   canEditCompany: boolean;
   publicationAccess?: {
     mode: 'free_all' | 'paid_required';
+    override?: 'inherit' | 'free' | 'required';
     companySubscriptionStatus: 'active' | 'canceled' | 'missing';
     companySubscriptionEndsAt: string | null;
     canPublish: boolean;
-    reason: 'free_global' | 'company_subscription_active' | 'company_subscription_required';
+    reason: 'free_global' | 'user_free' | 'company_subscription_active' | 'company_subscription_required';
   };
   company: Company | null;
 }

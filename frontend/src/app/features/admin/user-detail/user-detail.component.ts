@@ -204,6 +204,49 @@ export class UserDetailComponent implements OnInit {
     });
   }
 
+  async setPaymentOverride(mode: 'inherit' | 'free' | 'required'): Promise<void> {
+    const current = this.user()?.recruiterProfile?.paymentOverride || 'inherit';
+    if (current === mode || this.actionLoading()) return;
+    const ok = await this.confirmDialog.confirm({
+      title:
+        mode === 'free'
+          ? 'Désactiver le paiement pour ce recruteur ?'
+          : mode === 'required'
+            ? 'Activer le paiement pour ce recruteur ?'
+            : 'Revenir à la règle du site ?',
+      message:
+        mode === 'free'
+          ? 'Ce recruteur pourra publier sans abonnement, même si le site est en mode paiement.'
+          : mode === 'required'
+            ? 'Ce recruteur devra avoir un abonnement actif pour publier, même si le site est gratuit.'
+            : 'Ce recruteur suivra le mode choisi pour tout le site.',
+      confirmLabel: 'Confirmer',
+      confirmDanger: mode === 'required',
+    });
+    if (!ok) return;
+
+    this.message.set(null);
+    this.errorMessage.set(null);
+    this.actionLoading.set('payment');
+    this.adminService.updateRecruiterPaymentOverride(this.userId, mode).subscribe({
+      next: (res) => {
+        if (res.data) this.user.set(res.data);
+        this.message.set(
+          mode === 'free'
+            ? 'Paiement désactivé pour ce recruteur.'
+            : mode === 'required'
+              ? 'Paiement activé pour ce recruteur.'
+              : 'Ce recruteur suit à nouveau la règle du site.'
+        );
+        this.actionLoading.set(null);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Erreur');
+        this.actionLoading.set(null);
+      },
+    });
+  }
+
   async deleteUser(): Promise<void> {
     const ok = await this.confirmDialog.confirm({
       title: 'Désactiver ce compte ?',

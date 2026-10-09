@@ -47,6 +47,24 @@ export interface AdminUserDetail extends AdminUserListItem {
     companyId?: string;
     companyName?: string;
     companyLogoUrl?: string | null;
+    paymentOverride?: 'inherit' | 'free' | 'required';
+  } | null;
+}
+
+export interface AdminUserProfileView {
+  id: string;
+  email: string;
+  role: string;
+  isVerified: boolean;
+  isBanned: boolean;
+  createdAt: string;
+  candidate: import('./candidate-profile.model').CandidateProfile | null;
+  recruiter: {
+    id: string;
+    jobTitle: string | null;
+    phone: string | null;
+    companyRole: string;
+    company: import('./company.model').Company | null;
   } | null;
 }
 

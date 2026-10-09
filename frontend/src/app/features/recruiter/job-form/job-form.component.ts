@@ -24,6 +24,8 @@ import {
 
   REMOTE_TYPES,
 
+  REMOTE_TYPE_LABELS,
+
   RemoteType,
 
 } from '../../../core/constants/job.constant';
@@ -114,6 +116,15 @@ export class JobFormComponent implements OnInit {
   readonly contractTypes = CONTRACT_TYPES;
 
   readonly remoteTypes = REMOTE_TYPES;
+
+  readonly remoteLabels = REMOTE_TYPE_LABELS;
+
+  readonly contractLabels: Record<ContractType, string> = {
+    CDI: 'CDI',
+    CDD: 'CDD',
+    Freelance: 'Freelance',
+    Internship: 'Stage',
+  };
 
   readonly jobStatuses = JOB_SELECTABLE_STATUSES;
 

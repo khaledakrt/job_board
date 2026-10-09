@@ -12,7 +12,7 @@
           class="rte-font-btn {{ font.className }}"
           [class.rte-font-btn-active]="activeFontId() === font.id"
           [disabled]="disabled()"
-          (mousedown)="$event.preventDefault()"
+          (mousedown)="onFormatMouseDown($event)"
           (click)="applyFont(font.id)"
           [title]="font.label"
           [attr.aria-label]="font.label"
@@ -27,7 +27,7 @@
         class="rte-btn"
         [class.rte-btn-active]="boldActive()"
         [disabled]="disabled()"
-        (mousedown)="$event.preventDefault()"
+        (mousedown)="onFormatMouseDown($event)"
         (click)="format('bold')"
         title="Gras"
         aria-label="Gras"
@@ -39,7 +39,7 @@
         class="rte-btn"
         [class.rte-btn-active]="italicActive()"
         [disabled]="disabled()"
-        (mousedown)="$event.preventDefault()"
+        (mousedown)="onFormatMouseDown($event)"
         (click)="format('italic')"
         title="Italique"
         aria-label="Italique"
@@ -51,7 +51,7 @@
         class="rte-btn"
         [class.rte-btn-active]="underlineActive()"
         [disabled]="disabled()"
-        (mousedown)="$event.preventDefault()"
+        (mousedown)="onFormatMouseDown($event)"
         (click)="format('underline')"
         title="Souligner"
         aria-label="Souligner"
@@ -67,13 +67,13 @@
         [disabled]="disabled()"
         (mousedown)="onLinkButtonMouseDown($event)"
         (click)="openLinkEditor()"
-        title="Ajouter ou modifier un lien"
+        title="Rendre le texte sélectionné cliquable"
         aria-label="Lien"
       >
-        <span aria-hidden="true">🔗</span>
+        Lien
       </button>
     </div>
-    <span class="rte-hint">Surlignez → police, lien ou B/I/U</span>
+    <span class="rte-hint">Sélectionnez un mot, puis Gras ou Lien</span>
   </div>
   @if (linkEditorOpen()) {
     <div class="rte-link-bar" role="dialog" aria-label="Insérer un lien">
@@ -90,12 +90,12 @@
         (input)="onLinkUrlInput($event)"
         (paste)="onLinkInputPaste($event)"
         (keydown)="onLinkKeydown($event)"
-        placeholder="Collez l’URL ici (https://…)"
+        placeholder="https://www.societe.com"
         autocomplete="url"
         inputmode="url"
       />
       <button type="button" class="rte-link-apply btn-secondary !w-auto" (mousedown)="$event.preventDefault()" (click)="applyLink()">
-        OK
+        Appliquer
       </button>
       @if (canRemoveLink()) {
         <button type="button" class="rte-link-remove btn-secondary !w-auto" (mousedown)="$event.preventDefault()" (click)="removeLink()">

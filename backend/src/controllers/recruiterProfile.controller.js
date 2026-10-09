@@ -23,14 +23,13 @@ const getProfile = asyncHandler(async (req, res) => {
     });
   }
 
-  const [subscriptionMode, subscription] = await Promise.all([
-    subscriptionService.getRecruiterSubscriptionMode(),
+  const [access, subscription] = await Promise.all([
+    subscriptionService.resolvePublicationAccess(recruiter.company_id, req.user.id),
     recruiter.company_id
       ? subscriptionService.getCompanySubscription(recruiter.company_id)
       : Promise.resolve(subscriptionService.formatSubscription(null)),
   ]);
-  const canPublish =
-    subscriptionMode === subscriptionService.SUBSCRIPTION_MODES.FREE_ALL || subscription.isActive;
+  const canPublish = access.canPublish;
 
   res.status(200).json({
     success: true,
@@ -45,15 +44,12 @@ const getProfile = asyncHandler(async (req, res) => {
       canDecideApplication: recruiter.can_decide_application,
       canEditCompany: recruiter.can_edit_company,
       publicationAccess: {
-        mode: subscriptionMode,
+        mode: access.mode,
+        override: access.override,
         companySubscriptionStatus: subscription.status,
         companySubscriptionEndsAt: subscription.currentPeriodEnd,
         canPublish,
-        reason: canPublish
-          ? subscriptionMode === subscriptionService.SUBSCRIPTION_MODES.FREE_ALL
-            ? 'free_global'
-            : 'company_subscription_active'
-          : 'company_subscription_required',
+        reason: access.reason,
       },
       company: recruiter.company ? formatCompany(recruiter.company) : null,
     },

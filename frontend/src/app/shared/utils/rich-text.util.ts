@@ -14,16 +14,9 @@ const ALLOWED_TAGS = new Set([
 const SAFE_LINK_PROTOCOLS = /^(https?:|mailto:)/i;
 
 const FONT_CLASS_PREFIX = 'rte-font-';
-const ALLOWED_FONT_IDS = new Set([
-  'arial',
-  'serif',
-  'comic',
-  'default',
-  'mono',
-  'modern',
-]);
+const ALLOWED_FONT_IDS = new Set(['arial', 'serif', 'default']);
 
-/** Trois polices très contrastées (sans empattements / serif / manuscrite). */
+/** Arial pour le texte courant, Georgia pour un titre ou une citation. */
 export const RICH_TEXT_FONTS = [
   {
     id: 'arial',
@@ -38,13 +31,6 @@ export const RICH_TEXT_FONTS = [
     shortLabel: 'Georgia',
     className: 'rte-font-serif',
     fontFamily: 'Georgia, "Times New Roman", Times, serif',
-  },
-  {
-    id: 'comic',
-    label: 'Comic Sans — arrondie, très différente',
-    shortLabel: 'Comic',
-    className: 'rte-font-comic',
-    fontFamily: '"Comic Sans MS", "Comic Sans", cursive',
   },
 ] as const;
 
@@ -158,13 +144,15 @@ function sanitizeNode(node: Node, out: Element | DocumentFragment): void {
   if (tag === 'SPAN') {
     const fontClasses = allowedFontClasses(el.getAttribute('class'));
     const style = el.getAttribute('style');
-    if (style && !isAllowedFontFamily(style)) {
+    const familyMatch = style?.match(/font-family\s*:\s*([^;]+)/i);
+    const familyOk = !familyMatch || isAllowedFontFamily(style);
+    if (!fontClasses && !familyOk) {
       for (const child of Array.from(el.childNodes)) {
         sanitizeNode(child, out);
       }
       return;
     }
-    if (!fontClasses && !style) {
+    if (!fontClasses && !familyMatch) {
       for (const child of Array.from(el.childNodes)) {
         sanitizeNode(child, out);
       }
@@ -172,9 +160,8 @@ function sanitizeNode(node: Node, out: Element | DocumentFragment): void {
     }
     const span = document.createElement('span');
     if (fontClasses) span.setAttribute('class', fontClasses);
-    const ff = style?.match(/font-family\s*:\s*([^;]+)/i);
-    if (ff) {
-      span.style.fontFamily = ff[1].trim();
+    if (familyMatch && familyOk) {
+      span.style.fontFamily = familyMatch[1].trim();
     }
     for (const child of Array.from(el.childNodes)) {
       sanitizeNode(child, span);

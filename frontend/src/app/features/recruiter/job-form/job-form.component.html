@@ -1,9 +1,22 @@
+<div class="job-sheet">
 <div class="page-header row-between">
   <div>
     <h1 class="page-title">{{ (isEditMode() ? 'recruiter.jobForm.editTitle' : 'recruiter.jobForm.createTitle') | t }}</h1>
     <p class="page-subtitle">{{ 'recruiter.jobForm.subtitle' | t }}</p>
   </div>
-  <a [routerLink]="routes.RECRUITER.JOBS" class="btn-secondary !w-auto">← {{ 'recruiter.jobForm.backJobs' | t }}</a>
+  <div class="page-header-actions">
+    <a [routerLink]="routes.RECRUITER.JOBS" class="btn-secondary !w-auto">← {{ 'recruiter.jobForm.backJobs' | t }}</a>
+    @if (!loadingJob()) {
+      <button
+        type="submit"
+        form="job-offer-form"
+        class="btn-primary !w-auto"
+        [disabled]="saving() || !context.canPostJob()"
+      >
+        {{ submitButtonLabel() }}
+      </button>
+    }
+  </div>
 </div>
 
 @if (errorMessage()) {
@@ -19,12 +32,15 @@
 }
 
 @if (!loadingJob()) {
-<form [formGroup]="form" (ngSubmit)="onSubmit()" class="job-form panel" novalidate>
+<form id="job-offer-form" [formGroup]="form" (ngSubmit)="onSubmit()" class="job-form" novalidate>
   <fieldset class="form-fieldset" [disabled]="saving() || !context.canPostJob()">
-  <div class="form-grid">
-    <div class="form-field form-field-inline span-2">
-      <label class="form-label" for="title">{{ 'forms.title' | t }}</label>
-      <div class="form-field-body">
+  <div class="job-sections">
+    <section class="job-section">
+      <header class="job-section-head">
+        <h2>Le poste</h2>
+      </header>
+      <div class="job-field">
+        <label class="form-label" for="title">{{ 'forms.title' | t }}</label>
         <input
           id="title"
           class="form-input"
@@ -32,279 +48,228 @@
           [attr.placeholder]="'recruiter.jobForm.jobTitlePlaceholder' | t"
         />
       </div>
-    </div>
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="contractType">{{ 'forms.contract' | t }}</label>
-      <div class="form-field-body">
-        <select id="contractType" class="form-input" formControlName="contractType">
-          @for (type of contractTypes; track type) {
-            <option [value]="type">{{ type }}</option>
-          }
-        </select>
+      <div class="job-fields job-fields-meta">
+        <div class="job-field">
+          <label class="form-label" for="contractType">{{ 'forms.contract' | t }}</label>
+          <select id="contractType" class="form-input" formControlName="contractType">
+            @for (type of contractTypes; track type) {
+              <option [value]="type">{{ contractLabels[type] }}</option>
+            }
+          </select>
+        </div>
+        <div class="job-field">
+          <label class="form-label" for="remoteType">{{ 'recruiter.jobForm.mode' | t }}</label>
+          <select id="remoteType" class="form-input" formControlName="remoteType">
+            @for (type of remoteTypes; track type) {
+              <option [value]="type">{{ remoteLabels[type] }}</option>
+            }
+          </select>
+        </div>
+        <div class="job-field">
+          <label class="form-label" for="location">{{ 'recruiter.jobForm.location' | t }}</label>
+          <input
+            id="location"
+            class="form-input"
+            formControlName="location"
+            [attr.placeholder]="'recruiter.jobForm.locationPlaceholder' | t"
+          />
+        </div>
+        <div class="job-field">
+          <label class="form-label" for="experienceYears">Expérience minimum</label>
+          <input
+            id="experienceYears"
+            type="number"
+            min="0"
+            max="50"
+            class="form-input"
+            formControlName="experienceYears"
+            placeholder="0 = débutant"
+            title="Années d'expérience minimum"
+          />
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="remoteType">{{ 'recruiter.jobForm.mode' | t }}</label>
-      <div class="form-field-body">
-        <select id="remoteType" class="form-input" formControlName="remoteType">
-          @for (type of remoteTypes; track type) {
-            <option [value]="type">{{ type }}</option>
-          }
-        </select>
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="location">{{ 'recruiter.jobForm.location' | t }}</label>
-      <div class="form-field-body">
-        <input
-          id="location"
-          class="form-input"
-          formControlName="location"
-          [attr.placeholder]="'recruiter.jobForm.locationPlaceholder' | t"
-        />
-      </div>
-    </div>
-
-    @if (isExpiredJob()) {
-      <div class="form-field form-field-inline span-2">
+    <section class="job-section">
+      <header class="job-section-head">
+        <h2>Publication</h2>
+      </header>
+      @if (isExpiredJob()) {
         <p class="field-hint field-hint-warning">
           Offre expirée — seuls la description, le profil recherché, les compétences, langues et avantages sont modifiables.
         </p>
-      </div>
-      <div class="form-field form-field-inline span-2">
-        <label class="form-label">{{ 'recruiter.jobForm.expiration' | t }}</label>
-        <div class="form-field-body">
-          <p class="field-readonly">Offre expirée le {{ form.controls.expiresAt.value | date: 'dd/MM/yyyy' }}</p>
+        <p class="field-readonly">Offre expirée le {{ form.controls.expiresAt.value | date: 'dd/MM/yyyy' }}</p>
+      } @else {
+        <div class="job-fields">
+          <div class="job-field">
+            <label class="form-label" for="status">{{ 'forms.status' | t }}</label>
+            <select id="status" class="form-input" formControlName="status">
+              @for (status of jobStatuses; track status) {
+                <option [value]="status">{{ statusLabels[status] }}</option>
+              }
+            </select>
+            <p class="field-hint">{{ statusHints[form.controls.status.value] }}</p>
+          </div>
+          <div class="job-field">
+            <label class="form-label" for="expiresAt">{{ 'recruiter.jobForm.expiration' | t }}</label>
+            <input id="expiresAt" type="date" class="form-input" formControlName="expiresAt" />
+            <p class="field-hint">Passe en « Expirée » à 23h59 ce jour-là.</p>
+          </div>
         </div>
-      </div>
-    } @else {
-      <div class="form-field form-field-inline">
-        <label class="form-label" for="expiresAt">{{ 'recruiter.jobForm.expiration' | t }}</label>
-        <div class="form-field-body">
-          <input id="expiresAt" type="date" class="form-input" formControlName="expiresAt" />
-          <p class="field-hint">« Expirée » à 23h59 ce jour-là.</p>
-        </div>
-      </div>
+      }
+    </section>
 
-      <div class="form-field form-field-inline">
-        <label class="form-label" for="status">{{ 'forms.status' | t }}</label>
-        <div class="form-field-body">
-          <select id="status" class="form-input" formControlName="status">
-            @for (status of jobStatuses; track status) {
-              <option [value]="status">{{ statusLabels[status] }}</option>
-            }
+    <section class="job-section">
+      <header class="job-section-head">
+        <h2>Rémunération</h2>
+      </header>
+      <div class="job-fields job-fields-salary">
+        <div class="job-field">
+          <label class="form-label" for="salaryMin">Minimum</label>
+          <input id="salaryMin" type="number" min="0" step="1" class="form-input" formControlName="salaryMin" placeholder="1800" />
+        </div>
+        <div class="job-field">
+          <label class="form-label" for="salaryMax">Maximum</label>
+          <input id="salaryMax" type="number" min="0" step="1" class="form-input" formControlName="salaryMax" placeholder="2500" />
+        </div>
+        <div class="job-field">
+          <label class="form-label" for="salaryCurrency">Devise</label>
+          <select id="salaryCurrency" class="form-input" formControlName="salaryCurrency">
+            <option value="TND">TND</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
           </select>
-          <p class="field-hint">{{ statusHints[form.controls.status.value] }}</p>
         </div>
-      </div>
-    }
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="experienceYears">{{ 'recruiter.jobForm.experienceShort' | t }}</label>
-      <div class="form-field-body">
-        <input
-          id="experienceYears"
-          type="number"
-          min="0"
-          max="50"
-          class="form-input"
-          formControlName="experienceYears"
-          placeholder="Ans min. (0 = débutant)"
-          title="Années d'expérience minimum"
-        />
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="salaryLabel" [attr.title]="'forms.salary' | t">{{ 'forms.salary' | t }}</label>
-      <div class="form-field-body">
-        <input
-          id="salaryLabel"
-          type="text"
-          class="form-input"
-          formControlName="salaryLabel"
-          placeholder="Ex. 2500 TND, à négocier, fixe + commissions"
-          title="Montant numérique ou formulation libre"
-        />
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="salaryMin">Salaire min</label>
-      <div class="form-field-body">
-        <input
-          id="salaryMin"
-          type="number"
-          min="0"
-          step="1"
-          class="form-input"
-          formControlName="salaryMin"
-          placeholder="Ex. 1800"
-        />
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="salaryMax">Salaire max</label>
-      <div class="form-field-body">
-        <input
-          id="salaryMax"
-          type="number"
-          min="0"
-          step="1"
-          class="form-input"
-          formControlName="salaryMax"
-          placeholder="Ex. 2500"
-        />
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="salaryCurrency">Devise</label>
-      <div class="form-field-body">
-        <select id="salaryCurrency" class="form-input" formControlName="salaryCurrency">
-          <option value="TND">TND</option>
-          <option value="EUR">EUR</option>
-          <option value="USD">USD</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline">
-      <label class="form-label" for="salaryPeriod">Période</label>
-      <div class="form-field-body">
-        <select id="salaryPeriod" class="form-input" formControlName="salaryPeriod">
-          <option value="month">Mois</option>
-          <option value="year">An</option>
-          <option value="day">Jour</option>
-          <option value="hour">Heure</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="languageInput">Langues</label>
-      <div class="form-field-body">
-        <div class="tag-input-row">
+        <div class="job-field">
+          <label class="form-label" for="salaryPeriod">Période</label>
+          <select id="salaryPeriod" class="form-input" formControlName="salaryPeriod">
+            <option value="month">Mois</option>
+            <option value="year">An</option>
+            <option value="day">Jour</option>
+            <option value="hour">Heure</option>
+          </select>
+        </div>
+        <div class="job-field job-field-wide">
+          <label class="form-label" for="salaryLabel">Affichage libre</label>
           <input
-            id="languageInput"
+            id="salaryLabel"
+            type="text"
             class="form-input"
-            [value]="languageInput()"
-            (input)="languageInput.set($any($event.target).value)"
-            (keydown)="onLanguageKeydown($event)"
-            placeholder="Français, Anglais… puis Entrée"
+            formControlName="salaryLabel"
+            placeholder="Ex. 2500 TND, à négocier, fixe + commissions"
           />
-          <button type="button" class="btn-secondary !w-auto" (click)="addLanguage()">+</button>
         </div>
-        <div class="tag-list">
-          @for (lang of languages(); track lang) {
-            <span class="tag-chip tag-chip-lang">
-              {{ lang }}
-              <button
-                type="button"
-                class="tag-remove"
-                (click)="removeLanguage(lang)"
-                aria-label="Retirer la langue"
-              >
-                ×
-              </button>
-            </span>
+      </div>
+    </section>
+
+    <section class="job-section">
+      <header class="job-section-head">
+        <h2>Contenu de l’offre</h2>
+      </header>
+      <div class="job-editors">
+        <div class="job-field">
+          <label class="form-label" for="description">Description du poste</label>
+          <app-rich-text-editor
+            editorId="description"
+            editorSize="large"
+            formControlName="description"
+            placeholder="Décrivez le poste, la mission, l’équipe…"
+          />
+          @if (form.controls.description.touched && form.controls.description.hasError('richTextMinLength')) {
+            <p class="field-hint field-hint-error">Min. 20 caractères.</p>
           }
         </div>
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="description">Description</label>
-      <div class="form-field-body">
-        <app-rich-text-editor
-          editorId="description"
-          formControlName="description"
-          placeholder="Décrivez le poste, la mission, l'équipe…"
-        />
-        @if (form.controls.description.touched && form.controls.description.hasError('richTextMinLength')) {
-          <p class="field-hint field-hint-error">Min. 20 caractères.</p>
-        }
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="requirements">Profil</label>
-      <div class="form-field-body">
-        <app-rich-text-editor
-          editorId="requirements"
-          formControlName="requirements"
-          placeholder="Diplômes, compétences, expérience…"
-        />
-      </div>
-    </div>
-
-    <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="tagInput">Skills</label>
-      <div class="form-field-body">
-        <div class="tag-input-row">
-          <input
-            id="tagInput"
-            class="form-input"
-            [value]="tagInput()"
-            (input)="tagInput.set($any($event.target).value)"
-            (keydown)="onTagKeydown($event)"
-            placeholder="Angular, Node.js… puis Entrée"
+        <div class="job-field">
+          <label class="form-label" for="requirements">Profil recherché</label>
+          <app-rich-text-editor
+            editorId="requirements"
+            editorSize="large"
+            formControlName="requirements"
+            placeholder="Diplômes, compétences, expérience…"
           />
-          <button type="button" class="btn-secondary !w-auto" (click)="addTag()">+</button>
-        </div>
-        <div class="tag-list">
-          @for (tag of tags(); track tag) {
-            <span class="tag-chip">
-              {{ tag }}
-              <button type="button" class="tag-remove" (click)="removeTag(tag)" aria-label="Retirer">×</button>
-            </span>
-          }
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="form-field form-field-inline form-field-inline-top span-2">
-      <label class="form-label" for="benefitInput">Avantages</label>
-      <div class="form-field-body">
-        <div class="tag-input-row">
-          <input
-            id="benefitInput"
-            class="form-input"
-            [value]="benefitInput()"
-            (input)="benefitInput.set($any($event.target).value)"
-            (keydown)="onBenefitKeydown($event)"
-            placeholder="Sorties, tickets resto, ambiance… puis Entrée"
-          />
-          <button type="button" class="btn-secondary !w-auto" (click)="addBenefit()">+</button>
+    <section class="job-section">
+      <header class="job-section-head">
+        <h2>Compétences et avantages</h2>
+      </header>
+      <div class="job-fields">
+        <div class="job-field">
+          <label class="form-label" for="tagInput">Compétences</label>
+          <div class="tag-input-row">
+            <input
+              id="tagInput"
+              class="form-input"
+              [value]="tagInput()"
+              (input)="tagInput.set($any($event.target).value)"
+              (keydown)="onTagKeydown($event)"
+              placeholder="Angular, Node.js…"
+            />
+            <button type="button" class="btn-secondary !w-auto" (click)="addTag()">Ajouter</button>
+          </div>
+          <div class="tag-list">
+            @for (tag of tags(); track tag) {
+              <span class="tag-chip">
+                {{ tag }}
+                <button type="button" class="tag-remove" (click)="removeTag(tag)" aria-label="Retirer">×</button>
+              </span>
+            }
+          </div>
         </div>
-        <p class="field-hint">Ex. sorties d'équipe, tickets restaurant, télétravail, mutuelle…</p>
-        <div class="tag-list">
-          @for (benefit of benefits(); track benefit) {
-            <span class="tag-chip tag-chip-benefit">
-              {{ benefit }}
-              <button
-                type="button"
-                class="tag-remove"
-                (click)="removeBenefit(benefit)"
-                aria-label="Retirer l'avantage"
-              >
-                ×
-              </button>
-            </span>
-          }
+        <div class="job-field">
+          <label class="form-label" for="languageInput">Langues</label>
+          <div class="tag-input-row">
+            <input
+              id="languageInput"
+              class="form-input"
+              [value]="languageInput()"
+              (input)="languageInput.set($any($event.target).value)"
+              (keydown)="onLanguageKeydown($event)"
+              placeholder="Français, Anglais…"
+            />
+            <button type="button" class="btn-secondary !w-auto" (click)="addLanguage()">Ajouter</button>
+          </div>
+          <div class="tag-list">
+            @for (lang of languages(); track lang) {
+              <span class="tag-chip tag-chip-lang">
+                {{ lang }}
+                <button type="button" class="tag-remove" (click)="removeLanguage(lang)" aria-label="Retirer la langue">×</button>
+              </span>
+            }
+          </div>
+        </div>
+        <div class="job-field job-field-wide">
+          <label class="form-label" for="benefitInput">Avantages</label>
+          <div class="tag-input-row">
+            <input
+              id="benefitInput"
+              class="form-input"
+              [value]="benefitInput()"
+              (input)="benefitInput.set($any($event.target).value)"
+              (keydown)="onBenefitKeydown($event)"
+              placeholder="Tickets restaurant, télétravail, mutuelle…"
+            />
+            <button type="button" class="btn-secondary !w-auto" (click)="addBenefit()">Ajouter</button>
+          </div>
+          <div class="tag-list">
+            @for (benefit of benefits(); track benefit) {
+              <span class="tag-chip tag-chip-benefit">
+                {{ benefit }}
+                <button type="button" class="tag-remove" (click)="removeBenefit(benefit)" aria-label="Retirer l'avantage">×</button>
+              </span>
+            }
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <section class="quiz-section span-2 panel-card">
+    <section class="quiz-section job-section">
       <div class="quiz-section-head">
         <div>
-          <h2 class="quiz-section-title">Quiz (optionnel)</h2>
-          <p class="field-hint">2 questions — indiquez la bonne réponse (contrôle côté recruteur à la réception).</p>
+          <h2 class="quiz-section-title">Quiz</h2>
+          <p class="field-hint">Optionnel. Deux questions, la bonne réponse est contrôlée à la réception.</p>
         </div>
         <label class="quiz-toggle">
           <input
@@ -342,6 +307,7 @@
   </div>
 </form>
 }
+</div>
 
 @if (quizModalOpen()) {
   <app-job-quiz-modal

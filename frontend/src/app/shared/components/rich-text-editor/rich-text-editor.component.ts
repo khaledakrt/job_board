@@ -149,7 +149,13 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     this.emitValue();
   }
 
-  /** Garde la sélection avant le clic sur 🔗 (sinon elle est perdue). */
+  /** Garde la sélection avant un clic dans la barre (sinon elle est perdue). */
+  onFormatMouseDown(event: MouseEvent): void {
+    event.preventDefault();
+    this.captureSelectionForLink();
+  }
+
+  /** Garde la sélection avant le clic sur Lien (sinon elle est perdue). */
   onLinkButtonMouseDown(event: MouseEvent): void {
     event.preventDefault();
     this.captureSelectionForLink();
@@ -316,9 +322,37 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     if (this.disabled()) return;
     this.focusEditor();
     this.restoreSelection();
+    const range = this.resolveActiveRange();
+    if (!range || range.collapsed) {
+      this.fontHint.set(
+        command === 'bold'
+          ? 'Sélectionnez le mot, puis cliquez Gras.'
+          : 'Sélectionnez le texte, puis choisissez le style.'
+      );
+      return;
+    }
+
+    const editor = this.editorRef?.nativeElement;
+    const before = editor?.innerHTML ?? '';
     document.execCommand(command, false);
+    if (editor && editor.innerHTML === before && !this.hasFormatInSelection(command)) {
+      this.wrapRange(range, command);
+    }
+
+    this.fontHint.set(null);
     this.refreshToolbarState();
     this.emitValue();
+  }
+
+  private wrapRange(range: Range, command: 'bold' | 'italic' | 'underline'): void {
+    const tag = command === 'bold' ? 'strong' : command === 'italic' ? 'em' : 'u';
+    const el = document.createElement(tag);
+    try {
+      el.appendChild(range.extractContents());
+      range.insertNode(el);
+    } catch {
+      this.fontHint.set('Impossible d’appliquer ce style sur cette sélection.');
+    }
   }
 
   applyFont(fontId: RichTextFontId): void {
@@ -329,7 +363,7 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     this.focusEditor();
     const range = this.resolveActiveRange();
     if (!range || range.collapsed) {
-      this.fontHint.set('Sélectionnez du texte dans la zone, puis cliquez Arial, Georgia ou Comic.');
+      this.fontHint.set('Sélectionnez du texte dans la zone, puis cliquez Arial ou Georgia.');
       return;
     }
 
@@ -737,7 +771,7 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     if (!el) return;
     const safe = sanitizeRichHtml(html) || '';
     el.innerHTML = safe;
-    el.dataset['placeholder'] = safe ? 'false' : 'true';
+    this.syncEmptyState(el, safe);
   }
 
   private currentSanitizedHtml(): string {
@@ -752,7 +786,15 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     if (sanitized !== el.innerHTML) {
       el.innerHTML = sanitized;
     }
-    el.dataset['placeholder'] = sanitized ? 'false' : 'true';
+    this.syncEmptyState(el, sanitized);
+  }
+
+  private syncEmptyState(el: HTMLElement, html: string): void {
+    if (html.trim()) {
+      delete el.dataset['empty'];
+    } else {
+      el.dataset['empty'] = 'true';
+    }
   }
 
   /**
@@ -766,7 +808,7 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
     if (syncDom && sanitized !== el.innerHTML) {
       el.innerHTML = sanitized;
     }
-    el.dataset['placeholder'] = sanitized ? 'false' : 'true';
+    this.syncEmptyState(el, sanitized);
     this.onChange(sanitized);
   }
 }

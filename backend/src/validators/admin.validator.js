@@ -102,6 +102,10 @@ const updateSubscriptionPolicySchema = z.object({
   mode: z.enum(['free_all', 'paid_required']),
 });
 
+const updateRecruiterPaymentOverrideSchema = z.object({
+  mode: z.enum(['inherit', 'free', 'required']),
+});
+
 const updateCompanySubscriptionSchema = z.object({
   action: z.enum(['activate_manual', 'cancel']),
   planType: z.string().trim().min(1).max(64).optional().default('manual_free'),
@@ -199,6 +203,7 @@ module.exports = {
   banUserBodySchema,
   updateJobStatusBodySchema,
   updateSubscriptionPolicySchema,
+  updateRecruiterPaymentOverrideSchema,
   updateCompanySubscriptionSchema,
   listCatalogQuerySchema,
   listInstitutionOfferingsQuerySchema,

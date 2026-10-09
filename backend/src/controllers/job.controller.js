@@ -41,6 +41,7 @@ const updateJob = asyncHandler(async (req, res) => {
     jobId: req.validatedParams.id,
     companyId: req.companyId,
     payload: req.validatedBody,
+    userId: req.user.id,
   });
 
   res.status(200).json({
