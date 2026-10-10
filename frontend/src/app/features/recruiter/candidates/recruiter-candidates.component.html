@@ -221,15 +221,9 @@
             </ul>
           </section>
         }
-        @if (cvLoading()) {
-          <p class="cv-status">Chargement du CV…</p>
-        }
-        @if (cvFrame(); as frame) {
-          <iframe class="cv-frame" [src]="frame" title="CV du candidat"></iframe>
-        }
       </div>
       <footer class="candidate-modal-footer">
-        <button type="button" class="cv-btn" [disabled]="!person.resumeUrl || cvLoading()" (click)="previewCv(person)">
+        <button type="button" class="cv-btn" [disabled]="!person.resumeUrl" (click)="openCv(person)">
           Afficher le CV
         </button>
         <button type="button" class="candidate-close-btn" (click)="closeDetail()">Fermer</button>

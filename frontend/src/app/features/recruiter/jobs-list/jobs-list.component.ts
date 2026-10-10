@@ -39,7 +39,6 @@ export class JobsListComponent implements OnInit {
   readonly currentPage = signal(1);
   readonly loading = signal(false);
   readonly statusFilter = signal<JobStatus | ''>('');
-  readonly copiedJobId = signal<string | null>(null);
   readonly statusUpdating = signal<string | null>(null);
   readonly message = signal<string | null>(null);
   readonly error = signal<string | null>(null);
@@ -85,20 +84,6 @@ export class JobsListComponent implements OnInit {
         this.loading.set(false);
       },
     });
-  }
-
-  publicJobUrl(job: Job): string {
-    return `${window.location.origin}${this.routes.PUBLIC.JOB(job.id)}`;
-  }
-
-  async copyPublicLink(job: Job): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(this.publicJobUrl(job));
-      this.copiedJobId.set(job.id);
-      this.message.set('Lien public copié.');
-    } catch {
-      this.error.set('Impossible de copier le lien.');
-    }
   }
 
   onStatusFilterChange(event: Event): void {

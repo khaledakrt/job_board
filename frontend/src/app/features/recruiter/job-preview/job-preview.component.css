@@ -79,6 +79,27 @@
   line-height: 1.15;
 }
 
+.offer-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.9rem;
+}
+
+.copy-public-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #0a66c2;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.copy-public-link:hover {
+  text-decoration: underline;
+}
+
 .preview-co {
   color: #0a66c2;
   font-weight: 600;

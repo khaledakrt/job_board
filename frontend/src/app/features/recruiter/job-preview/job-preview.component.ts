@@ -38,6 +38,7 @@ export class JobPreviewComponent implements OnInit {
   readonly job = signal<Job | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly copied = signal(false);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -56,6 +57,21 @@ export class JobPreviewComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  isPublic(job: Job): boolean {
+    return isJobPubliclyVisible(job.status);
+  }
+
+  async copyPublicLink(job: Job): Promise<void> {
+    const url = `${window.location.origin}${this.routes.PUBLIC.JOB(job.id)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copied.set(true);
+      this.error.set(null);
+    } catch {
+      this.error.set('Impossible de copier le lien.');
+    }
   }
 
   companyLogo(job: Job): string | null {

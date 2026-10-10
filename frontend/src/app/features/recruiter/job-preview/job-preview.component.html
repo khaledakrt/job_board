@@ -40,7 +40,14 @@
         <div class="preview-logo-ph">{{ j.company?.name?.charAt(0) || '?' }}</div>
       }
       <div>
-        <h2>{{ j.title }}</h2>
+        <div class="offer-title-row">
+          <h2>{{ j.title }}</h2>
+          @if (isPublic(j)) {
+            <button type="button" class="copy-public-link" (click)="copyPublicLink(j)">
+              {{ copied() ? 'Lien copié' : 'Copier le lien' }}
+            </button>
+          }
+        </div>
         <p class="preview-co">{{ j.company?.name }}</p>
       </div>
     </header>
