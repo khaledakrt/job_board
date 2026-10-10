@@ -461,6 +461,36 @@ async function renderInstitutionOfferingSeoHtml(offering) {
   });
 }
 
+function renderClosedJobHtml(closed) {
+  const message = escapeHtml(closed?.message || 'Cette offre n’est plus disponible.');
+  const home = escapeHtml(publicSiteUrl());
+  return `<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Offre plus disponible — Tun JobBoard</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
+    main { max-width: 36rem; margin: 12vh auto; padding: 2rem 1.25rem; }
+    .brand { margin: 0 0 1.5rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #0a66c2; }
+    h1 { margin: 0 0 0.75rem; font-size: 1.6rem; line-height: 1.25; }
+    p { margin: 0; font-size: 1rem; line-height: 1.55; color: #334155; }
+    a { display: inline-block; margin-top: 1.5rem; padding: 0.7rem 1rem; border-radius: 0.75rem; background: #0a66c2; color: #fff; font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">Tun JobBoard</p>
+    <h1>Cette offre n’est plus disponible</h1>
+    <p>${message}</p>
+    <a href="${home}">Voir les offres en ligne</a>
+  </main>
+</body>
+</html>`;
+}
+
 module.exports = {
   renderJobSeoHtml,
   renderHomeSeoHtml,
@@ -472,4 +502,5 @@ module.exports = {
   renderPrivateInstitutionsListSeoHtml,
   renderPrivateInstitutionSeoHtml,
   renderInstitutionOfferingSeoHtml,
+  renderClosedJobHtml,
 };

@@ -83,8 +83,12 @@ export class PublicJobPageComponent implements OnInit {
         }
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set(this.i18n.translate('public.job.loadError'));
+      error: (err: HttpErrorResponse) => {
+        this.error.set(
+          err.status === 404 && err.error?.message
+            ? err.error.message
+            : this.i18n.translate('public.job.loadError')
+        );
         this.loading.set(false);
       },
     });

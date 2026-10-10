@@ -15,8 +15,10 @@ const {
   renderPrivateInstitutionsListSeoHtml,
   renderPrivateInstitutionSeoHtml,
   renderInstitutionOfferingSeoHtml,
+  renderClosedJobHtml,
 } = require('../utils/seoHtml');
 const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
 
 function sendSeoHtml(res, html) {
   res
@@ -31,8 +33,19 @@ const renderHome = asyncHandler(async (req, res) => {
 });
 
 const renderPublicJob = asyncHandler(async (req, res) => {
-  const job = await publicJobSearchService.getPublicJobPreviewById(req.params.id);
-  sendSeoHtml(res, await renderJobSeoHtml(job));
+  try {
+    const job = await publicJobSearchService.getPublicJobPreviewById(req.params.id);
+    sendSeoHtml(res, await renderJobSeoHtml(job));
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.statusCode !== 404) throw error;
+    const closed = await publicJobSearchService.describeClosedJob(req.params.id);
+    res
+      .status(404)
+      .type('html')
+      .set('X-Robots-Tag', 'noindex')
+      .set('Cache-Control', 'no-store')
+      .send(renderClosedJobHtml(closed));
+  }
 });
 
 const renderPublicCompany = asyncHandler(async (req, res) => {

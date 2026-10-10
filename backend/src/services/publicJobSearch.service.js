@@ -246,7 +246,7 @@ async function getPublicJobById(jobId) {
   });
 
   if (!job) {
-    throw ApiError.notFound('Job not found or no longer active');
+    throw await closedJobError(jobId);
   }
 
   await job.increment('views_count', { by: 1 });
@@ -284,15 +284,69 @@ async function getPublicJobPreviewById(jobId) {
   });
 
   if (!job) {
-    throw ApiError.notFound('Job not found or no longer active');
+    throw await closedJobError(jobId);
   }
 
   return formatPublicJob(job);
+}
+
+function closedJobCopy(job) {
+  const title = job?.title ? `« ${job.title} »` : 'Cette offre';
+  const company = job?.company?.name ? ` chez ${job.company.name}` : '';
+  const label = `${title}${company}`;
+
+  if (!job) {
+    return {
+      reason: 'deleted',
+      message: 'Cette offre a été supprimée. Elle n’est plus consultable.',
+    };
+  }
+
+  if (job.deleted_by_recruiter_at) {
+    return {
+      reason: 'deleted',
+      message: `${label} a été supprimée par le recruteur.`,
+    };
+  }
+
+  const expiredByDate = job.expires_at && new Date(job.expires_at).getTime() <= Date.now();
+  if (job.status === JOB_STATUS.EXPIRED || expiredByDate) {
+    return {
+      reason: 'expired',
+      message: `${label} a expiré. Elle n’est plus affichée.`,
+    };
+  }
+
+  if (job.status === JOB_STATUS.HIDDEN || job.archived_at) {
+    return {
+      reason: 'hidden',
+      message: `${label} a été masquée par le recruteur.`,
+    };
+  }
+
+  return {
+    reason: 'unpublished',
+    message: `${label} n’est plus publiée.`,
+  };
+}
+
+async function describeClosedJob(jobId) {
+  const job = await Job.findByPk(jobId, {
+    attributes: ['id', 'title', 'status', 'expires_at', 'archived_at', 'deleted_by_recruiter_at'],
+    include: [{ model: Company, as: 'company', attributes: ['name'] }],
+  });
+  return closedJobCopy(job);
+}
+
+async function closedJobError(jobId) {
+  const closed = await describeClosedJob(jobId);
+  return ApiError.notFound(closed.message);
 }
 
 module.exports = {
   searchJobs,
   getPublicJobById,
   getPublicJobPreviewById,
+  describeClosedJob,
   formatPublicJob,
 };
