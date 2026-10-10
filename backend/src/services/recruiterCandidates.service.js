@@ -1,6 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
+const sequelize = require('../database/sequelize');
 const { CandidateProfile, User } = require('../models');
 const { USER_ROLES } = require('../config/constants');
 const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
@@ -19,11 +20,16 @@ function asLabels(value) {
     .slice(0, 20);
 }
 
+function plainLabels(value) {
+  return asLabels(value).map((label) => label.split(' · ')[0]).filter(Boolean);
+}
+
 function asExperiences(value) {
   if (!Array.isArray(value)) return [];
   return value.slice(0, 8).map((item) => ({
     title: item?.title || '',
     company: item?.company || '',
+    city: item?.city || '',
     startDate: item?.startDate || '',
     endDate: item?.endDate || '',
     current: Boolean(item?.current),
@@ -35,11 +41,24 @@ function asEducation(value) {
   return value.slice(0, 6).map((item) => ({
     institution: item?.institution || '',
     degree: item?.degree || '',
+    city: item?.city || '',
   })).filter((item) => item.institution || item.degree);
+}
+
+function locationsOf(profile) {
+  const prefs = profile.job_preferences || {};
+  const preferred = Array.isArray(prefs.preferredLocations) ? prefs.preferredLocations : [];
+  const cities = [
+    ...(Array.isArray(profile.experiences) ? profile.experiences.map((item) => item?.city) : []),
+    ...(Array.isArray(profile.education) ? profile.education.map((item) => item?.city) : []),
+  ];
+  return [...preferred, ...cities].map((item) => String(item || '').trim()).filter(Boolean);
 }
 
 function formatCandidate(profile) {
   const user = profile.user;
+  const prefs = profile.job_preferences || {};
+  const locations = locationsOf(profile);
   return {
     id: profile.id,
     userId: profile.user_id,
@@ -53,11 +72,64 @@ function formatCandidate(profile) {
     languages: asLabels(profile.languages),
     experiences: asExperiences(profile.experiences),
     education: asEducation(profile.education),
+    locations,
+    location: locations[0] || null,
+    contractTypes: plainLabels(prefs.contractTypes),
     linkedinUrl: profile.linkedin_url,
     portfolioUrl: profile.portfolio_url,
     resumeUrl: profile.resume_url,
     avatarUrl: profile.avatar_url,
     createdAt: user?.created_at || null,
+  };
+}
+
+function sortedUnique(values) {
+  return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'fr'))
+    .slice(0, 80);
+}
+
+function jsonMatch(column, path, term) {
+  const safe = String(term).replace(/[%_\\]/g, '').slice(0, 80);
+  return sequelize.literal(
+    `JSON_SEARCH(\`${column}\`, 'one', ${sequelize.escape(`%${safe}%`)}, NULL, ${sequelize.escape(path)}) IS NOT NULL`
+  );
+}
+
+async function listFacets() {
+  const rows = await CandidateProfile.findAll({
+    attributes: ['skills', 'languages', 'professional_title', 'job_preferences', 'experiences', 'education'],
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: [],
+        where: { role: USER_ROLES.CANDIDATE, is_banned: false },
+        required: true,
+      },
+    ],
+  });
+
+  const countries = [];
+  const skills = [];
+  const languages = [];
+  const titles = [];
+  const contracts = [];
+  for (const profile of rows) {
+    countries.push(...locationsOf(profile));
+    skills.push(...plainLabels(profile.skills));
+    languages.push(...plainLabels(profile.languages));
+    if (profile.professional_title) titles.push(profile.professional_title);
+    const prefs = profile.job_preferences || {};
+    contracts.push(...plainLabels(prefs.contractTypes));
+  }
+
+  return {
+    countries: sortedUnique(countries),
+    skills: sortedUnique(skills),
+    languages: sortedUnique(languages),
+    titles: sortedUnique(titles),
+    contracts: sortedUnique(contracts),
   };
 }
 
@@ -67,21 +139,41 @@ async function listCandidates(query) {
     limit: Math.min(10, Number(query.limit) || 10),
   });
   const term = String(query.search || '').trim().slice(0, 120);
-  const where = {};
+  const country = String(query.country || '').trim();
+  const skill = String(query.skill || '').trim();
+  const language = String(query.language || '').trim();
+  const title = String(query.title || '').trim();
+  const contract = String(query.contract || '').trim();
+  const and = [];
 
   if (term) {
     const like = `%${term.replace(/[%_]/g, '')}%`;
-    where[Op.or] = [
-      { first_name: { [Op.like]: like } },
-      { last_name: { [Op.like]: like } },
-      { professional_title: { [Op.like]: like } },
-      { phone: { [Op.like]: like } },
-      { '$user.email$': { [Op.like]: like } },
-    ];
+    and.push({
+      [Op.or]: [
+        { first_name: { [Op.like]: like } },
+        { last_name: { [Op.like]: like } },
+        { professional_title: { [Op.like]: like } },
+        { phone: { [Op.like]: like } },
+        { '$user.email$': { [Op.like]: like } },
+      ],
+    });
   }
+  if (country) {
+    and.push({
+      [Op.or]: [
+        jsonMatch('job_preferences', '$.preferredLocations', country),
+        jsonMatch('experiences', '$[*].city', country),
+        jsonMatch('education', '$[*].city', country),
+      ],
+    });
+  }
+  if (skill) and.push(jsonMatch('skills', '$[*]', skill));
+  if (language) and.push(jsonMatch('languages', '$[*]', language));
+  if (title) and.push({ professional_title: title });
+  if (contract) and.push(jsonMatch('job_preferences', '$.contractTypes', contract));
 
   const result = await CandidateProfile.findAndCountAll({
-    where,
+    where: and.length ? { [Op.and]: and } : {},
     include: [
       {
         model: User,
@@ -98,12 +190,14 @@ async function listCandidates(query) {
     subQuery: false,
   });
 
-  return buildPaginatedResponse({
+  const pageResult = buildPaginatedResponse({
     rows: result.rows.map(formatCandidate),
     count: result.count,
     page,
     limit,
   });
+  pageResult.facets = await listFacets();
+  return pageResult;
 }
 
 module.exports = {

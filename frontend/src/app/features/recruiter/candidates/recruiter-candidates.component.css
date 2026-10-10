@@ -1,102 +1,95 @@
-.candidates-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.candidates-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
   margin-bottom: 1rem;
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1rem;
 }
 
-.candidates-toolbar .form-input {
-  flex: 1;
-}
-
-.candidates-count {
-  margin: 0;
+.candidates-filters label {
+  display: grid;
+  gap: 0.28rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: #64748b;
+}
+
+.candidates-filters .form-input {
   font-size: 0.82rem;
-  font-weight: 650;
-  white-space: nowrap;
+  padding: 0.45rem 0.65rem;
 }
 
 .candidates-empty {
-  padding: 1.25rem;
+  padding: 1rem;
   color: #64748b;
+  font-size: 0.85rem;
 }
 
-.candidates-layout {
-  display: grid;
-  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
+.candidates-table-wrap {
+  overflow-x: auto;
+  padding: 0.35rem;
 }
 
-.candidates-list {
-  display: flex;
-  flex-direction: column;
-  max-height: 42rem;
-  overflow: auto;
-  padding: 0.4rem;
-}
-
-.candidate-row {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
+.candidates-table {
   width: 100%;
-  padding: 0.65rem 0.7rem;
-  border: 0;
-  border-radius: 0.75rem;
-  background: transparent;
+  min-width: 0;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.candidates-table th {
+  padding: 0.55rem 0.7rem;
   text-align: left;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.candidates-table td {
+  padding: 0.65rem 0.7rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.candidates-table tbody tr {
   cursor: pointer;
 }
 
-.candidate-row.is-active,
-.candidate-row:hover {
-  background: #f1f5f9;
+.candidates-table tbody tr.is-active,
+.candidates-table tbody tr:hover {
+  background: #f8fafc;
 }
 
-.candidate-row-text {
-  display: grid;
-  min-width: 0;
-  flex: 1;
+.candidate-id {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.candidate-row-text strong,
-.candidate-row-text span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.candidate-id strong,
+.candidate-id span span {
+  display: block;
 }
 
-.candidate-row-text strong {
-  font-size: 0.88rem;
+.candidate-id strong {
+  font-size: 0.84rem;
   color: #0f172a;
 }
 
-.candidate-row-text span {
-  font-size: 0.75rem;
+.candidate-id span span {
+  font-size: 0.72rem;
   color: #64748b;
 }
 
-.candidate-cv-flag {
-  flex-shrink: 0;
-  font-size: 0.68rem;
-  font-weight: 750;
-  color: #0a66c2;
-}
-
 .candidate-avatar {
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 1.9rem;
+  height: 1.9rem;
   border-radius: 999px;
   object-fit: cover;
   flex-shrink: 0;
-}
-
-.candidate-avatar-lg {
-  width: 3.1rem;
-  height: 3.1rem;
 }
 
 .candidate-avatar-fallback {
@@ -104,48 +97,55 @@
   place-items: center;
   background: #dbeafe;
   color: #1d4ed8;
-  font-size: 0.75rem;
-  font-weight: 750;
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
-.candidates-pager {
+.candidate-tags {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.55rem 0.4rem 0.25rem;
-  font-size: 0.75rem;
-  color: #64748b;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
-.candidates-pager button {
-  border: 1px solid #e2e8f0;
-  border-radius: 0.45rem;
-  background: #fff;
-  padding: 0.25rem 0.55rem;
+.candidate-tags span {
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  font-size: 0.7rem;
+}
+
+.cv-btn {
+  border: 0;
+  border-radius: 0.5rem;
+  background: #0a66c2;
+  color: #fff;
+  padding: 0.4rem 0.7rem;
   font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.candidates-pager button:disabled {
+.cv-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
 .candidate-detail {
-  padding: 1.1rem 1.2rem 1.25rem;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
 }
 
 .candidate-detail-head {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  margin-bottom: 1rem;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .candidate-detail-head h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
 }
 
 .candidate-detail-head p,
@@ -154,54 +154,40 @@
 }
 
 .candidate-detail h3 {
-  margin: 0 0 0.4rem;
-  font-size: 0.78rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #64748b;
 }
 
 .candidate-detail section {
-  margin-top: 1rem;
+  margin-top: 0.9rem;
 }
 
 .candidate-facts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0.9rem 0 0;
 }
 
 .candidate-facts dt {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #64748b;
 }
 
 .candidate-facts dd {
-  margin: 0.15rem 0 0;
-  font-size: 0.88rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
   overflow-wrap: anywhere;
 }
 
 .candidate-bio {
   margin: 0;
-  white-space: pre-wrap;
+  font-size: 0.84rem;
   line-height: 1.5;
-  color: #334155;
-}
-
-.candidate-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.candidate-tags span {
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  background: #f1f5f9;
-  font-size: 0.75rem;
-  color: #334155;
+  white-space: pre-wrap;
 }
 
 .candidate-blocks {
@@ -209,28 +195,28 @@
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.55rem;
-}
-
-.candidate-blocks li {
-  display: grid;
+  gap: 0.4rem;
+  font-size: 0.82rem;
 }
 
 .candidate-blocks span {
-  font-size: 0.8rem;
+  display: block;
   color: #64748b;
+  font-size: 0.75rem;
 }
 
-.candidate-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1.15rem;
-}
-
-@media (max-width: 900px) {
-  .candidates-layout,
+@media (max-width: 1100px) {
+  .candidates-filters,
   .candidate-facts {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .candidates-filters,
+  .candidate-facts,
+  .candidate-detail-head {
     grid-template-columns: 1fr;
+    display: grid;
   }
 }

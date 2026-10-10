@@ -1,21 +1,64 @@
 <div class="page-header">
-  <div>
-    <h1 class="page-title">Candidats</h1>
-    <p class="page-subtitle">Profils inscrits, coordonnées et CV.</p>
-  </div>
+  <h1 class="page-title">Candidats</h1>
+  <p class="page-subtitle">Profils, compétences et CV déjà générés.</p>
 </div>
 
-<div class="candidates-toolbar panel-card">
-  <input
-    type="search"
-    class="form-input"
-    placeholder="Nom, titre, e-mail ou téléphone"
-    [value]="search()"
-    (input)="onSearch($any($event.target).value)"
-  />
-  @if (pagination(); as meta) {
-    <p class="candidates-count">{{ meta.totalItems }} candidat(s)</p>
-  }
+<div class="candidates-filters panel-card">
+  <label>
+    Recherche
+    <input
+      type="search"
+      class="form-input"
+      placeholder="Nom, e-mail ou téléphone"
+      [value]="search()"
+      (input)="onSearch($any($event.target).value)"
+    />
+  </label>
+  <label>
+    Pays ou ville
+    <select class="form-input" [value]="country()" (change)="onFilter('country', $any($event.target).value)">
+      <option value="">Tous</option>
+      @for (option of facets().countries; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    Compétence
+    <select class="form-input" [value]="skill()" (change)="onFilter('skill', $any($event.target).value)">
+      <option value="">Toutes</option>
+      @for (option of facets().skills; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    Langue
+    <select class="form-input" [value]="language()" (change)="onFilter('language', $any($event.target).value)">
+      <option value="">Toutes</option>
+      @for (option of facets().languages; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    Poste
+    <select class="form-input" [value]="title()" (change)="onFilter('title', $any($event.target).value)">
+      <option value="">Tous</option>
+      @for (option of facets().titles; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    Contrat
+    <select class="form-input" [value]="contract()" (change)="onFilter('contract', $any($event.target).value)">
+      <option value="">Tous</option>
+      @for (option of facets().contracts; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+  </label>
 </div>
 
 @if (errorMessage()) {
@@ -25,140 +68,103 @@
 @if (loading()) {
   <p class="candidates-empty panel-card">Chargement…</p>
 } @else if (!candidates().length) {
-  <p class="candidates-empty panel-card">Aucun candidat ne correspond à cette recherche.</p>
+  <p class="candidates-empty panel-card">Aucun candidat ne correspond à ces filtres.</p>
 } @else {
-  <div class="candidates-layout">
-    <section class="panel-card candidates-list">
-      @for (person of candidates(); track person.id) {
-        <button
-          type="button"
-          class="candidate-row"
-          [class.is-active]="selected()?.id === person.id"
-          (click)="select(person)"
-        >
-          @if (avatar(person); as src) {
-            <img [src]="src" alt="" class="candidate-avatar" />
-          } @else {
-            <span class="candidate-avatar candidate-avatar-fallback">{{ initials(person) }}</span>
-          }
-          <span class="candidate-row-text">
-            <strong>{{ displayName(person) }}</strong>
-            <span>{{ person.professionalTitle || person.email }}</span>
-          </span>
-          <span class="candidate-cv-flag">{{ person.resumeUrl ? 'CV' : '—' }}</span>
-        </button>
-      }
-      @if (pagination(); as meta) {
-        @if (meta.totalPages > 1) {
-          <div class="candidates-pager">
-            <button type="button" [disabled]="!meta.hasPreviousPage" (click)="goTo(meta.page - 1)">Précédent</button>
-            <span>{{ meta.page }} / {{ meta.totalPages }}</span>
-            <button type="button" [disabled]="!meta.hasNextPage" (click)="goTo(meta.page + 1)">Suivant</button>
-          </div>
+  <div class="candidates-table-wrap panel-card">
+    <table class="candidates-table">
+      <thead>
+        <tr>
+          <th>Candidat</th>
+          <th>Poste</th>
+          <th>Lieu</th>
+          <th>Compétences</th>
+          <th>Langues</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (person of candidates(); track person.id) {
+          <tr [class.is-active]="selected()?.id === person.id" (click)="select(person)">
+            <td>
+              <span class="candidate-id">
+                @if (avatar(person); as src) {
+                  <img [src]="src" alt="" class="candidate-avatar" />
+                } @else {
+                  <span class="candidate-avatar candidate-avatar-fallback">{{ initials(person) }}</span>
+                }
+                <span>
+                  <strong>{{ displayName(person) }}</strong>
+                  <span>{{ person.email }}</span>
+                </span>
+              </span>
+            </td>
+            <td>{{ person.professionalTitle || '—' }}</td>
+            <td>{{ person.location || '—' }}</td>
+            <td>
+              <span class="candidate-tags">
+                @for (skill of skillPreview(person); track skill) {
+                  <span>{{ skill }}</span>
+                }
+                @if (!person.skills.length) { — }
+              </span>
+            </td>
+            <td>{{ person.languages.slice(0, 2).join(', ') || '—' }}</td>
+            <td>
+              <button type="button" class="cv-btn" [disabled]="!person.resumeUrl" (click)="openCv(person, $event)">
+                Afficher le CV
+              </button>
+            </td>
+          </tr>
         }
-      }
-    </section>
-
-    @if (selected(); as person) {
-      <article class="panel-card candidate-detail">
-        <header class="candidate-detail-head">
-          @if (avatar(person); as src) {
-            <img [src]="src" alt="" class="candidate-avatar candidate-avatar-lg" />
-          } @else {
-            <span class="candidate-avatar candidate-avatar-lg candidate-avatar-fallback">{{ initials(person) }}</span>
-          }
-          <div>
-            <h2>{{ displayName(person) }}</h2>
-            <p>{{ person.professionalTitle || 'Titre non renseigné' }}</p>
-          </div>
-        </header>
-
-        <dl class="candidate-facts">
-          <div>
-            <dt>E-mail</dt>
-            <dd>{{ person.email || '—' }}</dd>
-          </div>
-          <div>
-            <dt>Téléphone</dt>
-            <dd>{{ person.phone || '—' }}</dd>
-          </div>
-          @if (person.createdAt) {
-            <div>
-              <dt>Inscrit le</dt>
-              <dd>{{ person.createdAt | date: 'dd/MM/yyyy' }}</dd>
-            </div>
-          }
-        </dl>
-
-        @if (person.bio) {
-          <section>
-            <h3>Présentation</h3>
-            <p class="candidate-bio">{{ person.bio }}</p>
-          </section>
-        }
-
-        @if (person.skills.length) {
-          <section>
-            <h3>Compétences</h3>
-            <div class="candidate-tags">
-              @for (skill of person.skills; track skill) {
-                <span>{{ skill }}</span>
-              }
-            </div>
-          </section>
-        }
-
-        @if (person.languages.length) {
-          <section>
-            <h3>Langues</h3>
-            <div class="candidate-tags">
-              @for (language of person.languages; track language) {
-                <span>{{ language }}</span>
-              }
-            </div>
-          </section>
-        }
-
-        @if (person.experiences.length) {
-          <section>
-            <h3>Expérience</h3>
-            <ul class="candidate-blocks">
-              @for (item of person.experiences; track $index) {
-                <li>
-                  <strong>{{ item.title || item.company }}</strong>
-                  <span>{{ item.company }}{{ period(item) ? ' · ' + period(item) : '' }}</span>
-                </li>
-              }
-            </ul>
-          </section>
-        }
-
-        @if (person.education.length) {
-          <section>
-            <h3>Formation</h3>
-            <ul class="candidate-blocks">
-              @for (item of person.education; track $index) {
-                <li>
-                  <strong>{{ item.degree || item.institution }}</strong>
-                  <span>{{ item.institution }}</span>
-                </li>
-              }
-            </ul>
-          </section>
-        }
-
-        <div class="candidate-actions">
-          <button type="button" class="btn-primary !w-auto px-4" [disabled]="!person.resumeUrl" (click)="openCv(person)">
-            {{ person.resumeUrl ? 'Voir le CV' : 'CV non déposé' }}
-          </button>
-          @if (person.linkedinUrl) {
-            <a class="btn-secondary !w-auto px-4" [href]="person.linkedinUrl" target="_blank" rel="noopener">LinkedIn</a>
-          }
-          @if (person.portfolioUrl) {
-            <a class="btn-secondary !w-auto px-4" [href]="person.portfolioUrl" target="_blank" rel="noopener">Portfolio</a>
-          }
-        </div>
-      </article>
-    }
+      </tbody>
+    </table>
   </div>
+
+  <app-admin-pagination
+    [pagination]="pagination()"
+    [loading]="loading()"
+    itemLabel="candidat"
+    (pageChange)="goTo($event)"
+  />
+
+  @if (selected(); as person) {
+    <article class="panel-card candidate-detail">
+      <header class="candidate-detail-head">
+        <div>
+          <h2>{{ displayName(person) }}</h2>
+          <p>{{ person.professionalTitle || 'Titre non renseigné' }}</p>
+        </div>
+        <button type="button" class="cv-btn" [disabled]="!person.resumeUrl" (click)="openCv(person)">
+          Afficher le CV
+        </button>
+      </header>
+      <dl class="candidate-facts">
+        <div><dt>E-mail</dt><dd>{{ person.email || '—' }}</dd></div>
+        <div><dt>Téléphone</dt><dd>{{ person.phone || '—' }}</dd></div>
+        <div><dt>Lieu</dt><dd>{{ person.locations.join(', ') || '—' }}</dd></div>
+        @if (person.createdAt) {
+          <div><dt>Inscrit le</dt><dd>{{ person.createdAt | date: 'dd/MM/yyyy' }}</dd></div>
+        }
+      </dl>
+      @if (person.bio) {
+        <section>
+          <h3>Présentation</h3>
+          <p class="candidate-bio">{{ person.bio }}</p>
+        </section>
+      }
+      @if (person.experiences.length) {
+        <section>
+          <h3>Expérience</h3>
+          <ul class="candidate-blocks">
+            @for (item of person.experiences; track $index) {
+              <li>
+                <strong>{{ item.title || item.company }}</strong>
+                <span>{{ item.company }}{{ period(item) ? ' · ' + period(item) : '' }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </article>
+  }
 }

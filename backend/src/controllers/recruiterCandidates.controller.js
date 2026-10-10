@@ -9,6 +9,7 @@ const listCandidates = asyncHandler(async (req, res) => {
     success: true,
     data: result.items,
     pagination: result.pagination,
+    facets: result.facets,
   });
 });
 

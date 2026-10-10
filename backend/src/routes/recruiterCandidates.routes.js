@@ -14,6 +14,11 @@ const router = express.Router();
 
 const listQuerySchema = z.object({
   search: z.string().max(120).optional(),
+  country: z.string().max(128).optional(),
+  skill: z.string().max(80).optional(),
+  language: z.string().max(64).optional(),
+  title: z.string().max(255).optional(),
+  contract: z.string().max(32).optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(10).optional(),
 });
