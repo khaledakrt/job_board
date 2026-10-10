@@ -90,8 +90,19 @@ export class AdminService {
     );
   }
 
-  getSentAnnouncements(): Observable<ApiResponse<{ items: SentAnnouncement[] }>> {
-    return this.http.get<ApiResponse<{ items: SentAnnouncement[] }>>(`${this.base}/announcements/sent`);
+  getSentAnnouncements(params?: {
+    search?: string;
+    role?: 'candidate' | 'recruiter';
+    sender?: string;
+  }): Observable<ApiResponse<{ items: SentAnnouncement[]; total: number }>> {
+    const query: Record<string, string> = {};
+    if (params?.search) query['search'] = params.search;
+    if (params?.role) query['role'] = params.role;
+    if (params?.sender) query['sender'] = params.sender;
+    return this.http.get<ApiResponse<{ items: SentAnnouncement[]; total: number }>>(
+      `${this.base}/announcements/sent`,
+      { params: query }
+    );
   }
 
   getAnnouncementRecipients(): Observable<ApiResponse<AnnouncementDirectory>> {

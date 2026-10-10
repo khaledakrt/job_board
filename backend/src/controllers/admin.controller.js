@@ -210,7 +210,7 @@ const listAnnouncementRecipients = asyncHandler(async (req, res) => {
 });
 
 const listSentAnnouncements = asyncHandler(async (req, res) => {
-  const data = await announcementService.listSentAnnouncements();
+  const data = await announcementService.listSentAnnouncements(req.validatedQuery);
   res.status(200).json({ success: true, data });
 });
 

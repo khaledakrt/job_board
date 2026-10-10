@@ -31,6 +31,7 @@ const {
   adminCreatePrivateInstitutionSchema,
   adminUpdatePrivateInstitutionSchema,
   announcementRecipientsQuerySchema,
+  sentAnnouncementsQuerySchema,
   sendAnnouncementBodySchema,
 } = require('../validators/admin.validator');
 const { updateCatalogStatusSchema } = require('../validators/publicCatalog.validator');
@@ -76,7 +77,11 @@ router.get(
   validateQuery(announcementRecipientsQuerySchema),
   adminController.listAnnouncementRecipients
 );
-router.get('/announcements/sent', adminController.listSentAnnouncements);
+router.get(
+  '/announcements/sent',
+  validateQuery(sentAnnouncementsQuerySchema),
+  adminController.listSentAnnouncements
+);
 router.post(
   '/announcements',
   validateBody(sendAnnouncementBodySchema),

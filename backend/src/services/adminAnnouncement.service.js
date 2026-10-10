@@ -225,6 +225,7 @@ async function sendAnnouncement({ actorId, senderKey, subject, message, userIds 
     return {
       email: user.email,
       name: displayName(user),
+      role: user.role,
       sent: !failure,
       error: failure?.error || null,
     };
@@ -274,8 +275,17 @@ function signatureLinesFor(email) {
   return match ? match.lines : [];
 }
 
-function formatSentMessage(row) {
-  const recipients = Array.isArray(row.recipients) ? row.recipients : [];
+function formatSentMessage(row, roleByEmail) {
+  const recipients = (Array.isArray(row.recipients) ? row.recipients : []).map((person) => {
+    const email = String(person?.email || '');
+    return {
+      email,
+      name: person?.name || email,
+      role: person?.role || roleByEmail.get(email.toLowerCase()) || null,
+      sent: person?.sent !== false,
+      error: person?.error || null,
+    };
+  });
   return {
     id: row.id,
     senderName: row.sender_name,
@@ -290,12 +300,52 @@ function formatSentMessage(row) {
   };
 }
 
-async function listSentAnnouncements() {
+function messageMatchesSearch(message, term) {
+  if (!term) return true;
+  const haystack = [
+    message.subject,
+    message.body,
+    message.senderName,
+    message.senderEmail,
+    ...message.recipients.flatMap((person) => [person.name, person.email]),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  return haystack.includes(term);
+}
+
+async function listSentAnnouncements({ search, role, sender } = {}) {
   const rows = await AdminSentMessage.findAll({
     order: [['created_at', 'DESC']],
-    limit: 100,
+    limit: 500,
   });
-  return { items: rows.map(formatSentMessage) };
+  const emails = new Set();
+  for (const row of rows) {
+    for (const person of Array.isArray(row.recipients) ? row.recipients : []) {
+      if (person?.email) emails.add(String(person.email).toLowerCase());
+    }
+  }
+  const users = emails.size
+    ? await User.findAll({
+        where: { email: { [Op.in]: [...emails] } },
+        attributes: ['email', 'role'],
+      })
+    : [];
+  const roleByEmail = new Map(users.map((user) => [user.email.toLowerCase(), user.role]));
+  const term = String(search || '').trim().toLowerCase();
+  const senderEmail = String(sender || '').trim().toLowerCase();
+
+  const matched = [];
+  for (const row of rows) {
+    const message = formatSentMessage(row, roleByEmail);
+    if (senderEmail && message.senderEmail.toLowerCase() !== senderEmail) continue;
+    if (role && !message.recipients.some((person) => person.role === role)) continue;
+    if (!messageMatchesSearch(message, term)) continue;
+    matched.push(message);
+  }
+
+  return { items: matched.slice(0, 100), total: matched.length };
 }
 
 module.exports = {

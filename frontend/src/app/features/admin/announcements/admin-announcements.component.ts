@@ -38,7 +38,12 @@ export class AdminAnnouncementsComponent implements OnInit {
   readonly historyOpen = signal(false);
   readonly historyLoading = signal(false);
   readonly sentMessages = signal<SentAnnouncement[]>([]);
+  readonly historyTotal = signal(0);
+  readonly historySearch = signal('');
+  readonly historyRole = signal<'' | 'candidate' | 'recruiter'>('');
+  readonly historySender = signal('');
   readonly openedMessageId = signal<string | null>(null);
+  private historyTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly openedMessage = computed(
     () => this.sentMessages().find((item) => item.id === this.openedMessageId()) ?? null
@@ -133,11 +138,39 @@ export class AdminAnnouncementsComponent implements OnInit {
     this.openedMessageId.set(this.openedMessageId() === id ? null : id);
   }
 
+  onHistorySearch(value: string): void {
+    this.historySearch.set(value);
+    if (this.historyTimer) clearTimeout(this.historyTimer);
+    this.historyTimer = setTimeout(() => this.loadHistory(), 300);
+  }
+
+  onHistoryRole(role: '' | 'candidate' | 'recruiter'): void {
+    this.historyRole.set(role);
+    this.openedMessageId.set(null);
+    this.loadHistory();
+  }
+
+  onHistorySender(sender: string): void {
+    this.historySender.set(sender);
+    this.openedMessageId.set(null);
+    this.loadHistory();
+  }
+
   loadHistory(): void {
     this.historyLoading.set(true);
-    this.adminService.getSentAnnouncements().subscribe({
+    const search = this.historySearch().trim();
+    const role = this.historyRole();
+    const sender = this.historySender();
+    this.adminService
+      .getSentAnnouncements({
+        search: search || undefined,
+        role: role || undefined,
+        sender: sender || undefined,
+      })
+      .subscribe({
       next: (res) => {
         this.sentMessages.set(res.data?.items ?? []);
+        this.historyTotal.set(res.data?.total ?? res.data?.items?.length ?? 0);
         this.historyLoading.set(false);
       },
       error: (err: HttpErrorResponse) => {

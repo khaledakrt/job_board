@@ -18,11 +18,38 @@
   @if (historyOpen()) {
     <section class="announce-card sent-mail-panel">
       <h2>Messages déjà envoyés</h2>
+      <div class="announce-toolbar sent-mail-filters">
+        <div class="announce-filters" role="group" aria-label="Rôle du destinataire">
+          <button type="button" [class.is-active]="historyRole() === ''" (click)="onHistoryRole('')">Tous</button>
+          <button type="button" [class.is-active]="historyRole() === 'candidate'" (click)="onHistoryRole('candidate')">Candidats</button>
+          <button type="button" [class.is-active]="historyRole() === 'recruiter'" (click)="onHistoryRole('recruiter')">Recruteurs</button>
+        </div>
+        <select class="form-input" [value]="historySender()" (change)="onHistorySender($any($event.target).value)">
+          <option value="">Toutes les boîtes</option>
+          @for (sender of senders(); track sender.key) {
+            <option [value]="sender.email">{{ sender.name }}</option>
+          }
+        </select>
+        <input
+          type="search"
+          class="form-input"
+          placeholder="Objet, texte, nom ou e-mail"
+          [value]="historySearch()"
+          (input)="onHistorySearch($any($event.target).value)"
+        />
+      </div>
       @if (historyLoading()) {
         <p class="table-loading">Chargement...</p>
       } @else if (!sentMessages().length) {
-        <p class="announce-hint">Aucun e-mail n’a encore été envoyé depuis cette page.</p>
+        <p class="announce-hint">
+          @if (historySearch() || historyRole() || historySender()) {
+            Aucun message ne correspond à ces filtres.
+          } @else {
+            Aucun e-mail n’a encore été envoyé depuis cette page.
+          }
+        </p>
       } @else {
+        <p class="announce-hint">{{ historyTotal() }} message(s)</p>
         <ul class="sent-mail-list">
           @for (mail of sentMessages(); track mail.id) {
             <li>
@@ -47,6 +74,9 @@
                       @for (person of mail.recipients; track person.email) {
                         <li>
                           {{ person.name }} — {{ person.email }}
+                          @if (person.role) {
+                            · {{ roleLabel(person.role) }}
+                          }
                           @if (!person.sent) {
                             <span class="sent-mail-fail">échec{{ person.error ? ' : ' + person.error : '' }}</span>
                           }

@@ -45,6 +45,7 @@ export interface AnnouncementSendResult {
 export interface SentAnnouncementRecipient {
   email: string;
   name: string;
+  role: 'candidate' | 'recruiter' | null;
   sent: boolean;
   error: string | null;
 }

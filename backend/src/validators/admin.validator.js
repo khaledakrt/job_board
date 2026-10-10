@@ -194,6 +194,12 @@ const announcementRecipientsQuerySchema = z.object({
   search: z.string().trim().max(255).optional(),
 });
 
+const sentAnnouncementsQuerySchema = z.object({
+  search: z.string().trim().max(255).optional(),
+  role: z.enum([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER]).optional(),
+  sender: z.string().trim().email().max(255).optional(),
+});
+
 const sendAnnouncementBodySchema = z.object({
   senderKey: z.enum(['support', 'info', 'administration']),
   subject: z.string().trim().min(1).max(180),
@@ -225,5 +231,6 @@ module.exports = {
   adminCreatePrivateInstitutionSchema,
   adminUpdatePrivateInstitutionSchema,
   announcementRecipientsQuerySchema,
+  sentAnnouncementsQuerySchema,
   sendAnnouncementBodySchema,
 };
