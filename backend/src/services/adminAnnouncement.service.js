@@ -315,7 +315,7 @@ function messageMatchesSearch(message, term) {
   return haystack.includes(term);
 }
 
-async function listSentAnnouncements({ search, role, sender } = {}) {
+async function listSentAnnouncements({ search, role, sender, page, limit } = {}) {
   const rows = await AdminSentMessage.findAll({
     order: [['created_at', 'DESC']],
     limit: 500,
@@ -345,7 +345,24 @@ async function listSentAnnouncements({ search, role, sender } = {}) {
     matched.push(message);
   }
 
-  return { items: matched.slice(0, 100), total: matched.length };
+  const pageNumber = Math.max(1, Number(page) || 1);
+  const pageSize = Math.min(50, Math.max(1, Number(limit) || 10));
+  const totalItems = matched.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const currentPage = Math.min(pageNumber, totalPages);
+  const start = (currentPage - 1) * pageSize;
+
+  return {
+    items: matched.slice(start, start + pageSize),
+    pagination: {
+      page: currentPage,
+      limit: pageSize,
+      totalItems,
+      totalPages,
+      hasNextPage: currentPage < totalPages,
+      hasPreviousPage: currentPage > 1,
+    },
+  };
 }
 
 module.exports = {

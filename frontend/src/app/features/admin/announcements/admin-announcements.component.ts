@@ -9,13 +9,19 @@ import {
   AnnouncementSender,
   SentAnnouncement,
 } from '../../../core/models/admin.model';
+import { PaginationMeta } from '../../../core/models/pagination.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { AdminService } from '../services/admin.service';
+
+const RECIPIENT_PAGE_SIZE = 15;
+const SENT_PAGE_SIZE = 10;
+const DETAIL_PAGE_SIZE = 8;
 
 @Component({
   selector: 'app-admin-announcements',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, AdminPaginationComponent],
   templateUrl: './admin-announcements.component.html',
   styleUrl: './admin-announcements.component.css',
 })
@@ -35,19 +41,63 @@ export class AdminAnnouncementsComponent implements OnInit {
   readonly roleFilter = signal<'' | 'candidate' | 'recruiter'>('');
   readonly search = signal('');
   readonly selected = signal<Set<string>>(new Set());
+  readonly recipientPage = signal(1);
   readonly historyOpen = signal(false);
   readonly historyLoading = signal(false);
   readonly sentMessages = signal<SentAnnouncement[]>([]);
-  readonly historyTotal = signal(0);
+  readonly historyPagination = signal<PaginationMeta | null>(null);
+  readonly historyPage = signal(1);
   readonly historySearch = signal('');
   readonly historyRole = signal<'' | 'candidate' | 'recruiter'>('');
   readonly historySender = signal('');
   readonly openedMessageId = signal<string | null>(null);
+  readonly detailPage = signal(1);
   private historyTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly openedMessage = computed(
     () => this.sentMessages().find((item) => item.id === this.openedMessageId()) ?? null
   );
+
+  readonly recipientPagination = computed((): PaginationMeta => {
+    const totalItems = this.visible().length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / RECIPIENT_PAGE_SIZE));
+    const page = Math.min(this.recipientPage(), totalPages);
+    return {
+      page,
+      limit: RECIPIENT_PAGE_SIZE,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+  });
+
+  readonly pagedRecipients = computed(() => {
+    const meta = this.recipientPagination();
+    const start = (meta.page - 1) * meta.limit;
+    return this.visible().slice(start, start + meta.limit);
+  });
+
+  readonly detailPagination = computed((): PaginationMeta => {
+    const totalItems = this.openedMessage()?.recipients.length ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalItems / DETAIL_PAGE_SIZE));
+    const page = Math.min(this.detailPage(), totalPages);
+    return {
+      page,
+      limit: DETAIL_PAGE_SIZE,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+  });
+
+  readonly pagedDetailRecipients = computed(() => {
+    const people = this.openedMessage()?.recipients ?? [];
+    const meta = this.detailPagination();
+    const start = (meta.page - 1) * meta.limit;
+    return people.slice(start, start + meta.limit);
+  });
 
   readonly form = this.fb.nonNullable.group({
     senderKey: ['support' as 'support' | 'info' | 'administration', Validators.required],
@@ -67,7 +117,7 @@ export class AdminAnnouncementsComponent implements OnInit {
 
   readonly selectedCount = computed(() => this.selected().size);
   readonly allVisibleSelected = computed(() => {
-    const rows = this.visible();
+    const rows = this.pagedRecipients();
     return rows.length > 0 && rows.every((person) => this.selected().has(person.id));
   });
 
@@ -103,7 +153,7 @@ export class AdminAnnouncementsComponent implements OnInit {
   }
 
   toggleVisible(): void {
-    const rows = this.visible();
+    const rows = this.pagedRecipients();
     const selectAll = !this.allVisibleSelected();
     this.selected.update((current) => {
       const next = new Set(current);
@@ -115,8 +165,23 @@ export class AdminAnnouncementsComponent implements OnInit {
     });
   }
 
+  setRecipientRole(role: '' | 'candidate' | 'recruiter'): void {
+    this.roleFilter.set(role);
+    this.recipientPage.set(1);
+  }
+
+  onRecipientSearch(value: string): void {
+    this.search.set(value);
+    this.recipientPage.set(1);
+  }
+
+  goToRecipientPage(page: number): void {
+    this.recipientPage.set(page);
+  }
+
   selectRole(role: '' | 'candidate' | 'recruiter'): void {
     this.roleFilter.set(role);
+    this.recipientPage.set(1);
     const ids = this.recipients()
       .filter((person) => !role || person.role === role)
       .map((person) => person.id);
@@ -136,22 +201,43 @@ export class AdminAnnouncementsComponent implements OnInit {
 
   openMessage(id: string): void {
     this.openedMessageId.set(this.openedMessageId() === id ? null : id);
+    this.detailPage.set(1);
+  }
+
+  goToDetailPage(page: number): void {
+    this.detailPage.set(page);
+  }
+
+  rolesLabel(mail: SentAnnouncement): string {
+    const roles = [...new Set(mail.recipients.map((person) => person.role).filter(Boolean))];
+    if (!roles.length) return '—';
+    return roles.map((role) => this.roleLabel(role as string)).join(', ');
   }
 
   onHistorySearch(value: string): void {
     this.historySearch.set(value);
+    this.historyPage.set(1);
+    this.openedMessageId.set(null);
     if (this.historyTimer) clearTimeout(this.historyTimer);
     this.historyTimer = setTimeout(() => this.loadHistory(), 300);
   }
 
   onHistoryRole(role: '' | 'candidate' | 'recruiter'): void {
     this.historyRole.set(role);
+    this.historyPage.set(1);
     this.openedMessageId.set(null);
     this.loadHistory();
   }
 
   onHistorySender(sender: string): void {
     this.historySender.set(sender);
+    this.historyPage.set(1);
+    this.openedMessageId.set(null);
+    this.loadHistory();
+  }
+
+  goToHistoryPage(page: number): void {
+    this.historyPage.set(page);
     this.openedMessageId.set(null);
     this.loadHistory();
   }
@@ -166,11 +252,14 @@ export class AdminAnnouncementsComponent implements OnInit {
         search: search || undefined,
         role: role || undefined,
         sender: sender || undefined,
+        page: this.historyPage(),
+        limit: SENT_PAGE_SIZE,
       })
       .subscribe({
       next: (res) => {
-        this.sentMessages.set(res.data?.items ?? []);
-        this.historyTotal.set(res.data?.total ?? res.data?.items?.length ?? 0);
+        this.sentMessages.set(res.data ?? []);
+        this.historyPagination.set(res.pagination ?? null);
+        if (res.pagination?.page) this.historyPage.set(res.pagination.page);
         this.historyLoading.set(false);
       },
       error: (err: HttpErrorResponse) => {

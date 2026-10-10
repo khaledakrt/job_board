@@ -198,6 +198,8 @@ const sentAnnouncementsQuerySchema = z.object({
   search: z.string().trim().max(255).optional(),
   role: z.enum([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER]).optional(),
   sender: z.string().trim().email().max(255).optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(50).optional(),
 });
 
 const sendAnnouncementBodySchema = z.object({

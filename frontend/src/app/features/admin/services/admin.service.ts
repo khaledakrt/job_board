@@ -94,12 +94,16 @@ export class AdminService {
     search?: string;
     role?: 'candidate' | 'recruiter';
     sender?: string;
-  }): Observable<ApiResponse<{ items: SentAnnouncement[]; total: number }>> {
+    page?: number;
+    limit?: number;
+  }): Observable<ApiResponse<SentAnnouncement[]> & { pagination: PaginationMeta }> {
     const query: Record<string, string> = {};
     if (params?.search) query['search'] = params.search;
     if (params?.role) query['role'] = params.role;
     if (params?.sender) query['sender'] = params.sender;
-    return this.http.get<ApiResponse<{ items: SentAnnouncement[]; total: number }>>(
+    if (params?.page) query['page'] = String(params.page);
+    if (params?.limit) query['limit'] = String(params.limit);
+    return this.http.get<ApiResponse<SentAnnouncement[]> & { pagination: PaginationMeta }>(
       `${this.base}/announcements/sent`,
       { params: query }
     );

@@ -85,9 +85,60 @@
 
 .announce-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.75fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
+}
+
+@media (min-width: 1100px) {
+  .announce-layout {
+    grid-template-columns: minmax(42rem, 1fr) minmax(22rem, 26rem);
+  }
+}
+
+.announce-table {
+  width: 100%;
+}
+
+.announce-table th,
+.announce-table td {
+  vertical-align: middle;
+}
+
+.announce-table .col-check {
+  width: 2.5rem;
+}
+
+.announce-table .col-role {
+  width: 8rem;
+  white-space: nowrap;
+}
+
+.announce-table .col-date,
+.announce-table .col-result {
+  white-space: nowrap;
+}
+
+.announce-table .col-subject {
+  font-weight: 700;
+}
+
+.announce-table .col-email {
+  word-break: break-word;
+}
+
+.cell-strong,
+.cell-muted {
+  display: block;
+}
+
+.cell-muted {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
 }
 
 .announce-card {

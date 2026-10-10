@@ -49,60 +49,103 @@
           }
         </p>
       } @else {
-        <p class="announce-hint">{{ historyTotal() }} message(s)</p>
-        <ul class="sent-mail-list">
-          @for (mail of sentMessages(); track mail.id) {
-            <li>
-              <button type="button" class="sent-mail-row" (click)="openMessage(mail.id)">
-                <span class="sent-mail-subject">{{ mail.subject }}</span>
-                <span class="sent-mail-meta">
-                  {{ mail.senderName }} · {{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }} ·
-                  {{ mail.sentCount }} envoyé(s)
-                  @if (mail.failedCount) {
-                    · {{ mail.failedCount }} échec(s)
-                  }
-                </span>
-              </button>
-              @if (openedMessage()?.id === mail.id) {
-                <article class="sent-mail">
-                  <p><strong>De :</strong> {{ mail.senderName }} &lt;{{ mail.senderEmail }}&gt;</p>
-                  <p><strong>Date :</strong> {{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
-                  <p><strong>Objet :</strong> {{ mail.subject }}</p>
-                  @if (mail.recipients.length) {
-                    <p><strong>À :</strong></p>
-                    <ul class="sent-mail-recipients">
-                      @for (person of mail.recipients; track person.email) {
-                        <li>
-                          {{ person.name }} — {{ person.email }}
-                          @if (person.role) {
-                            · {{ roleLabel(person.role) }}
-                          }
-                          @if (!person.sent) {
-                            <span class="sent-mail-fail">échec{{ person.error ? ' : ' + person.error : '' }}</span>
-                          }
-                        </li>
-                      }
-                    </ul>
-                  } @else {
-                    <p>{{ mail.sentCount }} envoi(s), {{ mail.failedCount }} échec(s). Les destinataires de cet ancien message n’ont pas été conservés.</p>
-                  }
-                  @if (mail.body) {
-                    <div class="sent-mail-body">{{ mail.body }}</div>
-                    @if (mail.signature.length) {
-                      <p class="sent-mail-signature">
-                        @for (line of mail.signature; track line) {
-                          {{ line }}<br />
-                        }
-                      </p>
-                    }
-                  } @else {
-                    <p class="announce-hint">Le texte de cet envoi n’a pas été conservé. Seuls l’objet, la date et le nombre d’envois sont disponibles.</p>
-                  }
-                </article>
+        <div class="admin-table-wrap">
+          <table class="data-table announce-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Objet</th>
+                <th>Expéditeur</th>
+                <th>Destinataires</th>
+                <th>Rôle</th>
+                <th>Résultat</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (mail of sentMessages(); track mail.id) {
+                <tr>
+                  <td class="col-date">{{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="col-subject">{{ mail.subject }}</td>
+                  <td>
+                    <span class="cell-strong">{{ mail.senderName }}</span>
+                    <span class="cell-muted">{{ mail.senderEmail }}</span>
+                  </td>
+                  <td>{{ mail.recipients.length || mail.sentCount + mail.failedCount }}</td>
+                  <td class="col-role">{{ rolesLabel(mail) }}</td>
+                  <td class="col-result">{{ mail.sentCount }} envoyé(s)@if (mail.failedCount) {, {{ mail.failedCount }} échec(s)}</td>
+                  <td>
+                    <button type="button" class="admin-btn-ghost" (click)="openMessage(mail.id)">
+                      {{ openedMessage()?.id === mail.id ? 'Fermer' : 'Voir' }}
+                    </button>
+                  </td>
+                </tr>
               }
-            </li>
-          }
-        </ul>
+            </tbody>
+          </table>
+        </div>
+        <app-admin-pagination
+          [pagination]="historyPagination()"
+          [loading]="historyLoading()"
+          itemLabel="message"
+          (pageChange)="goToHistoryPage($event)"
+        />
+        @if (openedMessage(); as mail) {
+          <article class="sent-mail">
+            <p><strong>De :</strong> {{ mail.senderName }} &lt;{{ mail.senderEmail }}&gt;</p>
+            <p><strong>Date :</strong> {{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>Objet :</strong> {{ mail.subject }}</p>
+            @if (mail.recipients.length) {
+              <div class="admin-table-wrap">
+                <table class="data-table announce-table">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>E-mail</th>
+                      <th class="col-role">Rôle</th>
+                      <th>Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (person of pagedDetailRecipients(); track person.email) {
+                      <tr>
+                        <td>{{ person.name }}</td>
+                        <td class="col-email">{{ person.email }}</td>
+                        <td class="col-role">{{ person.role ? roleLabel(person.role) : '—' }}</td>
+                        <td>
+                          @if (person.sent) {
+                            Envoyé
+                          } @else {
+                            <span class="sent-mail-fail">Échec{{ person.error ? ' — ' + person.error : '' }}</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <app-admin-pagination
+                [pagination]="detailPagination()"
+                itemLabel="destinataire"
+                (pageChange)="goToDetailPage($event)"
+              />
+            } @else {
+              <p>{{ mail.sentCount }} envoi(s), {{ mail.failedCount }} échec(s). Les destinataires de cet ancien message n’ont pas été conservés.</p>
+            }
+            @if (mail.body) {
+              <div class="sent-mail-body">{{ mail.body }}</div>
+              @if (mail.signature.length) {
+                <p class="sent-mail-signature">
+                  @for (line of mail.signature; track line) {
+                    {{ line }}<br />
+                  }
+                </p>
+              }
+            } @else {
+              <p class="announce-hint">Le texte de cet envoi n’a pas été conservé. Seuls l’objet, la date et le nombre d’envois sont disponibles.</p>
+            }
+          </article>
+        }
       }
     </section>
   }
@@ -119,7 +162,7 @@
     <section class="announce-card">
       <div class="announce-toolbar">
         <div class="announce-filters" role="group" aria-label="Groupe">
-          <button type="button" [class.is-active]="roleFilter() === ''" (click)="roleFilter.set('')">Tous</button>
+          <button type="button" [class.is-active]="roleFilter() === ''" (click)="setRecipientRole('')">Tous</button>
           <button type="button" [class.is-active]="roleFilter() === 'candidate'" (click)="selectRole('candidate')">Candidats</button>
           <button type="button" [class.is-active]="roleFilter() === 'recruiter'" (click)="selectRole('recruiter')">Recruteurs</button>
         </div>
@@ -128,7 +171,7 @@
           class="form-input"
           placeholder="Nom ou e-mail"
           [value]="search()"
-          (input)="search.set($any($event.target).value)"
+          (input)="onRecipientSearch($any($event.target).value)"
         />
       </div>
 
@@ -141,10 +184,10 @@
         <p class="table-loading">Chargement...</p>
       } @else {
         <div class="admin-table-wrap">
-          <table class="data-table">
+          <table class="data-table announce-table">
             <thead>
               <tr>
-                <th>
+                <th class="col-check">
                   <input
                     type="checkbox"
                     [checked]="allVisibleSelected()"
@@ -154,13 +197,13 @@
                 </th>
                 <th>Nom</th>
                 <th>E-mail</th>
-                <th>Rôle</th>
+                <th class="col-role">Rôle</th>
               </tr>
             </thead>
             <tbody>
-              @for (person of visible(); track person.id) {
+              @for (person of pagedRecipients(); track person.id) {
                 <tr>
-                  <td>
+                  <td class="col-check">
                     <input
                       type="checkbox"
                       [checked]="isSelected(person.id)"
@@ -169,8 +212,8 @@
                     />
                   </td>
                   <td>{{ person.name }}</td>
-                  <td>{{ person.email }}</td>
-                  <td>{{ roleLabel(person.role) }}</td>
+                  <td class="col-email">{{ person.email }}</td>
+                  <td class="col-role">{{ roleLabel(person.role) }}</td>
                 </tr>
               } @empty {
                 <tr>
@@ -180,6 +223,12 @@
             </tbody>
           </table>
         </div>
+        <app-admin-pagination
+          [pagination]="recipientPagination()"
+          [loading]="loading()"
+          itemLabel="personne"
+          (pageChange)="goToRecipientPage($event)"
+        />
       }
     </section>
 
