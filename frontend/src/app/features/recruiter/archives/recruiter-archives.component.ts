@@ -16,6 +16,8 @@ import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboar
 
 type ArchiveTab = 'applications' | 'jobs';
 const ARCHIVE_PAGE_SIZE = 20;
+/** Doit rester ≤ MAX_LIMIT côté API (100). Au-delà, la liste est refusée. */
+const ARCHIVE_BREAKDOWN_LIMIT = 100;
 
 @Component({
   selector: 'app-recruiter-archives',
@@ -81,7 +83,11 @@ export class RecruiterArchivesComponent implements OnInit {
         page: this.jobsPage(),
         limit: ARCHIVE_PAGE_SIZE,
       }),
-      jobsBreakdown: this.jobService.list({ archived: true, page: 1, limit: 500 }),
+      jobsBreakdown: this.jobService.list({
+        archived: true,
+        page: 1,
+        limit: ARCHIVE_BREAKDOWN_LIMIT,
+      }),
     }).subscribe({
       next: ({ applications, jobs, jobsBreakdown }) => {
         this.applications.set(applications.data || []);
