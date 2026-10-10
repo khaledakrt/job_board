@@ -45,6 +45,19 @@ function asEducation(value) {
   })).filter((item) => item.institution || item.degree);
 }
 
+function uniqueTexts(values) {
+  const seen = new Set();
+  const result = [];
+  for (const value of values) {
+    const text = String(value || '').trim();
+    const key = text.toLocaleLowerCase('fr');
+    if (!text || seen.has(key)) continue;
+    seen.add(key);
+    result.push(text);
+  }
+  return result;
+}
+
 function locationsOf(profile) {
   const prefs = profile.job_preferences || {};
   const preferred = Array.isArray(prefs.preferredLocations) ? prefs.preferredLocations : [];
@@ -52,7 +65,7 @@ function locationsOf(profile) {
     ...(Array.isArray(profile.experiences) ? profile.experiences.map((item) => item?.city) : []),
     ...(Array.isArray(profile.education) ? profile.education.map((item) => item?.city) : []),
   ];
-  return [...preferred, ...cities].map((item) => String(item || '').trim()).filter(Boolean);
+  return uniqueTexts([...preferred, ...cities]);
 }
 
 function formatCandidate(profile) {

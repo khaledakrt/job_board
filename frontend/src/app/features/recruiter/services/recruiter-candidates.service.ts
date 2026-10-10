@@ -8,6 +8,7 @@ import { PaginationMeta } from '../../../core/models/pagination.model';
 export interface RecruiterCandidateExperience {
   title: string;
   company: string;
+  city: string;
   startDate: string;
   endDate: string;
   current: boolean;
@@ -16,6 +17,7 @@ export interface RecruiterCandidateExperience {
 export interface RecruiterCandidateEducation {
   institution: string;
   degree: string;
+  city: string;
 }
 
 export interface RecruiterCandidate {

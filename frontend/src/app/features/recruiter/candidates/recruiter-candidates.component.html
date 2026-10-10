@@ -145,9 +145,19 @@
       (click)="$event.stopPropagation()"
     >
       <header class="candidate-modal-header">
-        <div>
-          <h2 id="candidate-modal-title">{{ displayName(person) }}</h2>
-          <p>{{ person.professionalTitle || 'Titre non renseigné' }}</p>
+        <div class="candidate-identity">
+          @if (avatar(person); as src) {
+            <img [src]="src" alt="" class="candidate-photo" />
+          } @else {
+            <span class="candidate-photo candidate-photo-fallback">{{ initials(person) }}</span>
+          }
+          <div>
+            <h2 id="candidate-modal-title">{{ displayName(person) }}</h2>
+            <p class="candidate-role">{{ person.professionalTitle || 'Titre non renseigné' }}</p>
+            @if (person.locations.length) {
+              <p class="candidate-place">{{ person.locations.join(' · ') }}</p>
+            }
+          </div>
         </div>
         <button type="button" class="candidate-modal-close" (click)="closeDetail()" aria-label="Fermer">×</button>
       </header>
@@ -155,7 +165,6 @@
         <dl class="candidate-facts">
           <div><dt>E-mail</dt><dd>{{ person.email || '—' }}</dd></div>
           <div><dt>Téléphone</dt><dd>{{ person.phone || '—' }}</dd></div>
-          <div><dt>Lieu</dt><dd>{{ person.locations.join(', ') || '—' }}</dd></div>
           @if (person.createdAt) {
             <div><dt>Inscrit le</dt><dd>{{ person.createdAt | date: 'dd/MM/yyyy' }}</dd></div>
           }
@@ -179,7 +188,11 @@
         @if (person.languages.length) {
           <section>
             <h3>Langues</h3>
-            <p class="candidate-bio">{{ person.languages.join(', ') }}</p>
+            <div class="candidate-tags">
+              @for (language of person.languages; track language) {
+                <span>{{ language }}</span>
+              }
+            </div>
           </section>
         }
         @if (person.experiences.length) {
@@ -189,7 +202,7 @@
               @for (item of person.experiences; track $index) {
                 <li>
                   <strong>{{ item.title || item.company }}</strong>
-                  <span>{{ item.company }}{{ period(item) ? ' · ' + period(item) : '' }}</span>
+                  <span>{{ [item.company, item.city, period(item)].filter(Boolean).join(' · ') }}</span>
                 </li>
               }
             </ul>
@@ -202,7 +215,7 @@
               @for (item of person.education; track $index) {
                 <li>
                   <strong>{{ item.degree || item.institution }}</strong>
-                  <span>{{ item.institution }}</span>
+                  <span>{{ [item.institution, item.city].filter(Boolean).join(' · ') }}</span>
                 </li>
               }
             </ul>
