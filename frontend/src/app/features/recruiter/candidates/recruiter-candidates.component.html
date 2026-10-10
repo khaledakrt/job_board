@@ -202,7 +202,7 @@
               @for (item of person.experiences; track $index) {
                 <li>
                   <strong>{{ item.title || item.company }}</strong>
-                  <span>{{ [item.company, item.city, period(item)].filter(Boolean).join(' · ') }}</span>
+                  <span>{{ line(item.company, item.city, period(item)) }}</span>
                 </li>
               }
             </ul>
@@ -215,7 +215,7 @@
               @for (item of person.education; track $index) {
                 <li>
                   <strong>{{ item.degree || item.institution }}</strong>
-                  <span>{{ [item.institution, item.city].filter(Boolean).join(' · ') }}</span>
+                  <span>{{ line(item.institution, item.city) }}</span>
                 </li>
               }
             </ul>

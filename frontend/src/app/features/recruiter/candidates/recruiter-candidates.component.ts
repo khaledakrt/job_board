@@ -120,6 +120,10 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
     return [item.startDate, end].filter(Boolean).join(' – ');
   }
 
+  line(...parts: Array<string | null | undefined>): string {
+    return parts.map((part) => (part || '').trim()).filter(Boolean).join(' · ');
+  }
+
   private load(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
