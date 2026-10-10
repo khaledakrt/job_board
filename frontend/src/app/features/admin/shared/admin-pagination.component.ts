@@ -12,6 +12,7 @@ export class AdminPaginationComponent {
   @Input() pagination: PaginationMeta | null = null;
   @Input() loading = false;
   @Input() itemLabel = 'élément';
+  @Input() compact = false;
 
   @Output() pageChange = new EventEmitter<number>();
 

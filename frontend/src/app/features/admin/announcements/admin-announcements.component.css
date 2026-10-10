@@ -127,8 +127,16 @@
   padding: 1rem 1.1rem;
 }
 
-.mail-modal .admin-table-wrap {
+.mail-modal .recipient-scroll {
+  max-height: 14.5rem;
   overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.mail-modal .recipient-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .mail-modal .data-table {

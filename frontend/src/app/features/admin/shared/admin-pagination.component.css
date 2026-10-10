@@ -89,6 +89,38 @@
   background: #0958ab;
 }
 
+.admin-pagination-bar--compact {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.admin-pagination-bar--compact .admin-pagination-summary {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.admin-pagination-bar--compact .admin-pagination-controls {
+  gap: 0.3rem;
+}
+
+.admin-pagination-bar--compact .admin-pagination-btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+}
+
+.admin-pagination-bar--compact .admin-pagination-page {
+  min-width: 1.65rem;
+  height: 1.65rem;
+  font-size: 0.72rem;
+}
+
 @media (max-width: 640px) {
   .admin-pagination-pages {
     order: 3;

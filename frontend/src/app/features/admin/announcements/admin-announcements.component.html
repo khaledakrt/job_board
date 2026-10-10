@@ -111,7 +111,7 @@
             <p><strong>Date :</strong> {{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
             <p><strong>Objet :</strong> {{ mail.subject }}</p>
             @if (mail.recipients.length) {
-              <div class="admin-table-wrap">
+              <div class="admin-table-wrap recipient-scroll">
                 <table class="data-table announce-table">
                   <thead>
                     <tr>
@@ -139,11 +139,14 @@
                   </tbody>
                 </table>
               </div>
-              <app-admin-pagination
-                [pagination]="detailPagination()"
-                itemLabel="destinataire"
-                (pageChange)="goToDetailPage($event)"
-              />
+              @if (detailPagination().totalPages > 1) {
+                <app-admin-pagination
+                  [pagination]="detailPagination()"
+                  [compact]="true"
+                  itemLabel="destinataire"
+                  (pageChange)="goToDetailPage($event)"
+                />
+              }
             } @else {
               <p>{{ mail.sentCount }} envoi(s), {{ mail.failedCount }} échec(s). Les destinataires de cet ancien message n’ont pas été conservés.</p>
             }

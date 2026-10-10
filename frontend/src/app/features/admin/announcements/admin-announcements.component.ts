@@ -17,7 +17,7 @@ import { AdminService } from '../services/admin.service';
 
 const RECIPIENT_PAGE_SIZE = 15;
 const SENT_PAGE_SIZE = 10;
-const DETAIL_PAGE_SIZE = 8;
+const DETAIL_PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-admin-announcements',

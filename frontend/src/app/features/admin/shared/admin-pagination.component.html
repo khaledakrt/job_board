@@ -1,5 +1,5 @@
 @if (pagination && pagination.totalItems > 0) {
-  <nav class="admin-pagination-bar" [attr.aria-label]="'Pagination ' + itemLabel">
+  <nav class="admin-pagination-bar" [class.admin-pagination-bar--compact]="compact" [attr.aria-label]="'Pagination ' + itemLabel">
     <p class="admin-pagination-summary">{{ summary() }}</p>
 
     <div class="admin-pagination-controls">
