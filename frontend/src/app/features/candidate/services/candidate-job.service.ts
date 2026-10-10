@@ -31,6 +31,8 @@ export interface CompanyDirectoryItem {
   industry: string | null;
   city: string | null;
   website: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   description: string | null;
   cities: string[];
   jobs: Job[];

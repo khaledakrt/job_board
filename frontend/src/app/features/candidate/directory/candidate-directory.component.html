@@ -115,6 +115,12 @@
           <aside class="company-side-info">
             <strong>{{ company.jobsCount }} offre(s) active(s)</strong>
             <p>{{ company.cities.length ? company.cities.join(', ') : (company.city || 'Ville non précisée') }}</p>
+            @if (company.contactEmail) {
+              <a [href]="'mailto:' + company.contactEmail">{{ company.contactEmail }}</a>
+            }
+            @if (company.contactPhone) {
+              <a [href]="'tel:' + company.contactPhone">{{ company.contactPhone }}</a>
+            }
             @if (company.website) {
               <a [href]="company.website" target="_blank" rel="noopener noreferrer">
                 Site web

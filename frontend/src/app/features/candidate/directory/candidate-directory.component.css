@@ -465,11 +465,13 @@
 }
 
 .company-side-info a {
-  display: inline-block;
-  margin-top: 0.65rem;
+  display: block;
+  margin-top: 0.45rem;
   color: #0a66c2;
   font-size: 0.8rem;
-  font-weight: 850;
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
   text-decoration: none;
 }
 
