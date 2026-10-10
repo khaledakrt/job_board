@@ -82,6 +82,11 @@ router.get(
   validateQuery(sentAnnouncementsQuerySchema),
   adminController.listSentAnnouncements
 );
+router.delete(
+  '/announcements/sent/:id',
+  validateParams(userIdParamsSchema),
+  adminController.deleteSentAnnouncement
+);
 router.post(
   '/announcements',
   validateBody(sendAnnouncementBodySchema),

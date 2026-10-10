@@ -109,6 +109,10 @@ export class AdminService {
     );
   }
 
+  deleteSentAnnouncement(id: string): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.base}/announcements/sent/${id}`);
+  }
+
   getAnnouncementRecipients(): Observable<ApiResponse<AnnouncementDirectory>> {
     return this.http.get<ApiResponse<AnnouncementDirectory>>(`${this.base}/announcements/recipients`);
   }

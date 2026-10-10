@@ -72,6 +72,80 @@
   color: #b91c1c;
 }
 
+.mail-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgb(15 23 42 / 45%);
+}
+
+.mail-modal {
+  position: fixed;
+  z-index: 81;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(52rem, calc(100vw - 2rem));
+  max-height: min(85vh, 46rem);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 25%);
+}
+
+.mail-modal-header,
+.mail-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+}
+
+.mail-modal-header {
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.mail-modal-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.mail-modal-close {
+  border: 0;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.mail-modal-body {
+  overflow: auto;
+  padding: 1rem 1.1rem;
+}
+
+.mail-modal-footer {
+  border-top: 1px solid #e6ebf2;
+  justify-content: flex-end;
+}
+
+.btn-danger-mail {
+  border: 0;
+  border-radius: 0.5rem;
+  background: #dc2626;
+  color: #fff;
+  padding: 0.55rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-danger-mail:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .sent-mail-body {
   white-space: pre-wrap;
   margin-top: 0.8rem;

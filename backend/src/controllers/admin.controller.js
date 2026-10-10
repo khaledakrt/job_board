@@ -214,6 +214,11 @@ const listSentAnnouncements = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
 });
 
+const deleteSentAnnouncement = asyncHandler(async (req, res) => {
+  await announcementService.deleteSentAnnouncement(req.validatedParams.id);
+  res.status(200).json({ success: true, message: 'Message retiré de l’historique' });
+});
+
 const sendAnnouncement = asyncHandler(async (req, res) => {
   const data = await announcementService.sendAnnouncement({
     actorId: req.user.id,
@@ -283,5 +288,6 @@ module.exports = {
   updateInstitutionOfferingStatus,
   listAnnouncementRecipients,
   listSentAnnouncements,
+  deleteSentAnnouncement,
   sendAnnouncement,
 };

@@ -13,16 +13,20 @@
       </button>
 
       <div class="admin-pagination-pages">
-        @for (num of pageNumbers(); track num) {
-          <button
-            type="button"
-            class="admin-pagination-page"
-            [class.admin-pagination-page--active]="pagination.page === num"
-            [disabled]="loading"
-            (click)="goTo(num)"
-          >
-            {{ num }}
-          </button>
+        @for (token of pageTokens(); track $index) {
+          @if (token === 'gap') {
+            <span class="admin-pagination-gap" aria-hidden="true">…</span>
+          } @else {
+            <button
+              type="button"
+              class="admin-pagination-page"
+              [class.admin-pagination-page--active]="pagination.page === token"
+              [disabled]="loading"
+              (click)="goTo(token)"
+            >
+              {{ token }}
+            </button>
+          }
         }
       </div>
 

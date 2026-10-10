@@ -76,7 +76,7 @@
                   <td class="col-result">{{ mail.sentCount }} envoyé(s)@if (mail.failedCount) {, {{ mail.failedCount }} échec(s)}</td>
                   <td>
                     <button type="button" class="admin-btn-ghost" (click)="openMessage(mail.id)">
-                      {{ openedMessage()?.id === mail.id ? 'Fermer' : 'Voir' }}
+                      Voir
                     </button>
                   </td>
                 </tr>
@@ -91,7 +91,22 @@
           (pageChange)="goToHistoryPage($event)"
         />
         @if (openedMessage(); as mail) {
-          <article class="sent-mail">
+          <div class="mail-modal-backdrop" (click)="closeMessage()"></div>
+          <div
+            class="mail-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sent-mail-title"
+            appModalKeyboard
+            [appModalKeyboardOpen]="true"
+            (appModalEscape)="closeMessage()"
+            (click)="$event.stopPropagation()"
+          >
+            <header class="mail-modal-header">
+              <h2 id="sent-mail-title">{{ mail.subject }}</h2>
+              <button type="button" class="mail-modal-close" (click)="closeMessage()" aria-label="Fermer">×</button>
+            </header>
+            <div class="mail-modal-body">
             <p><strong>De :</strong> {{ mail.senderName }} &lt;{{ mail.senderEmail }}&gt;</p>
             <p><strong>Date :</strong> {{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
             <p><strong>Objet :</strong> {{ mail.subject }}</p>
@@ -144,7 +159,14 @@
             } @else {
               <p class="announce-hint">Le texte de cet envoi n’a pas été conservé. Seuls l’objet, la date et le nombre d’envois sont disponibles.</p>
             }
-          </article>
+            </div>
+            <footer class="mail-modal-footer">
+              <button type="button" class="btn-danger-mail" [disabled]="deleting()" (click)="deleteOpened()">
+                {{ deleting() ? 'Suppression…' : 'Supprimer' }}
+              </button>
+              <button type="button" class="btn-secondary" (click)="closeMessage()">Fermer</button>
+            </footer>
+          </div>
         }
       }
     </section>

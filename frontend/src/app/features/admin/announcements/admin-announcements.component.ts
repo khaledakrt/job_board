@@ -11,6 +11,7 @@ import {
 } from '../../../core/models/admin.model';
 import { PaginationMeta } from '../../../core/models/pagination.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
 import { AdminPaginationComponent } from '../shared/admin-pagination.component';
 import { AdminService } from '../services/admin.service';
 
@@ -21,7 +22,7 @@ const DETAIL_PAGE_SIZE = 8;
 @Component({
   selector: 'app-admin-announcements',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, AdminPaginationComponent],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, AdminPaginationComponent, ModalKeyboardDirective],
   templateUrl: './admin-announcements.component.html',
   styleUrl: './admin-announcements.component.css',
 })
@@ -52,6 +53,7 @@ export class AdminAnnouncementsComponent implements OnInit {
   readonly historySender = signal('');
   readonly openedMessageId = signal<string | null>(null);
   readonly detailPage = signal(1);
+  readonly deleting = signal(false);
   private historyTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly openedMessage = computed(
@@ -200,8 +202,42 @@ export class AdminAnnouncementsComponent implements OnInit {
   }
 
   openMessage(id: string): void {
-    this.openedMessageId.set(this.openedMessageId() === id ? null : id);
+    this.openedMessageId.set(id);
     this.detailPage.set(1);
+  }
+
+  closeMessage(): void {
+    if (this.deleting()) return;
+    this.openedMessageId.set(null);
+  }
+
+  async deleteOpened(): Promise<void> {
+    const mail = this.openedMessage();
+    if (!mail || this.deleting()) return;
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Supprimer ce message',
+      message: `Retirer « ${mail.subject} » de l’historique ? Les destinataires gardent l’e-mail déjà reçu.`,
+      confirmLabel: 'Supprimer',
+      confirmDanger: true,
+    });
+    if (!confirmed) return;
+
+    this.deleting.set(true);
+    this.adminService.deleteSentAnnouncement(mail.id).subscribe({
+      next: () => {
+        this.openedMessageId.set(null);
+        this.deleting.set(false);
+        this.successMessage.set('Message retiré de l’historique');
+        if (this.sentMessages().length <= 1 && this.historyPage() > 1) {
+          this.historyPage.update((page) => page - 1);
+        }
+        this.loadHistory();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Impossible de supprimer ce message');
+        this.deleting.set(false);
+      },
+    });
   }
 
   goToDetailPage(page: number): void {

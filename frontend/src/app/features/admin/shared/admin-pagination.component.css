@@ -51,7 +51,16 @@
 .admin-pagination-pages {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.35rem;
+}
+
+.admin-pagination-gap {
+  min-width: 1.4rem;
+  text-align: center;
+  color: #94a3b8;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .admin-pagination-page {

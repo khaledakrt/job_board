@@ -365,9 +365,18 @@ async function listSentAnnouncements({ search, role, sender, page, limit } = {})
   };
 }
 
+async function deleteSentAnnouncement(id) {
+  const row = await AdminSentMessage.findByPk(id);
+  if (!row) {
+    throw ApiError.notFound('Message introuvable');
+  }
+  await row.destroy();
+}
+
 module.exports = {
   listAnnouncementRecipients,
   listSentAnnouncements,
+  deleteSentAnnouncement,
   sendAnnouncement,
   SENDERS,
 };

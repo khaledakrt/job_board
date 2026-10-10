@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { PaginationMeta } from '../../../core/models/pagination.model';
-import { adminPageNumbers, adminPageSummary } from './admin-pagination.util';
+import { AdminPageToken, adminPageSummary, adminPageTokens } from './admin-pagination.util';
 
 @Component({
   selector: 'app-admin-pagination',
@@ -19,8 +19,8 @@ export class AdminPaginationComponent {
     return adminPageSummary(this.pagination, this.itemLabel);
   }
 
-  pageNumbers(): number[] {
-    return adminPageNumbers(this.pagination);
+  pageTokens(): AdminPageToken[] {
+    return adminPageTokens(this.pagination);
   }
 
   goTo(page: number): void {
