@@ -132,27 +132,27 @@
               {{ context.company()?.name || ('recruiter.companyFallback' | t) }}
             </strong>
           </div>
-          @if (context.publicationAccess(); as access) {
-            @if (!access.canPublish) {
-              <div class="topbar-status-group">
+          <div class="topbar-end">
+            @if (context.publicationAccess(); as access) {
+              @if (!access.canPublish) {
                 <div
                   class="topbar-publish-status topbar-publish-status--blocked"
                   [title]="publicationStatusTitle(access)"
                 >
                   {{ publicationStatusLabelKey(access) | t }}
                 </div>
-              </div>
+              }
             }
-          }
-          @if (context.canDecideApplication()) {
-            <app-recruiter-notification-bell />
-          }
-          <div class="topbar-company-logo" [title]="context.company()?.name || ''">
-            @if (companyLogo(); as logo) {
-              <img [src]="logo" [alt]="context.company()?.name || 'Logo entreprise'" />
-            } @else {
-              <span>{{ companyInitial() }}</span>
+            @if (context.canDecideApplication()) {
+              <app-recruiter-notification-bell />
             }
+            <div class="topbar-company-logo" [title]="context.company()?.name || ''">
+              @if (companyLogo(); as logo) {
+                <img [src]="logo" [alt]="context.company()?.name || 'Logo entreprise'" />
+              } @else {
+                <span>{{ companyInitial() }}</span>
+              }
+            </div>
           </div>
         </header>
       }

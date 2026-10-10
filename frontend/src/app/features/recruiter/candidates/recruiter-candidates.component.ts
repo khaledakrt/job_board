@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { PaginationMeta } from '../../../core/models/pagination.model';
 import { ProtectedFileService } from '../../../core/services/protected-file.service';
 import { resolveAuthenticatedUploadUrl, resolveUploadUrl } from '../../../core/utils/asset-url.util';
@@ -20,30 +20,29 @@ const PAGE_SIZE = 10;
   templateUrl: './recruiter-candidates.component.html',
   styleUrl: './recruiter-candidates.component.css',
 })
-export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
+export class RecruiterCandidatesComponent implements OnInit {
   private readonly candidatesService = inject(RecruiterCandidatesService);
   private readonly files = inject(ProtectedFileService);
-  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly candidates = signal<RecruiterCandidate[]>([]);
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
-  readonly search = signal('');
-  readonly country = signal('');
-  readonly skill = signal('');
-  readonly language = signal('');
-  readonly title = signal('');
-  readonly contract = signal('');
+  readonly searchDraft = signal('');
+  readonly countryDraft = signal('');
+  readonly skillDraft = signal('');
+  readonly languageDraft = signal('');
+  readonly contractDraft = signal('');
+  private readonly search = signal('');
+  private readonly country = signal('');
+  private readonly skill = signal('');
+  private readonly language = signal('');
+  private readonly contract = signal('');
   readonly page = signal(1);
   readonly selectedId = signal<string | null>(null);
 
   ngOnInit(): void {
     this.load();
-  }
-
-  ngOnDestroy(): void {
-    if (this.searchTimer) clearTimeout(this.searchTimer);
   }
 
   selected(): RecruiterCandidate | null {
@@ -70,26 +69,15 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
     return person.skills.slice(0, 3);
   }
 
-  onSearch(value: string): void {
-    this.search.set(value);
-    if (this.searchTimer) clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => {
-      this.page.set(1);
-      this.load();
-    }, 300);
-  }
-
-  onFilter(field: 'country' | 'skill' | 'language' | 'title' | 'contract', value: string): void {
-    if (field === 'country') this.country.set(value);
-    if (field === 'skill') this.skill.set(value);
-    if (field === 'language') this.language.set(value);
-    if (field === 'title') this.title.set(value);
-    if (field === 'contract') this.contract.set(value);
-    if (this.searchTimer) clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => {
-      this.page.set(1);
-      this.load();
-    }, 300);
+  applyFilters(event: Event): void {
+    event.preventDefault();
+    this.search.set(this.searchDraft());
+    this.country.set(this.countryDraft());
+    this.skill.set(this.skillDraft());
+    this.language.set(this.languageDraft());
+    this.contract.set(this.contractDraft());
+    this.page.set(1);
+    this.load();
   }
 
   select(person: RecruiterCandidate): void {
@@ -133,7 +121,7 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
         country: this.country(),
         skill: this.skill(),
         language: this.language(),
-        title: this.title(),
+        title: '',
         contract: this.contract(),
         page: this.page(),
         limit: PAGE_SIZE,

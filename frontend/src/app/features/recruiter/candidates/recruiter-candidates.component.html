@@ -3,68 +3,49 @@
     <p class="page-subtitle">Profils inscrits sur le site. Ce ne sont pas les candidatures reçues sur vos offres.</p>
 </div>
 
-<div class="candidates-filters panel-card">
-  <label>
-    Recherche
-    <input
-      type="search"
-      class="form-input"
-      placeholder="Nom, e-mail ou téléphone"
-      [value]="search()"
-      (input)="onSearch($any($event.target).value)"
-    />
-  </label>
-  <label>
-    Pays ou ville
-    <input
-      type="search"
-      class="form-input"
-      placeholder="Ex. Tunis, France"
-      [value]="country()"
-      (input)="onFilter('country', $any($event.target).value)"
-    />
-  </label>
-  <label>
-    Compétence
-    <input
-      type="search"
-      class="form-input"
-      placeholder="Ex. Java, SQL"
-      [value]="skill()"
-      (input)="onFilter('skill', $any($event.target).value)"
-    />
-  </label>
-  <label>
-    Langue
-    <input
-      type="search"
-      class="form-input"
-      placeholder="Ex. Français, Anglais"
-      [value]="language()"
-      (input)="onFilter('language', $any($event.target).value)"
-    />
-  </label>
-  <label>
-    Poste
-    <input
-      type="search"
-      class="form-input"
-      placeholder="Ex. Développeur"
-      [value]="title()"
-      (input)="onFilter('title', $any($event.target).value)"
-    />
-  </label>
-  <label>
-    Contrat
-    <input
-      type="search"
-      class="form-input"
-      placeholder="Ex. CDI"
-      [value]="contract()"
-      (input)="onFilter('contract', $any($event.target).value)"
-    />
-  </label>
-</div>
+<form class="candidates-filters panel-card" (submit)="applyFilters($event)">
+  <input
+    type="search"
+    class="form-input"
+    aria-label="Recherche"
+    placeholder="Nom, e-mail ou téléphone"
+    [value]="searchDraft()"
+    (input)="searchDraft.set($any($event.target).value)"
+  />
+  <input
+    type="search"
+    class="form-input"
+    aria-label="Pays ou ville"
+    placeholder="Pays ou ville"
+    [value]="countryDraft()"
+    (input)="countryDraft.set($any($event.target).value)"
+  />
+  <input
+    type="search"
+    class="form-input"
+    aria-label="Compétence"
+    placeholder="Compétence"
+    [value]="skillDraft()"
+    (input)="skillDraft.set($any($event.target).value)"
+  />
+  <input
+    type="search"
+    class="form-input"
+    aria-label="Langue"
+    placeholder="Langue"
+    [value]="languageDraft()"
+    (input)="languageDraft.set($any($event.target).value)"
+  />
+  <input
+    type="search"
+    class="form-input"
+    aria-label="Contrat"
+    placeholder="Contrat"
+    [value]="contractDraft()"
+    (input)="contractDraft.set($any($event.target).value)"
+  />
+  <button type="submit" class="filter-submit" [disabled]="loading()">Rechercher</button>
+</form>
 
 @if (errorMessage()) {
   <div class="alert alert-error">{{ errorMessage() }}</div>
