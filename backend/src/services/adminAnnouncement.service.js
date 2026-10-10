@@ -66,7 +66,7 @@ function displayName(user) {
   const candidate = user.candidateProfile;
   const person = `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim();
   if (person) return person;
-  return user.recruiterProfile?.company?.name || user.email;
+  return user.recruiterProfile?.company?.name || '';
 }
 
 function formatRecipient(user) {
@@ -137,10 +137,11 @@ function signatureHtml(sender) {
 
 function buildHtml({ name, message, sender }) {
   const body = escapeHtml(message).replace(/\n/g, '<br />');
+  const hello = name ? `Bonjour ${escapeHtml(name)},` : 'Bonjour,';
   return `<!DOCTYPE html>
 <html lang="fr">
 <body style="font-family:Arial,sans-serif;color:#1f2937;padding:24px;">
-  <p>Bonjour ${escapeHtml(name)},</p>
+  <p>${hello}</p>
   <p style="line-height:1.55;">${body}</p>
   ${signatureHtml(sender)}
 </body>
@@ -194,7 +195,8 @@ async function sendAnnouncement({ actorId, senderKey, subject, message, userIds 
 
   for (const user of users) {
     const name = displayName(user);
-    const text = `Bonjour ${name},\n\n${message}\n\n${sender.lines.join('\n')}`;
+    const hello = name ? `Bonjour ${name},` : 'Bonjour,';
+    const text = `${hello}\n\n${message}\n\n${sender.lines.join('\n')}`;
     const result = await sendMail({
       to: user.email,
       from,
