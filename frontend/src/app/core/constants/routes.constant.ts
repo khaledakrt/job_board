@@ -68,6 +68,7 @@ export const APP_ROUTES = {
     ROOT: '/admin',
     DASHBOARD: '/admin/dashboard',
     USERS: '/admin/users',
+    MESSAGES: '/admin/messages',
     USER_NEW: '/admin/users/new',
     USER_DETAIL: (id: string) => `/admin/users/${id}`,
     USER_PROFILE: (id: string) => `/admin/users/${id}/profile`,

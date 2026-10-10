@@ -68,6 +68,7 @@ async function sendMail({
   html,
   from,
   replyTo,
+  attachments,
   devLinkLabel,
   devLinkUrl,
 }) {
@@ -93,6 +94,7 @@ async function sendMail({
       subject,
       text,
       html,
+      attachments,
     });
 
     logger.info(`[Email] Envoyé à ${to} (messageId: ${info.messageId})`);

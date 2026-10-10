@@ -1,0 +1,132 @@
+<div class="admin-page">
+  <header class="admin-page-header">
+    <div>
+      <p class="admin-breadcrumb">
+        <a [routerLink]="routes.ADMIN.DASHBOARD">Admin</a>
+        <span> / Messages</span>
+      </p>
+      <h1>Messages</h1>
+      <p class="admin-page-subtitle">
+        Choisissez des candidats ou des recruteurs, puis envoyez une information depuis une boîte du site.
+      </p>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="alert-error">{{ errorMessage() }}</div>
+  }
+  @if (successMessage()) {
+    <div class="alert-success">{{ successMessage() }}</div>
+  }
+
+  <div class="announce-layout">
+    <section class="announce-card">
+      <div class="announce-toolbar">
+        <div class="announce-filters" role="group" aria-label="Groupe">
+          <button type="button" [class.is-active]="roleFilter() === ''" (click)="roleFilter.set('')">Tous</button>
+          <button type="button" [class.is-active]="roleFilter() === 'candidate'" (click)="selectRole('candidate')">Candidats</button>
+          <button type="button" [class.is-active]="roleFilter() === 'recruiter'" (click)="selectRole('recruiter')">Recruteurs</button>
+        </div>
+        <input
+          type="search"
+          class="form-input"
+          placeholder="Nom ou e-mail"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="announce-selection">
+        <span>{{ selectedCount() }} sélectionné(s)</span>
+        <button type="button" class="admin-btn-ghost" (click)="clearSelection()">Tout désélectionner</button>
+      </div>
+
+      @if (loading()) {
+        <p class="table-loading">Chargement...</p>
+      } @else {
+        <div class="admin-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    [checked]="allVisibleSelected()"
+                    (change)="toggleVisible()"
+                    aria-label="Sélectionner les lignes affichées"
+                  />
+                </th>
+                <th>Nom</th>
+                <th>E-mail</th>
+                <th>Rôle</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (person of visible(); track person.id) {
+                <tr>
+                  <td>
+                    <input
+                      type="checkbox"
+                      [checked]="isSelected(person.id)"
+                      (change)="toggle(person.id)"
+                      [attr.aria-label]="'Sélectionner ' + person.email"
+                    />
+                  </td>
+                  <td>{{ person.name }}</td>
+                  <td>{{ person.email }}</td>
+                  <td>{{ roleLabel(person.role) }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4">Aucun compte candidat ou recruteur.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <section class="announce-card">
+      <h2>Nouveau message</h2>
+      <p class="announce-hint">Chaque personne reçoit un e-mail séparé. Les autres adresses restent cachées.</p>
+      <form [formGroup]="form" (ngSubmit)="send()">
+        <label class="announce-field">
+          <span>Envoyer depuis</span>
+          <select class="form-input" formControlName="senderKey">
+            @for (sender of senders(); track sender.key) {
+              <option [value]="sender.key">{{ sender.name }} — {{ sender.email }}</option>
+            } @empty {
+              <option value="support">Support Tun Job — support&#64;tun-job-board.com</option>
+              <option value="info">Informations Tun Job — info&#64;tun-job-board.com</option>
+              <option value="administration">Administration Tun Job — administration&#64;tun-job-board.com</option>
+            }
+          </select>
+        </label>
+        <label class="announce-field">
+          <span>Objet</span>
+          <input class="form-input" formControlName="subject" maxlength="180" />
+        </label>
+        <label class="announce-field">
+          <span>Message</span>
+          <textarea class="form-input" formControlName="message" rows="10" maxlength="8000"></textarea>
+        </label>
+        <button type="submit" class="btn-primary" [disabled]="sending()">
+          @if (sending()) {
+            Envoi…
+          } @else {
+            Envoyer à {{ selectedCount() }} personne(s)
+          }
+        </button>
+      </form>
+
+      @if (failed().length) {
+        <ul class="announce-failed">
+          @for (item of failed(); track item.email) {
+            <li>{{ item.email }} — {{ item.error }}</li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</div>

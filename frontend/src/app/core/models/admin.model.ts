@@ -18,6 +18,30 @@ export interface AdminStats {
   privateInstitutionsPending: number;
 }
 
+export interface AnnouncementRecipient {
+  id: string;
+  email: string;
+  role: 'candidate' | 'recruiter';
+  name: string;
+}
+
+export interface AnnouncementSender {
+  key: 'support' | 'info' | 'administration';
+  name: string;
+  email: string;
+}
+
+export interface AnnouncementDirectory {
+  items: AnnouncementRecipient[];
+  senders: AnnouncementSender[];
+}
+
+export interface AnnouncementSendResult {
+  requested: number;
+  sent: number;
+  failed: { email: string; error: string }[];
+}
+
 export interface AdminUserListItem {
   id: string;
   email: string;

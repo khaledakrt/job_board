@@ -30,6 +30,8 @@ const {
   adminUpdateTrainingCenterSchema,
   adminCreatePrivateInstitutionSchema,
   adminUpdatePrivateInstitutionSchema,
+  announcementRecipientsQuerySchema,
+  sendAnnouncementBodySchema,
 } = require('../validators/admin.validator');
 const { updateCatalogStatusSchema } = require('../validators/publicCatalog.validator');
 const {
@@ -67,6 +69,17 @@ router.patch(
   validateParams(paymentRequestIdParamsSchema),
   validateBody(reviewPaymentRequestSchema),
   subscriptionPaymentController.adminReviewPaymentRequest
+);
+
+router.get(
+  '/announcements/recipients',
+  validateQuery(announcementRecipientsQuerySchema),
+  adminController.listAnnouncementRecipients
+);
+router.post(
+  '/announcements',
+  validateBody(sendAnnouncementBodySchema),
+  adminController.sendAnnouncement
 );
 
 router.get('/users', validateQuery(listUsersQuerySchema), adminController.listUsers);

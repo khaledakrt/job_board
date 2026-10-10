@@ -65,6 +65,11 @@ export class AdminLayoutComponent {
           route: this.routes.ADMIN.USERS,
           queryParams: { role: 'admin' },
         },
+        {
+          label: 'Messages',
+          labelKey: 'admin.nav.messages',
+          route: this.routes.ADMIN.MESSAGES,
+        },
       ],
     },
     {

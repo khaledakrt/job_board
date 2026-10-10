@@ -1,0 +1,98 @@
+.announce-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.75fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.announce-card {
+  padding: 1rem 1.1rem 1.15rem;
+  border: 1px solid #e6ebf2;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.announce-card h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.announce-hint {
+  margin: 0 0 0.9rem;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.announce-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.announce-toolbar .form-input {
+  flex: 1 1 14rem;
+  min-width: 12rem;
+}
+
+.announce-filters {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.announce-filters button {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.announce-filters button.is-active {
+  border-color: #0a66c2;
+  background: #f8fbff;
+  color: #0a66c2;
+}
+
+.announce-selection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.announce-field {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.announce-field span {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.announce-field textarea {
+  min-height: 11rem;
+  resize: vertical;
+}
+
+.announce-failed {
+  margin: 0.9rem 0 0;
+  padding-left: 1.1rem;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 960px) {
+  .announce-layout {
+    grid-template-columns: 1fr;
+  }
+}

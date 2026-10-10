@@ -15,6 +15,13 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        path: 'messages',
+        loadComponent: () =>
+          import('./announcements/admin-announcements.component').then(
+            (m) => m.AdminAnnouncementsComponent
+          ),
+      },
+      {
         path: 'users',
         loadComponent: () =>
           import('./users-list/users-list.component').then((m) => m.UsersListComponent),

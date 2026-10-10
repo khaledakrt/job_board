@@ -1,6 +1,7 @@
 'use strict';
 
 const adminService = require('../services/admin.service');
+const announcementService = require('../services/adminAnnouncement.service');
 const publicCatalogService = require('../services/publicCatalog.service');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -203,6 +204,28 @@ const updatePrivateInstitutionStatus = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Statut mis à jour', data });
 });
 
+const listAnnouncementRecipients = asyncHandler(async (req, res) => {
+  const data = await announcementService.listAnnouncementRecipients(req.validatedQuery);
+  res.status(200).json({ success: true, data });
+});
+
+const sendAnnouncement = asyncHandler(async (req, res) => {
+  const data = await announcementService.sendAnnouncement({
+    actorId: req.user.id,
+    senderKey: req.validatedBody.senderKey,
+    subject: req.validatedBody.subject,
+    message: req.validatedBody.message,
+    userIds: req.validatedBody.userIds,
+  });
+  res.status(200).json({
+    success: true,
+    message: data.failed.length
+      ? `${data.sent} envoyé(s), ${data.failed.length} échec(s)`
+      : `${data.sent} message(s) envoyé(s)`,
+    data,
+  });
+});
+
 const listInstitutionOfferings = asyncHandler(async (req, res) => {
   const result = await publicCatalogService.adminListInstitutionOfferings(req.validatedQuery);
   res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
@@ -253,4 +276,6 @@ module.exports = {
   updatePrivateInstitutionStatus,
   listInstitutionOfferings,
   updateInstitutionOfferingStatus,
+  listAnnouncementRecipients,
+  sendAnnouncement,
 };

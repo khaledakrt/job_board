@@ -20,6 +20,8 @@ import {
   AdminUserDetail,
   AdminUserProfileView,
   AdminUserListItem,
+  AnnouncementDirectory,
+  AnnouncementSendResult,
   CatalogPublishStatus,
   CreateAdminUserRequest,
   LoginEvent,
@@ -85,6 +87,19 @@ export class AdminService {
       `${this.base}/users`,
       { params: new HttpParams({ fromObject: params as Record<string, string> }) }
     );
+  }
+
+  getAnnouncementRecipients(): Observable<ApiResponse<AnnouncementDirectory>> {
+    return this.http.get<ApiResponse<AnnouncementDirectory>>(`${this.base}/announcements/recipients`);
+  }
+
+  sendAnnouncement(body: {
+    senderKey: 'support' | 'info' | 'administration';
+    subject: string;
+    message: string;
+    userIds: string[];
+  }): Observable<ApiResponse<AnnouncementSendResult>> {
+    return this.http.post<ApiResponse<AnnouncementSendResult>>(`${this.base}/announcements`, body);
   }
 
   getUser(id: string): Observable<ApiResponse<AdminUserDetail>> {

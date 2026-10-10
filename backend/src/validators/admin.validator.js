@@ -189,6 +189,18 @@ const adminCreatePrivateInstitutionSchema = z.object({
 
 const adminUpdatePrivateInstitutionSchema = adminCreatePrivateInstitutionSchema.partial();
 
+const announcementRecipientsQuerySchema = z.object({
+  role: z.enum([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER]).optional(),
+  search: z.string().trim().max(255).optional(),
+});
+
+const sendAnnouncementBodySchema = z.object({
+  senderKey: z.enum(['support', 'info', 'administration']),
+  subject: z.string().trim().min(1).max(180),
+  message: z.string().trim().min(1).max(8000),
+  userIds: z.array(z.string().uuid()).min(1).max(200),
+});
+
 module.exports = {
   listUsersQuerySchema,
   listJobsQuerySchema,
@@ -212,4 +224,6 @@ module.exports = {
   adminUpdateTrainingCenterSchema,
   adminCreatePrivateInstitutionSchema,
   adminUpdatePrivateInstitutionSchema,
+  announcementRecipientsQuerySchema,
+  sendAnnouncementBodySchema,
 };
