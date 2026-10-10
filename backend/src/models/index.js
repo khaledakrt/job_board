@@ -18,6 +18,7 @@ const JobAlert = require('./JobAlert');
 const UserLoginEvent = require('./UserLoginEvent');
 const RefreshSession = require('./RefreshSession');
 const AdminAuditLog = require('./AdminAuditLog');
+const AdminSentMessage = require('./AdminSentMessage');
 const PlatformSetting = require('./PlatformSetting');
 const TrainingCenter = require('./TrainingCenter');
 const TrainingCourse = require('./TrainingCourse');
@@ -180,6 +181,7 @@ module.exports = {
   UserLoginEvent,
   RefreshSession,
   AdminAuditLog,
+  AdminSentMessage,
   PlatformSetting,
   TrainingCenter,
   TrainingCourse,

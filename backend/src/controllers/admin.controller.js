@@ -209,6 +209,11 @@ const listAnnouncementRecipients = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data });
 });
 
+const listSentAnnouncements = asyncHandler(async (req, res) => {
+  const data = await announcementService.listSentAnnouncements();
+  res.status(200).json({ success: true, data });
+});
+
 const sendAnnouncement = asyncHandler(async (req, res) => {
   const data = await announcementService.sendAnnouncement({
     actorId: req.user.id,
@@ -277,5 +282,6 @@ module.exports = {
   listInstitutionOfferings,
   updateInstitutionOfferingStatus,
   listAnnouncementRecipients,
+  listSentAnnouncements,
   sendAnnouncement,
 };

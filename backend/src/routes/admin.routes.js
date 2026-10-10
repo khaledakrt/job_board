@@ -76,6 +76,7 @@ router.get(
   validateQuery(announcementRecipientsQuerySchema),
   adminController.listAnnouncementRecipients
 );
+router.get('/announcements/sent', adminController.listSentAnnouncements);
 router.post(
   '/announcements',
   validateBody(sendAnnouncementBodySchema),

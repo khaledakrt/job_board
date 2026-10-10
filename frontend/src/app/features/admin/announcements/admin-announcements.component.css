@@ -1,3 +1,83 @@
+.announce-history-btn {
+  align-self: start;
+  width: auto;
+  white-space: nowrap;
+}
+
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.sent-mail-panel {
+  margin-bottom: 1rem;
+}
+
+.sent-mail-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.sent-mail-row {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #e6ebf2;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+}
+
+.sent-mail-subject {
+  display: block;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sent-mail-meta {
+  display: block;
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.sent-mail {
+  margin: 0.45rem 0 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e6ebf2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.sent-mail p {
+  margin: 0 0 0.35rem;
+}
+
+.sent-mail-recipients {
+  margin: 0 0 0.75rem 1.1rem;
+  color: #334155;
+}
+
+.sent-mail-fail {
+  color: #b91c1c;
+}
+
+.sent-mail-body {
+  white-space: pre-wrap;
+  margin-top: 0.8rem;
+  line-height: 1.55;
+}
+
+.sent-mail-signature {
+  margin-top: 1rem !important;
+  color: #475569;
+}
+
 .announce-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.75fr);

@@ -42,6 +42,26 @@ export interface AnnouncementSendResult {
   failed: { email: string; error: string }[];
 }
 
+export interface SentAnnouncementRecipient {
+  email: string;
+  name: string;
+  sent: boolean;
+  error: string | null;
+}
+
+export interface SentAnnouncement {
+  id: string;
+  senderName: string;
+  senderEmail: string;
+  subject: string;
+  body: string | null;
+  signature: string[];
+  recipients: SentAnnouncementRecipient[];
+  sentCount: number;
+  failedCount: number;
+  createdAt: string;
+}
+
 export interface AdminUserListItem {
   id: string;
   email: string;

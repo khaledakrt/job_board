@@ -10,7 +10,72 @@
         Choisissez des candidats ou des recruteurs, puis envoyez une information depuis une boîte du site.
       </p>
     </div>
+    <button type="button" class="btn-secondary announce-history-btn" (click)="toggleHistory()">
+      {{ historyOpen() ? 'Nouveau message' : 'Messages envoyés' }}
+    </button>
   </header>
+
+  @if (historyOpen()) {
+    <section class="announce-card sent-mail-panel">
+      <h2>Messages déjà envoyés</h2>
+      @if (historyLoading()) {
+        <p class="table-loading">Chargement...</p>
+      } @else if (!sentMessages().length) {
+        <p class="announce-hint">Aucun e-mail n’a encore été envoyé depuis cette page.</p>
+      } @else {
+        <ul class="sent-mail-list">
+          @for (mail of sentMessages(); track mail.id) {
+            <li>
+              <button type="button" class="sent-mail-row" (click)="openMessage(mail.id)">
+                <span class="sent-mail-subject">{{ mail.subject }}</span>
+                <span class="sent-mail-meta">
+                  {{ mail.senderName }} · {{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }} ·
+                  {{ mail.sentCount }} envoyé(s)
+                  @if (mail.failedCount) {
+                    · {{ mail.failedCount }} échec(s)
+                  }
+                </span>
+              </button>
+              @if (openedMessage()?.id === mail.id) {
+                <article class="sent-mail">
+                  <p><strong>De :</strong> {{ mail.senderName }} &lt;{{ mail.senderEmail }}&gt;</p>
+                  <p><strong>Date :</strong> {{ mail.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+                  <p><strong>Objet :</strong> {{ mail.subject }}</p>
+                  @if (mail.recipients.length) {
+                    <p><strong>À :</strong></p>
+                    <ul class="sent-mail-recipients">
+                      @for (person of mail.recipients; track person.email) {
+                        <li>
+                          {{ person.name }} — {{ person.email }}
+                          @if (!person.sent) {
+                            <span class="sent-mail-fail">échec{{ person.error ? ' : ' + person.error : '' }}</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p>{{ mail.sentCount }} envoi(s), {{ mail.failedCount }} échec(s). Les destinataires de cet ancien message n’ont pas été conservés.</p>
+                  }
+                  @if (mail.body) {
+                    <div class="sent-mail-body">{{ mail.body }}</div>
+                    @if (mail.signature.length) {
+                      <p class="sent-mail-signature">
+                        @for (line of mail.signature; track line) {
+                          {{ line }}<br />
+                        }
+                      </p>
+                    }
+                  } @else {
+                    <p class="announce-hint">Le texte de cet envoi n’a pas été conservé. Seuls l’objet, la date et le nombre d’envois sont disponibles.</p>
+                  }
+                </article>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
 
   @if (errorMessage()) {
     <div class="alert-error">{{ errorMessage() }}</div>
@@ -19,6 +84,7 @@
     <div class="alert-success">{{ successMessage() }}</div>
   }
 
+  @if (!historyOpen()) {
   <div class="announce-layout">
     <section class="announce-card">
       <div class="announce-toolbar">
@@ -129,4 +195,5 @@
       }
     </section>
   </div>
+  }
 </div>

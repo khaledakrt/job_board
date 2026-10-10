@@ -22,6 +22,7 @@ import {
   AdminUserListItem,
   AnnouncementDirectory,
   AnnouncementSendResult,
+  SentAnnouncement,
   CatalogPublishStatus,
   CreateAdminUserRequest,
   LoginEvent,
@@ -87,6 +88,10 @@ export class AdminService {
       `${this.base}/users`,
       { params: new HttpParams({ fromObject: params as Record<string, string> }) }
     );
+  }
+
+  getSentAnnouncements(): Observable<ApiResponse<{ items: SentAnnouncement[] }>> {
+    return this.http.get<ApiResponse<{ items: SentAnnouncement[] }>>(`${this.base}/announcements/sent`);
   }
 
   getAnnouncementRecipients(): Observable<ApiResponse<AnnouncementDirectory>> {

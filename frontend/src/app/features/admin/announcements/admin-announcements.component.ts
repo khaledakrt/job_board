@@ -1,16 +1,21 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { APP_ROUTES } from '../../../core/constants/routes.constant';
-import { AnnouncementRecipient, AnnouncementSender } from '../../../core/models/admin.model';
+import {
+  AnnouncementRecipient,
+  AnnouncementSender,
+  SentAnnouncement,
+} from '../../../core/models/admin.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { AdminService } from '../services/admin.service';
 
 @Component({
   selector: 'app-admin-announcements',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe],
   templateUrl: './admin-announcements.component.html',
   styleUrl: './admin-announcements.component.css',
 })
@@ -30,6 +35,14 @@ export class AdminAnnouncementsComponent implements OnInit {
   readonly roleFilter = signal<'' | 'candidate' | 'recruiter'>('');
   readonly search = signal('');
   readonly selected = signal<Set<string>>(new Set());
+  readonly historyOpen = signal(false);
+  readonly historyLoading = signal(false);
+  readonly sentMessages = signal<SentAnnouncement[]>([]);
+  readonly openedMessageId = signal<string | null>(null);
+
+  readonly openedMessage = computed(
+    () => this.sentMessages().find((item) => item.id === this.openedMessageId()) ?? null
+  );
 
   readonly form = this.fb.nonNullable.group({
     senderKey: ['support' as 'support' | 'info' | 'administration', Validators.required],
@@ -109,6 +122,31 @@ export class AdminAnnouncementsComponent implements OnInit {
     this.selected.set(new Set());
   }
 
+  toggleHistory(): void {
+    const next = !this.historyOpen();
+    this.historyOpen.set(next);
+    this.openedMessageId.set(null);
+    if (next) this.loadHistory();
+  }
+
+  openMessage(id: string): void {
+    this.openedMessageId.set(this.openedMessageId() === id ? null : id);
+  }
+
+  loadHistory(): void {
+    this.historyLoading.set(true);
+    this.adminService.getSentAnnouncements().subscribe({
+      next: (res) => {
+        this.sentMessages.set(res.data?.items ?? []);
+        this.historyLoading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || 'Impossible de charger les messages envoyés');
+        this.historyLoading.set(false);
+      },
+    });
+  }
+
   async send(): Promise<void> {
     this.successMessage.set(null);
     this.failed.set([]);
@@ -154,6 +192,7 @@ export class AdminAnnouncementsComponent implements OnInit {
             this.form.controls.message.setValue('');
           }
           this.sending.set(false);
+          if (this.historyOpen()) this.loadHistory();
         },
         error: (err: HttpErrorResponse) => {
           this.errorMessage.set(err.error?.message || 'Impossible d’envoyer le message');

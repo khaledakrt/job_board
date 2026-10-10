@@ -2,7 +2,14 @@
 
 const path = require('path');
 const { Op } = require('sequelize');
-const { User, CandidateProfile, RecruiterProfile, Company, AdminAuditLog } = require('../models');
+const {
+  User,
+  CandidateProfile,
+  RecruiterProfile,
+  Company,
+  AdminAuditLog,
+  AdminSentMessage,
+} = require('../models');
 const { USER_ROLES } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const { generateUuid } = require('../utils/uuid');
@@ -213,7 +220,29 @@ async function sendAnnouncement({ actorId, senderKey, subject, message, userIds 
     }
   }
 
+  const recipients = users.map((user) => {
+    const failure = failed.find((item) => item.email === user.email);
+    return {
+      email: user.email,
+      name: displayName(user),
+      sent: !failure,
+      error: failure?.error || null,
+    };
+  });
+
   try {
+    await AdminSentMessage.create({
+      id: generateUuid(),
+      actor_id: actorId || null,
+      sender_name: sender.name,
+      sender_email: sender.email,
+      subject,
+      body: message,
+      recipients,
+      sent_count: sent,
+      failed_count: failed.length,
+      created_at: new Date(),
+    });
     await AdminAuditLog.create({
       id: generateUuid(),
       actor_id: actorId || null,
@@ -230,7 +259,7 @@ async function sendAnnouncement({ actorId, senderKey, subject, message, userIds 
       created_at: new Date(),
     });
   } catch (err) {
-    console.warn('Admin audit log failed:', err.message);
+    console.warn('Admin sent message log failed:', err.message);
   }
 
   return {
@@ -240,8 +269,38 @@ async function sendAnnouncement({ actorId, senderKey, subject, message, userIds 
   };
 }
 
+function signatureLinesFor(email) {
+  const match = Object.values(SENDERS).find((sender) => sender.email === email);
+  return match ? match.lines : [];
+}
+
+function formatSentMessage(row) {
+  const recipients = Array.isArray(row.recipients) ? row.recipients : [];
+  return {
+    id: row.id,
+    senderName: row.sender_name,
+    senderEmail: row.sender_email,
+    subject: row.subject,
+    body: row.body,
+    signature: signatureLinesFor(row.sender_email),
+    recipients,
+    sentCount: row.sent_count,
+    failedCount: row.failed_count,
+    createdAt: row.created_at,
+  };
+}
+
+async function listSentAnnouncements() {
+  const rows = await AdminSentMessage.findAll({
+    order: [['created_at', 'DESC']],
+    limit: 100,
+  });
+  return { items: rows.map(formatSentMessage) };
+}
+
 module.exports = {
   listAnnouncementRecipients,
+  listSentAnnouncements,
   sendAnnouncement,
   SENDERS,
 };
