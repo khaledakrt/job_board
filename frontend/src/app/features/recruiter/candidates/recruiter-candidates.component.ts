@@ -5,6 +5,7 @@ import { PaginationMeta } from '../../../core/models/pagination.model';
 import { ProtectedFileService } from '../../../core/services/protected-file.service';
 import { resolveAuthenticatedUploadUrl, resolveUploadUrl } from '../../../core/utils/asset-url.util';
 import { AdminPaginationComponent } from '../../admin/shared/admin-pagination.component';
+import { ModalKeyboardDirective } from '../../../shared/directives/modal-keyboard.directive';
 import {
   RecruiterCandidate,
   RecruiterCandidatesService,
@@ -15,7 +16,7 @@ const PAGE_SIZE = 10;
 @Component({
   selector: 'app-recruiter-candidates',
   standalone: true,
-  imports: [DatePipe, AdminPaginationComponent],
+  imports: [DatePipe, AdminPaginationComponent, ModalKeyboardDirective],
   templateUrl: './recruiter-candidates.component.html',
   styleUrl: './recruiter-candidates.component.css',
 })
@@ -92,7 +93,11 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
   }
 
   select(person: RecruiterCandidate): void {
-    this.selectedId.set(this.selectedId() === person.id ? null : person.id);
+    this.selectedId.set(person.id);
+  }
+
+  closeDetail(): void {
+    this.selectedId.set(null);
   }
 
   goTo(page: number): void {

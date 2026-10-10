@@ -131,29 +131,84 @@
   cursor: not-allowed;
 }
 
-.candidate-detail {
-  margin-top: 1rem;
-  padding: 1rem 1.1rem;
+.candidate-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgb(15 23 42 / 45%);
 }
 
-.candidate-detail-head {
+.candidate-modal {
+  position: fixed;
+  z-index: 81;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(46rem, calc(100vw - 2rem));
+  max-height: min(85vh, 42rem);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 25%);
+  overflow: hidden;
+}
+
+.candidate-modal-header,
+.candidate-modal-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  padding: 0.9rem 1.1rem;
 }
 
-.candidate-detail-head h2 {
+.candidate-modal-header {
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.candidate-modal-header h2 {
   margin: 0;
   font-size: 1.05rem;
 }
 
-.candidate-detail-head p,
-.candidate-detail h3 {
+.candidate-modal-header p {
   margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
 }
 
-.candidate-detail h3 {
+.candidate-modal-close {
+  border: 0;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.candidate-modal-body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+}
+
+.candidate-modal-footer {
+  border-top: 1px solid #e6ebf2;
+  justify-content: flex-end;
+}
+
+.candidate-close-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.candidate-modal h3 {
   margin: 0 0 0.35rem;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
@@ -161,7 +216,7 @@
   color: #64748b;
 }
 
-.candidate-detail section {
+.candidate-modal section {
   margin-top: 0.9rem;
 }
 
@@ -214,9 +269,7 @@
 
 @media (max-width: 700px) {
   .candidates-filters,
-  .candidate-facts,
-  .candidate-detail-head {
+  .candidate-facts {
     grid-template-columns: 1fr;
-    display: grid;
   }
 }

@@ -133,43 +133,88 @@
   />
 
   @if (selected(); as person) {
-    <article class="panel-card candidate-detail">
-      <header class="candidate-detail-head">
+    <div class="candidate-modal-backdrop" (click)="closeDetail()"></div>
+    <div
+      class="candidate-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="candidate-modal-title"
+      appModalKeyboard
+      [appModalKeyboardOpen]="true"
+      (appModalEscape)="closeDetail()"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="candidate-modal-header">
         <div>
-          <h2>{{ displayName(person) }}</h2>
+          <h2 id="candidate-modal-title">{{ displayName(person) }}</h2>
           <p>{{ person.professionalTitle || 'Titre non renseigné' }}</p>
         </div>
+        <button type="button" class="candidate-modal-close" (click)="closeDetail()" aria-label="Fermer">×</button>
+      </header>
+      <div class="candidate-modal-body">
+        <dl class="candidate-facts">
+          <div><dt>E-mail</dt><dd>{{ person.email || '—' }}</dd></div>
+          <div><dt>Téléphone</dt><dd>{{ person.phone || '—' }}</dd></div>
+          <div><dt>Lieu</dt><dd>{{ person.locations.join(', ') || '—' }}</dd></div>
+          @if (person.createdAt) {
+            <div><dt>Inscrit le</dt><dd>{{ person.createdAt | date: 'dd/MM/yyyy' }}</dd></div>
+          }
+        </dl>
+        @if (person.bio) {
+          <section>
+            <h3>Présentation</h3>
+            <p class="candidate-bio">{{ person.bio }}</p>
+          </section>
+        }
+        @if (person.skills.length) {
+          <section>
+            <h3>Compétences</h3>
+            <div class="candidate-tags">
+              @for (skill of person.skills; track skill) {
+                <span>{{ skill }}</span>
+              }
+            </div>
+          </section>
+        }
+        @if (person.languages.length) {
+          <section>
+            <h3>Langues</h3>
+            <p class="candidate-bio">{{ person.languages.join(', ') }}</p>
+          </section>
+        }
+        @if (person.experiences.length) {
+          <section>
+            <h3>Expérience</h3>
+            <ul class="candidate-blocks">
+              @for (item of person.experiences; track $index) {
+                <li>
+                  <strong>{{ item.title || item.company }}</strong>
+                  <span>{{ item.company }}{{ period(item) ? ' · ' + period(item) : '' }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+        @if (person.education.length) {
+          <section>
+            <h3>Formation</h3>
+            <ul class="candidate-blocks">
+              @for (item of person.education; track $index) {
+                <li>
+                  <strong>{{ item.degree || item.institution }}</strong>
+                  <span>{{ item.institution }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+      <footer class="candidate-modal-footer">
         <button type="button" class="cv-btn" [disabled]="!person.resumeUrl" (click)="openCv(person)">
           Afficher le CV
         </button>
-      </header>
-      <dl class="candidate-facts">
-        <div><dt>E-mail</dt><dd>{{ person.email || '—' }}</dd></div>
-        <div><dt>Téléphone</dt><dd>{{ person.phone || '—' }}</dd></div>
-        <div><dt>Lieu</dt><dd>{{ person.locations.join(', ') || '—' }}</dd></div>
-        @if (person.createdAt) {
-          <div><dt>Inscrit le</dt><dd>{{ person.createdAt | date: 'dd/MM/yyyy' }}</dd></div>
-        }
-      </dl>
-      @if (person.bio) {
-        <section>
-          <h3>Présentation</h3>
-          <p class="candidate-bio">{{ person.bio }}</p>
-        </section>
-      }
-      @if (person.experiences.length) {
-        <section>
-          <h3>Expérience</h3>
-          <ul class="candidate-blocks">
-            @for (item of person.experiences; track $index) {
-              <li>
-                <strong>{{ item.title || item.company }}</strong>
-                <span>{{ item.company }}{{ period(item) ? ' · ' + period(item) : '' }}</span>
-              </li>
-            }
-          </ul>
-        </section>
-      }
-    </article>
+        <button type="button" class="candidate-close-btn" (click)="closeDetail()">Fermer</button>
+      </footer>
+    </div>
   }
 }
