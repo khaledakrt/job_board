@@ -29,4 +29,12 @@ export class TeamService {
   remove(memberId: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/${memberId}`);
   }
+
+  stop(memberId: string): Observable<ApiResponse<TeamMember>> {
+    return this.http.post<ApiResponse<TeamMember>>(`${this.apiUrl}/${memberId}/stop`, {});
+  }
+
+  reactivate(memberId: string): Observable<ApiResponse<TeamMember>> {
+    return this.http.post<ApiResponse<TeamMember>>(`${this.apiUrl}/${memberId}/reactivate`, {});
+  }
 }

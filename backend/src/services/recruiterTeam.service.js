@@ -1,6 +1,7 @@
 'use strict';
 
 const { RecruiterProfile, User, Company, Job, RefreshSession } = require('../models');
+const { Op } = require('sequelize');
 const { env } = require('../config');
 const emailService = require('./email.service');
 const { COMPANY_ROLES, USER_ROLES } = require('../config/constants');
@@ -17,6 +18,7 @@ function formatTeamMember(profile) {
     id: profile.id,
     userId: profile.user_id,
     email: profile.user?.email || null,
+    isBanned: Boolean(profile.user?.is_banned),
     firstName: profile.first_name,
     lastName: profile.last_name,
     jobTitle: profile.job_title,
@@ -32,7 +34,7 @@ function formatTeamMember(profile) {
 async function listTeamMembers(companyId) {
   const members = await RecruiterProfile.findAll({
     where: { company_id: companyId },
-    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_verified'] }],
+    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_verified', 'is_banned'] }],
     order: [['updated_at', 'DESC']],
   });
 
@@ -118,7 +120,7 @@ async function inviteTeamMember({ owner, payload }) {
     );
 
     created = await RecruiterProfile.findByPk(profile.id, {
-      include: [{ model: User, as: 'user', attributes: ['id', 'email'] }],
+      include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_banned'] }],
       transaction,
     });
     userForInvite = user;
@@ -159,7 +161,7 @@ async function inviteTeamMember({ owner, payload }) {
 async function updateTeamMemberPermissions({ owner, memberId, payload }) {
   const member = await RecruiterProfile.findOne({
     where: { id: memberId, company_id: owner.company_id },
-    include: [{ model: User, as: 'user', attributes: ['id', 'email'] }],
+    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_banned'] }],
   });
 
   if (!member) {
@@ -216,48 +218,109 @@ async function updateTeamMemberPermissions({ owner, memberId, payload }) {
 
   await member.update(updates);
 
-  await member.reload({ include: [{ model: User, as: 'user', attributes: ['id', 'email'] }] });
+  await member.reload({ include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_banned'] }] });
 
   return formatTeamMember(member);
 }
 
-async function removeTeamMember({ owner, memberId }) {
+async function loadManageableMember(owner, memberId) {
   const member = await RecruiterProfile.findOne({
     where: { id: memberId, company_id: owner.company_id },
     include: [{ model: User, as: 'user' }],
   });
 
   if (!member) {
-    throw ApiError.notFound('Team member not found');
+    throw ApiError.notFound('Membre introuvable.');
   }
-
-  if (member.company_role === COMPANY_ROLES.OWNER) {
-    throw ApiError.forbidden('Cannot remove the company owner');
-  }
-
   if (member.id === owner.id) {
-    throw ApiError.forbidden('You cannot remove yourself from the team');
+    throw ApiError.forbidden('Vous ne pouvez pas modifier votre propre compte ici.');
   }
+  return member;
+}
+
+async function assertAnotherOwnerRemains(owner, member) {
+  if (member.company_role !== COMPANY_ROLES.OWNER) return;
+  const others = await RecruiterProfile.count({
+    where: {
+      company_id: owner.company_id,
+      company_role: COMPANY_ROLES.OWNER,
+      id: { [Op.ne]: member.id },
+    },
+    include: [{ model: User, as: 'user', where: { is_banned: false }, required: true }],
+  });
+  if (others < 1) {
+    throw ApiError.badRequest('L’entreprise doit garder au moins un administrateur actif.');
+  }
+}
+
+async function revokeMemberAccess(user) {
+  await user.update({
+    session_version: Number(user.session_version || 0) + 1,
+  });
+  await RefreshSession.update(
+    { revoked_at: new Date() },
+    { where: { user_id: user.id, revoked_at: null } }
+  );
+}
+
+async function stopTeamMember({ owner, memberId }) {
+  const member = await loadManageableMember(owner, memberId);
+  await assertAnotherOwnerRemains(owner, member);
+  await member.user.update({
+    is_banned: true,
+    ban_reason: 'Compte arrêté par un administrateur de l’entreprise',
+    banned_at: new Date(),
+  });
+  await revokeMemberAccess(member.user);
+  await member.reload({
+    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_banned'] }],
+  });
+  return formatTeamMember(member);
+}
+
+async function reactivateTeamMember({ owner, memberId }) {
+  const member = await loadManageableMember(owner, memberId);
+  await member.user.update({
+    is_banned: false,
+    ban_reason: null,
+    banned_at: null,
+  });
+  await member.reload({
+    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'is_banned'] }],
+  });
+  return formatTeamMember(member);
+}
+
+async function removeTeamMember({ owner, memberId }) {
+  const member = await loadManageableMember(owner, memberId);
+  await assertAnotherOwnerRemains(owner, member);
 
   const postedJobsCount = await Job.count({ where: { recruiter_id: member.id } });
   if (postedJobsCount > 0) {
     throw ApiError.badRequest(
-      'This recruiter has published job history. Disable their permissions instead of removing the account.'
+      'Ce recruteur a publié des offres. Arrêtez son compte pour lui couper l’accès. L’historique des offres doit rester lié à ce compte.'
     );
   }
 
+  const user = member.user;
   await member.destroy();
-  await RefreshSession.update(
-    { revoked_at: new Date() },
-    { where: { user_id: member.user_id, revoked_at: null } }
-  );
+  if (user) {
+    await user.update({
+      is_banned: true,
+      ban_reason: 'Compte supprimé par un administrateur de l’entreprise',
+      banned_at: new Date(),
+    });
+    await revokeMemberAccess(user);
+  }
 
-  return { message: 'Team member removed successfully' };
+  return { message: 'Compte recruteur supprimé.' };
 }
 
 module.exports = {
   listTeamMembers,
   inviteTeamMember,
   updateTeamMemberPermissions,
+  stopTeamMember,
+  reactivateTeamMember,
   removeTeamMember,
 };

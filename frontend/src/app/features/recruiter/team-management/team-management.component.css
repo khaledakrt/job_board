@@ -129,10 +129,17 @@
 
 .member-actions {
   display: flex;
-  gap: 0.35rem;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
   align-items: center;
   justify-content: flex-end;
-  white-space: nowrap;
+}
+
+.badge-stopped {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  text-transform: none;
 }
 
 .data-table {

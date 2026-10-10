@@ -55,9 +55,37 @@ const removeMember = asyncHandler(async (req, res) => {
   });
 });
 
+const stopMember = asyncHandler(async (req, res) => {
+  const member = await recruiterTeamService.stopTeamMember({
+    owner: req.recruiter,
+    memberId: req.validatedParams.memberId,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Compte arrêté.',
+    data: member,
+  });
+});
+
+const reactivateMember = asyncHandler(async (req, res) => {
+  const member = await recruiterTeamService.reactivateTeamMember({
+    owner: req.recruiter,
+    memberId: req.validatedParams.memberId,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Compte réactivé.',
+    data: member,
+  });
+});
+
 module.exports = {
   listTeam,
   inviteMember,
   updateMember,
   removeMember,
+  stopMember,
+  reactivateMember,
 };

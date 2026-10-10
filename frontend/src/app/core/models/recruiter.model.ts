@@ -27,6 +27,7 @@ export interface TeamMember {
   id: string;
   userId: string;
   email: string | null;
+  isBanned: boolean;
   firstName: string | null;
   lastName: string | null;
   jobTitle: string | null;

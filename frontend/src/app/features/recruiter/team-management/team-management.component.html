@@ -59,6 +59,9 @@
             <span class="badge" [class.badge-owner]="member.companyRole === 'owner'">
               {{ roleLabel(member.companyRole) }}
             </span>
+            @if (member.isBanned) {
+              <span class="badge badge-stopped">{{ 'recruiter.team.stopped' | t }}</span>
+            }
             <div class="member-actions">
             @if (isSelf(member)) {
               <button type="button" class="btn-text-link" (click)="openSelfModal()">
@@ -69,8 +72,19 @@
               <button type="button" class="btn-text-link" (click)="openEditModal(member)">
                 {{ 'actions.edit' | t }}
               </button>
+            }
+            @if (canManageAccount(member)) {
+              @if (member.isBanned) {
+                <button type="button" class="btn-text-link" (click)="reactivateMember(member)">
+                  {{ 'recruiter.team.reactivateAccount' | t }}
+                </button>
+              } @else {
+                <button type="button" class="btn-text-danger" (click)="stopMember(member)">
+                  {{ 'recruiter.team.stopAccount' | t }}
+                </button>
+              }
               <button type="button" class="btn-text-danger" (click)="removeMember(member)">
-                {{ 'recruiter.team.remove' | t }}
+                {{ 'recruiter.team.deleteAccount' | t }}
               </button>
             }
             </div>

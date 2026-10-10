@@ -119,6 +119,10 @@ export class TeamManagementComponent implements OnInit {
     this.selfModalOpen.set(false);
   }
 
+  canManageAccount(member: TeamMember): boolean {
+    return this.canManageTeam() && !this.isSelf(member);
+  }
+
   canEditMember(member: TeamMember): boolean {
     return this.canManageTeam() && member.companyRole !== 'owner';
   }
@@ -280,10 +284,45 @@ export class TeamManagementComponent implements OnInit {
     );
   }
 
+  async stopMember(member: TeamMember): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: this.i18n.translate('recruiter.team.stopAccount'),
+      message: `${this.i18n.translate('recruiter.team.stopConfirmPrefix')} ${member.email} ? ${this.i18n.translate('recruiter.team.stopConfirmSuffix')}`,
+      confirmLabel: this.i18n.translate('recruiter.team.stopAccount'),
+      confirmDanger: true,
+    });
+    if (!ok) return;
+    this.teamService.stop(member.id).subscribe({
+      next: (res) => {
+        this.patchMember(res.data);
+        this.successMessage.set(this.i18n.translate('recruiter.team.stoppedSuccess'));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || this.i18n.translate('recruiter.team.updateFailed'));
+      },
+    });
+  }
+
+  async reactivateMember(member: TeamMember): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: this.i18n.translate('recruiter.team.reactivateAccount'),
+      message: `${this.i18n.translate('recruiter.team.reactivateConfirmPrefix')} ${member.email} ?`,
+      confirmLabel: this.i18n.translate('recruiter.team.reactivateAccount'),
+    });
+    if (!ok) return;
+    this.teamService.reactivate(member.id).subscribe({
+      next: (res) => {
+        this.patchMember(res.data);
+        this.successMessage.set(this.i18n.translate('recruiter.team.reactivatedSuccess'));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage.set(err.error?.message || this.i18n.translate('recruiter.team.updateFailed'));
+      },
+    });
+  }
+
   async removeMember(member: TeamMember): Promise<void> {
-    if (member.companyRole === 'owner' || !this.canManageTeam()) {
-      return;
-    }
+    if (!this.canManageAccount(member)) return;
 
     const ok = await this.confirmDialog.confirm({
       title: this.i18n.translate('recruiter.team.removeFromTeam'),

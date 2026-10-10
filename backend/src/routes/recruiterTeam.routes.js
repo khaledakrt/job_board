@@ -37,6 +37,20 @@ router.patch(
   recruiterTeamController.updateMember
 );
 
+router.post(
+  '/:memberId/stop',
+  validateParams(memberIdParamSchema),
+  requireCompanyOwner,
+  recruiterTeamController.stopMember
+);
+
+router.post(
+  '/:memberId/reactivate',
+  validateParams(memberIdParamSchema),
+  requireCompanyOwner,
+  recruiterTeamController.reactivateMember
+);
+
 router.delete(
   '/:memberId',
   validateParams(memberIdParamSchema),
