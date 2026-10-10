@@ -10,9 +10,16 @@
 
     @if (context.profile()) {
       <div class="sidebar-company-card">
-        <span class="company-card-kicker">{{ 'recruiter.company' | t }}</span>
-        <strong>{{ context.company()?.name || ('recruiter.company' | t) }}</strong>
-        <span>{{ context.profile()?.jobTitle || ('recruiter.roleFallback' | t) }}</span>
+        @if (companyLogo(); as logo) {
+          <img [src]="logo" alt="" class="sidebar-company-logo" />
+        } @else {
+          <span class="sidebar-company-logo sidebar-company-fallback">{{ companyInitial() }}</span>
+        }
+        <div class="sidebar-company-text">
+          <span class="company-card-kicker">{{ 'recruiter.company' | t }}</span>
+          <strong>{{ context.company()?.name || ('recruiter.company' | t) }}</strong>
+          <span>{{ context.profile()?.jobTitle || ('recruiter.roleFallback' | t) }}</span>
+        </div>
       </div>
     }
 
@@ -56,6 +63,15 @@
         {{ 'recruiter.nav.jobs' | t }}
       </a>
       @if (context.canDecideApplication()) {
+        <a
+          [routerLink]="routes.RECRUITER.CANDIDATES"
+          routerLinkActive="nav-active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link"
+        >
+          <span class="nav-icon" aria-hidden="true">C</span>
+          {{ 'recruiter.nav.candidates' | t }}
+        </a>
         <a
           [routerLink]="routes.RECRUITER.ATS"
           routerLinkActive="nav-active"
@@ -142,6 +158,13 @@
           @if (context.canDecideApplication()) {
             <app-recruiter-notification-bell />
           }
+          <div class="topbar-company-logo" [title]="context.company()?.name || ''">
+            @if (companyLogo(); as logo) {
+              <img [src]="logo" [alt]="context.company()?.name || 'Logo entreprise'" />
+            } @else {
+              <span>{{ companyInitial() }}</span>
+            }
+          </div>
         </header>
       }
       @if (context.loading()) {

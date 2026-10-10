@@ -58,6 +58,14 @@ export const RECRUITER_ROUTES: Routes = [
           import('./job-preview/job-preview.component').then((m) => m.JobPreviewComponent),
       },
       {
+        path: 'candidates',
+        canActivate: [recruiterWorkspaceGuard, applicationPermissionGuard],
+        loadComponent: () =>
+          import('./candidates/recruiter-candidates.component').then(
+            (m) => m.RecruiterCandidatesComponent
+          ),
+      },
+      {
         path: 'ats',
         canActivate: [recruiterWorkspaceGuard, applicationPermissionGuard],
         loadComponent: () =>

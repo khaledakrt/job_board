@@ -16,13 +16,13 @@
   left: 0;
   z-index: 40;
   box-sizing: border-box;
-  width: 272px;
+  width: 248px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   background: #0f172a;
-  padding: 1.2rem;
+  padding: 0.9rem 0.85rem;
   overflow: hidden;
 }
 
@@ -34,45 +34,72 @@
 }
 
 .brand-mark {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
   background: linear-gradient(135deg, #38bdf8, #0a66c2 55%, #f59e0b);
   color: #fff;
   display: grid;
   place-items: center;
+  font-size: 0.72rem;
   font-weight: 700;
-  box-shadow: 0 16px 32px rgba(10, 102, 194, 0.34);
+  box-shadow: none;
 }
 
 .brand-title {
-  font-size: 0.95rem;
-  font-weight: 800;
+  font-size: 0.82rem;
+  font-weight: 700;
   color: #ffffff;
 }
 
 .brand-sub {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: #94a3b8;
 }
 
 .sidebar-company-card {
-  display: grid;
-  gap: 0.15rem;
-  margin-bottom: 1rem;
-  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+  padding: 0.65rem 0.7rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 1.1rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.06));
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-company-logo {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.55rem;
+  object-fit: contain;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.sidebar-company-fallback {
+  display: grid;
+  place-items: center;
+  color: #0a66c2;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.sidebar-company-text {
+  display: grid;
+  min-width: 0;
+  gap: 0.05rem;
 }
 
 .sidebar-company-card strong {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
+  font-weight: 650;
   line-height: 1.25;
   color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar-company-card span:last-child {
@@ -111,26 +138,26 @@
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.72rem 0.75rem;
-  border-radius: 0.95rem;
-  font-size: 0.875rem;
-  font-weight: 700;
+  gap: 0.55rem;
+  padding: 0.42rem 0.6rem;
+  border-radius: 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: #cbd5e1;
   text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .nav-icon {
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 1.35rem;
+  height: 1.35rem;
   display: grid;
   place-items: center;
-  border-radius: 0.65rem;
+  border-radius: 0.4rem;
   background: rgba(255, 255, 255, 0.07);
   color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 850;
+  font-size: 0.62rem;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
@@ -181,7 +208,7 @@
   box-sizing: border-box;
   min-width: 0;
   min-height: 100vh;
-  margin-left: 272px;
+  margin-left: 248px;
   padding: 1.25rem 1.5rem 2.5rem;
 }
 
@@ -268,6 +295,30 @@
   border: 1px solid #fecaca;
   background: #fef2f2;
   color: #b91c1c;
+}
+
+.topbar-company-logo {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.topbar-company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.topbar-company-logo span {
+  font-size: 0.85rem;
+  font-weight: 750;
+  color: #0a66c2;
 }
 
 .topbar-status-dot {

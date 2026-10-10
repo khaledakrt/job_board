@@ -63,10 +63,6 @@ async function assertCandidateCanAccess({ userId, kind, filename }) {
 }
 
 async function assertRecruiterCanAccess({ userId, kind, filename }) {
-  if (kind === 'resume') {
-    return false;
-  }
-
   const recruiter = await RecruiterProfile.findOne({
     where: { user_id: userId },
     attributes: ['id', 'company_id', 'company_role', 'can_decide_application'],
@@ -77,6 +73,14 @@ async function assertRecruiterCanAccess({ userId, kind, filename }) {
     recruiter.can_decide_application !== true
   ) {
     return false;
+  }
+
+  if (kind === 'resume') {
+    const profile = await CandidateProfile.findOne({
+      where: { resume_url: { [Op.like]: uploadMarker(kind, filename) } },
+      attributes: ['id'],
+    });
+    return Boolean(profile);
   }
 
   const application = await Application.findOne({

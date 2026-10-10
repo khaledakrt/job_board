@@ -59,6 +59,7 @@ export const APP_ROUTES = {
     TEAM: '/recruiter/team',
     JOBS: '/recruiter/jobs',
     JOBS_NEW: '/recruiter/jobs/new',
+    CANDIDATES: '/recruiter/candidates',
     ATS: '/recruiter/ats',
     ARCHIVES: '/recruiter/archives',
     SUBSCRIPTION: '/recruiter/subscription',

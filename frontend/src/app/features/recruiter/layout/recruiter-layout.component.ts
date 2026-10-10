@@ -8,6 +8,7 @@ import type { RecruiterProfile } from '../../../core/models/recruiter.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { resolveUploadUrl } from '../../../core/utils/asset-url.util';
 
 type PublicationAccess = NonNullable<RecruiterProfile['publicationAccess']>;
 
@@ -100,6 +101,14 @@ export class RecruiterLayoutComponent implements OnInit, OnDestroy {
       return this.i18n.translate('recruiter.publication.activeSubscriptionTitle');
     }
     return this.i18n.translate('recruiter.publication.paymentRequiredTitle');
+  }
+
+  companyLogo(): string | null {
+    return resolveUploadUrl(this.context.company()?.logoUrl ?? null);
+  }
+
+  companyInitial(): string {
+    return (this.context.company()?.name || 'E').charAt(0).toUpperCase();
   }
 
   logout(): void {
