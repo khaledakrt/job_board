@@ -421,6 +421,21 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
     return descriptions[status];
   }
 
+  offerStateLabel(state: Application['jobAvailability']): string {
+    switch (state) {
+      case 'expired':
+        return 'Offre expirée';
+      case 'hidden':
+        return 'Offre masquée';
+      case 'deleted':
+        return 'Offre supprimée';
+      case 'unpublished':
+        return 'Offre plus publiée';
+      default:
+        return '';
+    }
+  }
+
   applicationRangeLabel(): string {
     const pagination = this.applicationsPagination();
     if (!pagination || pagination.totalItems === 0) return 'Aucune candidature';

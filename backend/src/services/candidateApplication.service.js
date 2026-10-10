@@ -16,8 +16,19 @@ const logger = require('../utils/logger');
 
 const MAX_INTERVIEW_ROUNDS = 3;
 
+function jobAvailability(job) {
+  if (!job) return 'deleted';
+  if (job.deleted_by_recruiter_at) return 'deleted';
+  const expiredByDate = job.expires_at && new Date(job.expires_at).getTime() <= Date.now();
+  if (job.status === JOB_STATUS.EXPIRED || expiredByDate) return 'expired';
+  if (job.status === JOB_STATUS.HIDDEN || job.archived_at) return 'hidden';
+  if (job.status !== JOB_STATUS.ACTIVE) return 'unpublished';
+  return 'open';
+}
+
 function formatApplication(application) {
   const isInterview = application.status === APPLICATION_STATUS.INTERVIEW;
+  const availability = application.job === undefined ? null : jobAvailability(application.job);
   return {
     id: application.id,
     jobId: application.job_id,
@@ -34,6 +45,7 @@ function formatApplication(application) {
     interviewResponseAvailability: isInterview ? application.interview_response_availability : null,
     interviewRespondedAt: isInterview ? application.interview_responded_at : null,
     candidateArchivedAt: application.candidate_archived_at,
+    jobAvailability: availability,
     createdAt: application.created_at,
     updatedAt: application.updated_at,
     job: application.job
@@ -106,6 +118,10 @@ async function listCandidateApplications(candidateId, filters = {}) {
           'location',
           'remote_type',
           'contract_type',
+          'status',
+          'expires_at',
+          'archived_at',
+          'deleted_by_recruiter_at',
           'quiz_enabled',
           'quiz_data',
         ],
@@ -342,6 +358,10 @@ async function getCandidateApplicationDetail({ candidateId, applicationId }) {
           'location',
           'remote_type',
           'contract_type',
+          'status',
+          'expires_at',
+          'archived_at',
+          'deleted_by_recruiter_at',
           'quiz_enabled',
           'quiz_data',
         ],

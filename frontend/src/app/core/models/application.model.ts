@@ -65,7 +65,7 @@ export interface Application {
   archivedAt?: string | null;
   archivedBy?: string | null;
   candidateArchivedAt?: string | null;
-  deletedByRecruiterAt?: string | null;
+  jobAvailability?: 'open' | 'expired' | 'hidden' | 'deleted' | 'unpublished' | null;
   createdAt: string;
   updatedAt: string;
   job?: ApplicationJob;

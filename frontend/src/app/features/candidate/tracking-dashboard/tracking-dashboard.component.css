@@ -743,8 +743,31 @@
 }
 
 .app-title {
+  display: block;
   font-weight: 700;
   color: #0f172a;
+}
+
+.offer-state {
+  display: inline-block;
+  margin-top: 0.28rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 750;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.offer-state-deleted {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.offer-state-hidden,
+.offer-state-unpublished {
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .status-pill {
