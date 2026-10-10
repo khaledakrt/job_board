@@ -37,6 +37,7 @@ export class JobsListComponent implements OnInit {
   readonly jobs = signal<Job[]>([]);
   readonly pagination = signal<PaginationMeta | null>(null);
   readonly currentPage = signal(1);
+  readonly loading = signal(false);
   readonly statusFilter = signal<JobStatus | ''>('');
   readonly copiedJobId = signal<string | null>(null);
   readonly statusUpdating = signal<string | null>(null);
@@ -47,7 +48,6 @@ export class JobsListComponent implements OnInit {
   readonly statusOptions = JOB_STATUSES.filter(
     (status) => status !== 'expired'
   ) as JobStatus[];
-  readonly routes = APP_ROUTES;
   readonly pageSize = PAGE_SIZE;
 
   readonly pageSummary = computed(() => {
