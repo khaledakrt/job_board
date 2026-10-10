@@ -124,7 +124,7 @@ export class TeamManagementComponent implements OnInit {
   }
 
   canEditMember(member: TeamMember): boolean {
-    return this.canManageTeam() && member.companyRole !== 'owner';
+    return this.canManageTeam() && !this.isSelf(member);
   }
 
   openInviteModal(): void {
@@ -151,15 +151,16 @@ export class TeamManagementComponent implements OnInit {
   openEditModal(member: TeamMember): void {
     if (!this.canEditMember(member)) return;
     this.editingMember.set(member);
+    const isOwner = member.companyRole === 'owner';
     this.editForm.reset({
       firstName: member.firstName || '',
       lastName: member.lastName || '',
       jobTitle: member.jobTitle || '',
       phone: member.phone || '',
       companyRole: member.companyRole,
-      canPostJob: member.canPostJob,
-      canDecideApplication: member.canDecideApplication,
-      canEditCompany: member.canEditCompany,
+      canPostJob: isOwner || member.canPostJob,
+      canDecideApplication: isOwner || member.canDecideApplication,
+      canEditCompany: isOwner || member.canEditCompany,
     });
     this.editModalOpen.set(true);
   }
@@ -167,6 +168,24 @@ export class TeamManagementComponent implements OnInit {
   closeEditModal(): void {
     this.editModalOpen.set(false);
     this.editingMember.set(null);
+  }
+
+  onRolePicked(role: string): void {
+    if (role === 'owner') {
+      this.editForm.patchValue({
+        canPostJob: true,
+        canDecideApplication: true,
+        canEditCompany: true,
+      });
+    }
+  }
+
+  syncRoleFromPermissions(): void {
+    queueMicrotask(() => {
+      const raw = this.editForm.getRawValue();
+      const allRights = Boolean(raw.canPostJob && raw.canDecideApplication && raw.canEditCompany);
+      this.editForm.controls.companyRole.setValue(allRights ? 'owner' : 'recruiter');
+    });
   }
 
   submitSelf(): void {
@@ -252,15 +271,17 @@ export class TeamManagementComponent implements OnInit {
     this.errorMessage.set(null);
 
     const raw = this.editForm.getRawValue();
+    const allRights = Boolean(raw.canPostJob && raw.canDecideApplication && raw.canEditCompany);
+    const companyRole: 'owner' | 'recruiter' = raw.companyRole === 'owner' || allRights ? 'owner' : 'recruiter';
     const payload: UpdateTeamMemberPayload = {
       firstName: raw.firstName || null,
       lastName: raw.lastName || null,
       jobTitle: raw.jobTitle || null,
       phone: raw.phone || null,
-      companyRole: raw.companyRole,
-      canPostJob: raw.canPostJob,
-      canDecideApplication: raw.canDecideApplication,
-      canEditCompany: raw.canEditCompany,
+      companyRole,
+      canPostJob: companyRole === 'owner' ? true : raw.canPostJob,
+      canDecideApplication: companyRole === 'owner' ? true : raw.canDecideApplication,
+      canEditCompany: companyRole === 'owner' ? true : raw.canEditCompany,
     };
 
     this.teamService.update(member.id, payload).subscribe({

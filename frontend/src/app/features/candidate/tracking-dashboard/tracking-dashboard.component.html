@@ -209,6 +209,24 @@
                 >
                   {{ 'actions.details' | t }}
                 </button>
+                @if (canArchiveApplication(app)) {
+                  <button
+                    type="button"
+                    class="row-action-btn row-action-muted"
+                    (click)="archiveApplication(app); $event.stopPropagation()"
+                  >
+                    Masquer
+                  </button>
+                }
+                @if (canRestoreApplication(app)) {
+                  <button
+                    type="button"
+                    class="row-action-btn"
+                    (click)="restoreApplication(app); $event.stopPropagation()"
+                  >
+                    Réafficher
+                  </button>
+                }
               </td>
             </tr>
           } @empty {
@@ -497,9 +515,14 @@
               Page publique
             </button>
           }
-          @if (detail.status === 'rejected') {
-            <button type="button" class="btn-secondary !w-auto px-4" (click)="archiveRejectedApplication(detail)">
+          @if (canArchiveApplication(detail)) {
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="archiveApplication(detail)">
               Masquer / Archiver
+            </button>
+          }
+          @if (canRestoreApplication(detail)) {
+            <button type="button" class="btn-secondary !w-auto px-4" (click)="restoreApplication(detail)">
+              Réafficher
             </button>
           }
         </div>

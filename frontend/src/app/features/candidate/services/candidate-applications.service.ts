@@ -51,6 +51,10 @@ export class CandidateApplicationsService {
     return this.http.patch<ApiResponse<Application>>(`${this.base}/${id}/archive`, {});
   }
 
+  restoreArchived(id: string): Observable<ApiResponse<Application>> {
+    return this.http.patch<ApiResponse<Application>>(`${this.base}/${id}/restore`, {});
+  }
+
   respondToInterview(id: string, payload: InterviewResponsePayload): Observable<ApiResponse<Application>> {
     return this.http.patch<ApiResponse<Application>>(`${this.base}/${id}/interview-response`, payload);
   }

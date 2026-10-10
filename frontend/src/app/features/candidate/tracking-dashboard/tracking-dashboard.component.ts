@@ -311,13 +311,22 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  async archiveRejectedApplication(detail: ApplicationDetail): Promise<void> {
-    if (detail.status !== 'rejected') return;
+  canArchiveApplication(app: Application): boolean {
+    if (this.appScope() !== 'active' || app.candidateArchivedAt) return false;
+    return app.status === 'rejected' || this.offerStateLabel(app.jobAvailability) !== '';
+  }
+
+  canRestoreApplication(app: Application): boolean {
+    return this.appScope() === 'archived' && Boolean(app.candidateArchivedAt);
+  }
+
+  async archiveApplication(detail: Application): Promise<void> {
+    if (!this.canArchiveApplication(detail)) return;
 
     const title = detail.job?.title || 'cette candidature';
     const ok = await this.confirmDialog.confirm({
       title: 'Masquer la candidature',
-      message: `Masquer « ${title} » de la liste active ? Elle restera disponible dans les archives.`,
+      message: `Masquer « ${title} » de la liste active ? Elle restera dans Archivées.`,
       confirmLabel: 'Masquer',
     });
     if (!ok) return;
@@ -329,6 +338,28 @@ export class TrackingDashboardComponent implements OnInit, OnDestroy {
       },
       error: (err: HttpErrorResponse) => {
         this.error.set(err.error?.message || 'Impossible de masquer la candidature.');
+      },
+    });
+  }
+
+  async restoreApplication(detail: Application): Promise<void> {
+    if (!this.canRestoreApplication(detail)) return;
+
+    const title = detail.job?.title || 'cette candidature';
+    const ok = await this.confirmDialog.confirm({
+      title: 'Réafficher la candidature',
+      message: `Remettre « ${title} » dans la liste active ?`,
+      confirmLabel: 'Réafficher',
+    });
+    if (!ok) return;
+
+    this.applicationsService.restoreArchived(detail.id).subscribe({
+      next: () => {
+        this.closeDetail();
+        this.loadApplications();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.error.set(err.error?.message || 'Impossible de réafficher la candidature.');
       },
     });
   }

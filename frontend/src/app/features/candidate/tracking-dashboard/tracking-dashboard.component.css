@@ -226,6 +226,14 @@
   cursor: pointer;
 }
 
+.row-action-muted {
+  color: #64748b;
+}
+
+.actions-cell .row-action-btn + .row-action-btn {
+  margin-left: 0.35rem;
+}
+
 .status-pill-interview {
   background: #fef3c7;
   color: #b45309;

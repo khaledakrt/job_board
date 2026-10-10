@@ -55,6 +55,12 @@ router.patch(
 );
 
 router.patch(
+  '/:id/restore',
+  validateParams(applicationIdSchema),
+  candidateApplicationController.restoreArchivedApplication
+);
+
+router.patch(
   '/:id/interview-response',
   validateParams(applicationIdSchema),
   validateBody(interviewResponseSchema),

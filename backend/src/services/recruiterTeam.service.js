@@ -168,10 +168,6 @@ async function updateTeamMemberPermissions({ owner, memberId, payload }) {
     throw ApiError.notFound('Team member not found');
   }
 
-  if (member.company_role === COMPANY_ROLES.OWNER && payload.companyRole !== COMPANY_ROLES.RECRUITER) {
-    throw ApiError.forbidden('Cannot modify another administrator from this form');
-  }
-
   if (member.id === owner.id) {
     throw ApiError.forbidden('Use your own profile form to update your information');
   }
@@ -191,30 +187,32 @@ async function updateTeamMemberPermissions({ owner, memberId, payload }) {
     updates.phone = payload.phone;
   }
 
-  if (payload.companyRole === COMPANY_ROLES.OWNER) {
-    updates.company_role = COMPANY_ROLES.OWNER;
-  } else if (payload.companyRole === COMPANY_ROLES.RECRUITER && member.company_role === COMPANY_ROLES.OWNER) {
-    const owners = await RecruiterProfile.count({
-      where: { company_id: owner.company_id, company_role: COMPANY_ROLES.OWNER },
+  const canPostJob = Boolean(payload.canPostJob);
+  const canDecideApplication = Boolean(payload.canDecideApplication);
+  const canEditCompany = Boolean(payload.canEditCompany);
+  const allRights = canPostJob && canDecideApplication && canEditCompany;
+  const nextRole = payload.companyRole === COMPANY_ROLES.OWNER || allRights
+    ? COMPANY_ROLES.OWNER
+    : COMPANY_ROLES.RECRUITER;
+
+  if (nextRole === COMPANY_ROLES.RECRUITER && member.company_role === COMPANY_ROLES.OWNER) {
+    const others = await RecruiterProfile.count({
+      where: {
+        company_id: owner.company_id,
+        company_role: COMPANY_ROLES.OWNER,
+        id: { [Op.ne]: member.id },
+      },
+      include: [{ model: User, as: 'user', where: { is_banned: false }, required: true }],
     });
-    if (owners <= 1) {
-      throw ApiError.badRequest('The company must keep at least one administrator');
+    if (others < 1) {
+      throw ApiError.badRequest('L’entreprise doit garder au moins un administrateur actif.');
     }
-    updates.company_role = COMPANY_ROLES.RECRUITER;
   }
 
-  const staysRecruiter = (updates.company_role || member.company_role) === COMPANY_ROLES.RECRUITER;
-  if (staysRecruiter) {
-    if (Object.prototype.hasOwnProperty.call(payload, 'canPostJob')) {
-      updates.can_post_job = payload.canPostJob;
-    }
-    if (Object.prototype.hasOwnProperty.call(payload, 'canDecideApplication')) {
-      updates.can_decide_application = payload.canDecideApplication;
-    }
-    if (Object.prototype.hasOwnProperty.call(payload, 'canEditCompany')) {
-      updates.can_edit_company = payload.canEditCompany;
-    }
-  }
+  updates.company_role = nextRole;
+  updates.can_post_job = nextRole === COMPANY_ROLES.OWNER ? true : canPostJob;
+  updates.can_decide_application = nextRole === COMPANY_ROLES.OWNER ? true : canDecideApplication;
+  updates.can_edit_company = nextRole === COMPANY_ROLES.OWNER ? true : canEditCompany;
 
   await member.update(updates);
 

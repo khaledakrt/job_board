@@ -15,8 +15,8 @@ function monthsAgo(months) {
 }
 
 function isArchivedApplication(app) {
-  if (app.status !== 'rejected') return false;
   if (app.candidate_archived_at) return true;
+  if (app.status !== 'rejected') return false;
   return new Date(app.updated_at) < monthsAgo(ARCHIVE_MONTHS);
 }
 

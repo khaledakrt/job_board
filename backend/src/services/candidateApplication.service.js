@@ -83,10 +83,12 @@ async function listCandidateApplications(candidateId, filters = {}) {
       { updated_at: { [Op.gte]: archiveCutoff } },
     ];
   } else if (scope === 'archived') {
-    where.status = APPLICATION_STATUS.REJECTED;
     where[Op.or] = [
-      { updated_at: { [Op.lt]: archiveCutoff } },
       { candidate_archived_at: { [Op.ne]: null } },
+      {
+        status: APPLICATION_STATUS.REJECTED,
+        updated_at: { [Op.lt]: archiveCutoff },
+      },
     ];
   }
 
@@ -159,7 +161,40 @@ async function listAppliedJobIds(candidateId) {
   return applications.map((a) => a.job_id);
 }
 
+const CLOSABLE_JOB_STATES = new Set(['expired', 'hidden', 'deleted', 'unpublished']);
+
 async function archiveRejectedApplication({ candidateId, applicationId }) {
+  const application = await Application.findOne({
+    where: { id: applicationId, candidate_id: candidateId },
+    include: [
+      {
+        model: Job,
+        as: 'job',
+        attributes: ['id', 'status', 'expires_at', 'archived_at', 'deleted_by_recruiter_at'],
+      },
+    ],
+  });
+
+  if (!application) {
+    throw ApiError.notFound('Application not found');
+  }
+
+  const offerClosed = CLOSABLE_JOB_STATES.has(jobAvailability(application.job));
+  if (application.status !== APPLICATION_STATUS.REJECTED && !offerClosed) {
+    throw ApiError.badRequest(
+      'Vous pouvez masquer une candidature refusée, ou une offre expirée, masquée ou supprimée.'
+    );
+  }
+
+  await application.update({
+    candidate_archived_at: application.candidate_archived_at || new Date(),
+    updated_at: new Date(),
+  });
+
+  return formatApplication(application);
+}
+
+async function restoreArchivedApplication({ candidateId, applicationId }) {
   const application = await Application.findOne({
     where: { id: applicationId, candidate_id: candidateId },
   });
@@ -167,12 +202,9 @@ async function archiveRejectedApplication({ candidateId, applicationId }) {
   if (!application) {
     throw ApiError.notFound('Application not found');
   }
-  if (application.status !== APPLICATION_STATUS.REJECTED) {
-    throw ApiError.badRequest('Seules les candidatures refusées peuvent être masquées.');
-  }
 
   await application.update({
-    candidate_archived_at: application.candidate_archived_at || new Date(),
+    candidate_archived_at: null,
     updated_at: new Date(),
   });
 
@@ -430,6 +462,7 @@ module.exports = {
   listCandidateApplications,
   listAppliedJobIds,
   archiveRejectedApplication,
+  restoreArchivedApplication,
   respondToInterview,
   getCandidateApplicationDetail,
   applyToJob,
