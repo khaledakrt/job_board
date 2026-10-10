@@ -5,6 +5,9 @@
       <p class="page-subtitle">
         Complétez les informations de votre société telles qu’elles apparaîtront auprès des candidats.
       </p>
+      @if (publicPageUrl(); as url) {
+        <a class="link-primary" [href]="url" target="_blank" rel="noopener">Voir la page publique</a>
+      }
     </div>
     <div class="profile-progress-card" aria-live="polite">
       <div class="profile-progress-head">

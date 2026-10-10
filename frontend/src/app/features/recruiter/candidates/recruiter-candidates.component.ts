@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { PaginationMeta } from '../../../core/models/pagination.model';
 import { ProtectedFileService } from '../../../core/services/protected-file.service';
 import { resolveAuthenticatedUploadUrl, resolveUploadUrl } from '../../../core/utils/asset-url.util';
@@ -23,7 +24,9 @@ const PAGE_SIZE = 10;
 export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
   private readonly candidatesService = inject(RecruiterCandidatesService);
   private readonly files = inject(ProtectedFileService);
+  private readonly sanitizer = inject(DomSanitizer);
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private cvObjectUrl: string | null = null;
 
   readonly candidates = signal<RecruiterCandidate[]>([]);
   readonly pagination = signal<PaginationMeta | null>(null);
@@ -37,6 +40,8 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
   readonly contract = signal('');
   readonly page = signal(1);
   readonly selectedId = signal<string | null>(null);
+  readonly cvFrame = signal<SafeResourceUrl | null>(null);
+  readonly cvLoading = signal(false);
 
   ngOnInit(): void {
     this.load();
@@ -44,6 +49,7 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.clearCvPreview();
   }
 
   selected(): RecruiterCandidate | null {
@@ -93,16 +99,45 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
   }
 
   select(person: RecruiterCandidate): void {
+    this.clearCvPreview();
     this.selectedId.set(person.id);
   }
 
   closeDetail(): void {
+    this.clearCvPreview();
     this.selectedId.set(null);
   }
 
   goTo(page: number): void {
     this.page.set(page);
     this.load();
+  }
+
+  previewCv(person: RecruiterCandidate): void {
+    if (!person.resumeUrl || this.cvLoading()) return;
+    this.cvLoading.set(true);
+    this.files.fetchBlob(person.resumeUrl).subscribe({
+      next: (blob) => {
+        this.clearCvPreview();
+        const typed =
+          blob.type && blob.type !== 'application/octet-stream'
+            ? blob
+            : new Blob([blob], { type: 'application/pdf' });
+        this.cvObjectUrl = URL.createObjectURL(typed);
+        this.cvFrame.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.cvObjectUrl));
+        this.cvLoading.set(false);
+      },
+      error: () => {
+        this.cvLoading.set(false);
+        this.errorMessage.set('Impossible d’afficher le CV.');
+      },
+    });
+  }
+
+  private clearCvPreview(): void {
+    if (this.cvObjectUrl) URL.revokeObjectURL(this.cvObjectUrl);
+    this.cvObjectUrl = null;
+    this.cvFrame.set(null);
   }
 
   openCv(person: RecruiterCandidate, event?: Event): void {

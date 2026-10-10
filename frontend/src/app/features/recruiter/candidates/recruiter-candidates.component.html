@@ -1,6 +1,6 @@
 <div class="page-header">
-  <h1 class="page-title">Candidats</h1>
-  <p class="page-subtitle">Profils, compétences et CV déjà générés.</p>
+    <h1 class="page-title">Banque de CV</h1>
+    <p class="page-subtitle">Profils inscrits sur le site. Ce ne sont pas les candidatures reçues sur vos offres.</p>
 </div>
 
 <div class="candidates-filters panel-card">
@@ -221,9 +221,15 @@
             </ul>
           </section>
         }
+        @if (cvLoading()) {
+          <p class="cv-status">Chargement du CV…</p>
+        }
+        @if (cvFrame(); as frame) {
+          <iframe class="cv-frame" [src]="frame" title="CV du candidat"></iframe>
+        }
       </div>
       <footer class="candidate-modal-footer">
-        <button type="button" class="cv-btn" [disabled]="!person.resumeUrl" (click)="openCv(person)">
+        <button type="button" class="cv-btn" [disabled]="!person.resumeUrl || cvLoading()" (click)="previewCv(person)">
           Afficher le CV
         </button>
         <button type="button" class="candidate-close-btn" (click)="closeDetail()">Fermer</button>

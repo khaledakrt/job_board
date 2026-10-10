@@ -3,21 +3,21 @@
     <span class="metric-icon">O</span>
     <p class="metric-label">Offres totales</p>
     <p class="metric-value">{{ summary().totalJobs }}</p>
-    <p class="metric-foot">{{ summary().activeJobs }} active(s)</p>
+    <p class="metric-foot">{{ summary().activeJobs }} en ligne</p>
   </article>
 
   <article class="metric-card metric-card-accent">
     <span class="metric-icon">V</span>
     <p class="metric-label">Vues totales</p>
     <p class="metric-value">{{ summary().totalViews | number }}</p>
-    <p class="metric-foot">Hors offres archivées / expirées</p>
+    <p class="metric-foot">Visites sur vos offres</p>
   </article>
 
   <article class="metric-card metric-card-success">
     <span class="metric-icon">C</span>
     <p class="metric-label">Candidatures</p>
     <p class="metric-value">{{ summary().totalApplicants | number }}</p>
-    <p class="metric-foot">Volume pipeline</p>
+    <p class="metric-foot">Personnes qui ont postulé</p>
   </article>
 
   <article class="metric-card metric-card-dark">
@@ -30,6 +30,6 @@
         0%
       }
     </p>
-    <p class="metric-foot">Candidatures / vues (toutes offres actives)</p>
+    <p class="metric-foot">Visiteurs qui postulent</p>
   </article>
 </div>

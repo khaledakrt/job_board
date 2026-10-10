@@ -77,19 +77,23 @@
     </div>
     <div class="next-actions-grid">
       <a [routerLink]="routes.RECRUITER.ONBOARDING" class="next-action-item">
-        <strong>{{ 'recruiter.dashboard.companyShowcase' | t }}</strong>
-        <span>Gardez votre vitrine employeur complète.</span>
+        <strong>Fiche entreprise</strong>
+        <span>Complétez ce que les candidats voient sur votre page.</span>
       </a>
       @if (context.canPostJob()) {
         <a [routerLink]="routes.RECRUITER.JOBS" class="next-action-item">
-          <strong>{{ 'recruiter.dashboard.jobsVisibility' | t }}</strong>
-          <span>Vérifiez les annonces actives et expirées.</span>
+          <strong>Offres à partager</strong>
+          <span>Copiez le lien public et vérifiez la date d’expiration.</span>
         </a>
       }
       @if (context.canDecideApplication()) {
         <a [routerLink]="routes.RECRUITER.ATS" class="next-action-item">
-          <strong>{{ 'recruiter.dashboard.viewApplications' | t }}</strong>
-          <span>Avancez les profils en attente dans l’ATS.</span>
+          <strong>Candidatures reçues</strong>
+          <span>Traitez les personnes qui ont postulé.</span>
+        </a>
+        <a [routerLink]="routes.RECRUITER.CANDIDATES" class="next-action-item">
+          <strong>Banque de CV</strong>
+          <span>Consultez les profils inscrits, même sans candidature.</span>
         </a>
       }
     </div>

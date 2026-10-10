@@ -89,6 +89,11 @@
 
         <section class="job-row-actions" aria-label="Actions">
           <div class="action-links">
+              @if (isPublic(job)) {
+                <button type="button" class="action-btn" (click)="copyPublicLink(job)">
+                  {{ copiedJobId() === job.id ? 'Lien copié' : 'Copier le lien' }}
+                </button>
+              }
               @if (context.canPostJob()) {
                 <a [routerLink]="['/recruiter/jobs', job.id, 'edit']" class="action-btn action-btn-edit">{{ 'actions.edit' | t }}</a>
               }

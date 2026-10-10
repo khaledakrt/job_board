@@ -132,29 +132,18 @@
               {{ context.company()?.name || ('recruiter.companyFallback' | t) }}
             </strong>
           </div>
-          <div class="topbar-status-group">
-            <div class="topbar-status">
-              <span class="topbar-status-dot"></span>
-              {{ 'common.activeWorkspace' | t }}
-            </div>
-            @if (context.publicationAccess(); as access) {
-              @if (access.canPublish) {
-                <div
-                  class="topbar-publish-status topbar-publish-status--ok"
-                  [title]="publicationStatusTitle(access)"
-                >
-                  {{ publicationStatusLabelKey(access) | t }}
-                </div>
-              } @else {
+          @if (context.publicationAccess(); as access) {
+            @if (!access.canPublish) {
+              <div class="topbar-status-group">
                 <div
                   class="topbar-publish-status topbar-publish-status--blocked"
                   [title]="publicationStatusTitle(access)"
                 >
                   {{ publicationStatusLabelKey(access) | t }}
                 </div>
-              }
+              </div>
             }
-          </div>
+          }
           @if (context.canDecideApplication()) {
             <app-recruiter-notification-bell />
           }

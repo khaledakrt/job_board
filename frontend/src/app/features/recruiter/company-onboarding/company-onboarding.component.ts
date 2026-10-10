@@ -11,6 +11,7 @@ import { Company, CompanyFormPayload } from '../../../core/models/company.model'
 import { COMPANY_SIZES, INDUSTRIES, LEGAL_FORMS } from './company-onboarding.constants';
 import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from './countries.constants';
 import { computeProfileProgress } from './company-profile-progress';
+import { APP_ROUTES } from '../../../core/constants/routes.constant';
 
 const SIRET_PATTERN = /^\d{14}$/;
 const URL_PATTERN = /^https?:\/\/.+/i;
@@ -27,6 +28,13 @@ export class CompanyOnboardingComponent implements OnInit {
   private readonly companyService = inject(CompanyService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   readonly context = inject(RecruiterContextService);
+  readonly routes = APP_ROUTES;
+
+  publicPageUrl(): string | null {
+    const id = this.context.company()?.id;
+    if (!id) return null;
+    return `${window.location.origin}${this.routes.PUBLIC.COMPANY(id)}`;
+  }
 
   readonly legalForms = LEGAL_FORMS;
   readonly companySizes = COMPANY_SIZES;
