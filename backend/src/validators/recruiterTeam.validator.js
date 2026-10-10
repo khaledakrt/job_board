@@ -13,14 +13,25 @@ const inviteTeamMemberSchema = z.object({
 });
 
 const updateTeamMemberSchema = z.object({
+  firstName: z.string().trim().max(100).optional().nullable(),
+  lastName: z.string().trim().max(100).optional().nullable(),
   jobTitle: z.string().trim().max(255).optional().nullable(),
   phone: z.string().trim().max(32).optional().nullable(),
   canPostJob: z.boolean().optional(),
   canDecideApplication: z.boolean().optional(),
   canEditCompany: z.boolean().optional(),
+  companyRole: z.enum(['owner', 'recruiter']).optional(),
+});
+
+const updateOwnProfileSchema = z.object({
+  firstName: z.string().trim().max(100).optional().nullable(),
+  lastName: z.string().trim().max(100).optional().nullable(),
+  jobTitle: z.string().trim().max(255).optional().nullable(),
+  phone: z.string().trim().max(32).optional().nullable(),
 });
 
 module.exports = {
   inviteTeamMemberSchema,
   updateTeamMemberSchema,
+  updateOwnProfileSchema,
 };

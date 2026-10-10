@@ -4,7 +4,7 @@ import { catchError, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Company } from '../../../core/models/company.model';
-import { RecruiterProfile } from '../../../core/models/recruiter.model';
+import { RecruiterProfile, UpdateOwnProfilePayload } from '../../../core/models/recruiter.model';
 
 @Injectable({ providedIn: 'root' })
 export class RecruiterContextService {
@@ -114,5 +114,11 @@ export class RecruiterContextService {
     if (company) {
       this.companyState.set({ ...company, logoUrl });
     }
+  }
+
+  updateOwnProfile(payload: UpdateOwnProfilePayload) {
+    return this.http
+      .patch<ApiResponse<UpdateOwnProfilePayload>>(`${this.apiUrl}/recruiter/profile`, payload)
+      .pipe(tap(() => this.loadContext().subscribe()));
   }
 }

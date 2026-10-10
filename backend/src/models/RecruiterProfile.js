@@ -18,6 +18,14 @@ RecruiterProfile.init(
       allowNull: false,
       unique: true,
     },
+    first_name: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    last_name: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
     company_id: {
       type: DataTypes.CHAR(36),
       allowNull: false,

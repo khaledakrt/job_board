@@ -4,6 +4,8 @@ export interface RecruiterProfile {
   id: string;
   userId: string;
   companyId: string;
+  firstName: string | null;
+  lastName: string | null;
   jobTitle: string | null;
   phone: string | null;
   companyRole: 'owner' | 'recruiter';
@@ -25,6 +27,8 @@ export interface TeamMember {
   id: string;
   userId: string;
   email: string | null;
+  firstName: string | null;
+  lastName: string | null;
   jobTitle: string | null;
   phone: string | null;
   companyRole: 'owner' | 'recruiter';
@@ -44,9 +48,19 @@ export interface InviteTeamMemberPayload {
 }
 
 export interface UpdateTeamMemberPayload {
+  firstName?: string | null;
+  lastName?: string | null;
   jobTitle?: string | null;
   phone?: string | null;
   canPostJob?: boolean;
   canDecideApplication?: boolean;
   canEditCompany?: boolean;
+  companyRole?: 'owner' | 'recruiter';
+}
+
+export interface UpdateOwnProfilePayload {
+  firstName?: string | null;
+  lastName?: string | null;
+  jobTitle?: string | null;
+  phone?: string | null;
 }

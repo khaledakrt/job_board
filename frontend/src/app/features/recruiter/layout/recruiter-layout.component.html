@@ -18,7 +18,7 @@
         <div class="sidebar-company-text">
           <span class="company-card-kicker">{{ 'recruiter.company' | t }}</span>
           <strong>{{ context.company()?.name || ('recruiter.company' | t) }}</strong>
-          <span>{{ context.profile()?.jobTitle || ('recruiter.roleFallback' | t) }}</span>
+          <span>{{ personLabel() }}</span>
         </div>
       </div>
     }
@@ -128,7 +128,7 @@
           <div>
             <p class="topbar-kicker">{{ 'common.welcome' | t }}</p>
             <strong>
-              {{ context.profile()?.jobTitle || ('recruiter.roleFallback' | t) }} ·
+              {{ personLabel() }} ·
               {{ context.company()?.name || ('recruiter.companyFallback' | t) }}
             </strong>
           </div>

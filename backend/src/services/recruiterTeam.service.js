@@ -17,6 +17,8 @@ function formatTeamMember(profile) {
     id: profile.id,
     userId: profile.user_id,
     email: profile.user?.email || null,
+    firstName: profile.first_name,
+    lastName: profile.last_name,
     jobTitle: profile.job_title,
     phone: profile.phone,
     companyRole: profile.company_role,
@@ -164,30 +166,52 @@ async function updateTeamMemberPermissions({ owner, memberId, payload }) {
     throw ApiError.notFound('Team member not found');
   }
 
-  if (member.company_role === COMPANY_ROLES.OWNER) {
-    throw ApiError.forbidden('Cannot modify the company owner permissions');
+  if (member.company_role === COMPANY_ROLES.OWNER && payload.companyRole !== COMPANY_ROLES.RECRUITER) {
+    throw ApiError.forbidden('Cannot modify another administrator from this form');
   }
 
   if (member.id === owner.id) {
-    throw ApiError.forbidden('Use a dedicated flow to update your own profile');
+    throw ApiError.forbidden('Use your own profile form to update your information');
   }
 
   const updates = { updated_at: new Date() };
 
+  if (Object.prototype.hasOwnProperty.call(payload, 'firstName')) {
+    updates.first_name = payload.firstName || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'lastName')) {
+    updates.last_name = payload.lastName || null;
+  }
   if (Object.prototype.hasOwnProperty.call(payload, 'jobTitle')) {
     updates.job_title = payload.jobTitle;
   }
   if (Object.prototype.hasOwnProperty.call(payload, 'phone')) {
     updates.phone = payload.phone;
   }
-  if (Object.prototype.hasOwnProperty.call(payload, 'canPostJob')) {
-    updates.can_post_job = payload.canPostJob;
+
+  if (payload.companyRole === COMPANY_ROLES.OWNER) {
+    updates.company_role = COMPANY_ROLES.OWNER;
+  } else if (payload.companyRole === COMPANY_ROLES.RECRUITER && member.company_role === COMPANY_ROLES.OWNER) {
+    const owners = await RecruiterProfile.count({
+      where: { company_id: owner.company_id, company_role: COMPANY_ROLES.OWNER },
+    });
+    if (owners <= 1) {
+      throw ApiError.badRequest('The company must keep at least one administrator');
+    }
+    updates.company_role = COMPANY_ROLES.RECRUITER;
   }
-  if (Object.prototype.hasOwnProperty.call(payload, 'canDecideApplication')) {
-    updates.can_decide_application = payload.canDecideApplication;
-  }
-  if (Object.prototype.hasOwnProperty.call(payload, 'canEditCompany')) {
-    updates.can_edit_company = payload.canEditCompany;
+
+  const staysRecruiter = (updates.company_role || member.company_role) === COMPANY_ROLES.RECRUITER;
+  if (staysRecruiter) {
+    if (Object.prototype.hasOwnProperty.call(payload, 'canPostJob')) {
+      updates.can_post_job = payload.canPostJob;
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, 'canDecideApplication')) {
+      updates.can_decide_application = payload.canDecideApplication;
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, 'canEditCompany')) {
+      updates.can_edit_company = payload.canEditCompany;
+    }
   }
 
   await member.update(updates);

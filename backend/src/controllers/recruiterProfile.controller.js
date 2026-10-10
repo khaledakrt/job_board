@@ -39,6 +39,8 @@ const getProfile = asyncHandler(async (req, res) => {
       companyId: recruiter.company_id,
       jobTitle: recruiter.job_title,
       phone: recruiter.phone,
+      firstName: recruiter.first_name,
+      lastName: recruiter.last_name,
       companyRole: recruiter.company_role,
       canPostJob: recruiter.can_post_job,
       canDecideApplication: recruiter.can_decide_application,
@@ -107,4 +109,35 @@ const getSummary = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: summary });
 });
 
-module.exports = { getProfile, getSummary };
+const updateProfile = asyncHandler(async (req, res) => {
+  const payload = req.validatedBody;
+  const updates = { updated_at: new Date() };
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'firstName')) {
+    updates.first_name = payload.firstName || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'lastName')) {
+    updates.last_name = payload.lastName || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'jobTitle')) {
+    updates.job_title = payload.jobTitle || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'phone')) {
+    updates.phone = payload.phone || null;
+  }
+
+  await req.recruiter.update(updates);
+
+  res.status(200).json({
+    success: true,
+    message: 'Profil mis à jour.',
+    data: {
+      firstName: req.recruiter.first_name,
+      lastName: req.recruiter.last_name,
+      jobTitle: req.recruiter.job_title,
+      phone: req.recruiter.phone,
+    },
+  });
+});
+
+module.exports = { getProfile, getSummary, updateProfile };

@@ -89,10 +89,23 @@ export class SettingsComponent implements OnInit {
   });
 
   readonly notifSaved = signal(false);
+  readonly profileSaving = signal(false);
+  readonly profileSaved = signal(false);
+  readonly profileError = signal<string | null>(null);
+  readonly profileForm = this.fb.nonNullable.group({
+    firstName: [''],
+    lastName: [''],
+    jobTitle: [''],
+    phone: [''],
+  });
 
   ngOnInit(): void {
-    if (this.isRecruiter() && !this.recruiterContext.checked()) {
-      this.recruiterContext.loadContext().subscribe({ error: () => undefined });
+    if (this.isRecruiter()) {
+      if (this.recruiterContext.profile()) this.patchRecruiterProfile();
+      this.recruiterContext.loadContext().subscribe({
+        next: () => this.patchRecruiterProfile(),
+        error: () => undefined,
+      });
     }
     if (!this.isCandidate()) return;
     if (this.candidateContext.profile()) {
@@ -101,6 +114,47 @@ export class SettingsComponent implements OnInit {
     this.candidateContext.loadProfile().subscribe({
       next: () => this.patchNotifPrefs(),
     });
+  }
+
+  personLine(): string {
+    const profile = this.recruiterContext.profile();
+    const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ').trim();
+    return [name, profile?.jobTitle].filter(Boolean).join(' · ') || 'Recruteur';
+  }
+
+  private patchRecruiterProfile(): void {
+    const profile = this.recruiterContext.profile();
+    if (!profile) return;
+    this.profileForm.patchValue({
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      jobTitle: profile.jobTitle || '',
+      phone: profile.phone || '',
+    });
+  }
+
+  saveRecruiterProfile(): void {
+    const raw = this.profileForm.getRawValue();
+    this.profileSaving.set(true);
+    this.profileSaved.set(false);
+    this.profileError.set(null);
+    this.recruiterContext
+      .updateOwnProfile({
+        firstName: raw.firstName || null,
+        lastName: raw.lastName || null,
+        jobTitle: raw.jobTitle || null,
+        phone: raw.phone || null,
+      })
+      .subscribe({
+        next: () => {
+          this.profileSaving.set(false);
+          this.profileSaved.set(true);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.profileSaving.set(false);
+          this.profileError.set(err.error?.message || 'Impossible d’enregistrer ces informations.');
+        },
+      });
   }
 
   private patchNotifPrefs(): void {

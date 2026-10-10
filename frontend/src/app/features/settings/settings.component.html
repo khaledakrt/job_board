@@ -7,13 +7,43 @@
   <div class="settings-layout">
     @if (isRecruiter()) {
       <section class="settings-card panel-card recruiter-settings-card">
+        <h2 class="settings-section-title">Mes informations</h2>
+        <p class="settings-section-hint">Prénom, nom, poste et téléphone. Chaque recruteur renseigne sa propre fiche.</p>
+        @if (profileSaved()) {
+          <div class="alert alert-success">Informations enregistrées.</div>
+        }
+        @if (profileError()) {
+          <div class="alert alert-error">{{ profileError() }}</div>
+        }
+        <form class="recruiter-profile-form" [formGroup]="profileForm" (ngSubmit)="saveRecruiterProfile()">
+          <div class="settings-name-row">
+            <label>
+              Prénom
+              <input class="form-input" formControlName="firstName" autocomplete="given-name" />
+            </label>
+            <label>
+              Nom
+              <input class="form-input" formControlName="lastName" autocomplete="family-name" />
+            </label>
+          </div>
+          <label>
+            Poste
+            <input class="form-input" formControlName="jobTitle" autocomplete="organization-title" />
+          </label>
+          <label>
+            Téléphone
+            <input class="form-input" type="tel" formControlName="phone" autocomplete="tel" />
+          </label>
+          <button type="submit" class="btn-primary !w-auto px-4" [disabled]="profileSaving()">Enregistrer</button>
+        </form>
+
         <h2 class="settings-section-title">Espace recruteur</h2>
         <p class="settings-section-hint">Rôle, permissions et raccourcis utiles pour votre travail quotidien.</p>
 
         <div class="recruiter-context-box">
           <span>Entreprise</span>
           <strong>{{ recruiterContext.company()?.name || 'Entreprise non chargée' }}</strong>
-          <small>{{ recruiterContext.profile()?.jobTitle || 'Recruteur' }}</small>
+          <small>{{ personLine() }}</small>
         </div>
 
         <div class="recruiter-permission-list">

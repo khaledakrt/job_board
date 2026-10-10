@@ -35,11 +35,12 @@
     <div class="members-grid">
       @for (member of members(); track member.id) {
         <article class="member-card">
-          <div class="member-avatar">{{ (member.email || '?').charAt(0).toUpperCase() }}</div>
+          <div class="member-avatar">{{ displayName(member).charAt(0).toUpperCase() }}</div>
           <div class="member-main">
             <div class="member-head">
               <div>
-                <h2>{{ member.email }}</h2>
+                <h2>{{ displayName(member) }}</h2>
+                <p class="member-email">{{ member.email }}</p>
                 <p>{{ member.jobTitle || ('recruiter.team.jobTitleMissing' | t) }}</p>
               </div>
             </div>
@@ -59,6 +60,11 @@
               {{ roleLabel(member.companyRole) }}
             </span>
             <div class="member-actions">
+            @if (isSelf(member)) {
+              <button type="button" class="btn-text-link" (click)="openSelfModal()">
+                {{ 'recruiter.team.myInfo' | t }}
+              </button>
+            }
             @if (canEditMember(member)) {
               <button type="button" class="btn-text-link" (click)="openEditModal(member)">
                 {{ 'actions.edit' | t }}
@@ -141,6 +147,16 @@
         <h2 id="edit-member-title" class="modal-title">{{ 'actions.edit' | t }} — {{ member.email }}</h2>
       </header>
       <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="modal-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="editFirstName">{{ 'forms.firstName' | t }}</label>
+            <input id="editFirstName" class="form-input" formControlName="firstName" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="editLastName">{{ 'forms.lastName' | t }}</label>
+            <input id="editLastName" class="form-input" formControlName="lastName" />
+          </div>
+        </div>
         <div class="form-field">
           <label class="form-label" for="editJobTitle">{{ 'forms.job' | t }}</label>
           <input id="editJobTitle" class="form-input" formControlName="jobTitle" />
@@ -149,19 +165,74 @@
           <label class="form-label" for="editPhone">{{ 'forms.phone' | t }}</label>
           <input id="editPhone" class="form-input" formControlName="phone" />
         </div>
+        <div class="form-field">
+          <label class="form-label" for="editRole">{{ 'recruiter.team.role' | t }}</label>
+          <select id="editRole" class="form-input" formControlName="companyRole">
+            <option value="recruiter">{{ 'recruiter.team.recruiterRole' | t }}</option>
+            <option value="owner">{{ 'recruiter.team.ownerRole' | t }}</option>
+          </select>
+        </div>
 
-        <fieldset class="permissions-fieldset">
-          <legend class="form-label">{{ 'recruiter.team.permissions' | t }}</legend>
-          @for (perm of permissionOptions; track perm.key) {
-            <label class="checkbox-row">
-              <input type="checkbox" [formControlName]="perm.key" />
-              <span>{{ perm.labelKey | t }}</span>
-            </label>
-          }
-        </fieldset>
+        @if (editForm.controls.companyRole.value === 'recruiter') {
+          <fieldset class="permissions-fieldset">
+            <legend class="form-label">{{ 'recruiter.team.permissions' | t }}</legend>
+            @for (perm of permissionOptions; track perm.key) {
+              <label class="checkbox-row">
+                <input type="checkbox" [formControlName]="perm.key" />
+                <span>{{ perm.labelKey | t }}</span>
+              </label>
+            }
+          </fieldset>
+        } @else {
+          <p class="role-note">{{ 'recruiter.team.adminRights' | t }}</p>
+        }
 
         <div class="modal-actions">
           <button type="button" class="btn-secondary !w-auto px-4" (click)="closeEditModal()">{{ 'actions.cancel' | t }}</button>
+          <button type="submit" class="btn-primary !w-auto px-4" [disabled]="saving()">
+            @if (saving()) { {{ 'actions.saving' | t }} } @else { {{ 'actions.save' | t }} }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (selfModalOpen()) {
+  <div
+    class="modal-backdrop"
+    appModalKeyboard
+    [appModalKeyboardOpen]="selfModalOpen()"
+    appModalFocusId="self-profile-title"
+    (appModalEscape)="closeSelfModal()"
+    (click)="closeSelfModal()"
+  >
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="self-profile-title">
+      <header class="modal-header">
+        <p>{{ 'recruiter.team.personalInfo' | t }}</p>
+        <h2 id="self-profile-title" class="modal-title">{{ 'recruiter.team.myInfo' | t }}</h2>
+      </header>
+      <form [formGroup]="selfForm" (ngSubmit)="submitSelf()" class="modal-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="selfFirstName">{{ 'forms.firstName' | t }}</label>
+            <input id="selfFirstName" class="form-input" formControlName="firstName" autocomplete="given-name" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="selfLastName">{{ 'forms.lastName' | t }}</label>
+            <input id="selfLastName" class="form-input" formControlName="lastName" autocomplete="family-name" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="selfJobTitle">{{ 'forms.job' | t }}</label>
+          <input id="selfJobTitle" class="form-input" formControlName="jobTitle" autocomplete="organization-title" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="selfPhone">{{ 'forms.phone' | t }}</label>
+          <input id="selfPhone" class="form-input" formControlName="phone" type="tel" autocomplete="tel" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary !w-auto px-4" (click)="closeSelfModal()">{{ 'actions.cancel' | t }}</button>
           <button type="submit" class="btn-primary !w-auto px-4" [disabled]="saving()">
             @if (saving()) { {{ 'actions.saving' | t }} } @else { {{ 'actions.save' | t }} }
           </button>

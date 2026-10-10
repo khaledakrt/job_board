@@ -40,6 +40,7 @@ export class TeamManagementComponent implements OnInit {
   readonly loading = signal(false);
   readonly modalOpen = signal(false);
   readonly editModalOpen = signal(false);
+  readonly selfModalOpen = signal(false);
   readonly editingMember = signal<TeamMember | null>(null);
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -55,11 +56,21 @@ export class TeamManagementComponent implements OnInit {
   });
 
   readonly editForm = this.fb.nonNullable.group({
+    firstName: [''],
+    lastName: [''],
     jobTitle: [''],
     phone: [''],
+    companyRole: ['recruiter' as 'owner' | 'recruiter'],
     canPostJob: [false],
     canDecideApplication: [false],
     canEditCompany: [false],
+  });
+
+  readonly selfForm = this.fb.nonNullable.group({
+    firstName: [''],
+    lastName: [''],
+    jobTitle: [''],
+    phone: [''],
   });
 
   ngOnInit(): void {
@@ -82,6 +93,30 @@ export class TeamManagementComponent implements OnInit {
 
   canManageTeam(): boolean {
     return this.context.isOwner();
+  }
+
+  isSelf(member: TeamMember): boolean {
+    return member.userId === this.context.profile()?.userId;
+  }
+
+  displayName(member: TeamMember): string {
+    const name = [member.firstName, member.lastName].filter(Boolean).join(' ').trim();
+    return name || member.email || 'Recruteur';
+  }
+
+  openSelfModal(): void {
+    const profile = this.context.profile();
+    this.selfForm.reset({
+      firstName: profile?.firstName || '',
+      lastName: profile?.lastName || '',
+      jobTitle: profile?.jobTitle || '',
+      phone: profile?.phone || '',
+    });
+    this.selfModalOpen.set(true);
+  }
+
+  closeSelfModal(): void {
+    this.selfModalOpen.set(false);
   }
 
   canEditMember(member: TeamMember): boolean {
@@ -113,8 +148,11 @@ export class TeamManagementComponent implements OnInit {
     if (!this.canEditMember(member)) return;
     this.editingMember.set(member);
     this.editForm.reset({
+      firstName: member.firstName || '',
+      lastName: member.lastName || '',
       jobTitle: member.jobTitle || '',
       phone: member.phone || '',
+      companyRole: member.companyRole,
       canPostJob: member.canPostJob,
       canDecideApplication: member.canDecideApplication,
       canEditCompany: member.canEditCompany,
@@ -125,6 +163,35 @@ export class TeamManagementComponent implements OnInit {
   closeEditModal(): void {
     this.editModalOpen.set(false);
     this.editingMember.set(null);
+  }
+
+  submitSelf(): void {
+    if (this.selfForm.invalid) {
+      this.selfForm.markAllAsTouched();
+      return;
+    }
+    const raw = this.selfForm.getRawValue();
+    this.saving.set(true);
+    this.errorMessage.set(null);
+    this.context
+      .updateOwnProfile({
+        firstName: raw.firstName || null,
+        lastName: raw.lastName || null,
+        jobTitle: raw.jobTitle || null,
+        phone: raw.phone || null,
+      })
+      .subscribe({
+        next: () => {
+          this.successMessage.set(this.i18n.translate('recruiter.team.profileSaved'));
+          this.saving.set(false);
+          this.closeSelfModal();
+          this.loadMembers();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.errorMessage.set(err.error?.message || this.i18n.translate('recruiter.team.updateFailed'));
+          this.saving.set(false);
+        },
+      });
   }
 
   async submitInvite(): Promise<void> {
@@ -182,8 +249,11 @@ export class TeamManagementComponent implements OnInit {
 
     const raw = this.editForm.getRawValue();
     const payload: UpdateTeamMemberPayload = {
+      firstName: raw.firstName || null,
+      lastName: raw.lastName || null,
       jobTitle: raw.jobTitle || null,
       phone: raw.phone || null,
+      companyRole: raw.companyRole,
       canPostJob: raw.canPostJob,
       canDecideApplication: raw.canDecideApplication,
       canEditCompany: raw.canEditCompany,

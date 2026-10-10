@@ -103,6 +103,13 @@ export class RecruiterLayoutComponent implements OnInit, OnDestroy {
     return this.i18n.translate('recruiter.publication.paymentRequiredTitle');
   }
 
+  personLabel(): string {
+    const profile = this.context.profile();
+    const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ').trim();
+    if (name && profile?.jobTitle) return `${name} · ${profile.jobTitle}`;
+    return name || profile?.jobTitle || this.i18n.translate('recruiter.roleFallback');
+  }
+
   companyLogo(): string | null {
     return resolveUploadUrl(this.context.company()?.logoUrl ?? null);
   }

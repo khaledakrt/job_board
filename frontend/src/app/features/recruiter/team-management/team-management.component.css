@@ -308,3 +308,19 @@
     flex-direction: column;
   }
 }
+
+.member-email {
+  font-size: 0.78rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.role-note {
+  margin: 0;
+  color: #334155;
+  font-size: 0.85rem;
+}
