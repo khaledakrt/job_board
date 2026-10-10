@@ -7,18 +7,10 @@ import { resolveAuthenticatedUploadUrl, resolveUploadUrl } from '../../../core/u
 import { AdminPaginationComponent } from '../../admin/shared/admin-pagination.component';
 import {
   RecruiterCandidate,
-  RecruiterCandidateFacets,
   RecruiterCandidatesService,
 } from '../services/recruiter-candidates.service';
 
 const PAGE_SIZE = 10;
-const EMPTY_FACETS: RecruiterCandidateFacets = {
-  countries: [],
-  skills: [],
-  languages: [],
-  titles: [],
-  contracts: [],
-};
 
 @Component({
   selector: 'app-recruiter-candidates',
@@ -34,7 +26,6 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
 
   readonly candidates = signal<RecruiterCandidate[]>([]);
   readonly pagination = signal<PaginationMeta | null>(null);
-  readonly facets = signal<RecruiterCandidateFacets>(EMPTY_FACETS);
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly search = signal('');
@@ -93,8 +84,11 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
     if (field === 'language') this.language.set(value);
     if (field === 'title') this.title.set(value);
     if (field === 'contract') this.contract.set(value);
-    this.page.set(1);
-    this.load();
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.page.set(1);
+      this.load();
+    }, 300);
   }
 
   select(person: RecruiterCandidate): void {
@@ -139,7 +133,6 @@ export class RecruiterCandidatesComponent implements OnInit, OnDestroy {
         next: (res) => {
           this.candidates.set(res.data ?? []);
           this.pagination.set(res.pagination ?? null);
-          if (res.facets) this.facets.set(res.facets);
           const current = this.selectedId();
           const stillThere = (res.data ?? []).some((person) => person.id === current);
           if (!stillThere) this.selectedId.set(null);

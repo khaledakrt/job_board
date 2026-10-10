@@ -16,48 +16,53 @@
   </label>
   <label>
     Pays ou ville
-    <select class="form-input" [value]="country()" (change)="onFilter('country', $any($event.target).value)">
-      <option value="">Tous</option>
-      @for (option of facets().countries; track option) {
-        <option [value]="option">{{ option }}</option>
-      }
-    </select>
+    <input
+      type="search"
+      class="form-input"
+      placeholder="Ex. Tunis, France"
+      [value]="country()"
+      (input)="onFilter('country', $any($event.target).value)"
+    />
   </label>
   <label>
     Compétence
-    <select class="form-input" [value]="skill()" (change)="onFilter('skill', $any($event.target).value)">
-      <option value="">Toutes</option>
-      @for (option of facets().skills; track option) {
-        <option [value]="option">{{ option }}</option>
-      }
-    </select>
+    <input
+      type="search"
+      class="form-input"
+      placeholder="Ex. Java, SQL"
+      [value]="skill()"
+      (input)="onFilter('skill', $any($event.target).value)"
+    />
   </label>
   <label>
     Langue
-    <select class="form-input" [value]="language()" (change)="onFilter('language', $any($event.target).value)">
-      <option value="">Toutes</option>
-      @for (option of facets().languages; track option) {
-        <option [value]="option">{{ option }}</option>
-      }
-    </select>
+    <input
+      type="search"
+      class="form-input"
+      placeholder="Ex. Français, Anglais"
+      [value]="language()"
+      (input)="onFilter('language', $any($event.target).value)"
+    />
   </label>
   <label>
     Poste
-    <select class="form-input" [value]="title()" (change)="onFilter('title', $any($event.target).value)">
-      <option value="">Tous</option>
-      @for (option of facets().titles; track option) {
-        <option [value]="option">{{ option }}</option>
-      }
-    </select>
+    <input
+      type="search"
+      class="form-input"
+      placeholder="Ex. Développeur"
+      [value]="title()"
+      (input)="onFilter('title', $any($event.target).value)"
+    />
   </label>
   <label>
     Contrat
-    <select class="form-input" [value]="contract()" (change)="onFilter('contract', $any($event.target).value)">
-      <option value="">Tous</option>
-      @for (option of facets().contracts; track option) {
-        <option [value]="option">{{ option }}</option>
-      }
-    </select>
+    <input
+      type="search"
+      class="form-input"
+      placeholder="Ex. CDI"
+      [value]="contract()"
+      (input)="onFilter('contract', $any($event.target).value)"
+    />
   </label>
 </div>
 

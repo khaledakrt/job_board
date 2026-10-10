@@ -83,54 +83,11 @@ function formatCandidate(profile) {
   };
 }
 
-function sortedUnique(values) {
-  return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'fr'))
-    .slice(0, 80);
-}
-
 function jsonMatch(column, path, term) {
   const safe = String(term).replace(/[%_\\]/g, '').slice(0, 80);
   return sequelize.literal(
     `JSON_SEARCH(\`${column}\`, 'one', ${sequelize.escape(`%${safe}%`)}, NULL, ${sequelize.escape(path)}) IS NOT NULL`
   );
-}
-
-async function listFacets() {
-  const rows = await CandidateProfile.findAll({
-    attributes: ['skills', 'languages', 'professional_title', 'job_preferences', 'experiences', 'education'],
-    include: [
-      {
-        model: User,
-        as: 'user',
-        attributes: [],
-        where: { role: USER_ROLES.CANDIDATE, is_banned: false },
-        required: true,
-      },
-    ],
-  });
-
-  const countries = [];
-  const skills = [];
-  const languages = [];
-  const titles = [];
-  const contracts = [];
-  for (const profile of rows) {
-    countries.push(...locationsOf(profile));
-    skills.push(...plainLabels(profile.skills));
-    languages.push(...plainLabels(profile.languages));
-    if (profile.professional_title) titles.push(profile.professional_title);
-    const prefs = profile.job_preferences || {};
-    contracts.push(...plainLabels(prefs.contractTypes));
-  }
-
-  return {
-    countries: sortedUnique(countries),
-    skills: sortedUnique(skills),
-    languages: sortedUnique(languages),
-    titles: sortedUnique(titles),
-    contracts: sortedUnique(contracts),
-  };
 }
 
 async function listCandidates(query) {
@@ -169,7 +126,10 @@ async function listCandidates(query) {
   }
   if (skill) and.push(jsonMatch('skills', '$[*]', skill));
   if (language) and.push(jsonMatch('languages', '$[*]', language));
-  if (title) and.push({ professional_title: title });
+  if (title) {
+    const like = `%${title.replace(/[%_]/g, '')}%`;
+    and.push({ professional_title: { [Op.like]: like } });
+  }
   if (contract) and.push(jsonMatch('job_preferences', '$.contractTypes', contract));
 
   const result = await CandidateProfile.findAndCountAll({
@@ -196,7 +156,6 @@ async function listCandidates(query) {
     page,
     limit,
   });
-  pageResult.facets = await listFacets();
   return pageResult;
 }
 
