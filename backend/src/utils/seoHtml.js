@@ -140,7 +140,7 @@ function firstImage(...candidates) {
       return absoluteUrl(candidate);
     }
   }
-  return absoluteUrl('/og-default.svg');
+  return absoluteUrl('/og-cover.jpg');
 }
 
 function injectSeo(html, { title, description, url, imageUrl, ogType = 'website', jsonLd }) {
@@ -150,7 +150,7 @@ function injectSeo(html, { title, description, url, imageUrl, ogType = 'website'
     '<meta name="robots" content="index,follow" />',
     `<link rel="canonical" href="${escapeHtml(url)}" />`,
     metaTag('og:type', ogType, true),
-    metaTag('og:site_name', 'JobBoard', true),
+    metaTag('og:site_name', 'Tun Job Board', true),
     metaTag('og:title', title, true),
     metaTag('og:description', description, true),
     metaTag('og:url', url, true),
@@ -237,20 +237,20 @@ async function renderJobSeoHtml(job) {
 }
 
 async function renderHomeSeoHtml() {
-  const title = 'JobBoard Tunisie - Offres d’emploi, formations et établissements privés';
+  const title = 'Tun Job Board — Offres d’emploi en Tunisie';
   const description =
-    'Trouvez des offres d’emploi, découvrez des centres de formation et explorez les établissements privés en Tunisie sur JobBoard.';
+    'Tun Job Board, la plateforme pour publier une offre, postuler et suivre les candidatures.';
   const url = publicSiteUrl();
   return renderSeoHtml({
     title,
     description,
     path: '/',
-    imageUrl: '/og-default.svg',
+    imageUrl: '/og-cover.jpg',
     ogType: 'website',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'JobBoard Tunisie',
+      name: 'Tun Job Board',
       url,
       description,
     },
@@ -286,7 +286,7 @@ async function renderTrainingCentersListSeoHtml() {
     title,
     description,
     path,
-    imageUrl: '/og-default.svg',
+    imageUrl: '/og-cover.jpg',
     ogType: 'website',
     jsonLd: collectionJsonLd(title, description, `${publicSiteUrl()}${path}`),
   });
@@ -397,7 +397,7 @@ async function renderPrivateInstitutionsListSeoHtml() {
     title,
     description,
     path,
-    imageUrl: '/og-default.svg',
+    imageUrl: '/og-cover.jpg',
     ogType: 'website',
     jsonLd: collectionJsonLd(title, description, `${publicSiteUrl()}${path}`),
   });
