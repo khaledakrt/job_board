@@ -143,8 +143,15 @@ function firstImage(...candidates) {
   return absoluteUrl('/og-cover.jpg');
 }
 
-function injectSeo(html, { title, description, url, imageUrl, ogType = 'website', jsonLd }) {
+function stripShareMeta(html) {
+  return html
+    .replace(/<meta\s+(?:property|name)=["'](?:og:|twitter:)[^"']*["'][^>]*>/gi, '')
+    .replace(/<link\s+rel=["']canonical["'][^>]*>/gi, '');
+}
+
+function injectSeo(html, { title, description, url, imageUrl, ogType = 'website', imageCard, jsonLd }) {
   const jsonLdTags = Array.isArray(jsonLd) ? jsonLd : [jsonLd].filter(Boolean);
+  const card = imageCard || (imageUrl ? 'summary_large_image' : 'summary');
   const tags = [
     metaTag('description', description),
     '<meta name="robots" content="index,follow" />',
@@ -155,7 +162,8 @@ function injectSeo(html, { title, description, url, imageUrl, ogType = 'website'
     metaTag('og:description', description, true),
     metaTag('og:url', url, true),
     metaTag('og:image', imageUrl, true),
-    metaTag('twitter:card', imageUrl ? 'summary_large_image' : 'summary'),
+    metaTag('og:image:alt', title, true),
+    metaTag('twitter:card', card),
     metaTag('twitter:title', title),
     metaTag('twitter:description', description),
     metaTag('twitter:image', imageUrl),
@@ -164,7 +172,7 @@ function injectSeo(html, { title, description, url, imageUrl, ogType = 'website'
     .filter(Boolean)
     .join('\n    ');
 
-  return html
+  return stripShareMeta(html)
     .replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     .replace(/<meta\s+name=["']description["'][^>]*>/i, '')
     .replace('</head>', `    ${tags}\n  </head>`);
@@ -213,24 +221,25 @@ function collectionJsonLd(title, description, url) {
 }
 
 async function renderJobSeoHtml(job) {
-  const companyName = job.company?.name || 'JobBoard';
-  const title = `${job.title} - ${companyName}`;
-  const descriptionParts = [
-    stripHtml(job.description),
-    job.location ? `Lieu: ${job.location}` : null,
-    job.contractType ? `Contrat: ${job.contractType}` : null,
-  ].filter(Boolean);
-  const description = truncate(descriptionParts.join(' · '), 220);
+  const companyName = job.company?.name || 'Tun Job Board';
+  const title = `${job.title} — ${companyName}`;
+  const facts = [job.contractType, job.location].filter(Boolean).join(' · ');
+  const lead = facts
+    ? `${companyName} recrute : ${job.title}. ${facts}.`
+    : `${companyName} recrute : ${job.title}.`;
+  const description = truncate([lead, stripHtml(job.description)].filter(Boolean).join(' '), 220);
   const url = `${publicSiteUrl()}/offres/${job.id}`;
-  const imageUrl = absoluteUrl(job.company?.logoUrl);
-  const jobPostingJson = JSON.parse(buildJobPosting(job, url, imageUrl, stripHtml(job.description)));
+  const logoUrl = absoluteUrl(job.company?.logoUrl);
+  const imageUrl = logoUrl || firstImage();
+  const jobPostingJson = JSON.parse(buildJobPosting(job, url, logoUrl, stripHtml(job.description)));
   const html = await readFrontendIndex();
 
   return injectSeo(html, {
     title,
     description,
     url,
-    imageUrl: imageUrl || firstImage(),
+    imageUrl,
+    imageCard: logoUrl ? 'summary' : 'summary_large_image',
     ogType: 'article',
     jsonLd: jobPostingJson,
   });
