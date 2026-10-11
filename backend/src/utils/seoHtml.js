@@ -239,7 +239,7 @@ async function renderJobSeoHtml(job) {
 async function renderHomeSeoHtml() {
   const title = 'Tun Job Board — Offres d’emploi en Tunisie';
   const description =
-    'Tun Job Board, la plateforme pour publier une offre, postuler et suivre les candidatures.';
+    'Sur Tun Job Board, les candidats trouvent des offres en Tunisie et les recruteurs publient leurs annonces, reçoivent les CV et suivent les candidatures.';
   const url = publicSiteUrl();
   return renderSeoHtml({
     title,
