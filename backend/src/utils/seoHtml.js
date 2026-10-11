@@ -232,7 +232,8 @@ async function renderJobSeoHtml(job) {
   const description = truncate([lead, stripHtml(job.description)].filter(Boolean).join(' '), 220);
   const url = `${publicSiteUrl()}/offres/${job.id}`;
   const logoUrl = absoluteUrl(job.company?.logoUrl);
-  const imageUrl = `${publicSiteUrl()}/api/og/jobs/${job.id}.jpg`;
+  const cardUrl = `${publicSiteUrl()}/api/og/jobs/${job.id}.jpg`;
+  const imageUrl = logoUrl || cardUrl;
   const jobPostingJson = JSON.parse(buildJobPosting(job, url, logoUrl, stripHtml(job.description)));
   const html = await readFrontendIndex();
 
@@ -241,9 +242,9 @@ async function renderJobSeoHtml(job) {
     description,
     url,
     imageUrl,
-    imageWidth: 1200,
-    imageHeight: 627,
-    imageCard: 'summary_large_image',
+    imageWidth: logoUrl ? undefined : 1200,
+    imageHeight: logoUrl ? undefined : 627,
+    imageCard: logoUrl ? 'summary' : 'summary_large_image',
     ogType: 'article',
     jsonLd: jobPostingJson,
   });
