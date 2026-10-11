@@ -25,6 +25,8 @@ const subscriptionWebhooksRoutes = require('./subscriptionWebhooks.routes');
 const providerRoutes = require('./provider.routes');
 const candidateDashboardRoutes = require('./candidateDashboard.routes');
 
+const seoController = require('../controllers/seo.controller');
+
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -33,6 +35,13 @@ router.get('/health', (req, res) => {
     message: 'API is healthy',
     timestamp: new Date().toISOString(),
   });
+});
+
+router.get('/og/jobs/:id', (req, res, next) => {
+  const id = String(req.params.id || '').replace(/\.jpg$/i, '');
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return next();
+  req.params.id = id;
+  return seoController.renderJobShareImage(req, res, next);
 });
 
 router.use('/auth', authRoutes);

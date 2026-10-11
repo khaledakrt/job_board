@@ -149,7 +149,7 @@ function stripShareMeta(html) {
     .replace(/<link\s+rel=["']canonical["'][^>]*>/gi, '');
 }
 
-function injectSeo(html, { title, description, url, imageUrl, ogType = 'website', imageCard, jsonLd }) {
+function injectSeo(html, { title, description, url, imageUrl, ogType = 'website', imageCard, imageWidth, imageHeight, jsonLd }) {
   const jsonLdTags = Array.isArray(jsonLd) ? jsonLd : [jsonLd].filter(Boolean);
   const card = imageCard || (imageUrl ? 'summary_large_image' : 'summary');
   const tags = [
@@ -163,6 +163,8 @@ function injectSeo(html, { title, description, url, imageUrl, ogType = 'website'
     metaTag('og:url', url, true),
     metaTag('og:image', imageUrl, true),
     metaTag('og:image:alt', title, true),
+    imageWidth ? metaTag('og:image:width', String(imageWidth), true) : '',
+    imageHeight ? metaTag('og:image:height', String(imageHeight), true) : '',
     metaTag('twitter:card', card),
     metaTag('twitter:title', title),
     metaTag('twitter:description', description),
@@ -230,7 +232,7 @@ async function renderJobSeoHtml(job) {
   const description = truncate([lead, stripHtml(job.description)].filter(Boolean).join(' '), 220);
   const url = `${publicSiteUrl()}/offres/${job.id}`;
   const logoUrl = absoluteUrl(job.company?.logoUrl);
-  const imageUrl = logoUrl || firstImage();
+  const imageUrl = `${publicSiteUrl()}/api/og/jobs/${job.id}.jpg`;
   const jobPostingJson = JSON.parse(buildJobPosting(job, url, logoUrl, stripHtml(job.description)));
   const html = await readFrontendIndex();
 
@@ -239,7 +241,9 @@ async function renderJobSeoHtml(job) {
     description,
     url,
     imageUrl,
-    imageCard: logoUrl ? 'summary' : 'summary_large_image',
+    imageWidth: 1200,
+    imageHeight: 627,
+    imageCard: 'summary_large_image',
     ogType: 'article',
     jsonLd: jobPostingJson,
   });

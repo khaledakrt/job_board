@@ -28,6 +28,17 @@ function sendSeoHtml(res, html) {
     .send(html);
 }
 
+const renderJobShareImage = asyncHandler(async (req, res) => {
+  const jobShareImage = require('../services/jobShareImage.service');
+  const job = await publicJobSearchService.getPublicJobPreviewById(req.params.id);
+  const image = await jobShareImage.renderJobShareCard(job);
+  res
+    .status(200)
+    .type('jpeg')
+    .set('Cache-Control', 'public, max-age=3600')
+    .send(image);
+});
+
 const renderHome = asyncHandler(async (req, res) => {
   sendSeoHtml(res, await renderHomeSeoHtml());
 });
@@ -102,4 +113,5 @@ module.exports = {
   renderPrivateInstitutionsList,
   renderPrivateInstitution,
   renderInstitutionOffering,
+  renderJobShareImage,
 };
